@@ -6,11 +6,14 @@ class TaskWrapper(gym.Wrapper):
         super().__init__(*args, **kwargs)
         self.task_completion = 0.0
         self.task_space = None
+        self.task = None
 
     def reset(self, *args, **kwargs):
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")
             self.change_task(new_task)
+            # TODO: Handle failure case for change task
+            self.task = new_task
         return self.observation(super().reset(*args, **kwargs))
 
     def change_task(self, new_task):

@@ -1,1 +1,2 @@
 from .learning_progress import LearningProgressCurriculum
+from .simple_box import SimpleBoxCurriculum
