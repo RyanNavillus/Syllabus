@@ -37,7 +37,7 @@ class LearningProgressCurriculum(Curriculum):
         if task is None:
             return
         super().complete_task(task, success_prob)
-        
+
         k_slow = 2.0 / (55 + 1.0)
         k_fast = 2.0 / (30 + 1.0)
         self._p_slow[task] = (success_prob * k_slow) + (self._p_slow[task] * (1.0 - k_slow))

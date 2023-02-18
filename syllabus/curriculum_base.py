@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import typing
+import wandb
 from typing import Any, List, Union
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 from itertools import product
@@ -10,23 +11,27 @@ class Curriculum:
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, wandb_run=None) -> None:
+    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, use_wandb: bool = False) -> None:
         self.task_space = task_space
-        self.wandb_run = wandb_run
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
+        self.use_wandb = use_wandb
 
-    def _sum_axes(list_or_size: Union[np.ndarray, int]):
-        if isinstance(list_or_size, int):
+    def _sum_axes(list_or_size: Union[list, int]):
+        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
             return list_or_size
-        elif isinstance(list_or_size, list):
-            return sum([Curriculum._sum_axes(x) for x in list_or_size])
+        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
+            return np.prod([Curriculum._sum_axes(x) for x in list_or_size])
+        else:
+            raise NotImplementedError(f"{type(list_or_size)}")
 
     def _enumerate_axes(list_or_size: Union[np.ndarray, int]):
-        if isinstance(list_or_size, int):
+        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
             return tuple(range(list_or_size))
-        elif isinstance(list_or_size, list):
+        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
             return tuple(product(*[Curriculum._enumerate_axes(x) for x in list_or_size]))
+        else:
+            raise NotImplementedError(f"{type(list_or_size)}")
 
     @property
     def _n_tasks(self, task_space: gym.Space = None) -> int:
@@ -45,16 +50,12 @@ class Curriculum:
             return None
         elif isinstance(task_space, gym.spaces.Tuple):
             return sum([self._n_tasks(s) for s in task_space.spaces])
-        elif isinstance(task_space, Sequence):
-            return sum([self._n_tasks(s) for s in task_space.spaces])
         elif isinstance(task_space, Dict):
             return sum([self._n_tasks(s) for s in task_space.spaces.values()])
         elif isinstance(task_space, MultiBinary):
             return Curriculum._sum_axes(task_space.nvec)
         elif isinstance(task_space, MultiDiscrete):
             return Curriculum._sum_axes(task_space.nvec)
-        elif isinstance(task_space, Text):
-            return None
         else:
             raise NotImplementedError
 
@@ -119,8 +120,13 @@ class Curriculum:
             task_dist[0] = 1.0
         else:
             task_dist = self._sample_distribution()
-        self.log_task_dist(task_dist)
-        return np.random.choice(self._tasks, size=k, p=task_dist)
+        if self.use_wandb:
+            self.log_task_dist(task_dist)
+        # Use list of indices because np.choice does not play nice with tuple tasks
+        tasks = self._tasks
+        n_tasks = len(tasks)
+        task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
+        return [tasks[i] for i in task_idx]
 
     def log_task_dist(self, task_dist: List[float], check_dist=True):
         """
@@ -131,6 +137,9 @@ class Curriculum:
         """
         if check_dist:
             assert sum(task_dist) - 1.0 < 0.0001, "Task distribution must be a valid probability distribution."
-        print(task_dist)
-        if self.wandb_run:
-            self.wandb_run.log({"task_dist": self.task_space.sample()}, commit=False)
+        # TODO: Find a way for this to work with ray wandb callback?
+        try:
+            wandb.log({"task_dist": task_dist, "test": 0}, commit=False)
+        except wandb.errors.Error:
+            # No need to crash over logging :)
+            pass

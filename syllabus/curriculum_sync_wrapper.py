@@ -53,19 +53,28 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         super().__init__(curriculum)
         self.sample_queue = sample_queue
         self.complete_queue = complete_queue
+        self.update_thread = None
+        self.should_update = False
 
     def start(self):
         """
         Start the thread that reads the complete_queue and reads the sample_queue.
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
+        self.should_update = True
         self.update_thread.start()
+
+    def stop(self):
+        """
+        Stop the thread that reads the complete_queue and reads the sample_queue.
+        """
+        self.should_update = False
 
     def _update_queues(self):
         """
         Continuously process completed tasks and sample new tasks.
         """
-        while True:
+        while self.should_update:
             # Process completed tasks
             n_completed_tasks = 0
             while not self.complete_queue.empty():
