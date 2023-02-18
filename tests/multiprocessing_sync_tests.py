@@ -1,19 +1,18 @@
-
+""" Test curriculum synchronization across multiple processes. """
 import time
 import random
 from multiprocessing import SimpleQueue, Process
 
 import ray
-from nle.env.tasks import NetHackScore
 
-import curriculum
-from curriculum import (MultiProcessingSyncWrapper,
-                        RaySyncWrapper,
-                        LearningProgressCurriculum,
-                        RayCurriculumWrapper,
-                        NestedRayCurriculumWrapper,
-                        MultiProcessingCurriculumWrapper)
-from nethack_le import NethackTaskWrapper
+from nle.env.tasks import NetHackScore
+from examples import NethackTaskWrapper
+from curricula import LearningProgressCurriculum
+from syllabus import (MultiProcessingSyncWrapper,
+                      RaySyncWrapper,
+                      RayCurriculumWrapper,
+                      MultiProcessingCurriculumWrapper)
+
 
 N_ENVS = 2
 N_EPISODES = 50
@@ -56,7 +55,7 @@ def run_episode(env, new_task=None):
 def run_episodes(curriculum):
     env = create_nethack_env()
     ep_rews = []
-    for i in range(N_EPISODES):
+    for _ in range(N_EPISODES):
         task = curriculum.sample()[0]
         ep_rews.append(run_episode(env, new_task=task))
         curriculum.complete_task(task, success_prob=random.random())
@@ -65,7 +64,7 @@ def run_episodes(curriculum):
 def run_episodes_queue(sample_queue, complete_queue):
     env = create_nethack_env_queue(sample_queue, complete_queue)
     ep_rews = []
-    for i in range(N_EPISODES):
+    for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
 
 
@@ -117,10 +116,11 @@ if __name__ == "__main__":
     del curriculum
     print(f"Multi process test passed: {end - start:.2f}s")
 
-
     # Test Ray multi process
     sample_env = NethackTaskWrapper(NetHackScore())
-    curriculum = RayCurriculumWrapper(LearningProgressCurriculum, sample_env.task_space, random_start_tasks=10)
+    curriculum = RayCurriculumWrapper(LearningProgressCurriculum,
+                                      sample_env.task_space,
+                                      random_start_tasks=10)
     del sample_env
 
     print("\nRunning Ray multi process test...")

@@ -4,7 +4,7 @@ import ray
 from multiprocessing import SimpleQueue
 
 from typing import Any, Callable, Dict
-from curriculum import Curriculum, TaskWrapper
+from syllabus import Curriculum, TaskWrapper
 
 
 class MultiProcessingSyncWrapper(gym.Wrapper):

@@ -5,7 +5,7 @@ import threading
 from functools import wraps
 
 from torch.multiprocessing import SimpleQueue
-from curriculum import Curriculum, decorate_all_functions
+from syllabus import Curriculum, decorate_all_functions
 
 
 class CurriculumWrapper:
@@ -142,45 +142,3 @@ class RayCurriculumWrapper(CurriculumWrapper):
     # We override this to prevent an immediate ray.get and instead allow the updates to be batched
     def on_step(self, task, step, reward, done):
         super().on_step(task, step, reward, done)
-
-
-@decorate_all_functions(remote_call)
-class NestedRayCurriculumWrapper(CurriculumWrapper):
-    """
-    Subclass of LearningProgress Curriculum that uses Ray to share tasks and receive feedback
-    from the environment. The only change is the @ray.remote decorator on the class.
-
-    The @decorate_all_functions(remote_call) annotation automatically forwards all functions not explicitly
-    overridden here to the remote curriculum.
-    """
-    def __init__(self, curriculum, batch_results=True) -> None:
-        # TODO: Replace this shit with deep copy from object class method. This will allow actual wrappers to work
-        assert Curriculum in curriculum.unwrapped.__class__.__bases__, "curriculum_class must extend Curriculum"
-        super().__init__(curriculum, batch_results=batch_results)
-        curriculum = BufferWrapper.options(name="curriculum").remote(curriculum)
-        self.curriculum = curriculum
-        self.unwrapped = None
-
-    # If you choose to override a function, you will need to forward the call to the remote curriculum.
-    # This method is shown here as an example. If you remove it, the same functionality will be provided automatically.
-    def sample(self, k: int = 1):
-        return ray.get(self.curriculum.sample.remote(k=k))
-
-    # We override this to prevent an immediate ray.get and instead allow the updates to be batched
-    def on_step(self, task, step, reward, done):
-        super().on_step(task, step, reward, done)
-
-    #def _init_classes(self, classes):
-    #    if len(classes) == 1:
-    #        class_object, args, kwargs = classes[0]
-    #        return class_object.remote(*args, **kwargs)
-
-    #    current_object = None
-    #    for i, (class_object, args, kwargs) in enumerate(classes):
-    #        if i == 0:
-    #            current_object = class_object(*args, **kwargs)
-    #        elif i == len(classes) - 1:
-    #            current_object = class_object.remote(*args, **kwargs)
-    #        else:
-    #            current_object = class_object(current_object, *args, **kwargs)
-
