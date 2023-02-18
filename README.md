@@ -129,6 +129,9 @@ results = tuner.fit()
 As you can see, we just wrap the task-enabled CartPole environment with a `RaySyncWrapper`, and create a curriculum with the `RayCurriculumWrapper`. They automatically communicate with each other to sample tasks from your curriculum and use them in the environments. That's it! Now you can implement as many curricula as you want, and as long as they follow the `Curriculum` API, you can hot-swap them in this code.
 
 
+## Task Spaces
+Syllabus uses task spaces to define valid ranges for tasks and simplify some logic. These are simply [Gym spaces](https://gymnasium.farama.org/api/spaces/) which support a majority of existing curriculum methods. For now, the code thoroughly supports Discrete and MultiDiscrete spaces with preliminary support for Box spaces. The task space is typically determined by the environment and limits the type of curriculum that you can use. Most curricula support either a discrete set of tasks or a continuous space of tasks.  
+
 
 ## Curriculum API
 
