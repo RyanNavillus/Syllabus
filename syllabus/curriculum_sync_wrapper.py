@@ -3,6 +3,7 @@ import ray
 import time
 import threading
 from functools import wraps
+from typing import List, Tuple
 
 from torch.multiprocessing import SimpleQueue
 from syllabus import Curriculum, decorate_all_functions
@@ -42,6 +43,9 @@ class CurriculumWrapper:
         else:
             self.curriculum.on_step(task, step, reward, done)
 
+    def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+        self.curriculum.on_step_batch(step_results)
+
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     """
@@ -49,16 +53,23 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     to share tasks and receive feedback from the environment.
     Meant to be used with the MultiprocessingSyncWrapper for Gym environments.
     """
-    def __init__(self, curriculum, sample_queue: SimpleQueue, complete_queue: SimpleQueue, task_space: gym.Space = None):
-        super().__init__(curriculum)
-        self.sample_queue = sample_queue
+    def __init__(self,
+                 curriculum,
+                 task_queue: SimpleQueue,
+                 complete_queue: SimpleQueue,
+                 step_queue: SimpleQueue = None,
+                 task_space: gym.Space = None,
+                 batch_results: bool = False):
+        super().__init__(curriculum, batch_results=True)
+        self.task_queue = task_queue
         self.complete_queue = complete_queue
+        self.step_queue = step_queue
         self.update_thread = None
         self.should_update = False
 
     def start(self):
         """
-        Start the thread that reads the complete_queue and reads the sample_queue.
+        Start the thread that reads the complete_queue and reads the task_queue.
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
@@ -66,7 +77,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def stop(self):
         """
-        Stop the thread that reads the complete_queue and reads the sample_queue.
+        Stop the thread that reads the complete_queue and reads the task_queue.
         """
         self.should_update = False
 
@@ -82,10 +93,15 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 self.curriculum.complete_task(task, success_prob)
                 n_completed_tasks += 1
 
+            # Process environment step results:
+            while self.step_queue is not None and not self.step_queue.empty():
+                batch_results = self.step_queue.get()
+                self.on_step_batch(batch_results)
+
             # Sample new tasks
             new_tasks = self.curriculum.sample(k=n_completed_tasks)
             for task in new_tasks:
-                self.sample_queue.put(task)
+                self.task_queue.put(task)
             time.sleep(0.1)
 
 

@@ -95,7 +95,7 @@ class Curriculum:
         """
         Update the curriculum with the current step results from the environment.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
     def on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
         """

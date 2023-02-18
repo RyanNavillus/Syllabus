@@ -14,8 +14,8 @@ from syllabus import (MultiProcessingSyncWrapper,
                       MultiProcessingCurriculumWrapper)
 
 
-N_ENVS = 2
-N_EPISODES = 50
+N_ENVS = 8
+N_EPISODES = 20
 
 
 def create_nethack_env():
@@ -24,21 +24,27 @@ def create_nethack_env():
     return env
 
 
-def create_nethack_env_queue(sample_queue, complete_queue):
+def create_nethack_env_queue(task_queue, complete_queue, step_queue):
     env = NetHackScore()
     env = NethackTaskWrapper(env)
-    env = MultiProcessingSyncWrapper(env, sample_queue, complete_queue, default_task=0, task_space=env.task_space)
+    env = MultiProcessingSyncWrapper(env,
+                                     task_queue,
+                                     complete_queue,
+                                     step_queue=step_queue,
+                                     update_on_step=True,
+                                     default_task=0,
+                                     task_space=env.task_space)
     return env
 
 
 def create_nethack_env_ray():
     env = NetHackScore()
     env = NethackTaskWrapper(env)
-    env = RaySyncWrapper(env, update_on_step=False, default_task=0, task_space=env.task_space)
+    env = RaySyncWrapper(env, update_on_step=True, default_task=0, task_space=env.task_space)
     return env
 
 
-def run_episode(env, new_task=None):
+def run_episode(env, new_task=None, curriculum=None):
     if new_task:
         obs = env.reset(new_task=new_task)
     else:
@@ -48,6 +54,8 @@ def run_episode(env, new_task=None):
     while not done:
         action = env.action_space.sample()
         obs, rew, done, info = env.step(action)
+        if curriculum:
+            curriculum.on_step(obs, rew, done, info)
         ep_rew += rew
     return ep_rew
 
@@ -57,12 +65,12 @@ def run_episodes(curriculum):
     ep_rews = []
     for _ in range(N_EPISODES):
         task = curriculum.sample()[0]
-        ep_rews.append(run_episode(env, new_task=task))
+        ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum))
         curriculum.complete_task(task, success_prob=random.random())
 
 
-def run_episodes_queue(sample_queue, complete_queue):
-    env = create_nethack_env_queue(sample_queue, complete_queue)
+def run_episodes_queue(task_queue, complete_queue, step_queue):
+    env = create_nethack_env_queue(task_queue, complete_queue, step_queue)
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
@@ -90,22 +98,25 @@ if __name__ == "__main__":
     print(f"Single process test passed: {end - start:.2f}s")
 
     # Test Queue multi process
-    sample_queue = SimpleQueue()
+    task_queue = SimpleQueue()
     complete_queue = SimpleQueue()
-    sample_env = create_nethack_env_queue(sample_queue, complete_queue)
+    step_queue = SimpleQueue()
+    sample_env = create_nethack_env_queue(task_queue, complete_queue, step_queue)
     curriculum = LearningProgressCurriculum(sample_env.task_space, random_start_tasks=10)
     curriculum = MultiProcessingCurriculumWrapper(curriculum,
-                                                  sample_queue=sample_queue,
+                                                  task_queue=task_queue,
                                                   complete_queue=complete_queue,
+                                                  step_queue=step_queue,
                                                   task_space=sample_env.task_space)
     del sample_env
     curriculum.start()
+    time.sleep(3)
 
     print("\nRunning Python multi process test...")
     start = time.time()
     actors = []
     for _ in range(N_ENVS):
-        actors.append(Process(target=run_episodes_queue, args=(sample_queue, complete_queue)))
+        actors.append(Process(target=run_episodes_queue, args=(task_queue, complete_queue, step_queue)))
 
     for actor in actors:
         actor.start()

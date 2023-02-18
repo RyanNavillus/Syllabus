@@ -1,9 +1,10 @@
-import gym
-import numpy as np
-import ray
-from multiprocessing import SimpleQueue
-
+import time
 from typing import Any, Callable, Dict
+from multiprocessing import SimpleQueue
+import numpy as np
+
+import gym
+import ray
 from syllabus import Curriculum, TaskWrapper
 
 
@@ -17,21 +18,31 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  env,
                  task_queue: SimpleQueue,
                  completion_queue: SimpleQueue,
+                 step_queue: SimpleQueue = None,
+                 update_on_step: bool = True,
                  default_task=None,
-                 task_space: gym.Space = None):
+                 task_space: gym.Space = None,
+                 global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         assert isinstance(env, TaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.task_queue = task_queue
         self.completion_queue = completion_queue
+        self.step_queue = step_queue
         self.task_space = task_space
+        self.update_on_step = update_on_step
+        self.global_task_completion = global_task_completion
+        self.task_completion = 0.0
+        self.step_results = []
         if task_space.contains(default_task):
             self.default_task = default_task
 
     def reset(self, *args, **kwargs):
         # Update curriculum
         if self.completion_queue:
-            self.completion_queue.put((self.env.task, self.env.task_completion))
+            self.completion_queue.put((self.env.task, self.task_completion))
+            self.task_completion = 0.0
+        self.step_results = []
 
         # Sample new task
         if self.task_queue.empty():
@@ -44,7 +55,22 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
-    # TODO: Update curriculum with current step info
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+
+        if "task_completion" in info:
+            if self.global_task_completion is not None:
+                self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
+            else:
+                self.task_completion = info["task_completion"]
+
+        if self.update_on_step:
+            self.step_results.append((obs, rew, done, info))
+            if len(self.step_results) >= 1000 or done:
+                self.step_queue.put(self.step_results)
+                self.step_results = []
+
+        return obs, rew, done, info
 
 
 class RaySyncWrapper(gym.Wrapper):

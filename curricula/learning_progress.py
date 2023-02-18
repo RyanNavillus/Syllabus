@@ -101,6 +101,12 @@ class LearningProgressCurriculum(Curriculum):
         task_dist = self._softmax(task_lps_sigmoid)
         return task_dist
 
+    def on_step(self, obs, rew, done, info) -> None:
+        """
+        Update the curriculum with the current step results from the environment.
+        """
+        pass
+
 
 if __name__ == "__main__":
     def sample_binomial(p=0.5, n=200):
