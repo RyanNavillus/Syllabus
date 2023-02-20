@@ -13,14 +13,10 @@ class CurriculumWrapper:
     """
     Wrapper class for adding multiprocessing synchronization to a curriculum.
     """
-    def __init__(self, curriculum: Curriculum, batch_results=False) -> None:
+    def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
         self.task_space = curriculum.task_space
         self.unwrapped = curriculum
-
-        self.batch_results = batch_results
-        if self.batch_results:
-            self.batches = []
 
     def sample(self, k: int = 1):
         return self.curriculum.sample(k=k)
@@ -35,13 +31,7 @@ class CurriculumWrapper:
         return self.curriculum._tasks()
 
     def on_step(self, task, step, reward, done):
-        if self.batch_results:
-            self.batches.append((task, step, reward, done))
-            if len(self.batches) == 100:
-                self.curriculum.on_step_batch(self.batches)
-                self.batches = []
-        else:
-            self.curriculum.on_step(task, step, reward, done)
+        self.curriculum.on_step(task, step, reward, done)
 
     def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         self.curriculum.on_step_batch(step_results)
@@ -58,9 +48,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                  task_queue: SimpleQueue,
                  complete_queue: SimpleQueue,
                  step_queue: SimpleQueue = None,
-                 task_space: gym.Space = None,
-                 batch_results: bool = False):
-        super().__init__(curriculum, batch_results=True)
+                 task_space: gym.Space = None):
+        super().__init__(curriculum)
         self.task_queue = task_queue
         self.complete_queue = complete_queue
         self.step_queue = step_queue
@@ -124,11 +113,6 @@ def remote_call(func):
     return wrapper
 
 
-@ray.remote(name="curriculum")
-def BufferWrapper(CurriculumWrapper):
-    pass
-
-
 @decorate_all_functions(remote_call)
 class RayCurriculumWrapper(CurriculumWrapper):
     """
@@ -136,11 +120,13 @@ class RayCurriculumWrapper(CurriculumWrapper):
     from the environment. The only change is the @ray.remote decorator on the class.
 
     The @decorate_all_functions(remote_call) annotation automatically forwards all functions not explicitly
-    overridden here to the remote curriculum.
+    overridden here to the remote curriculum. This is intended to forward private functions of Curriculum subclasses
+    for convenience.
+    # TODO: Implement the Curriculum methods explicitly
     """
-    def __init__(self, curriculum_class, *curriculum_args, batch_results=True, **curriculum_kwargs) -> None:
+    def __init__(self, curriculum_class, *curriculum_args, **curriculum_kwargs) -> None:
         sample_curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
-        super().__init__(sample_curriculum, batch_results=batch_results)
+        super().__init__(sample_curriculum)
         ray_curriculum_class = ray.remote(curriculum_class).options(name="curriculum")
         curriculum = ray_curriculum_class.remote(*curriculum_args, **curriculum_kwargs)
         self.curriculum = curriculum
@@ -158,3 +144,6 @@ class RayCurriculumWrapper(CurriculumWrapper):
     # We override this to prevent an immediate ray.get and instead allow the updates to be batched
     def on_step(self, task, step, reward, done):
         super().on_step(task, step, reward, done)
+
+    def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+        ray.get(self.curriculum.on_step_batch.remote(step_results))

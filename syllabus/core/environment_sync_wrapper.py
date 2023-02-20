@@ -38,11 +38,12 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self.default_task = default_task
 
     def reset(self, *args, **kwargs):
+        self.step_results = []
+
         # Update curriculum
         if self.completion_queue:
             self.completion_queue.put((self.env.task, self.task_completion))
             self.task_completion = 0.0
-        self.step_results = []
 
         # Sample new task
         if self.task_queue.empty():
@@ -95,8 +96,11 @@ class RaySyncWrapper(gym.Wrapper):
         self.curriculum = ray.get_actor("curriculum")
         self.task_completion = 0.0
         self.global_task_completion = global_task_completion
+        self.step_results = []
 
     def reset(self, *args, **kwargs):
+        self.step_results = []
+
         # Update curriculum
         self.curriculum.complete_task.remote(self.env.task, self.task_completion)
         self.task_completion = 0.0
@@ -119,7 +123,10 @@ class RaySyncWrapper(gym.Wrapper):
 
         # TODO: Optimize
         if self.update_on_step:
-            self.curriculum.on_step.remote(obs, rew, done, info)
+            self.step_results.append((obs, rew, done, info))
+            if len(self.step_results) >= 1000 or done:
+                self.curriculum.on_step_batch.remote(self.step_results)
+                self.step_results = []
 
         return obs, rew, done, info
 

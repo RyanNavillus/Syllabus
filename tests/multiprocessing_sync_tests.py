@@ -14,8 +14,8 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            MultiProcessingCurriculumWrapper)
 
 
-N_ENVS = 8
-N_EPISODES = 20
+N_ENVS = 16
+N_EPISODES = 100
 
 
 def create_nethack_env():
@@ -40,7 +40,6 @@ def create_nethack_env_queue(task_queue, complete_queue, step_queue):
 def create_nethack_env_ray():
     env = NetHackScore()
     env = NethackTaskWrapper(env)
-    print("Ray update_on_step is enabled, which currently has bugs.")
     env = RaySyncWrapper(env, update_on_step=True, default_task=0, task_space=env.task_space)
     return env
 

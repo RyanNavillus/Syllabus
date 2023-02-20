@@ -4,8 +4,8 @@ import numpy as np
 from ray.tune.registry import register_env
 from ray import tune
 from gym.spaces import Box
-from syllabus import TaskWrapper, RaySyncWrapper, RayCurriculumWrapper
-from curricula import SimpleBoxCurriculum
+from syllabus.core import TaskWrapper, RaySyncWrapper, RayCurriculumWrapper
+from syllabus.curricula import SimpleBoxCurriculum
 
 
 class CartPoleTaskWrapper(TaskWrapper):
