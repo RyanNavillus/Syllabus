@@ -6,12 +6,12 @@ from multiprocessing import SimpleQueue, Process
 import ray
 
 from nle.env.tasks import NetHackScore
-from examples import NethackTaskWrapper
-from curricula import LearningProgressCurriculum
-from syllabus import (MultiProcessingSyncWrapper,
-                      RaySyncWrapper,
-                      RayCurriculumWrapper,
-                      MultiProcessingCurriculumWrapper)
+from syllabus.examples import NethackTaskWrapper
+from syllabus.curricula import LearningProgressCurriculum
+from syllabus.core import (MultiProcessingSyncWrapper,
+                           RaySyncWrapper,
+                           RayCurriculumWrapper,
+                           MultiProcessingCurriculumWrapper)
 
 
 N_ENVS = 8
@@ -40,6 +40,7 @@ def create_nethack_env_queue(task_queue, complete_queue, step_queue):
 def create_nethack_env_ray():
     env = NetHackScore()
     env = NethackTaskWrapper(env)
+    print("Ray update_on_step is enabled, which currently has bugs.")
     env = RaySyncWrapper(env, update_on_step=True, default_task=0, task_space=env.task_space)
     return env
 

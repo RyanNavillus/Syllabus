@@ -9,7 +9,7 @@ import numpy as np
 from gym.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
 
-from syllabus import Curriculum
+from syllabus.core import Curriculum
 
 
 class LearningProgressCurriculum(Curriculum):

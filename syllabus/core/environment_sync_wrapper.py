@@ -5,7 +5,7 @@ import numpy as np
 
 import gym
 import ray
-from syllabus import Curriculum, TaskWrapper
+from syllabus.core import Curriculum, TaskWrapper
 
 
 class MultiProcessingSyncWrapper(gym.Wrapper):

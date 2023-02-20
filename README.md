@@ -245,6 +245,6 @@ class TaskWrapper(gym.Wrapper):
     	Forwards the step action to the inner env.
     	Also adds the result of self.task_completion to info["task_completion"]
     	which is sent to the curriculum.
- 		"""
+        """
 ```
 

@@ -6,7 +6,7 @@ from functools import wraps
 from typing import List, Tuple
 
 from torch.multiprocessing import SimpleQueue
-from syllabus import Curriculum, decorate_all_functions
+from syllabus.core import Curriculum, decorate_all_functions
 
 
 class CurriculumWrapper:

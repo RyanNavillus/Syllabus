@@ -13,7 +13,7 @@ from nle.env.tasks import (NetHackScore,
                            NetHackGold,
                            NetHackEat,
                            NetHackScout)
-from syllabus import TaskWrapper
+from syllabus.core import TaskWrapper
 
 
 class NethackTaskWrapper(TaskWrapper):
