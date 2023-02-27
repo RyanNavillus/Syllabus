@@ -34,7 +34,7 @@ class PrioritizedLevelReplay(Curriculum):
     ):
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
         self.strategy = strategy
-        if self.strategy == "policy entropy":
+        if self.strategy == "policy_entropy":
             assert num_actions is not None, "Must provide num_actions for policy entropy strategy"
             self.num_actions = num_actions
         self.replay_schedule = replay_schedule
