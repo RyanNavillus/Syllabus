@@ -130,3 +130,29 @@ if __name__ == "__main__":
     end = time.time()
     del curriculum
     print(f"Python multiprocess test passed: {end - start:.2f}s")
+
+    strategies = ["random",
+                  "sequential",
+                  "policy_entropy",
+                  "least_confidence",
+                  "min_margin",
+                  "gae",
+                  "value_l1",
+                  "one_step_td_error"]
+    for strategy in strategies:
+        curriculum = make_ray_curriculum(PrioritizedLevelReplay,
+                                         list(range(7)),
+                                         sample_env.task_space,
+                                         strategy=strategy,
+                                         num_actions=sample_env.action_space.n,
+                                         random_start_tasks=10)
+        print(f"\nRunning {strategy} test...")
+        start = time.time()
+        remotes = []
+
+        for _ in range(N_ENVS):
+            remotes.append(run_episodes_ray.remote())
+        ray.get(remotes)
+        end = time.time()
+        del curriculum
+        print(f"{strategy} test passed: {end - start:.2f}s")
