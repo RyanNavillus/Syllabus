@@ -57,7 +57,7 @@ class Curriculum:
         elif isinstance(task_space, MultiDiscrete):
             return Curriculum._sum_axes(task_space.nvec)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"Unsupported task space type: {type(task_space)}")
 
     @property
     def _tasks(self, task_space: gym.Space = None, sample_interval: float = None) -> List[tuple]:

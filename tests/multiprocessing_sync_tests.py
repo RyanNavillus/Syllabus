@@ -11,7 +11,9 @@ from syllabus.curricula import LearningProgressCurriculum
 from syllabus.core import (MultiProcessingSyncWrapper,
                            RaySyncWrapper,
                            RayCurriculumWrapper,
-                           MultiProcessingCurriculumWrapper)
+                           MultiProcessingCurriculumWrapper,
+                           make_multiprocessing_curriculum,
+                           make_ray_curriculum)
 
 
 N_ENVS = 16
@@ -88,7 +90,6 @@ if __name__ == "__main__":
     # Test single process
     sample_env = create_nethack_env()
     curriculum = LearningProgressCurriculum(sample_env.task_space, random_start_tasks=10)
-    del sample_env
 
     print("\nRunning single process test...")
     start = time.time()
@@ -106,11 +107,45 @@ if __name__ == "__main__":
     curriculum = MultiProcessingCurriculumWrapper(curriculum,
                                                   task_queue=task_queue,
                                                   complete_queue=complete_queue,
-                                                  step_queue=step_queue,
-                                                  task_space=sample_env.task_space)
-    del sample_env
+                                                  step_queue=step_queue)
     curriculum.start()
     time.sleep(3)
+
+    print("\nRunning Python multiprocess test...")
+    start = time.time()
+    actors = []
+    for _ in range(N_ENVS):
+        actors.append(Process(target=run_episodes_queue, args=(task_queue, complete_queue, step_queue)))
+
+    for actor in actors:
+        actor.start()
+    for actor in actors:
+        actor.join()
+    end = time.time()
+
+    del curriculum
+    print(f"Python multiprocess test passed: {end - start:.2f}s")
+
+    # Test Ray multi process
+    curriculum = RayCurriculumWrapper(LearningProgressCurriculum,
+                                      sample_env.task_space,
+                                      random_start_tasks=10)
+
+    print("\nRunning Ray multi process test...")
+    start = time.time()
+    remotes = []
+    for _ in range(N_ENVS):
+        remotes.append(run_episodes_ray.remote())
+    ray.get(remotes)
+    end = time.time()
+
+    del curriculum
+    print(f"Ray multiprocess test passed: {end - start:.2f}s")
+
+    # Test Queue multi process
+    _, task_queue, complete_queue, step_queue = make_multiprocessing_curriculum(LearningProgressCurriculum,
+                                                                                sample_env.task_space,
+                                                                                random_start_tasks=10)
 
     print("\nRunning Python multi process test...")
     start = time.time()
@@ -123,16 +158,12 @@ if __name__ == "__main__":
     for actor in actors:
         actor.join()
     end = time.time()
-    curriculum.stop()
+
     del curriculum
-    print(f"Multi process test passed: {end - start:.2f}s")
+    print(f"Python multiprocess test passed: {end - start:.2f}s")
 
     # Test Ray multi process
-    sample_env = NethackTaskWrapper(NetHackScore())
-    curriculum = RayCurriculumWrapper(LearningProgressCurriculum,
-                                      sample_env.task_space,
-                                      random_start_tasks=10)
-    del sample_env
+    make_ray_curriculum(LearningProgressCurriculum, sample_env.task_space, random_start_tasks=10)
 
     print("\nRunning Ray multi process test...")
     start = time.time()
@@ -141,4 +172,6 @@ if __name__ == "__main__":
         remotes.append(run_episodes_ray.remote())
     ray.get(remotes)
     end = time.time()
-    print(f"Multi process test passed: {end - start:.2f}s")
+
+    del curriculum
+    print(f"Python multiprocess test passed: {end - start:.2f}s")

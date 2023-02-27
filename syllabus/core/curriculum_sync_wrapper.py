@@ -1,4 +1,3 @@
-import gym
 import ray
 import time
 import threading
@@ -47,8 +46,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                  curriculum,
                  task_queue: SimpleQueue,
                  complete_queue: SimpleQueue,
-                 step_queue: SimpleQueue = None,
-                 task_space: gym.Space = None):
+                 step_queue: SimpleQueue = None):
         super().__init__(curriculum)
         self.task_queue = task_queue
         self.complete_queue = complete_queue
@@ -93,6 +91,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 self.task_queue.put(task)
             time.sleep(0.1)
 
+    def __del__(self):
+        self.stop()
+
 
 def remote_call(func):
     """
@@ -124,15 +125,14 @@ class RayCurriculumWrapper(CurriculumWrapper):
     for convenience.
     # TODO: Implement the Curriculum methods explicitly
     """
-    def __init__(self, curriculum_class, *curriculum_args, **curriculum_kwargs) -> None:
+    def __init__(self, curriculum_class, *curriculum_args, actor_name="curriculum", **curriculum_kwargs) -> None:
         sample_curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
+
         super().__init__(sample_curriculum)
-        ray_curriculum_class = ray.remote(curriculum_class).options(name="curriculum")
+        ray_curriculum_class = ray.remote(curriculum_class).options(name=actor_name)
         curriculum = ray_curriculum_class.remote(*curriculum_args, **curriculum_kwargs)
         self.curriculum = curriculum
         self.unwrapped = None
-
-        # Set basic properties here so that wrapper has the same interface as the curriculum.
         self.task_space = sample_curriculum.task_space
         del sample_curriculum
 
@@ -147,3 +147,27 @@ class RayCurriculumWrapper(CurriculumWrapper):
 
     def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         ray.get(self.curriculum.on_step_batch.remote(step_results))
+
+
+def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curriculum_kwargs):
+    """
+    Helper function for creating a MultiProcessingCurriculumWrapper.
+    """
+
+    curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
+    task_queue = SimpleQueue()
+    complete_queue = SimpleQueue()
+    step_queue = SimpleQueue()
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum,
+                                                     task_queue=task_queue,
+                                                     complete_queue=complete_queue,
+                                                     step_queue=step_queue)
+    mp_curriculum.start()
+    return mp_curriculum, task_queue, complete_queue, step_queue
+
+
+def make_ray_curriculum(curriculum_class, *curriculum_args, actor_name="curriculum", **curriculum_kwargs):
+    """
+    Helper function for creating a RayCurriculumWrapper.
+    """
+    return RayCurriculumWrapper(curriculum_class, *curriculum_args, actor_name=actor_name, **curriculum_kwargs)

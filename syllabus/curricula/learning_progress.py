@@ -28,7 +28,7 @@ class LearningProgressCurriculum(Curriculum):
             for task in self._tasks:
                 self._p_fast[task] = 0.0
                 self._p_slow[task] = 0.0
-        print(f"Creating curriculum with {self._n_tasks} tasks: {self._tasks} from task space: {self.task_space}")
+        #print(f"Creating curriculum with {self._n_tasks} tasks: {self._tasks} from task space: {self.task_space}")
 
     def complete_task(self, task: int, success_prob: float):
         """
