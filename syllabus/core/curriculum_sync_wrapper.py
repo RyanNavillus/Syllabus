@@ -153,7 +153,6 @@ def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curric
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
-
     curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
     task_queue = SimpleQueue()
     complete_queue = SimpleQueue()
