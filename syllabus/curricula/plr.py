@@ -177,9 +177,7 @@ class PrioritizedLevelReplay(Curriculum):
                 if not start_t < total_steps:
                     break
 
-                if (
-                    t == 0
-                ):  # if t is 0, then this done step caused a full update of previous seed last cycle
+                if (t == 0):  # if t is 0, then this done step caused a full update of previous seed last cycle
                     continue
 
                 seed_t = level_seeds[start_t, actor_index].item()
@@ -192,15 +190,9 @@ class PrioritizedLevelReplay(Curriculum):
                 )
 
                 if self.requires_value_buffers:
-                    score_function_kwargs["returns"] = rollouts.returns[
-                        start_t:t, actor_index
-                    ]
-                    score_function_kwargs["rewards"] = rollouts.rewards[
-                        start_t:t, actor_index
-                    ]
-                    score_function_kwargs["value_preds"] = rollouts.value_preds[
-                        start_t:t, actor_index
-                    ]
+                    score_function_kwargs["returns"] = rollouts.returns[start_t:t, actor_index]
+                    score_function_kwargs["rewards"] = rollouts.rewards[start_t:t, actor_index]
+                    score_function_kwargs["value_preds"] = rollouts.value_preds[start_t:t, actor_index]
 
                 score = score_function(**score_function_kwargs)
                 num_steps = len(episode_logits)
