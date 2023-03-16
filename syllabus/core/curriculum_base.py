@@ -120,26 +120,24 @@ class Curriculum:
             task_dist[0] = 1.0
         else:
             task_dist = self._sample_distribution()
-        if self.use_wandb:
-            self.log_task_dist(task_dist)
+
         # Use list of indices because np.choice does not play nice with tuple tasks
         tasks = self._tasks
         n_tasks = len(tasks)
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]
 
-    def log_task_dist(self, task_dist: List[float], check_dist=True):
+    def log_metrics(self, step=None):
         """
         Log the task distribution to wandb.
 
         Paramaters:
             task_dist: List of task probabilities. Must be a valid probability distribution.
         """
-        if check_dist:
-            assert sum(task_dist) - 1.0 < 0.0001, "Task distribution must be a valid probability distribution."
-        # TODO: Find a way for this to work with ray wandb callback?
         try:
-            wandb.log({"task_dist": task_dist, "test": 0}, commit=False)
+            task_dist = self._sample_distribution()
+            dist_dict = {f"task_{idx}_prob": prob for idx, prob in enumerate(task_dist)}
+            wandb.log({"curriculum": dist_dict}, step=step)
         except wandb.errors.Error:
             # No need to crash over logging :)
             pass

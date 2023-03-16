@@ -34,6 +34,9 @@ class CurriculumWrapper:
 
     def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         self.curriculum.on_step_batch(step_results)
+    
+    def log_metrics(self, step=None):
+        self.curriculum.log_metrics(step=step)
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):

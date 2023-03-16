@@ -81,6 +81,9 @@ class NethackTaskWrapper(TaskWrapper):
         self.observation_space = copy.deepcopy(self.env.observation_space)
         self.observation_space["goal"] = spaces.MultiBinary(len(self.task_list))
 
+        # Task completion metrics
+        self.episode_return = 0
+
         # Initialize all tasks
         original_class = self.env.__class__
         for task in task_list:
@@ -114,6 +117,7 @@ class NethackTaskWrapper(TaskWrapper):
             self.change_task(new_task)
 
         self.done = False
+        self.episode_return = 0
 
         return self.observation(self.env.reset(**kwargs))
 
@@ -161,14 +165,17 @@ class NethackTaskWrapper(TaskWrapper):
         return observation
 
     def _task_completion(self, obs, rew, done, info):
-        return info["end_status"] == 2
+        # TODO: Add real task completion metrics
+        return np.random.rand()
 
     def step(self, action):
         """
         Step through environment and update task completion.
         """
         obs, rew, done, info = self.env.step(action)
+        self.episode_return += rew
         self.done = done
+        info["task_completion"] = self._task_completion(obs, rew, done, info)
         return self.observation(obs), rew, done, info
 
 
