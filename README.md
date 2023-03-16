@@ -1,6 +1,6 @@
 # Syllabus
 
-Syllabus is an API for designing curricula for reinforcement learning agents, as well as a framework for synchronizing those curricula across environments running in multiple processes. it currently has support for environments run with Ray actors and Python multiprocessing, which should include RL libraries such as RLLib, CleanRL, Stable Baselines 3, and TorchBeast. We currently have working examples with **RLLib** and **Torchbeast**.
+Syllabus is an API for designing curricula for reinforcement learning agents, as well as a framework for synchronizing those curricula across environments running in multiple processes. it currently has support for environments run with Ray actors and Python multiprocessing, which should include RL libraries such as RLLib, CleanRL, Stable Baselines 3, and TorchBeast. We currently have working examples with **CleanRL**, **RLLib**, and **Torchbeast**.
 
 
 
