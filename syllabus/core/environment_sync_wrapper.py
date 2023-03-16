@@ -48,7 +48,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
-            next_task = self.default_task if self.default_task else self.env.task
+            next_task = self.default_task if self.default_task is not None else self.env.task
             # Queue is too short, add tasks as needed
             self.task_queue.put(self.default_task)
         else:
