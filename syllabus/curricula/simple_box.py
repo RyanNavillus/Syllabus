@@ -9,10 +9,10 @@ class SimpleBoxCurriculum(Curriculum):
     Base class and API for defining curricula to interface with Gym environments.
     """
     def __init__(self,
+                 *curriculum_args,
                  steps: int = 5,
                  success_threshold: float = 0.25,
                  required_successes: int = 10,
-                 *curriculum_args,
                  **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert isinstance(self.task_space, Box), "SimpleBoxCurriculum only supports Box task spaces."

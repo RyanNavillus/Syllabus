@@ -34,6 +34,9 @@ class CurriculumWrapper:
 
     def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         self.curriculum.on_step_batch(step_results)
+    
+    def log_metrics(self, step=None):
+        self.curriculum.log_metrics(step=step)
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
@@ -153,7 +156,6 @@ def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curric
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
-
     curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
     task_queue = SimpleQueue()
     complete_queue = SimpleQueue()
