@@ -166,7 +166,23 @@ class NethackTaskWrapper(TaskWrapper):
 
     def _task_completion(self, obs, rew, done, info):
         # TODO: Add real task completion metrics
-        return np.random.rand()
+        completion = 0.0
+        if self.task == 0:
+            completion = self.episode_return / 1000
+        elif self.task == 1:
+            completion = self.episode_return
+        elif self.task == 2:
+            completion = self.episode_return
+        elif self.task == 3:
+            completion = self.episode_return
+        elif self.task == 4:
+            completion = self.episode_return / 1000
+        elif self.task == 5:
+            completion = self.episode_return / 10
+        elif self.task == 6:
+            completion = self.episode_return / 100
+
+        return min(max(completion, 0.0), 1.0)
 
     def step(self, action):
         """

@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import typing
 import wandb
-from typing import Any, List, Union
+from typing import Any, List, Union, Callable
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 from itertools import product
 
@@ -11,11 +11,12 @@ class Curriculum:
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, use_wandb: bool = False) -> None:
+    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, use_wandb: bool = False, task_names: Callable = None) -> None:
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
         self.use_wandb = use_wandb
+        self.task_names = task_names
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
@@ -136,7 +137,10 @@ class Curriculum:
         """
         try:
             task_dist = self._sample_distribution()
-            dist_dict = {f"task_{idx}_prob": prob for idx, prob in enumerate(task_dist)}
+            if self.task_names:
+                dist_dict = {f"{self.task_names[idx]}_prob": prob for idx, prob in enumerate(task_dist)}
+            else:
+                dist_dict = {f"task_{idx}_prob": prob for idx, prob in enumerate(task_dist)}
             wandb.log({"curriculum": dist_dict}, step=step)
         except wandb.errors.Error:
             # No need to crash over logging :)

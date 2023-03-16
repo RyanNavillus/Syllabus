@@ -375,10 +375,6 @@ def learn(
 
         episode_returns = batch["episode_return"][batch["done"]]
         episode_steps = batch["episode_step"][batch["done"]]
-        if flags.curriculum:
-            score_returns = batch["score_return"][batch["done"]]
-            goal_returns = batch["goal_return"][batch["done"]]
-            exp_bonuses = batch["exp_bonus"][batch["done"]]
 
         stats = {
             "episode_returns": tuple(episode_returns.cpu().numpy()),
@@ -390,10 +386,6 @@ def learn(
             "baseline_loss": baseline_loss.item(),
             "entropy_loss": entropy_loss.item(),
         }
-        if flags.curriculum:
-            stats["mean_score_return"] = torch.mean(score_returns).item()
-            stats["mean_goal_return"] = torch.mean(goal_returns).item()
-            stats["mean_exp_bonus"] = torch.mean(exp_bonuses).item()
 
         optimizer.zero_grad()
         total_loss.backward()
@@ -424,11 +416,6 @@ def create_buffers(flags, observation_space, num_actions, num_overlapping_steps=
         baseline=dict(size=size, dtype=torch.float32),
         last_action=dict(size=size, dtype=torch.int64),
         action=dict(size=size, dtype=torch.int64),
-        score_reward=dict(size=size, dtype=torch.float32),
-        score_return=dict(size=size, dtype=torch.float32),
-        goal_return=dict(size=size, dtype=torch.float32),
-        exp_bonus=dict(size=size, dtype=torch.float32),
-        task_complete=dict(size=size, dtype=torch.bool),
     )
     buffers = {key: [] for key in specs}
     for _ in range(flags.num_buffers):
@@ -454,7 +441,6 @@ class ResettingEnvironment:
     def __init__(self, gym_env):
         self.gym_env = gym_env
         self.episode_return = None
-        #self.score_return = None
         self._copy_gym_properties()
     
     def _copy_gym_properties(self):
@@ -465,7 +451,6 @@ class ResettingEnvironment:
         if flags.curriculum:
             self.task_space = self.gym_env.task_space
 
-
     def initial(self):
         initial_reward = torch.zeros(1, 1)
         # This supports only single-tensor actions ATM.
@@ -473,9 +458,6 @@ class ResettingEnvironment:
         self.episode_return = torch.zeros(1, 1)
         self.episode_step = torch.zeros(1, 1, dtype=torch.float32)
         initial_done = torch.ones(1, 1, dtype=torch.uint8)
-        if flags.curriculum:
-            pass
-            #self.score_return = torch.zeros(1, 1, dtype=torch.float32)
 
         result = _format_observations(self.gym_env.reset())
         result.update(
@@ -485,24 +467,12 @@ class ResettingEnvironment:
             episode_step=self.episode_step,
             last_action=initial_last_action,
         )
-        if flags.curriculum:
-            pass
-            #result.update(
-            #    score_return=self.score_return,
-            #)
-
         return result
 
     def step(self, action):
         observation, reward, done, info = self.gym_env.step(action.item())
         self.episode_step += 1
         self.episode_return += reward
-        if flags.curriculum:
-            pass
-            #reward_info = info["rewards"]
-            #self.score_return += reward_info["score_reward"]
-            #score_return = self.score_return
-
         episode_step = self.episode_step
         episode_return = self.episode_return
 
@@ -510,9 +480,6 @@ class ResettingEnvironment:
             observation = self.gym_env.reset()
             self.episode_return = torch.zeros(1, 1)
             self.episode_step = torch.zeros(1, 1, dtype=torch.float32)
-            if flags.curriculum:
-                pass
-                #self.score_return = torch.zeros(1, 1)
 
         result = _format_observations(observation)
 
@@ -523,7 +490,6 @@ class ResettingEnvironment:
                 reward=reward,
                 done=done,
                 episode_return=episode_return,
-                #score_return=score_return,
                 episode_step=episode_step,
                 last_action=action,
             )
@@ -641,9 +607,14 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
     # else:
     task_queue, complete_queue, step_queue = None, None, None
     if flags.curriculum:
+        name_list = None
+        if isinstance(sample_env.task_space, gym.spaces.Discrete):
+            task_list = sample_env.gym_env.task_list
+            name_list = [task_list[idx].__name__ for idx in range(len(task_list))]
         curriculum, task_queue, complete_queue, step_queue = make_multiprocessing_curriculum(LearningProgressCurriculum,
                                                                                              task_space,
-                                                                                             random_start_tasks=0)
+                                                                                             random_start_tasks=0,
+                                                                                             task_names=name_list)
 
     learner_model = Net(observation_space, action_space.n, flags.use_lstm, goal=flags.curriculum).to(device=flags.device)
     learner_model.load_state_dict(model.state_dict())
@@ -709,7 +680,6 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
         """Thread target for the learning process."""
         nonlocal step, stats, all_stats
         while step < flags.total_steps:
-            print(step)
             batch, agent_state = get_batch(flags, free_queue, full_queue, buffers, initial_agent_state_buffers)
             stats = learn(flags, model, learner_model, batch, agent_state, optimizer, scheduler)
 
@@ -766,45 +736,45 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
                 #wandb.gym.monitor()
 
             # # Combine stats
-            # all_stats_dict = {}
-            # if len(all_stats) > 0:
-            #     # Iterate through keys and combine based on data type
-            #     for key, value in all_stats[0].items():
-            #         all_stats_dict[key] = 0
-            #         stat_list = []
-            #         if isinstance(value, (int, float, np.uint8, np.float32)):
-            #             # Average values
-            #             for stat_dict in all_stats:
-            #                 stat_value = stat_dict.get(key)
-            #                 if stat_value is not None and not np.isnan(stat_value) and not math.isnan(stat_value):
-            #                     stat_list.append(stat_value)
-            #             all_stats_dict[key] = (sum(stat_list) / len(stat_list)) if len(stat_list) > 0 else 0
-            #         elif isinstance(value, (list, tuple)):
-            #             # Combine lists
-            #             for stat_dict in all_stats:
-            #                 stat_value = stat_dict.get(key)
-            #                 if stat_value is not None and stat_value != () and stat_value != []:
-            #                     stat_list += stat_value
-            #             all_stats_dict[key] = stat_list
-            # all_stats = []
+            all_stats_dict = {}
+            if len(all_stats) > 0:
+                # Iterate through keys and combine based on data type
+                for key, value in all_stats[0].items():
+                    all_stats_dict[key] = 0
+                    stat_list = []
+                    if isinstance(value, (int, float, np.uint8, np.float32)):
+                        # Average values
+                        for stat_dict in all_stats:
+                            stat_value = stat_dict.get(key)
+                            if stat_value is not None and not np.isnan(stat_value) and not math.isnan(stat_value):
+                                stat_list.append(stat_value)
+                        all_stats_dict[key] = (sum(stat_list) / len(stat_list)) if len(stat_list) > 0 else 0
+                    elif isinstance(value, (list, tuple)):
+                        # Combine lists
+                        for stat_dict in all_stats:
+                            stat_value = stat_dict.get(key)
+                            if stat_value is not None and stat_value != () and stat_value != []:
+                                stat_list += stat_value
+                        all_stats_dict[key] = stat_list
+            all_stats = []
 
-            # # Remove clutter
-            # if "episode_returns" in all_stats_dict:
-            #     del all_stats_dict["episode_returns"]
-            # if "episode_lengths" in all_stats_dict:
-            #     del all_stats_dict["episode_lengths"]
+            # Remove clutter
+            if "episode_returns" in all_stats_dict:
+                del all_stats_dict["episode_returns"]
+            if "episode_lengths" in all_stats_dict:
+                del all_stats_dict["episode_lengths"]
 
-            # # Log run data to weights and biases
-            # if flags.exp_name:
-            #     wandb_stats = all_stats_dict
-            #     for key, value in wandb_stats.items():
-            #         if isinstance(value, (int, float, np.uint8, np.float32)):
-            #             wandb_stats[key] = 0.0 if np.isnan(value) else value
-            #     if not flags.curriculum:
-            #         wandb_stats["mean_score_return"] = wandb_stats["mean_episode_return"]
-            #     wandb_stats["learning_rate"] = scheduler.get_last_lr()[0]
-            #     # task_table.add_data(step, str(curriculum.export_task_names()))
-            #     wandb.log(wandb_stats, step=step)
+            # Log run data to weights and biases
+            if flags.exp_name:
+                wandb_stats = all_stats_dict
+                for key, value in wandb_stats.items():
+                    if isinstance(value, (int, float, np.uint8, np.float32)):
+                        wandb_stats[key] = 0.0 if np.isnan(value) else value
+                if not flags.curriculum:
+                    wandb_stats["mean_score_return"] = wandb_stats["mean_episode_return"]
+                wandb_stats["learning_rate"] = scheduler.get_last_lr()[0]
+                # task_table.add_data(step, str(curriculum.export_task_names()))
+                wandb.log(wandb_stats, step=step)
 
             sps = (step - start_step) / (timer() - start_time)
 
@@ -815,8 +785,8 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
             else:
                 mean_return = ""
             total_loss = stats.get("total_loss", float("inf"))
-            log_str = "Steps %i @ %.1f SPS. Loss %f. %s"        # Stats:\n%s"
-            log_args = [step, sps, total_loss, mean_return]     # , pprint.pformat(all_stats_dict)]
+            log_str = "Steps %i @ %.1f SPS. Loss %f. %sStats:\n%s"
+            log_args = [step, sps, total_loss, mean_return, pprint.pformat(all_stats_dict)]
             # log_str = "Steps %i @ %.1f SPS. Loss %f. %s"
             # log_args = [step, sps, total_loss, mean_return]
             # if flags.curriculum:
@@ -1297,7 +1267,7 @@ if __name__ == "__main__":
     if flags.exp_name:
         wandb_run = wandb.init(
                     project="syllabus",
-                    entity="ENTITY",
+                    entity="ryan-colab",
                     config=flags,
                     save_code=True,
                     name=flags.exp_name,
