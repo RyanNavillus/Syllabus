@@ -27,7 +27,7 @@ class SimpleBoxCurriculum(Curriculum):
         self.consecutive_successes = 0
         self.max_reached = False
 
-    def complete_task(self, task: typing.Any, success_prob: float) -> None:
+    def _complete_task(self, task: typing.Any, success_prob: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.

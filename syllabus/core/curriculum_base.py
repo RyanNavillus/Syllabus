@@ -85,25 +85,67 @@ class Curriculum:
         else:
             raise NotImplementedError
 
-    def complete_task(self, task: typing.Any, success_prob: float) -> None:
+    def _complete_task(self, task: typing.Any, success_prob: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
         """
         self.completed_tasks += 1
 
-    def on_step(self, obs, rew, done, info) -> None:
+    def _on_step(self, obs, rew, done, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
+    def _on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
         for step_result in step_results:
             self.on_step(*step_result)
+
+    def _on_episode(self, episode_return: float, trajectory: List = None) -> None:
+        """
+        Update the curriculum with episode results from the environment.
+        """
+        raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+
+    def _on_demand(metrics: Dict):
+        """
+        Update the curriculum with arbitrary inputs.
+        """
+        raise NotImplementedError
+
+    def update_curriculum(self, update_data: Dict):
+        """
+        Update the curriculum with the specified update type.
+        """
+        update_type = update_data["update_type"]
+        args = update_data["metrics"]
+
+        if update_type == "step":
+            self._on_step(*args)
+        elif update_type == "step_batch":
+            self._on_step_batch(*args)
+        elif update_type == "episode":
+            self._on_episode(*args)
+        elif update_type == "demand":
+            self._on_demand(*args)
+        elif update_type == "complete":
+            self._complete_task(*args)
+        elif update_type == "noop":
+            # Used to request tasks from the synchronization layer
+            pass
+        else:
+            raise NotImplementedError(f"Update type {update_type} not implemented.")
+
+    def batch_update_curriculum(self, update_data: List[Dict]):
+        """
+        Update the curriculum with the specified update type.
+        """
+        for update in update_data:
+            self.update_curriculum(update)
 
     def _sample_distribution(self) -> List[float]:
         """
