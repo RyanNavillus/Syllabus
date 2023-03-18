@@ -17,6 +17,7 @@ class Curriculum:
         self.completed_tasks = 0
         self.use_wandb = use_wandb
         self.task_names = task_names
+        self.n_updates = 0
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
@@ -111,7 +112,7 @@ class Curriculum:
         """
         raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def _on_demand(metrics: Dict):
+    def _on_demand(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """
@@ -139,6 +140,7 @@ class Curriculum:
             pass
         else:
             raise NotImplementedError(f"Update type {update_type} not implemented.")
+        self.n_updates += 1
 
     def batch_update_curriculum(self, update_data: List[Dict]):
         """
