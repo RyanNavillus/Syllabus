@@ -101,9 +101,9 @@ if __name__ == "__main__":
 
     # Test Queue multi process
     curriculum, task_queue, complete_queue, step_queue = make_multiprocessing_curriculum(PrioritizedLevelReplay,
-                                                                                list(range(7)),
-                                                                                sample_env.task_space,
-                                                                                random_start_tasks=10)
+                                                                                         list(range(7)),
+                                                                                         sample_env.task_space,
+                                                                                         random_start_tasks=10)
     print("\nRunning Python multi process test...")
     start = time.time()
     actors = []
