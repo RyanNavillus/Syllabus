@@ -39,7 +39,7 @@ class RolloutStorage(object):
             assert value_preds is not None and rewards is not None, f"Selected strategy {self._requires_value_buffers} requires value_preds and rewards"
             if len(rewards.shape) == 3:
                 rewards = rewards.squeeze(2)
-            self.value_preds[self.step].copy_(value_preds)
+            self.value_preds[self.step].copy_(torch.as_tensor(value_preds))
             self.rewards[self.step].copy_(torch.as_tensor(rewards)[:, None])
             self.masks[self.step + 1].copy_(torch.as_tensor(masks)[:, None])
 
@@ -69,12 +69,16 @@ class PrioritizedLevelReplay(Curriculum):
                  level_sampler_kwargs,
                  action_space,
                  *curriculum_args,
+                 device="cuda",
                  num_steps=256,
                  num_processes=64,
                  gamma=0.999,
                  gae_lambda=0.95,
                  **curriculum_kwargs):
         self._strategy = level_sampler_kwargs.get("strategy", "random")
+        if "num_actors" in level_sampler_kwargs:
+            print(f"Overwriting 'num_actors' {level_sampler_kwargs['num_actors']} in level sampler kwargs with PLR num_processes {num_processes}.")
+        level_sampler_kwargs["num_actors"] = num_processes
         super().__init__(*curriculum_args, **curriculum_kwargs)
         self._num_steps = num_steps    # Number of steps stored in rollouts and used to update level sampler
         self._num_processes = num_processes      # Number of parallel environments
@@ -82,6 +86,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self._level_sampler = LevelSampler(*level_sampler_args, **level_sampler_kwargs)
         self._rollouts = RolloutStorage(self._num_steps, self._num_processes, action_space, self._level_sampler.requires_value_buffers)
+        self._rollouts.to(device)
 
     def _on_demand(self, metrics: Dict):
         """
@@ -101,7 +106,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._rollouts.insert(action_log_dist, masks, value_preds=value, rewards=rew, level_seeds=level_seeds)
 
         # Update level sampler
-        if self._rollouts.step == self._num_steps:
+        if self._rollouts.step == self._num_steps - 1:
             if self._level_sampler.requires_value_buffers:
                 if "next_value" not in metrics:
                     raise KeyError("'next_value' must be provided in the update every {self.num_steps} steps for the strategy {self._strategy}.")
@@ -118,4 +123,5 @@ class PrioritizedLevelReplay(Curriculum):
         return self._level_sampler.sample_weights()
 
     def sample(self, k: int = 1) -> Union[List, Any]:
-        return [self._level_sampler.sample() for k in range(k)]
+        sample = [self._level_sampler.sample() for k in range(k+1)]
+        return sample

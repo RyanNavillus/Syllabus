@@ -91,9 +91,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 self.batch_update_curriculum(batch_updates)
 
             # Sample new tasks
-            new_tasks = self.curriculum.sample(k=requested_tasks)
-            for task in new_tasks:
-                self.task_queue.put(task)
+            if requested_tasks > 0:
+                new_tasks = self.curriculum.sample(k=requested_tasks)
+                for task in new_tasks:
+                    self.task_queue.put(task)
             time.sleep(0.00001)
 
     def __del__(self):

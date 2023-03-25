@@ -255,7 +255,7 @@ class LevelSampler():
         proportion_seen = (len(self.seeds) - num_unseen)/len(self.seeds)
 
         if self.replay_schedule == 'fixed':
-            if proportion_seen >= self.rho: 
+            if proportion_seen >= self.rho:
                 # Sample replay level with fixed prob = 1 - nu OR if all levels seen
                 if np.random.rand() > self.nu or not proportion_seen < 1.0:
                     return self._sample_replay_level()
@@ -286,7 +286,6 @@ class LevelSampler():
                 staleness_weights /= z
 
             weights = (1 - self.staleness_coef)*weights + self.staleness_coef*staleness_weights
-
         return weights
 
     def _score_transform(self, transform, temperature, scores):

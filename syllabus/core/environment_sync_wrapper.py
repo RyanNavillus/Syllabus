@@ -61,7 +61,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             next_task = self.default_task if self.default_task else self.env.task
         else:
             next_task = self.task_queue.get()
-
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
