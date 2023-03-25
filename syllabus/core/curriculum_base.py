@@ -131,8 +131,9 @@ class Curriculum:
             self._on_step_batch(*args)
         elif update_type == "episode":
             self._on_episode(*args)
-        elif update_type == "demand":
-            self._on_demand(*args)
+        elif update_type == "on_demand":
+            # Directly pass metrics without expanding
+            self._on_demand(args)
         elif update_type == "complete":
             self._complete_task(*args)
         elif update_type == "noop":

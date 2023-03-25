@@ -1,1 +1,2 @@
 from .nethack_task_wrapper import NethackTaskWrapper
+from .minihack_task_wrapper import MinihackTaskWrapper

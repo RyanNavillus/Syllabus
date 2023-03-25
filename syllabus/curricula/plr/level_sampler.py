@@ -8,14 +8,24 @@ from collections import namedtuple
 import numpy as np
 import torch
 
+
 class LevelSampler():
-    def __init__(
-        self, seeds, obs_space, action_space, num_actors=1, 
-        strategy='random', replay_schedule='fixed', score_transform='power',
-        temperature=1.0, eps=0.05,
-        rho=0.2, nu=0.5, alpha=1.0, 
-        staleness_coef=0, staleness_transform='power', staleness_temperature=1.0):
-        self.obs_space = obs_space
+    def __init__(self,
+                 seeds,
+                 action_space,
+                 num_actors=1,
+                 strategy='random',
+                 replay_schedule='fixed',
+                 score_transform='power',
+                 temperature=1.0,
+                 eps=0.05,
+                 rho=0.2,
+                 nu=0.5,
+                 alpha=1.0,
+                 staleness_coef=0,
+                 staleness_transform='power',
+                 staleness_temperature=1.0
+    ):
         self.action_space = action_space
         self.strategy = strategy
         self.replay_schedule = replay_schedule
@@ -136,7 +146,7 @@ class LevelSampler():
 
     @property
     def requires_value_buffers(self):
-        return self.strategy in ['gae', 'value_l1', 'one_step_td_error']    
+        return self.strategy in ['gae', 'value_l1', 'one_step_td_error']
 
     def _update_with_rollouts(self, rollouts, score_function):
         level_seeds = rollouts.level_seeds
