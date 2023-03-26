@@ -1,26 +1,18 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and following paper: https://arxiv.org/abs/2010.03934
 
-from collections import namedtuple
 import numpy as np
 import torch
 import gym
 
-
-def enumerate_tasks(space):
-    assert isinstance(space, gym.spaces.Discrete) or isinstance(space, gym.spaces.MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
-    if isinstance(space, gym.spaces.Discrete):
-        print("Discrete tasks:", list(range(space.n)))
-        return list(range(space.n))
-    else:
-        print("MultiDiscrete tasks", list(range(space.nvec.prod())))
-        return list(range(space.nvec.prod()))
+from collections import namedtuple
 
 
 class TaskSampler():
     def __init__(self,
                  task_space,
                  action_space,
+                 tasks,
                  num_actors=1,
                  strategy='random',
                  replay_schedule='fixed',
@@ -34,7 +26,11 @@ class TaskSampler():
                  staleness_transform='power',
                  staleness_temperature=1.0
     ):
+        self.task_space = task_space
         self.action_space = action_space
+        self.tasks = tasks
+        self.num_tasks = len(self.tasks)
+
         self.strategy = strategy
         self.replay_schedule = replay_schedule
         self.score_transform = score_transform
@@ -47,9 +43,6 @@ class TaskSampler():
         self.staleness_transform = staleness_transform
         self.staleness_temperature = staleness_temperature
 
-        # Track tasks and scores as in np arrays backed by shared memory
-        self._init_task_index(task_space)
-
         self.unseen_task_weights = np.array([1.] * self.num_tasks)
         self.task_scores = np.array([0.] * self.num_tasks, dtype=np.float)
         self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=np.float)
@@ -57,12 +50,6 @@ class TaskSampler():
         self.task_staleness = np.array([0.] * self.num_tasks, dtype=np.float)
 
         self.next_task_index = 0    # Only used for sequential strategy
-
-    def _init_task_index(self, task_space):
-        self.task_space = task_space
-        self.tasks = enumerate_tasks(task_space)
-        self.num_tasks = len(self.tasks)
-        self.task2index = {task: i for i, task in enumerate(self.tasks)}
 
     def update_with_rollouts(self, rollouts):
         if self.strategy == 'random':
@@ -171,8 +158,7 @@ class TaskSampler():
                 if t == 0:  # if t is 0, then this done step caused a full update of previous  last cycle
                     continue
 
-                task_t = tasks[start_t, actor_index].item()
-                task_idx_t = self.task2index[task_t]
+                task_idx_t = tasks[start_t, actor_index].item()
 
                 score_function_kwargs = {}
                 episode_logits = policy_logits[start_t:t, actor_index]
@@ -188,8 +174,11 @@ class TaskSampler():
 
                 start_t = t.item()
             if start_t < total_steps:
-                task_t = tasks[start_t, actor_index].item()
-                task_idx_t = self.task2index[task_t]
+                # If there is only 1 step, we can't calculate the one-step td error
+                if self.strategy == 'one_step_td_error' and start_t == total_steps - 1:
+                    continue
+
+                task_idx_t = tasks[start_t, actor_index].item()
 
                 score_function_kwargs = {}
                 episode_logits = policy_logits[start_t:, actor_index]
@@ -228,7 +217,7 @@ class TaskSampler():
 
         self._update_staleness(task_idx)
 
-        return int(task)
+        return task
 
     def _sample_unseen_level(self):
         sample_weights = self.unseen_task_weights/self.unseen_task_weights.sum()
@@ -237,7 +226,7 @@ class TaskSampler():
 
         self._update_staleness(task_idx)
 
-        return int(task)
+        return task
 
     def sample(self, strategy=None):
         if not strategy:
@@ -246,13 +235,13 @@ class TaskSampler():
         if strategy == 'random':
             task_idx = np.random.choice(range((self.num_tasks)))
             task = self.tasks[task_idx]
-            return int(task)
+            return task
 
         if strategy == 'sequential':
             task_idx = self.next_task_index
             self.next_task_index = (self.next_task_index + 1) % self.num_tasks
             task = self.tasks[task_idx]
-            return int(task)
+            return task
 
         num_unseen = (self.unseen_task_weights > 0).sum()
         proportion_seen = (self.num_tasks - num_unseen)/self.num_tasks

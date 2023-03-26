@@ -5,6 +5,7 @@ import wandb
 from typing import Any, List, Union, Callable
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 from itertools import product
+from syllabus.core import enumerate_axes
 
 
 class Curriculum:
@@ -24,14 +25,6 @@ class Curriculum:
             return list_or_size
         elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
             return np.prod([Curriculum._sum_axes(x) for x in list_or_size])
-        else:
-            raise NotImplementedError(f"{type(list_or_size)}")
-
-    def _enumerate_axes(list_or_size: Union[np.ndarray, int]):
-        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
-            return tuple(range(list_or_size))
-        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
-            return tuple(product(*[Curriculum._enumerate_axes(x) for x in list_or_size]))
         else:
             raise NotImplementedError(f"{type(list_or_size)}")
 
@@ -80,9 +73,9 @@ class Curriculum:
         elif isinstance(task_space, Dict):
             raise NotImplementedError
         elif isinstance(task_space, MultiBinary):
-            return list(Curriculum._enumerate_axes(task_space.nvec))
+            return list(enumerate_axes(task_space.nvec))
         elif isinstance(task_space, MultiDiscrete):
-            return list(Curriculum._enumerate_axes(task_space.nvec))
+            return list(enumerate_axes(task_space.nvec))
         else:
             raise NotImplementedError
 

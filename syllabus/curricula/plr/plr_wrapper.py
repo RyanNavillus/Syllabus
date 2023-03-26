@@ -3,16 +3,12 @@ import torch
 import numpy as np
 
 from syllabus.curricula import TaskSampler
-from syllabus.core import Curriculum, UsageError
+from syllabus.core import Curriculum, UsageError, enumerate_axes
 from typing import Any, Callable, Dict, List, Union, Tuple
 
 
-def _flatten_helper(T, N, _tensor):
-    return _tensor.view(T * N, *_tensor.size()[2:])
-
-
 class RolloutStorage(object):
-    def __init__(self, num_steps, num_processes, action_space, requires_value_buffers):
+    def __init__(self, num_steps: int, num_processes: int, action_space: gym.Space, requires_value_buffers: bool):
         self._requires_value_buffers = requires_value_buffers
         self.action_log_dist = torch.zeros(num_steps, num_processes, action_space.n)
         self.tasks = torch.zeros(num_steps, num_processes, 1, dtype=torch.int)
@@ -46,6 +42,7 @@ class RolloutStorage(object):
 
         self.action_log_dist[self.step].copy_(action_log_dist)
         if tasks is not None:
+            assert isinstance(tasks[0], int), "Provided task must be an integer"
             self.tasks[self.step].copy_(torch.as_tensor(tasks)[:, None])
         self.step = (self.step + 1) % self.num_steps
 
@@ -66,29 +63,31 @@ class RolloutStorage(object):
 
 class PrioritizedLevelReplay(Curriculum):
     def __init__(self,
-                 task_space,
-                 task_sampler_kwargs,
-                 action_space,
+                 task_space: gym.Space,
+                 task_sampler_kwargs_dict: dict,
+                 action_space: gym.Space,
                  *curriculum_args,
-                 device="cuda",
-                 num_steps=256,
-                 num_processes=64,
-                 gamma=0.999,
-                 gae_lambda=0.95,
+                 device: str = "cuda",
+                 num_steps: int = 256,
+                 num_processes: int = 64,
+                 gamma: float = 0.999,
+                 gae_lambda: float = 0.95,
                  **curriculum_kwargs):
-        self._strategy = task_sampler_kwargs.get("strategy", "random")
+        self._strategy = task_sampler_kwargs_dict.get("strategy", "random")
         if not isinstance(task_space, gym.spaces.Discrete) and not isinstance(task_space, gym.spaces.MultiDiscrete):
             raise ValueError(f"Task space must be discrete or multi-discrete, got {task_space}.")
 
-        if "num_actors" in task_sampler_kwargs:
-            print(f"Overwriting 'num_actors' {task_sampler_kwargs['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
-        task_sampler_kwargs["num_actors"] = num_processes
+        if "num_actors" in task_sampler_kwargs_dict:
+            print(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+        task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
-        self._num_steps = num_steps    # Number of steps stored in rollouts and used to update task sampler
-        self._num_processes = num_processes      # Number of parallel environments
+        self._num_steps = num_steps             # Number of steps stored in rollouts and used to update task sampler
+        self._num_processes = num_processes     # Number of parallel environments
         self._gamma = gamma
         self._gae_lambda = gae_lambda
-        self._task_sampler = TaskSampler(task_space, action_space, **task_sampler_kwargs)
+        self.tasks = self._enumerate_tasks(task_space)
+        self._task2index = {task: i for i, task in enumerate(self.tasks)}
+        self._task_sampler = TaskSampler(task_space, action_space, self.tasks, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(self._num_steps, self._num_processes, action_space, self._task_sampler.requires_value_buffers)
         self._rollouts.to(device)
         self.num_updates = 0    # Used to ensure proper usage
@@ -102,6 +101,8 @@ class PrioritizedLevelReplay(Curriculum):
         action_log_dist = metrics["action_log_dist"]
         masks = metrics["masks"]
         tasks = metrics["tasks"]
+        tasks = [self._task2index[t] for t in tasks]
+
         value = next_value = rew = None
         if self._task_sampler.requires_value_buffers:
             if "value" not in metrics or "rew" not in metrics:
@@ -158,3 +159,10 @@ class PrioritizedLevelReplay(Curriculum):
         """
         if self.num_updates == 0 and self.num_samples > self._num_processes * 2:
             raise UsageError("PLR has not been updated yet. Please call update_curriculum() in your learner process.")
+
+    def _enumerate_tasks(self, space):
+        assert isinstance(space, gym.spaces.Discrete) or isinstance(space, gym.spaces.MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
+        if isinstance(space, gym.spaces.Discrete):
+            return list(range(space.n))
+        else:
+            return list(enumerate_axes(space.nvec))

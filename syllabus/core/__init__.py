@@ -2,7 +2,7 @@
 from .environment_task_wrapper import TaskWrapper
 
 # Curriculum Code
-from .utils import decorate_all_functions, UsageError
+from .utils import decorate_all_functions, UsageError, enumerate_axes
 from .curriculum_base import Curriculum
 from .curriculum_sync_wrapper import (CurriculumWrapper,
                                       MultiProcessingCurriculumWrapper,
