@@ -1,17 +1,25 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
+# Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
+# If you use this code, please cite the above codebase and following paper: https://arxiv.org/abs/2010.03934
 
 from collections import namedtuple
 import numpy as np
 import torch
+import gym
 
 
-class LevelSampler():
+def enumerate_tasks(space):
+    assert isinstance(space, gym.spaces.Discrete) or isinstance(space, gym.spaces.MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
+    if isinstance(space, gym.spaces.Discrete):
+        print("Discrete tasks:", list(range(space.n)))
+        return list(range(space.n))
+    else:
+        print("MultiDiscrete tasks", list(range(space.nvec.prod())))
+        return list(range(space.nvec.prod()))
+
+
+class TaskSampler():
     def __init__(self,
-                 seeds,
+                 task_space,
                  action_space,
                  num_actors=1,
                  strategy='random',
@@ -39,23 +47,22 @@ class LevelSampler():
         self.staleness_transform = staleness_transform
         self.staleness_temperature = staleness_temperature
 
-        # Track seeds and scores as in np arrays backed by shared memory
-        self._init_seed_index(seeds)
+        # Track tasks and scores as in np arrays backed by shared memory
+        self._init_task_index(task_space)
 
-        self.unseen_seed_weights = np.array([1.]*len(seeds))
-        self.seed_scores = np.array([0.]*len(seeds), dtype=np.float)
-        self.partial_seed_scores = np.zeros((num_actors, len(seeds)), dtype=np.float)
-        self.partial_seed_steps = np.zeros((num_actors, len(seeds)), dtype=np.int64)
-        self.seed_staleness = np.array([0.]*len(seeds), dtype=np.float)
+        self.unseen_task_weights = np.array([1.] * self.num_tasks)
+        self.task_scores = np.array([0.] * self.num_tasks, dtype=np.float)
+        self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=np.float)
+        self.partial_task_steps = np.zeros((num_actors, self.num_tasks), dtype=np.int64)
+        self.task_staleness = np.array([0.] * self.num_tasks, dtype=np.float)
 
-        self.next_seed_index = 0 # Only used for sequential strategy
+        self.next_task_index = 0    # Only used for sequential strategy
 
-    def seed_range(self):
-        return (int(min(self.seeds)), int(max(self.seeds)))
-
-    def _init_seed_index(self, seeds):
-        self.seeds = np.array(seeds, dtype=np.int64)
-        self.seed2index = {seed: i for i, seed in enumerate(seeds)}
+    def _init_task_index(self, task_space):
+        self.task_space = task_space
+        self.tasks = enumerate_tasks(task_space)
+        self.num_tasks = len(self.tasks)
+        self.task2index = {task: i for i, task in enumerate(self.tasks)}
 
     def update_with_rollouts(self, rollouts):
         if self.strategy == 'random':
@@ -79,27 +86,27 @@ class LevelSampler():
 
         self._update_with_rollouts(rollouts, score_function)
 
-    def update_seed_score(self, actor_index, seed_idx, score, num_steps):
-        score = self._partial_update_seed_score(actor_index, seed_idx, score, num_steps, done=True)
+    def update_task_score(self, actor_index, task_idx, score, num_steps):
+        score = self._partial_update_task_score(actor_index, task_idx, score, num_steps, done=True)
 
-        self.unseen_seed_weights[seed_idx] = 0. # No longer unseen
+        self.unseen_task_weights[task_idx] = 0.     # No longer unseen
 
-        old_score = self.seed_scores[seed_idx]
-        self.seed_scores[seed_idx] = (1 - self.alpha)*old_score + self.alpha*score
+        old_score = self.task_scores[task_idx]
+        self.task_scores[task_idx] = (1 - self.alpha)*old_score + self.alpha*score
 
-    def _partial_update_seed_score(self, actor_index, seed_idx, score, num_steps, done=False):
-        partial_score = self.partial_seed_scores[actor_index][seed_idx]
-        partial_num_steps = self.partial_seed_steps[actor_index][seed_idx]
+    def _partial_update_task_score(self, actor_index, task_idx, score, num_steps, done=False):
+        partial_score = self.partial_task_scores[actor_index][task_idx]
+        partial_num_steps = self.partial_task_steps[actor_index][task_idx]
 
         running_num_steps = partial_num_steps + num_steps
         merged_score = partial_score + (score - partial_score)*num_steps/float(running_num_steps)
 
         if done:
-            self.partial_seed_scores[actor_index][seed_idx] = 0. # zero partial score, partial num_steps
-            self.partial_seed_steps[actor_index][seed_idx] = 0
+            self.partial_task_scores[actor_index][task_idx] = 0.    # zero partial score, partial num_steps
+            self.partial_task_steps[actor_index][task_idx] = 0
         else:
-            self.partial_seed_scores[actor_index][seed_idx] = merged_score
-            self.partial_seed_steps[actor_index][seed_idx] = running_num_steps
+            self.partial_task_scores[actor_index][task_idx] = merged_score
+            self.partial_task_steps[actor_index][task_idx] = running_num_steps
 
         return merged_score
 
@@ -117,7 +124,7 @@ class LevelSampler():
     def _average_min_margin(self, **kwargs):
         episode_logits = kwargs['episode_logits']
         top2_confidence = torch.exp(episode_logits.topk(2, dim=-1)[0])
-        return 1 - (top2_confidence[:,0] - top2_confidence[:,1]).mean().item()
+        return 1 - (top2_confidence[:, 0] - top2_confidence[:,1]).mean().item()
 
     def _average_gae(self, **kwargs):
         returns = kwargs['returns']
@@ -141,7 +148,7 @@ class LevelSampler():
 
         max_t = len(rewards)
         td_errors = (rewards[:-1] + value_preds[:max_t-1] - value_preds[1:max_t]).abs()
-
+        assert not torch.isnan(td_errors.abs().mean()), f"Got invalid values for 'rewards' or 'value_preds'. Check that reward length: {len(rewards)}"
         return td_errors.abs().mean().item()
 
     @property
@@ -149,110 +156,106 @@ class LevelSampler():
         return self.strategy in ['gae', 'value_l1', 'one_step_td_error']
 
     def _update_with_rollouts(self, rollouts, score_function):
-        level_seeds = rollouts.level_seeds
+        tasks = rollouts.tasks
         policy_logits = rollouts.action_log_dist
         done = ~(rollouts.masks > 0)
         total_steps, num_actors = policy_logits.shape[:2]
-        num_decisions = len(policy_logits)
 
         for actor_index in range(num_actors):
-            done_steps = done[:,actor_index].nonzero()[:total_steps,0]
+            done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
             start_t = 0
 
             for t in done_steps:
                 if not start_t < total_steps: break
 
-                if t == 0: # if t is 0, then this done step caused a full update of previous seed last cycle
-                    continue 
+                if t == 0:  # if t is 0, then this done step caused a full update of previous  last cycle
+                    continue
 
-                seed_t = level_seeds[start_t,actor_index].item()
-                seed_idx_t = self.seed2index[seed_t]
+                task_t = tasks[start_t, actor_index].item()
+                task_idx_t = self.task2index[task_t]
 
                 score_function_kwargs = {}
-                episode_logits = policy_logits[start_t:t,actor_index]
+                episode_logits = policy_logits[start_t:t, actor_index]
                 score_function_kwargs['episode_logits'] = torch.log_softmax(episode_logits, -1)
 
                 if self.requires_value_buffers:
-                    score_function_kwargs['returns'] = rollouts.returns[start_t:t,actor_index]
-                    score_function_kwargs['rewards'] = rollouts.rewards[start_t:t,actor_index]
-                    score_function_kwargs['value_preds'] = rollouts.value_preds[start_t:t,actor_index]
-
+                    score_function_kwargs['returns'] = rollouts.returns[start_t:t, actor_index]
+                    score_function_kwargs['rewards'] = rollouts.rewards[start_t:t, actor_index]
+                    score_function_kwargs['value_preds'] = rollouts.value_preds[start_t:t, actor_index]
                 score = score_function(**score_function_kwargs)
                 num_steps = len(episode_logits)
-                self.update_seed_score(actor_index, seed_idx_t, score, num_steps)
+                self.update_task_score(actor_index, task_idx_t, score, num_steps)
 
                 start_t = t.item()
-
             if start_t < total_steps:
-                seed_t = level_seeds[start_t,actor_index].item()
-                seed_idx_t = self.seed2index[seed_t]
+                task_t = tasks[start_t, actor_index].item()
+                task_idx_t = self.task2index[task_t]
 
                 score_function_kwargs = {}
-                episode_logits = policy_logits[start_t:,actor_index]
+                episode_logits = policy_logits[start_t:, actor_index]
                 score_function_kwargs['episode_logits'] = torch.log_softmax(episode_logits, -1)
 
                 if self.requires_value_buffers:
-                    score_function_kwargs['returns'] = rollouts.returns[start_t:,actor_index]
-                    score_function_kwargs['rewards'] = rollouts.rewards[start_t:,actor_index]
-                    score_function_kwargs['value_preds'] = rollouts.value_preds[start_t:,actor_index]
+                    score_function_kwargs['returns'] = rollouts.returns[start_t:, actor_index]
+                    score_function_kwargs['rewards'] = rollouts.rewards[start_t:, actor_index]
+                    score_function_kwargs['value_preds'] = rollouts.value_preds[start_t:, actor_index]
 
                 score = score_function(**score_function_kwargs)
                 num_steps = len(episode_logits)
-                self._partial_update_seed_score(actor_index, seed_idx_t, score, num_steps)
+                self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
     def after_update(self):
         # Reset partial updates, since weights have changed, and thus logits are now stale
-        for actor_index in range(self.partial_seed_scores.shape[0]):
-            for seed_idx in range(self.partial_seed_scores.shape[1]):
-                if self.partial_seed_scores[actor_index][seed_idx] != 0:
-                    self.update_seed_score(actor_index, seed_idx, 0, 0)
-        self.partial_seed_scores.fill(0)
-        self.partial_seed_steps.fill(0)
+        for actor_index in range(self.partial_task_scores.shape[0]):
+            for task_idx in range(self.partial_task_scores.shape[1]):
+                if self.partial_task_scores[actor_index][task_idx] != 0:
+                    self.update_task_score(actor_index, task_idx, 0, 0)
+        self.partial_task_scores.fill(0)
+        self.partial_task_steps.fill(0)
 
     def _update_staleness(self, selected_idx):
         if self.staleness_coef > 0:
-            self.seed_staleness = self.seed_staleness + 1
-            self.seed_staleness[selected_idx] = 0
+            self.task_staleness = self.task_staleness + 1
+            self.task_staleness[selected_idx] = 0
 
     def _sample_replay_level(self):
         sample_weights = self.sample_weights()
-
         if np.isclose(np.sum(sample_weights), 0):
             sample_weights = np.ones_like(sample_weights, dtype=np.float)/len(sample_weights)
 
-        seed_idx = np.random.choice(range(len(self.seeds)), 1, p=sample_weights)[0]
-        seed = self.seeds[seed_idx]
+        task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
+        task = self.tasks[task_idx]
 
-        self._update_staleness(seed_idx)
+        self._update_staleness(task_idx)
 
-        return int(seed)
+        return int(task)
 
     def _sample_unseen_level(self):
-        sample_weights = self.unseen_seed_weights/self.unseen_seed_weights.sum()
-        seed_idx = np.random.choice(range(len(self.seeds)), 1, p=sample_weights)[0]
-        seed = self.seeds[seed_idx]
+        sample_weights = self.unseen_task_weights/self.unseen_task_weights.sum()
+        task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
+        task = self.tasks[task_idx]
 
-        self._update_staleness(seed_idx)
+        self._update_staleness(task_idx)
 
-        return int(seed)
+        return int(task)
 
     def sample(self, strategy=None):
         if not strategy:
             strategy = self.strategy
 
         if strategy == 'random':
-            seed_idx = np.random.choice(range((len(self.seeds))))
-            seed = self.seeds[seed_idx]
-            return int(seed)
+            task_idx = np.random.choice(range((self.num_tasks)))
+            task = self.tasks[task_idx]
+            return int(task)
 
         if strategy == 'sequential':
-            seed_idx = self.next_seed_index
-            self.next_seed_index = (self.next_seed_index + 1) % len(self.seeds)
-            seed = self.seeds[seed_idx]
-            return int(seed)
+            task_idx = self.next_task_index
+            self.next_task_index = (self.next_task_index + 1) % self.num_tasks
+            task = self.tasks[task_idx]
+            return int(task)
 
-        num_unseen = (self.unseen_seed_weights > 0).sum()
-        proportion_seen = (len(self.seeds) - num_unseen)/len(self.seeds)
+        num_unseen = (self.unseen_task_weights > 0).sum()
+        proportion_seen = (self.num_tasks - num_unseen)/self.num_tasks
 
         if self.replay_schedule == 'fixed':
             if proportion_seen >= self.rho:
@@ -270,21 +273,19 @@ class LevelSampler():
                 return self._sample_unseen_level()
 
     def sample_weights(self):
-        weights = self._score_transform(self.score_transform, self.temperature, self.seed_scores)
-        weights = weights * (1-self.unseen_seed_weights) # zero out unseen levels
-
+        weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)
+        weights = weights * (1-self.unseen_task_weights) # zero out unseen levels
         z = np.sum(weights)
         if z > 0:
             weights /= z
 
         staleness_weights = 0
         if self.staleness_coef > 0:
-            staleness_weights = self._score_transform(self.staleness_transform, self.staleness_temperature, self.seed_staleness)
-            staleness_weights = staleness_weights * (1-self.unseen_seed_weights)
+            staleness_weights = self._score_transform(self.staleness_transform, self.staleness_temperature, self.task_staleness)
+            staleness_weights = staleness_weights * (1-self.unseen_task_weights)
             z = np.sum(staleness_weights)
-            if z > 0: 
+            if z > 0:
                 staleness_weights /= z
-
             weights = (1 - self.staleness_coef)*weights + self.staleness_coef*staleness_weights
         return weights
 
@@ -294,13 +295,13 @@ class LevelSampler():
         if transform == 'max':
             weights = np.zeros_like(scores)
             scores = scores[:]
-            scores[self.unseen_seed_weights > 0] = -float('inf') # only argmax over seen levels
+            scores[self.unseen_task_weights > 0] = -float('inf') # only argmax over seen levels
             argmax = np.random.choice(np.flatnonzero(np.isclose(scores, scores.max())))
             weights[argmax] = 1.
         elif transform == 'eps_greedy':
             weights = np.zeros_like(scores)
             weights[scores.argmax()] = 1. - self.eps
-            weights += self.eps/len(self.seeds)
+            weights += self.eps/self.num_tasks
         elif transform == 'rank':
             temp = np.flip(scores.argsort())
             ranks = np.empty_like(temp)
