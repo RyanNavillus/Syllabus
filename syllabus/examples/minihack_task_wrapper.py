@@ -24,6 +24,7 @@ class MinihackTaskWrapper(TaskWrapper):
 
         # Task completion metrics
         self.episode_return = 0
+        self.task_space = spaces.Discrete(1000)
 
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided
