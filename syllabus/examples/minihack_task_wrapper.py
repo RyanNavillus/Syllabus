@@ -32,6 +32,6 @@ class MinihackTaskWrapper(TaskWrapper):
 
         self.done = False
         self.episode_return = 0
-        self.current_seed = new_task
+        self.current_task = new_task
         self.env.seed(new_task)
         return self.observation(self.env.reset(**kwargs))

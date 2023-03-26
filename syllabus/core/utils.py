@@ -10,3 +10,8 @@ def decorate_all_functions(function_decorator):
                     setattr(cls, name, function_decorator(obj))
             return cls
     return decorator
+
+
+class UsageError(Exception):
+    ...
+    pass
