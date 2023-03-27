@@ -10,4 +10,4 @@ from .curriculum_sync_wrapper import (CurriculumWrapper,
                                       make_multiprocessing_curriculum,
                                       make_ray_curriculum)
 
-from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper
+from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper, PettingZooMultiProcessingSyncWrapper

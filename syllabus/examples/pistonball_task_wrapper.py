@@ -27,6 +27,10 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
         self.episode_return = 0
         self.task_space = spaces.Discrete(11)   # 0.1 - 1.0 friction
 
+    @property
+    def task(self):
+        return self.env.unwrapped.task
+
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided
         # if new_task is not None:
@@ -35,14 +39,10 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
         self.done = False
         self.episode_return = 0
         if new_task is not None:
-            new_task /= 10
+            task = new_task / 10
             # Inject current_task into the environment
-            # frame_size = (64, 64)
-            # env = pistonball_v6.parallel_env(
-            #     ball_friction=new_task, continuous=False, max_cycles=125
-            # )
-            # env = color_reduction_v0(env)
-            # env = resize_v1(env, frame_size[0], frame_size[1])
-            # env = frame_stack_v1(env, stack_size=4)
-            # self.env = env
+            self.env = pistonball_v6.parallel_env(
+                ball_friction=task, continuous=False, max_cycles=125
+            )
+            self.env.unwrapped.task = new_task
         return self.observation(self.env.reset(**kwargs))
