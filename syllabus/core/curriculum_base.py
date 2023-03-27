@@ -97,7 +97,7 @@ class Curriculum:
         Update the curriculum with a batch of step results from the environment.
         """
         for step_result in step_results:
-            self.on_step(*step_result)
+            self._on_step(*step_result)
 
     def _on_episode(self, episode_return: float, trajectory: List = None) -> None:
         """
