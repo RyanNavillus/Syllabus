@@ -16,7 +16,7 @@ from torch.distributions.categorical import Categorical
 from pettingzoo.butterfly import pistonball_v6
 from supersuit import color_reduction_v0, frame_stack_v1, resize_v0
 
-from syllabus.core import make_multiprocessing_curriculum, MultiProcessingSyncWrapper, TaskWrapper
+from syllabus.core import make_multiprocessing_curriculum, PettingZooMultiProcessingSyncWrapper, TaskWrapper
 from syllabus.curricula import PrioritizedLevelReplay
 from syllabus.examples import PistonballTaskWrapper
 
@@ -103,27 +103,24 @@ if __name__ == "__main__":
     stack_size = 4
     frame_size = (64, 64)
     max_cycles = 125
-    total_episodes = 2
+    total_episodes = 100
 
     # PLR settings
     num_steps = 128
 
-    """ ENV SETUP """
-    env = pistonball_v6.parallel_env(
+    """ CURRICULUM SETUP """
+    sample_env = pistonball_v6.parallel_env(
         continuous=False, max_cycles=max_cycles
     )
-    env = PistonballTaskWrapper(env)
-    task_space = env.task_space
-    env = color_reduction_v0(env)
-    env = resize_v0(env, frame_size[0], frame_size[1])
-    env = frame_stack_v1(env, stack_size=stack_size)
-    num_agents = len(env.possible_agents)
-    action_space = env.action_spaces[env.possible_agents[0]]
+    sample_env = PistonballTaskWrapper(sample_env)
+
+    num_agents = len(sample_env.possible_agents)
+    action_space = sample_env.action_spaces[sample_env.possible_agents[0]]
     num_actions = action_space.n
-    observation_size = env.observation_space(env.possible_agents[0]).shape
+    observation_size = sample_env.observation_space(sample_env.possible_agents[0]).shape
 
     curriculum, task_queue, update_queue = make_multiprocessing_curriculum(PrioritizedLevelReplay,
-                                                                           task_space,
+                                                                           sample_env.task_space,
                                                                            {"strategy": "one_step_td_error",
                                                                             "rho": 0.01,
                                                                             "nu": 0},
@@ -133,6 +130,27 @@ if __name__ == "__main__":
                                                                            gamma=gamma,
                                                                            gae_lambda=0.95,
                                                                            random_start_tasks=0)
+    del sample_env
+
+    """ ENV SETUP """
+    env = pistonball_v6.parallel_env(
+        continuous=False, max_cycles=max_cycles
+    )
+    env = PistonballTaskWrapper(env)
+    env = PettingZooMultiProcessingSyncWrapper(env,
+                                               task_queue,
+                                               update_queue,
+                                               update_on_step=False,
+                                               default_task=0,
+                                               task_space=env.task_space)
+    task_space = env.task_space
+    env = color_reduction_v0(env)
+    env = resize_v0(env, frame_size[0], frame_size[1])
+    env = frame_stack_v1(env, stack_size=stack_size)
+    num_agents = len(env.possible_agents)
+    action_space = env.action_spaces[env.possible_agents[0]]
+    num_actions = action_space.n
+    observation_size = env.observation_space(env.possible_agents[0]).shape
 
     """ LEARNER SETUP """
     agent = Agent(num_actions=num_actions).to(device)

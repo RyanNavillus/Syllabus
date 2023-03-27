@@ -2,6 +2,7 @@ import gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
+
 class TaskWrapper(gym.Wrapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,10 +73,13 @@ class TaskWrapper(gym.Wrapper):
 class PettingZooTaskWrapper(BaseParallelWraper):
     def __init__(self, env: pettingzoo.ParallelEnv):
         super().__init__(env)
-        self.agents = env.unwrapped.agents
         self.task_completion = 0.0
         self.task_space = None
         self.env.unwrapped.task = None
+
+    @property
+    def agents(self):
+        return self.env.agents
 
     def reset(self, *args, **kwargs):
         if "new_task" in kwargs:
