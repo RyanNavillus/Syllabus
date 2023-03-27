@@ -98,10 +98,13 @@ class PrioritizedLevelReplay(Curriculum):
         Update the curriculum with arbitrary inputs.
         """
         self.num_updates += 1
-        action_log_dist = metrics["action_log_dist"]
-        masks = metrics["masks"]
-        tasks = metrics["tasks"]
-        tasks = [self._task2index[t] for t in tasks]
+        try:
+            action_log_dist = metrics["action_log_dist"]
+            masks = metrics["masks"]
+            tasks = metrics["tasks"]
+            tasks = [self._task2index[t] for t in tasks]
+        except KeyError as e:
+            raise KeyError("Missing or malformed PLR update. Must include 'action_log_dist', 'masks', and 'tasks'") from e
 
         value = next_value = rew = None
         if self._task_sampler.requires_value_buffers:
