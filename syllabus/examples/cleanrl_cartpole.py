@@ -17,6 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 # Syllabus imports
 from syllabus.core import TaskWrapper, MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
+from syllabus.examples import CartPoleTaskWrapper
 
 
 def parse_args():
@@ -134,31 +135,6 @@ class Agent(nn.Module):
         if action is None:
             action = probs.sample()
         return action, probs.log_prob(action), probs.entropy(), self.critic(x)
-
-
-class CartPoleTaskWrapper(TaskWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        self.task = (-0.02, 0.02)
-        self.total_reward = 0
-
-    def reset(self, *args, **kwargs):
-        self.env.reset()
-        self.total_reward = 0
-        if "new_task" in kwargs:
-            new_task = kwargs.pop("new_task")
-            self.change_task(new_task)
-        return np.array(self.env.state, dtype=np.float32)
-
-    def change_task(self, new_task):
-        low, high = new_task
-        self.env.state = self.env.np_random.uniform(low=low, high=high, size=(4,))
-        self.task = new_task
-
-    def _task_completion(self, obs, rew, done, info) -> float:
-        # Return percent of optimal reward
-        self.total_reward += rew
-        return self.total_reward / 500.0
 
 
 if __name__ == "__main__":
