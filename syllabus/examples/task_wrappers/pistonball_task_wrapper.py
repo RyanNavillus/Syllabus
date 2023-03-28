@@ -27,10 +27,6 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
         self.episode_return = 0
         self.task_space = spaces.Discrete(11)   # 0.1 - 1.0 friction
 
-    @property
-    def task(self):
-        return self.env.unwrapped.task
-
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided
         # if new_task is not None:

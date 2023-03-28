@@ -2,7 +2,7 @@ import gym
 import torch
 import numpy as np
 
-from syllabus.curricula import TaskSampler
+from syllabus.curricula.plr import TaskSampler
 from syllabus.core import Curriculum, UsageError, enumerate_axes
 from typing import Any, Callable, Dict, List, Union, Tuple
 
