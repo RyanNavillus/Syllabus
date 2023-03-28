@@ -27,7 +27,7 @@ class SimpleBoxCurriculum(Curriculum):
         self.consecutive_successes = 0
         self.max_reached = False
 
-    def complete_task(self, task: typing.Any, success_prob: float) -> None:
+    def _complete_task(self, task: typing.Any, success_prob: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
@@ -49,25 +49,9 @@ class SimpleBoxCurriculum(Curriculum):
             self.consecutive_successes = 0
             if new_low == self.task_space.low[0] and new_high == self.task_space.high[1]:
                 self.max_reached = True
-            print(self.max_range)
-
-    def _sample_distribution(self) -> List[float]:
-        """
-        Returns a sample distribution over the task space.
-        """
-        raise NotImplementedError
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Sample k tasks from the curriculum.
         """
         return [self.max_range for _ in range(k)]
-
-    def log_task_dist(self, task_dist: List[float], check_dist=True):
-        """
-        Log the task distribution to wandb.
-
-        Paramaters:
-            task_dist: List of task probabilities. Must be a valid probability distribution.
-        """
-        raise NotImplementedError

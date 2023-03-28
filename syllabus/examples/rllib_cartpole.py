@@ -4,33 +4,9 @@ import numpy as np
 from ray.tune.registry import register_env
 from ray import tune
 from gym.spaces import Box
-from syllabus.core import TaskWrapper, RaySyncWrapper, RayCurriculumWrapper
+from syllabus.core import TaskWrapper, RaySyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
-
-
-class CartPoleTaskWrapper(TaskWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        self.task = (-0.02, 0.02)
-        self.total_reward = 0
-
-    def reset(self, *args, **kwargs):
-        self.env.reset()
-        self.total_reward = 0
-        if "new_task" in kwargs:
-            new_task = kwargs.pop("new_task")
-            self.change_task(new_task)
-        return np.array(self.env.state, dtype=np.float32)
-
-    def change_task(self, new_task):
-        low, high = new_task
-        self.env.state = self.env.np_random.uniform(low=low, high=high, size=(4,))
-        self.task = new_task
-
-    def _task_completion(self, obs, rew, done, info) -> float:
-        # Return percent of optimal reward
-        self.total_reward += rew
-        return self.total_reward / 500.0
+from syllabus.examples import CartPoleTaskWrapper
 
 
 def env_creator(config):
@@ -42,7 +18,7 @@ def env_creator(config):
 ray.init()
 register_env("task_cartpole", env_creator)
 
-curriculum = RayCurriculumWrapper(SimpleBoxCurriculum, task_space=Box(-0.3, 0.3, shape=(2,)))
+curriculum = make_ray_curriculum(SimpleBoxCurriculum, task_space=Box(-0.3, 0.3, shape=(2,)))
 
 config = {
         "env": "task_cartpole",

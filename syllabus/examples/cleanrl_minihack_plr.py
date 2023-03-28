@@ -7,17 +7,19 @@ import time
 from distutils.util import strtobool
 
 import gym
+#import minigrid
+import minihack
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
+from gym.envs.registration import register
 
-# Syllabus imports
-from syllabus.core import TaskWrapper, MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import SimpleBoxCurriculum
-from syllabus.examples import CartPoleTaskWrapper
+from syllabus.core import make_multiprocessing_curriculum, MultiProcessingSyncWrapper, TaskWrapper
+from syllabus.curricula import PrioritizedLevelReplay
+from syllabus.examples import MinihackTaskWrapper
 
 
 def parse_args():
@@ -33,7 +35,7 @@ def parse_args():
         help="if toggled, cuda will be enabled by default")
     parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
         help="if toggled, this experiment will be tracked with Weights and Biases")
-    parser.add_argument("--wandb-project-name", type=str, default="Syllabus",
+    parser.add_argument("--wandb-project-name", type=str, default="cleanRL",
         help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None,
         help="the entity (team) of wandb's project")
@@ -41,7 +43,7 @@ def parse_args():
         help="whether to capture videos of the agent performances (check out `videos` folder)")
 
     # Algorithm specific arguments
-    parser.add_argument("--env-id", type=str, default="CartPole-v1",
+    parser.add_argument("--env-id", type=str, default="MiniHack-River-v0",
         help="the id of the environment")
     parser.add_argument("--total-timesteps", type=int, default=500000,
         help="total timesteps of the experiments")
@@ -82,21 +84,24 @@ def parse_args():
     return args
 
 
-def make_env(env_id, seed, idx, capture_video, run_name, task_queue, complete_queue, step_queue):
+def make_env(env_id, seed, idx, capture_video, run_name, task_queue, update_queue):
     def thunk():
-        env = gym.make(env_id)
+        env = gym.make(env_id, observation_keys=("pixel", "glyphs"))
+        env = gym.wrappers.FlattenObservation(env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = MinihackTaskWrapper(env)
         if capture_video:
             if idx == 0:
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-        env.seed(seed)
+        env = MultiProcessingSyncWrapper(env,
+                                         task_queue,
+                                         update_queue,
+                                         update_on_step=False,
+                                         default_task=0,
+                                         task_space=gym.spaces.Discrete(1))
+        #env.seed(seed)
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
-        env = CartPoleTaskWrapper(env)
-        env = MultiProcessingSyncWrapper(env, task_queue, complete_queue, step_queue,
-                                         default_task=(-0.02, 0.02),
-                                         task_space=gym.spaces.Box(-0.3, 0.3, shape=(2,)),
-                                         update_on_step=False)
         return env
 
     return thunk
@@ -129,11 +134,14 @@ class Agent(nn.Module):
     def get_value(self, x):
         return self.critic(x)
 
-    def get_action_and_value(self, x, action=None):
+    def get_action_and_value(self, x, action=None, full_log_probs=False):
         logits = self.actor(x)
         probs = Categorical(logits=logits)
         if action is None:
             action = probs.sample()
+        if full_log_probs:
+            log_probs = torch.log(probs.probs)
+            return action, probs.log_prob(action), probs.entropy(), self.critic(x), log_probs
         return action, probs.log_prob(action), probs.entropy(), self.critic(x)
 
 
@@ -166,14 +174,25 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
-    # curriculum setup
-    curriculum, task_queue, complete_queue, step_queue = make_multiprocessing_curriculum(SimpleBoxCurriculum,
-                                                                                         gym.spaces.Box(-0.3, 0.3, shape=(2,)),
-                                                                                         random_start_tasks=10)
+    sample_env = gym.make(args.env_id)
+    sample_env = MinihackTaskWrapper(sample_env)
+
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(PrioritizedLevelReplay,
+                                                                           sample_env.task_space,
+                                                                           {"strategy": "one_step_td_error",
+                                                                            "rho": 0.01,
+                                                                            "nu": 0},
+                                                                           sample_env.action_space,
+                                                                           num_steps=args.num_steps,
+                                                                           num_processes=args.num_envs,
+                                                                           gamma=args.gamma,
+                                                                           gae_lambda=args.gae_lambda,
+                                                                           random_start_tasks=0)
+    del sample_env
 
     # env setup
-    envs = gym.vector.SyncVectorEnv(
-        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, complete_queue, step_queue) for i in range(args.num_envs)]
+    envs = gym.vector.AsyncVectorEnv(
+        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, update_queue) for i in range(args.num_envs)]
     )
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
@@ -209,7 +228,7 @@ if __name__ == "__main__":
 
             # ALGO LOGIC: action logic
             with torch.no_grad():
-                action, logprob, _, value = agent.get_action_and_value(next_obs)
+                action, logprob, _, value, full_log_probs = agent.get_action_and_value(next_obs, full_log_probs=True)
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
@@ -224,8 +243,20 @@ if __name__ == "__main__":
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
-                    curriculum.log_metrics(step=global_step)
                     break
+
+            update = {
+                "update_type": "on_demand",
+                "metrics": {
+                    "action_log_dist": full_log_probs,
+                    "value": value,
+                    "next_value": agent.get_value(next_obs) if step == args.num_steps - 1 else None,
+                    "rew": reward,
+                    "masks": torch.Tensor(1 - done),
+                    "tasks": envs.get_attr("current_task"),
+                }
+            }
+            curriculum.update_curriculum(update)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -242,6 +273,7 @@ if __name__ == "__main__":
                 delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
                 advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
             returns = advantages + values
+
 
         # flatten the batch
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
@@ -321,5 +353,6 @@ if __name__ == "__main__":
         writer.add_scalar("losses/explained_variance", explained_var, global_step)
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
+
     envs.close()
     writer.close()

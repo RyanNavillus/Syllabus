@@ -1267,7 +1267,7 @@ if __name__ == "__main__":
     if flags.exp_name:
         wandb_run = wandb.init(
                     project="syllabus",
-                    entity="ryan-colab",
+                    entity="",
                     config=flags,
                     save_code=True,
                     name=flags.exp_name,
