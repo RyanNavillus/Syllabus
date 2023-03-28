@@ -4,7 +4,7 @@ import numpy as np
 from ray.tune.registry import register_env
 from ray import tune
 from gym.spaces import Box
-from syllabus.core import TaskWrapper, RaySyncWrapper, RayCurriculumWrapper
+from syllabus.core import TaskWrapper, RaySyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
 from syllabus.examples import CartPoleTaskWrapper
 
@@ -18,7 +18,7 @@ def env_creator(config):
 ray.init()
 register_env("task_cartpole", env_creator)
 
-curriculum = RayCurriculumWrapper(SimpleBoxCurriculum, task_space=Box(-0.3, 0.3, shape=(2,)))
+curriculum = make_ray_curriculum(SimpleBoxCurriculum, task_space=Box(-0.3, 0.3, shape=(2,)))
 
 config = {
         "env": "task_cartpole",
