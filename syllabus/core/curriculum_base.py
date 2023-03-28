@@ -1,10 +1,11 @@
+import typing
+from typing import Any, Callable, List, Tuple, Union
+
 import gym
 import numpy as np
-import typing
-import wandb
-from typing import Any, List, Union, Callable
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
-from itertools import product
+
+import wandb
 from syllabus.core import enumerate_axes
 
 
@@ -12,11 +13,10 @@ class Curriculum:
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, use_wandb: bool = False, task_names: Callable = None) -> None:
+    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, task_names: Callable = None) -> None:
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
-        self.use_wandb = use_wandb
         self.task_names = task_names
         self.n_updates = 0
 
@@ -79,7 +79,7 @@ class Curriculum:
         else:
             raise NotImplementedError
 
-    def _complete_task(self, task: typing.Any, success_prob: float) -> None:
+    def _complete_task(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.

@@ -14,12 +14,6 @@ class NoopCurriculum(Curriculum):
     def _on_step(self, obs, rew, done, info) -> None:
         pass
 
-    def _sample_distribution(self) -> List[float]:
-        """
-        Returns a sample distribution over the task space.
-        """
-        raise NotImplementedError
-
     def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Sample k tasks from the curriculum.

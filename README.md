@@ -1,25 +1,26 @@
 # Syllabus
 
-Syllabus is an API for designing curricula for reinforcement learning agents, as well as a framework for synchronizing those curricula across environments running in multiple processes. it currently has support for environments run with Ray actors and Python multiprocessing, which should include RL libraries such as RLLib, CleanRL, Stable Baselines 3, and TorchBeast. We currently have working examples with **CleanRL**, **RLLib**, and **Torchbeast**.
+Syllabus is an API for designing curricula for reinforcement learning agents, as well as a framework for synchronizing those curricula across environments running in multiple processes. It currently has support for environments run with Python native multiprocessing or Ray actors, which includes RL libraries such as RLLib, CleanRL, Stable Baselines 3, and Monobeast (Torchbeast). We currently have working examples with **CleanRL**, **RLLib**, and **Monobeast (Torchbeast)**. We also have preliminary support and examples for multiagent **PettingZoo** environments.
 
 
 
 ## How it works
 
-Syllabus uses a bidirectional sender-receiver model where the curricula sends tasks and receives environment outputs, while the environment receives tasks and sends outputs. The environment can use the provided task and the curriculum can use the outputs to update its task distribution. Adding this functionality to existing RL training code requires only a few additions.
+Syllabus uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment outputs, while the environment receives tasks and sends outputs. The environment can run the provided task in the next episode and the curriculum can use the outputs to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information. Adding Syllabus's functionality to existing RL training code requires only a few additions.
 
 To use syllabus for your curriculum learning project, you need:
 
-* A curriculum that subclasses `Curriculum` or follows its API
-* An environment that supports multiple tasks
-* A wrapper that subclasses `TaskWrapper` allowing you to set a new task on `reset()`
-* Learning code that uses ray actors or python multiprocessing to parallelize environments
+* A curriculum that subclasses `Curriculum` or follows its API.
+* An environment that supports multiple tasks.
+* A wrapper that subclasses `TaskWrapper` allowing you to set a new task on `reset()`.
+* Learning code that uses python multiprocessing or ray actors to parallelize environments.
 
 All of the global coordination is handled automatically by Syllabus's synchronization wrappers.
 
+
 ## Example
 
-This is a simple example of using Syllabus to synchronize a curriculum for CartPole using RLLib. CartPole doesn't normally support multiple tasks so we make a slight modification, allowing us to change the initialization range for the cart (the range from which the cart's initial location is selected). We also implement a `SimpleBoxCurriculum` which increases the initialization range whenever a specific reward threshold is met. We can use the `TaskWrapper` class to implement this new functionality for CartPole and to allow us to change the task on `reset()`.
+This is a simple example of using Syllabus to synchronize a curriculum for CartPole using RLLib. CartPole doesn't normally support multiple tasks so we make a slight modification, allowing us to change the initialization range for the cart (the range from which the cart's initial location is selected). We also implement a `SimpleBoxCurriculum` which increases the initialization range whenever a specific reward threshold is met. We can use the `TaskWrapper` class to implement this new functionality for CartPole and to change the task on `reset()`.
 
 ```python
 from syllabus import TaskWrapper
@@ -52,199 +53,62 @@ class CartPoleTaskWrapper(TaskWrapper):
 
 
 
-We can train an agent for this environment with the following code:
-
-```python
-import gym
-import ray
-import numpy as np
-from ray.tune.registry import register_env
-from ray import tune
+With just a few modifications to our base learning code, we can train an agent with a curriculum that's globally synchronized across multiple parallel environments.
+![Example Diff](./example_diff.png)
 
 
-def env_creator(config):
-    env = gym.make("CartPole-v1")
-    return CartPoleTaskWrapper(env)
+As you can see, we just wrap the task-enabled CartPole environment with a `RaySyncWrapper`, and create a curriculum with the `make_ray_curriculum()` function. They automatically communicate with each other to sample tasks from your curriculum, use them in the environments, and update the curriculum with environment outputs. That's it! Now you can implement as many curricula as you want, and as long as they follow the `Curriculum` API, you can hot-swap them in this code.
+
+For more examples, take a look at our examples folder. We currently have examples for the following combinations of RL components:
+
+| RL Library    | Environment                       | Curriculum Method         |
+| --------------|-----------------------------------|---------------------------|
+| CleanRL       | CartPole-v1 (Gym)                 | SimpleBoxCurriculum       |
+| CleanRL       | MiniHack-River-v0 (Gym API)       | PrioritizedLevelReplay    |
+| CleanRL       | Pistonball-v6 (Pettingzoo)        | SimpleBoxCurriculum       |
+| RLLib         | CartPole-v1 (Gym)                 | SimpleBoxCurriculum       |
+| TorchBeast    | NetHackScore-v0 (Gym API)         | LearningProgress          |
+
+If you write any new examples and would like to share them, please create a PR!
 
 
-ray.init()
-register_env("task_cartpole", env_creator)
+# Custom Curricula and Environments
+As you can see, adding a curriculum implemented in Syllabus to any environment with a task-wrapper in Syllabus only takes a few lines of code. To create your own curriculum, all you need to do is write a subclass of Syllabus's `Curriculum` class and pass that to the curriculum creation function. `Curriculum` provides multiple methods for updating your curriculum, each meant for a different context.
+* `_on_step()` is called once for each environment step by the environment synchronization wrapper.
+* `_on_episode()` will be called once for each completed episode  by the environment synchronization wrapper (**not yet implemented**).
+* `_complete_task()` is called after each episode  by the environment synchronization wrapper. It receives a boolean or float value indicating whether the selected task was completed in the previous episode.
+* `_on_demand()` is meant to be called by the central learner process to update a curriculum with information from the training process, such as TD errors or gradient norms. It is never used by the individual environments.
 
-config = {
-        "env": "task_cartpole",
-        "num_gpus": 1,
-        "num_workers": 16,
-        "framework": "torch",
-}
+Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. If you choose not to use `_on_step()` to update your curriculum, set `update_on_step=False` when initializing the environment synchronization wrapper to improve performance (An exception with the same suggestion is raised by default).
 
-tuner = tune.Tuner("APEX", param_space=config)
-results = tuner.fit()
-```
-
-
-
-With a few modifications, we can train this agent with a curriculum that's globally synchronized across multiple parallel environments.
-
-```python
-import gym
-import ray
-import numpy as np
-from ray.tune.registry import register_env
-from ray import tune
-
-# Additional imports
-from gym.spaces import Box
-from syllabus import RaySyncWrapper, RayCurriculumWrapper
-from curricula import SimpleBoxCurriculum
-
-
-def env_creator(config):
-    env = gym.make("CartPole-v1")
-    env = CartPoleTaskWrapper(env)
-    # Here we wrap the environment in a wrapper to receive new tasks
-    # and send updates to the curriculum
-    return RaySyncWrapper(env,
-                          default_task=(-0.02, 0.02),
-                          task_space=Box(-0.3, 0.3, shape=(2,)),
-                          update_on_step=False)
-
-
-ray.init()
-register_env("task_cartpole", env_creator)
-
-# We create a curriculum to server new tasks to the environment
-curriculum = RayCurriculumWrapper(SimpleBoxCurriculum, task_space=Box(-0.3, 0.3, shape=(2,)))
-
-config = {
-        "env": "task_cartpole",
-        "num_gpus": 1,
-        "num_workers": 8,
-        "framework": "torch",
-}
-
-tuner = tune.Tuner("APEX", param_space=config)
-results = tuner.fit()
-```
-
-As you can see, we just wrap the task-enabled CartPole environment with a `RaySyncWrapper`, and create a curriculum with the `RayCurriculumWrapper`. They automatically communicate with each other to sample tasks from your curriculum and use them in the environments. That's it! Now you can implement as many curricula as you want, and as long as they follow the `Curriculum` API, you can hot-swap them in this code.
-
+To write a custom task wrapper for an environment, simply subclass the `TaskWrapper` for gym environments or `PettingZooTaskWrapper` for pettingzoo environments. If changing the task only requires you to edit properties of the environment, you can do so in the `change_task()` method. This is called before the internal environment's `reset()` function when you pass a `new_task` to the wrapped environment's `reset()`. If you need to perform more complex operations, you can also override the `reset()` method or other environment methods.
 
 ## Task Spaces
-Syllabus uses task spaces to define valid ranges for tasks and simplify some logic. These are simply [Gym spaces](https://gymnasium.farama.org/api/spaces/) which support a majority of existing curriculum methods. For now, the code thoroughly supports Discrete and MultiDiscrete spaces with preliminary support for Box spaces. The task space is typically determined by the environment and limits the type of curriculum that you can use. Most curricula support either a discrete set of tasks or a continuous space of tasks.  
+Syllabus uses task spaces to define valid ranges for tasks and simplify some logic. These are [Gym spaces](https://gymnasium.farama.org/api/spaces/) which support a majority of existing curriculum methods. For now, the code thoroughly supports Discrete and MultiDiscrete spaces with preliminary support for Box spaces. The task space is typically determined by the environment and limits the type of curriculum that you can use. Extra warnings to clarify these limitations will be added in the future. Most curricula support either a discrete set of tasks or a continuous space of tasks, but not both.
 
 
-## Curriculum API
-
-```python
-class Curriculum:
-    """
-    Base class and API for defining curricula to interface with Gym environments.
-    """
-    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, use_wandb: bool = False) -> None:
-
-    @property
-    def _n_tasks(self, task_space: gym.Space = None) -> int:
-        """
-        Return the number of discrete tasks in the task_space.
-        Returns None for continuous spaces.
-        """
-
-    @property
-    def _tasks(self, task_space: gym.Space = None, sample_interval: float = None) -> List[tuple]:
-        """
-        Return the full list of discrete tasks in the task_space.
-        Return a sample of the tasks for continuous spaces if sample_interval is specified.
-        Can be overridden to exclude invalid tasks within the space.
-        """
-
-    def complete_task(self, task: typing.Any, success_prob: float) -> None:
-        """
-        Update the curriculum with a task and its success probability upon
-        success or failure.
-        """
-
-    def on_step(self, obs, rew, done, info) -> None:
-        """
-        Update the curriculum with the current step results from the environment.
-        """
-
-    def on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
-        """
-        Update the curriculum with a batch of step results from the environment.
-        """
-
-    def _sample_distribution(self) -> List[float]:
-        """
-        Returns a sample distribution over the task space.
-        """
-
-    def sample(self, k: int = 1) -> Union[List, Any]:
-        """
-        Sample k tasks from the curriculum.
-        """
-
-    def log_task_dist(self, task_dist: List[float], check_dist=True) -> None:
-        """
-        Log the task distribution to wandb.
-
-        Paramaters:
-            task_dist: List of task probabilities. Must be a valid probability distribution.
-        """
+## Optimization
+There is a cost to synchronizing separate processes. To minimize this we batch environment step updates, and each communication channel updates independently. That being said, there is still a lot of room to optimize Syllabus. Here is the current speed comparison of environment stepping with and without Syllabus:
 ```
-
-
-
-## Task-Enabled Environment API
-
-```python
-class TaskWrapper(gym.Wrapper):
-    def __init__(self, *args, **kwargs):
-
-    def reset(self, *args, **kwargs):
-    	"""
-    	Changes the current task and resets the environment.
-    	Calls the change_task function whenever "new_task" is passed in kwargs.
-    	Also uses self.observation to add a goal encoding.
-    	"""
-
-    def change_task(self, new_task):
-        """
-        Changes the task of the existing environment to the new_task.
-
-        Each environment will implement tasks differently. The easiest system would be to call a
-        function or set an instance variable to change the task.
-
-        Some environments may need to be reset or even reinitialized to change the task.
-        If you need to reset or re-init the environment here, make sure to check
-        that it is not in the middle of an episode to avoid unexpected behavior.
-        """
-
-    def _task_completion(self, obs, rew, done, info) -> float:
-        """
-        Implement this function to indicate whether the selected task has been completed.
-        This can be determined using the observation, rewards, done, info or internal values
-        from the environment. Intended to be used for automatic curricula.
-        Returns a boolean or float value indicating binary completion or scalar degree of completion.
-        """
-
-    def _encode_goal(self):
-        """
-        Implement this method to indicate which task is selected to the agent.
-        Returns: Numpy array encoding the goal.
-        """
-
-    def observation(self, observation):
-        """
-        Adds the goal encoding to the observation.
-        Override to add additional task-specific observations.
-        Returns a modified observation.
-        """
-
-    def step(self, action):
-    	"""
-    	Forwards the step action to the inner env.
-    	Also adds the result of self.task_completion to info["task_completion"]
-    	which is sent to the curriculum.
-        """
+Relative speed of native multiprocessing with Syllabus: 74.67%
+Relative speed Ray multiprocessing with Syllabus: 70.17%
+Relative speed of native multiprocessing with Syllabus (no step updates): 90.46%
+Relative speed Ray multiprocessing with Syllabus (no step updates): 89.34%
 ```
+As you can see, step updates contribute to a significant slowdown. Not all curricula require individual step outputs, so you can disable these updates in the environment sync wrapper by initializing it with `update_on_step=False`.
 
+Note: This setup means that the environment might sample tasks from the curriculum before the data from its previous episode has been procesed. We assume that this slight delay is inconsequential to most curriculum learning methods.
+
+
+# Supported Automatic Curriculum Learning Methods:
+To help people get started using Syllabus, I've added a few simple curriculum learning methods and some popular baselines (namely Prioritized Level Replay). Below is a full table of supported methods. If you use these methods in your work, please be sure to cite Syllabus as well as original papers and codebases for the relevant methods.
+
+| Method                                | Original Implementation/Citation                  |
+| ------------------------------------- | -----------                                       |
+| Prioritized Level Replay (PLR)        | https://github.com/facebookresearch/level-replay  |
+| Learning Progress                     | https://arxiv.org/abs/2106.14876                  |
+| SimpleBoxCurriculum                   |                                                   |
+
+
+## Citing Syllabus
+To be added soon.
