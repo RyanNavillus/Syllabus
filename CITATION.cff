@@ -1,0 +1,8 @@
+cff-version: 0.1
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Sullivan
+    given-names: Ryan
+title: "Syllabus"
+version: 0.1
+date-released: 2023-03-27

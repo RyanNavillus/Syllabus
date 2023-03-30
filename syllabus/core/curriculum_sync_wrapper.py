@@ -1,8 +1,9 @@
 import ray
+import sys
 import time
 import threading
 from functools import wraps
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from torch.multiprocessing import SimpleQueue
 from syllabus.core import Curriculum, decorate_all_functions
@@ -29,14 +30,20 @@ class CurriculumWrapper:
     def _tasks(self):
         return self.curriculum._tasks()
 
-    def on_step(self, task, step, reward, done):
-        self.curriculum.on_step(task, step, reward, done)
+    def _on_step(self, task, step, reward, done):
+        self.curriculum._on_step(task, step, reward, done)
 
-    def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
-        self.curriculum.on_step_batch(step_results)
-    
     def log_metrics(self, step=None):
         self.curriculum.log_metrics(step=step)
+
+    def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+        self.curriculum._on_step_batch(step_results)
+
+    def update_curriculum(self, metrics):
+        self.curriculum.update_curriculum(metrics)
+
+    def batch_update_curriculum(self, metrics):
+        self.curriculum.batch_update_curriculum(metrics)
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
@@ -48,12 +55,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     def __init__(self,
                  curriculum,
                  task_queue: SimpleQueue,
-                 complete_queue: SimpleQueue,
-                 step_queue: SimpleQueue = None):
+                 update_queue: SimpleQueue):
         super().__init__(curriculum)
         self.task_queue = task_queue
-        self.complete_queue = complete_queue
-        self.step_queue = step_queue
+        self.update_queue = update_queue
         self.update_thread = None
         self.should_update = False
 
@@ -76,23 +81,22 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         Continuously process completed tasks and sample new tasks.
         """
         while self.should_update:
-            # Process completed tasks
-            n_completed_tasks = 0
-            while not self.complete_queue.empty():
-                task, success_prob = self.complete_queue.get()
-                self.curriculum.complete_task(task, success_prob)
-                n_completed_tasks += 1
-
-            # Process environment step results:
-            while self.step_queue is not None and not self.step_queue.empty():
-                batch_results = self.step_queue.get()
-                self.on_step_batch(batch_results)
+            # Update curriculum with environment results:
+            requested_tasks = 0
+            while self.update_queue is not None and not self.update_queue.empty():
+                batch_updates = self.update_queue.get()
+                if isinstance(batch_updates, dict):
+                    batch_updates = [batch_updates]
+                # Count updates with "request_sample" set to True
+                requested_tasks = sum([result["request_sample"] for result in batch_updates if "request_sample" in result])
+                self.batch_update_curriculum(batch_updates)
 
             # Sample new tasks
-            new_tasks = self.curriculum.sample(k=n_completed_tasks)
-            for task in new_tasks:
-                self.task_queue.put(task)
-            time.sleep(0.1)
+            if requested_tasks > 0:
+                new_tasks = self.curriculum.sample(k=requested_tasks)
+                for task in new_tasks:
+                    self.task_queue.put(task)
+            time.sleep(0.00001)
 
     def __del__(self):
         self.stop()
@@ -144,12 +148,8 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    # We override this to prevent an immediate ray.get and instead allow the updates to be batched
-    def on_step(self, task, step, reward, done):
-        super().on_step(task, step, reward, done)
-
-    def on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
-        ray.get(self.curriculum.on_step_batch.remote(step_results))
+    def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+        ray.get(self.curriculum._on_step_batch.remote(step_results))
 
 
 def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curriculum_kwargs):
@@ -158,14 +158,10 @@ def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curric
     """
     curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
     task_queue = SimpleQueue()
-    complete_queue = SimpleQueue()
-    step_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum,
-                                                     task_queue=task_queue,
-                                                     complete_queue=complete_queue,
-                                                     step_queue=step_queue)
+    update_queue = SimpleQueue()
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue)
     mp_curriculum.start()
-    return mp_curriculum, task_queue, complete_queue, step_queue
+    return mp_curriculum, task_queue, update_queue
 
 
 def make_ray_curriculum(curriculum_class, *curriculum_args, actor_name="curriculum", **curriculum_kwargs):

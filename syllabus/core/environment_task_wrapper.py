@@ -1,4 +1,6 @@
 import gym
+import pettingzoo
+from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
 
 class TaskWrapper(gym.Wrapper):
@@ -66,3 +68,13 @@ class TaskWrapper(gym.Wrapper):
         info["task_completion"] = self.task_completion
 
         return self.observation(obs), rew, done, info
+
+
+class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
+    def __init__(self, env: pettingzoo.ParallelEnv):
+        super().__init__(env)
+        self.task = None
+
+    @property
+    def agents(self):
+        return self.env.agents

@@ -1,36 +1,30 @@
+import typing
+from typing import Any, Callable, List, Tuple, Union
+
 import gym
 import numpy as np
-import typing
-import wandb
-from typing import Any, List, Union, Callable
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
-from itertools import product
+
+import wandb
+from syllabus.core import enumerate_axes
 
 
 class Curriculum:
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, use_wandb: bool = False, task_names: Callable = None) -> None:
+    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, task_names: Callable = None) -> None:
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
-        self.use_wandb = use_wandb
         self.task_names = task_names
+        self.n_updates = 0
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
             return list_or_size
         elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
             return np.prod([Curriculum._sum_axes(x) for x in list_or_size])
-        else:
-            raise NotImplementedError(f"{type(list_or_size)}")
-
-    def _enumerate_axes(list_or_size: Union[np.ndarray, int]):
-        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
-            return tuple(range(list_or_size))
-        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
-            return tuple(product(*[Curriculum._enumerate_axes(x) for x in list_or_size]))
         else:
             raise NotImplementedError(f"{type(list_or_size)}")
 
@@ -79,31 +73,75 @@ class Curriculum:
         elif isinstance(task_space, Dict):
             raise NotImplementedError
         elif isinstance(task_space, MultiBinary):
-            return list(Curriculum._enumerate_axes(task_space.nvec))
+            return list(enumerate_axes(task_space.nvec))
         elif isinstance(task_space, MultiDiscrete):
-            return list(Curriculum._enumerate_axes(task_space.nvec))
+            return list(enumerate_axes(task_space.nvec))
         else:
             raise NotImplementedError
 
-    def complete_task(self, task: typing.Any, success_prob: float) -> None:
+    def _complete_task(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
         """
         self.completed_tasks += 1
 
-    def on_step(self, obs, rew, done, info) -> None:
+    def _on_step(self, obs, rew, done, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
+    def _on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
         for step_result in step_results:
-            self.on_step(*step_result)
+            self._on_step(*step_result)
+
+    def _on_episode(self, episode_return: float, trajectory: List = None) -> None:
+        """
+        Update the curriculum with episode results from the environment.
+        """
+        raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+
+    def _on_demand(self, metrics: Dict):
+        """
+        Update the curriculum with arbitrary inputs.
+        """
+        raise NotImplementedError
+
+    def update_curriculum(self, update_data: Dict):
+        """
+        Update the curriculum with the specified update type.
+        """
+        update_type = update_data["update_type"]
+        args = update_data["metrics"]
+
+        if update_type == "step":
+            self._on_step(*args)
+        elif update_type == "step_batch":
+            self._on_step_batch(*args)
+        elif update_type == "episode":
+            self._on_episode(*args)
+        elif update_type == "on_demand":
+            # Directly pass metrics without expanding
+            self._on_demand(args)
+        elif update_type == "complete":
+            self._complete_task(*args)
+        elif update_type == "noop":
+            # Used to request tasks from the synchronization layer
+            pass
+        else:
+            raise NotImplementedError(f"Update type {update_type} not implemented.")
+        self.n_updates += 1
+
+    def batch_update_curriculum(self, update_data: List[Dict]):
+        """
+        Update the curriculum with the specified update type.
+        """
+        for update in update_data:
+            self.update_curriculum(update)
 
     def _sample_distribution(self) -> List[float]:
         """
