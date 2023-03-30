@@ -34,8 +34,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.global_task_completion = global_task_completion
         self.task_completion = 0.0
         self.step_results = []
-        if task_space.contains(default_task):
-            self.default_task = default_task
+        self.default_task = default_task
+        if default_task is not None and not task_space.contains(default_task):
+            raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
     def reset(self, *args, **kwargs):
         self.step_results = []
