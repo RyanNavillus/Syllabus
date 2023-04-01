@@ -1,18 +1,18 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and following paper: https://arxiv.org/abs/2010.03934
 
+from collections import namedtuple
+
+import gym
 import numpy as np
 import torch
-import gym
-
-from collections import namedtuple
 
 
 class TaskSampler():
     def __init__(self,
                  task_space,
-                 action_space,
                  tasks,
+                 action_space=None,
                  num_actors=1,
                  strategy='random',
                  replay_schedule='fixed',
@@ -50,6 +50,9 @@ class TaskSampler():
         self.task_staleness = np.array([0.] * self.num_tasks, dtype=np.float)
 
         self.next_task_index = 0    # Only used for sequential strategy
+
+        if not self.requires_value_buffers and self.action_space is None:
+            raise ValueError('Must provide action space to PLR if using "policy_entropy", "least_confidence", or "min_margin" strategies')
 
     def update_with_rollouts(self, rollouts):
         if self.strategy == 'random':
@@ -144,9 +147,10 @@ class TaskSampler():
 
     def _update_with_rollouts(self, rollouts, score_function):
         tasks = rollouts.tasks
-        policy_logits = rollouts.action_log_dist
+        if not self.requires_value_buffers:
+            policy_logits = rollouts.action_log_dist
         done = ~(rollouts.masks > 0)
-        total_steps, num_actors = policy_logits.shape[:2]
+        total_steps, num_actors = rollouts.tasks.shape[:2]
 
         for actor_index in range(num_actors):
             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
@@ -160,16 +164,17 @@ class TaskSampler():
 
                 task_idx_t = tasks[start_t, actor_index].item()
 
+                # Store kwargs for score function
                 score_function_kwargs = {}
-                episode_logits = policy_logits[start_t:t, actor_index]
-                score_function_kwargs['episode_logits'] = torch.log_softmax(episode_logits, -1)
-
                 if self.requires_value_buffers:
                     score_function_kwargs['returns'] = rollouts.returns[start_t:t, actor_index]
                     score_function_kwargs['rewards'] = rollouts.rewards[start_t:t, actor_index]
                     score_function_kwargs['value_preds'] = rollouts.value_preds[start_t:t, actor_index]
+                else:
+                    episode_logits = policy_logits[start_t:t, actor_index]
+                    score_function_kwargs['episode_logits'] = torch.log_softmax(episode_logits, -1)
                 score = score_function(**score_function_kwargs)
-                num_steps = len(episode_logits)
+                num_steps = len(rollouts.tasks[start_t:t, actor_index])
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
 
                 start_t = t.item()
@@ -180,17 +185,18 @@ class TaskSampler():
 
                 task_idx_t = tasks[start_t, actor_index].item()
 
+                # Store kwargs for score function
                 score_function_kwargs = {}
-                episode_logits = policy_logits[start_t:, actor_index]
-                score_function_kwargs['episode_logits'] = torch.log_softmax(episode_logits, -1)
-
                 if self.requires_value_buffers:
                     score_function_kwargs['returns'] = rollouts.returns[start_t:, actor_index]
                     score_function_kwargs['rewards'] = rollouts.rewards[start_t:, actor_index]
                     score_function_kwargs['value_preds'] = rollouts.value_preds[start_t:, actor_index]
+                else:
+                    episode_logits = policy_logits[start_t:, actor_index]
+                    score_function_kwargs['episode_logits'] = torch.log_softmax(episode_logits, -1)
 
                 score = score_function(**score_function_kwargs)
-                num_steps = len(episode_logits)
+                num_steps = len(rollouts.tasks[start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
     def after_update(self):

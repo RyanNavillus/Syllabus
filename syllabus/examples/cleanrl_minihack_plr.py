@@ -182,7 +182,7 @@ if __name__ == "__main__":
                                                                            {"strategy": "one_step_td_error",
                                                                             "rho": 0.01,
                                                                             "nu": 0},
-                                                                           sample_env.action_space,
+                                                                           action_space=sample_env.action_space,
                                                                            num_steps=args.num_steps,
                                                                            num_processes=args.num_envs,
                                                                            gamma=args.gamma,

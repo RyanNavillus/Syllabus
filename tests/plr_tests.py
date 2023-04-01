@@ -137,7 +137,7 @@ if __name__ == "__main__":
     curriculum = make_ray_curriculum(PrioritizedLevelReplay, 
                                      ([1], sample_env.action_space),
                                      {},
-                                     sample_env.action_space,
+                                     action_space=sample_env.action_space,
                                      sample_env.task_space,
                                      random_start_tasks=10)
     print("\nRunning Ray multi process test...")
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         curriculum = make_ray_curriculum(PrioritizedLevelReplay,
                                          ([1], sample_env.action_space),
                                          {},
-                                         sample_env.action_space,
+                                         action_space=sample_env.action_space,
                                          sample_env.task_space,
                                          random_start_tasks=10)
         print(f"\nRunning {requires_buffers} test...")

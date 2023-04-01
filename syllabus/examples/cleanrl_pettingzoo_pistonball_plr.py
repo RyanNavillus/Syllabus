@@ -124,7 +124,7 @@ if __name__ == "__main__":
                                                                            {"strategy": "one_step_td_error",
                                                                             "rho": 0.01,
                                                                             "nu": 0},
-                                                                           action_space,
+                                                                           action_space=action_space,
                                                                            num_steps=num_steps,
                                                                            num_processes=num_agents,
                                                                            gamma=gamma,

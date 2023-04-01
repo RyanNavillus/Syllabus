@@ -8,9 +8,8 @@ from typing import Any, Callable, Dict, List, Union, Tuple
 
 
 class RolloutStorage(object):
-    def __init__(self, num_steps: int, num_processes: int, action_space: gym.Space, requires_value_buffers: bool):
+    def __init__(self, num_steps: int, num_processes: int, requires_value_buffers: bool, action_space: gym.Space = None):
         self._requires_value_buffers = requires_value_buffers
-        self.action_log_dist = torch.zeros(num_steps, num_processes, action_space.n)
         self.tasks = torch.zeros(num_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(num_steps + 1, num_processes, 1)
 
@@ -18,20 +17,25 @@ class RolloutStorage(object):
             self.returns = torch.zeros(num_steps + 1, num_processes, 1)
             self.rewards = torch.zeros(num_steps, num_processes, 1)
             self.value_preds = torch.zeros(num_steps + 1, num_processes, 1)
+        else:
+            if action_space is None:
+                raise ValueError("Action space must be provided to PLR for strategies 'policy_entropy', 'least_confidence', 'min_margin'")
+            self.action_log_dist = torch.zeros(num_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
         self.step = 0
 
     def to(self, device):
-        self.action_log_dist = self.action_log_dist.to(device)
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
         if self._requires_value_buffers:
             self.rewards = self.rewards.to(device)
             self.value_preds = self.value_preds.to(device)
             self.returns = self.returns.to(device)
+        else:
+            self.action_log_dist = self.action_log_dist.to(device)
 
-    def insert(self, action_log_dist, masks, value_preds=None, rewards=None, tasks=None):
+    def insert(self, masks, action_log_dist=None, value_preds=None, rewards=None, tasks=None):
         if self._requires_value_buffers:
             assert value_preds is not None and rewards is not None, f"Selected strategy {self._requires_value_buffers} requires value_preds and rewards"
             if len(rewards.shape) == 3:
@@ -39,8 +43,8 @@ class RolloutStorage(object):
             self.value_preds[self.step].copy_(torch.as_tensor(value_preds))
             self.rewards[self.step].copy_(torch.as_tensor(rewards)[:, None])
             self.masks[self.step + 1].copy_(torch.as_tensor(masks)[:, None])
-
-        self.action_log_dist[self.step].copy_(action_log_dist)
+        else:
+            self.action_log_dist[self.step].copy_(action_log_dist)
         if tasks is not None:
             assert isinstance(tasks[0], int), "Provided task must be an integer"
             self.tasks[self.step].copy_(torch.as_tensor(tasks)[:, None])
@@ -65,8 +69,8 @@ class PrioritizedLevelReplay(Curriculum):
     def __init__(self,
                  task_space: gym.Space,
                  task_sampler_kwargs_dict: dict,
-                 action_space: gym.Space,
                  *curriculum_args,
+                 action_space: gym.Space = None,
                  device: str = "cuda",
                  num_steps: int = 256,
                  num_processes: int = 64,
@@ -87,8 +91,8 @@ class PrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self.tasks = self._enumerate_tasks(task_space)
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-        self._task_sampler = TaskSampler(task_space, action_space, self.tasks, **task_sampler_kwargs_dict)
-        self._rollouts = RolloutStorage(self._num_steps, self._num_processes, action_space, self._task_sampler.requires_value_buffers)
+        self._task_sampler = TaskSampler(task_space, self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._rollouts = RolloutStorage(self._num_steps, self._num_processes, self._task_sampler.requires_value_buffers, action_space=action_space)
         self._rollouts.to(device)
         self.num_updates = 0    # Used to ensure proper usage
         self.num_samples = 0    # Used to ensure proper usage
@@ -99,22 +103,26 @@ class PrioritizedLevelReplay(Curriculum):
         """
         self.num_updates += 1
         try:
-            action_log_dist = metrics["action_log_dist"]
             masks = metrics["masks"]
             tasks = metrics["tasks"]
             tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
-            raise KeyError("Missing or malformed PLR update. Must include 'action_log_dist', 'masks', and 'tasks'") from e
+            raise KeyError("Missing or malformed PLR update. Must include 'masks', and 'tasks'") from e
 
-        value = next_value = rew = None
+        # Parse optional update values (required for some strategies)
+        value = next_value = rew = action_log_dist = None
         if self._task_sampler.requires_value_buffers:
             if "value" not in metrics or "rew" not in metrics:
                 raise KeyError(f"'value' and 'rew' must be provided in every update for the strategy {self._strategy}.")
             value = metrics["value"]
             rew = metrics["rew"]
+        else:
+            if "action_log_dist" not in metrics:
+                raise KeyError(f"'action_log_dist' must be provided in every update for the strategy {self._strategy}.")
+            action_log_dist = metrics["action_log_dist"]
 
         # Update rollouts
-        self._rollouts.insert(action_log_dist, masks, value_preds=value, rewards=rew, tasks=tasks)
+        self._rollouts.insert(masks, action_log_dist=action_log_dist, value_preds=value, rewards=rew, tasks=tasks)
 
         # Update task sampler
         if self._rollouts.step == 0:
