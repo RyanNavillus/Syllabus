@@ -159,7 +159,11 @@ class TaskSampler():
             for t in done_steps:
                 if not start_t < total_steps: break
 
-                if t == 0:  # if t is 0, then this done step caused a full update of previous  last cycle
+                if t == 0:  # if t is 0, then this done step caused a full update of previous last cycle
+                    continue
+
+                # If there is only 1 step, we can't calculate the one-step td error
+                if self.strategy == 'one_step_td_error' and t - start_t <= 1:
                     continue
 
                 task_idx_t = tasks[start_t, actor_index].item()
