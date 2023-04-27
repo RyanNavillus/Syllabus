@@ -7,21 +7,14 @@ import gymnasium as gym
 from gym import spaces
 
 from syllabus.core import TaskWrapper
-from nle.env import base
-from nle.env.tasks import (NetHackScore,
-                           NetHackStaircase,
-                           NetHackStaircasePet,
-                           NetHackOracle,
-                           NetHackGold,
-                           NetHackEat,
-                           NetHackScout)
+
 
 class SubclassTaskWrapper(TaskWrapper):
     """
     This is a general wrapper for tasks defined as subclasses of a base environment.
 
-    This wrapper reinitializes the environment with the task-specific subclass at the start of each episode.
-    This is a simple, general solution to using Syllabus with subclass tasks, but it is likely inefficient.
+    This wrapper reinitializes the environment with the provided env function at the start of each episode.
+    This is a simple, general solution to using Syllabus with tasks that need to be reinitialized, but it is inefficient.
     It's likely that you can achieve better performance by using a more specialized wrapper.
     """
     def __init__(self, env: gym.Env, task_subclasses: List[gym.Env] = None, **env_init_kwargs):
@@ -108,40 +101,3 @@ class SubclassTaskWrapper(TaskWrapper):
         self.done = done
         info["task_completion"] = self._task_completion(obs, rew, done, info)
         return self.observation(obs), rew, done, info
-
-
-if __name__ == "__main__":
-    def run_episode(env, task: str = None, verbose=1):
-        env.reset(new_task=task)
-        task_name = type(env.unwrapped).__name__
-        done = False
-        ep_rew = 0
-        while not done:
-            action = env.action_space.sample()
-            _, rew, done, _ = env.step(action)
-            ep_rew += rew
-        if verbose:
-            print(f"Episodic reward for {task_name}: {ep_rew}")
-
-    print("Testing NethackTaskWrapper")
-    N_EPISODES = 100
-
-    # Initialize NLE
-    nethack_env = NetHackScore()
-    nethack_task_env = SubclassTaskWrapper(nethack_env, task_subclasses=[NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold, NetHackEat, NetHackScout])
-
-    start_time = time.time()
-
-    for _ in range(N_EPISODES):
-        run_episode(nethack_task_env, verbose=0)
-
-    end_time = time.time()
-    print(f"Run time same task: {end_time - start_time}")
-    start_time = time.time()
-
-    for _ in range(N_EPISODES):
-        nethack_task = nethack_task_env.task_space.sample()
-        run_episode(nethack_task_env, task=nethack_task, verbose=0)
-
-    end_time = time.time()
-    print(f"Run time swapping tasks: {end_time - start_time}")
