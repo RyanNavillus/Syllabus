@@ -55,7 +55,7 @@ class TaskWrapper(gym.Wrapper):
         """
         # Add goal to observation
         goal_encoding = self._encode_goal()
-        if goal_encoding:
+        if goal_encoding is not None:
             observation['goal'] = goal_encoding
 
         return observation

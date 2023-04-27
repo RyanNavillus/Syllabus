@@ -155,7 +155,7 @@ class TaskSampler():
         for actor_index in range(num_actors):
             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
             start_t = 0
-
+            
             for t in done_steps:
                 if not start_t < total_steps: break
 
