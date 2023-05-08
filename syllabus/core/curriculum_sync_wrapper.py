@@ -2,6 +2,7 @@ import ray
 import sys
 import time
 import threading
+import wandb
 from functools import wraps
 from typing import Any, Dict, List, Tuple
 
@@ -33,8 +34,8 @@ class CurriculumWrapper:
     def _on_step(self, task, step, reward, done):
         self.curriculum._on_step(task, step, reward, done)
 
-    def log_metrics(self, step=None):
-        self.curriculum.log_metrics(step=step)
+    def log_metrics(self, writer, step=None):
+        self.curriculum.log_metrics(writer, step=step)
 
     def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         self.curriculum._on_step_batch(step_results)
@@ -61,6 +62,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.update_queue = update_queue
         self.update_thread = None
         self.should_update = False
+        self.queued_tasks = 0
 
     def start(self):
         """
@@ -88,7 +90,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
                 # Count updates with "request_sample" set to True
-                requested_tasks = sum([result["request_sample"] for result in batch_updates if "request_sample" in result])
+                requests = sum([result["request_sample"] for result in batch_updates if "request_sample" in result])
+                requested_tasks += requests
+                self.queued_tasks -= requests
                 self.batch_update_curriculum(batch_updates)
 
             # Sample new tasks
@@ -96,10 +100,16 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 new_tasks = self.curriculum.sample(k=requested_tasks)
                 for task in new_tasks:
                     self.task_queue.put(task)
-            time.sleep(0.00001)
+                    self.queued_tasks += 1
+            time.sleep(0.0001)
 
     def __del__(self):
         self.stop()
+    
+    def log_metrics(self, writer, step=None):
+        super().log_metrics(writer, step=step)
+        writer.add_scalar("curriculum/task_queue_length", self.queued_tasks, step)
+
 
 
 def remote_call(func):

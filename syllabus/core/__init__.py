@@ -11,3 +11,5 @@ from .curriculum_sync_wrapper import (CurriculumWrapper,
                                       make_ray_curriculum)
 
 from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper, PettingZooMultiProcessingSyncWrapper
+from .subclass_task_wrapper import SubclassTaskWrapper
+from .reinit_task_wrapper import ReinitTaskWrapper

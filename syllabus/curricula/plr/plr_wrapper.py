@@ -68,8 +68,8 @@ class RolloutStorage(object):
 class PrioritizedLevelReplay(Curriculum):
     def __init__(self,
                  task_space: gym.Space,
-                 task_sampler_kwargs_dict: dict,
                  *curriculum_args,
+                 task_sampler_kwargs_dict: dict = {},
                  action_space: gym.Space = None,
                  device: str = "cuda",
                  num_steps: int = 256,
@@ -77,7 +77,7 @@ class PrioritizedLevelReplay(Curriculum):
                  gamma: float = 0.999,
                  gae_lambda: float = 0.95,
                  **curriculum_kwargs):
-        self._strategy = task_sampler_kwargs_dict.get("strategy", "random")
+        self._strategy = task_sampler_kwargs_dict.get("strategy", None)
         if not isinstance(task_space, gym.spaces.Discrete) and not isinstance(task_space, gym.spaces.MultiDiscrete):
             raise ValueError(f"Task space must be discrete or multi-discrete, got {task_space}.")
 

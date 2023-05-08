@@ -1,7 +1,7 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import copy
 import time
-from typing import List, Callable
+from typing import List, Callable, Tuple, Union
 import numpy as np
 import gymnasium as gym
 from gym import spaces
@@ -22,11 +22,23 @@ class ReinitTaskWrapper(TaskWrapper):
         self.env_fn = env_fn
         self.task_envs = {}     # Save instance of each task environment to avoid reinitializing
         self.task_space = task_space
+        self.task = None
 
-        # Tracking episode end
-        self.done = True
+    def encode_task(self, task):
+        """
+        Override to convert task description into an element of the MultiDiscrete task space.
+        This is the identity function by default.
+        """
+        return task
+    
+    def decode_task(self, encoding):
+        """ 
+        Override to convert element of the MultiDiscrete task space into format usable by the reinit env_fn. 
+        This is the identity function by default.  
+        """
+        return encoding
 
-    def reset(self, new_task: int = None, **kwargs):
+    def reset(self, new_task: Union[Tuple, int, float] = None, **kwargs):
         """
         Resets the environment along with all available tasks, and change the current task.
         """
@@ -34,11 +46,9 @@ class ReinitTaskWrapper(TaskWrapper):
         if new_task is not None:
             self.change_task(new_task)
 
-        self.done = False
-
         return self.observation(self.env.reset(**kwargs))
 
-    def change_task(self, new_task: int):
+    def change_task(self, new_task: Union[Tuple, int, float]):
         """
         Change task by directly editing environment class.
 
@@ -47,22 +57,19 @@ class ReinitTaskWrapper(TaskWrapper):
         since very few tasks override reset. If new_task is provided, we change the task before
         calling the final reset.
         """
-        # Ignore new task if mid episode
-        if not self.done:
-            raise RuntimeError("Cannot change task mid-episode.")
 
         # Update current task
         if new_task not in self.task_envs:
-            self.task_envs[new_task] = self.env_fn(new_task)
+            self.task_envs[new_task] = self.env_fn(self.decode_task(new_task))
         
         self.env = self.task_envs[new_task]
+        self.task = new_task
 
     def step(self, action):
         """
         Step through environment and update task completion.
         """
         obs, rew, done, info = self.env.step(action)
-        self.done = done
         info["task_completion"] = self._task_completion(obs, rew, done, info)
         return self.observation(obs), rew, done, info
 

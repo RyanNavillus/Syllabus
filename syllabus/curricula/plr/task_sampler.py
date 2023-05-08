@@ -14,7 +14,7 @@ class TaskSampler():
                  tasks,
                  action_space=None,
                  num_actors=1,
-                 strategy='random',
+                 strategy='one_step_td_error',
                  replay_schedule='fixed',
                  score_transform='power',
                  temperature=1.0,

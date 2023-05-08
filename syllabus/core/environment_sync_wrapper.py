@@ -23,7 +23,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  default_task=None,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        assert isinstance(env, TaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.task_queue = task_queue
@@ -34,6 +33,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.task_completion = 0.0
         self.step_results = []
         self.default_task = default_task
+        self.warned_once = False
         if default_task is not None and not task_space.contains(default_task):
             raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
@@ -61,6 +61,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
             next_task = self.default_task if self.default_task is not None else self.env.task
+            if not self.warned_once:
+                print("\nTask queue was empty, selecting default task. This warning will not print again.\n")
+                self.warned_once = True
         else:
             next_task = self.task_queue.get()
         return self.env.reset(*args, new_task=next_task, **kwargs)
@@ -102,7 +105,6 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                  default_task=None,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        assert isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.task_queue = task_queue

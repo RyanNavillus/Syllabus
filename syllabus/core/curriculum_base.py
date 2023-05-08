@@ -166,7 +166,7 @@ class Curriculum:
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]
 
-    def log_metrics(self, step=None):
+    def log_metrics(self, writer, step=None):
         """
         Log the task distribution to wandb.
 
@@ -176,10 +176,11 @@ class Curriculum:
         try:
             task_dist = self._sample_distribution()
             if self.task_names:
-                dist_dict = {f"{self.task_names[idx]}_prob": prob for idx, prob in enumerate(task_dist)}
+                for idx, prob in enumerate(task_dist):
+                    writer.add_scalar(f"curriculum/task_{self.task_names(self._tasks[idx])}_prob", prob, step)
             else:
-                dist_dict = {f"task_{idx}_prob": prob for idx, prob in enumerate(task_dist)}
-            wandb.log({"curriculum": dist_dict}, step=step)
+                for idx, prob in enumerate(task_dist):
+                    writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
         except wandb.errors.Error:
             # No need to crash over logging :)
             pass
