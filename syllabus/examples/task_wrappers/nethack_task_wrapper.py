@@ -3,7 +3,7 @@ import copy
 import time
 from typing import List
 import numpy as np
-import gymnasium as gym
+import gym
 from gym import spaces
 from nle.env import base
 from nle.env.tasks import (NetHackScore,

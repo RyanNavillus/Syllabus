@@ -63,7 +63,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             next_task = self.default_task if self.default_task is not None else self.env.task
             if not self.warned_once:
                 print("\nTask queue was empty, selecting default task. This warning will not print again.\n")
-                self.warned_once = True
+                self.warned_once = False
         else:
             next_task = self.task_queue.get()
         return self.env.reset(*args, new_task=next_task, **kwargs)

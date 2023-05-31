@@ -14,7 +14,7 @@ from torch.distributions.categorical import Categorical
 
 
 from pettingzoo.butterfly import pistonball_v6
-from supersuit import color_reduction_v0, frame_stack_v1, resize_v0
+from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
 
 from syllabus.core import make_multiprocessing_curriculum, PettingZooMultiProcessingSyncWrapper, TaskWrapper
 from syllabus.curricula import PrioritizedLevelReplay
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     curriculum, task_queue, update_queue = make_multiprocessing_curriculum(PrioritizedLevelReplay,
                                                                            sample_env.task_space,
-                                                                           {"strategy": "one_step_td_error",
+                                                                           task_sampler_kwargs_dict={"strategy": "one_step_td_error",
                                                                             "rho": 0.01,
                                                                             "nu": 0},
                                                                            action_space=action_space,
@@ -145,7 +145,7 @@ if __name__ == "__main__":
                                                task_space=env.task_space)
     task_space = env.task_space
     env = color_reduction_v0(env)
-    env = resize_v0(env, frame_size[0], frame_size[1])
+    env = resize_v1(env, frame_size[0], frame_size[1])
     env = frame_stack_v1(env, stack_size=stack_size)
     num_agents = len(env.possible_agents)
     action_space = env.action_spaces[env.possible_agents[0]]

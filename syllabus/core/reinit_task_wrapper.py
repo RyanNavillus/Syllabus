@@ -3,7 +3,7 @@ import copy
 import time
 from typing import List, Callable, Tuple, Union
 import numpy as np
-import gymnasium as gym
+import gym
 from gym import spaces
 
 from syllabus.core import TaskWrapper

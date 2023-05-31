@@ -184,3 +184,4 @@ class Curriculum:
         except wandb.errors.Error:
             # No need to crash over logging :)
             pass
+

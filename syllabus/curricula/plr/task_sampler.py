@@ -10,7 +10,6 @@ import torch
 
 class TaskSampler():
     def __init__(self,
-                 task_space,
                  tasks,
                  action_space=None,
                  num_actors=1,
@@ -26,7 +25,6 @@ class TaskSampler():
                  staleness_transform='power',
                  staleness_temperature=1.0
     ):
-        self.task_space = task_space
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)

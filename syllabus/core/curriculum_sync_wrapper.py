@@ -70,6 +70,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
+        initial_tasks = self.curriculum.sample(8)
+        for task in initial_tasks:
+            self.task_queue.put(task)
         self.update_thread.start()
 
     def stop(self):

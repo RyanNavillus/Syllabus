@@ -3,10 +3,10 @@ import copy
 import time
 from typing import List
 import numpy as np
-import gymnasium as gym
+import gym
 from gym import spaces
 from pettingzoo.butterfly import pistonball_v6
-from supersuit import color_reduction_v0, frame_stack_v1, resize_v0
+from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
 
 from syllabus.core import PettingZooTaskWrapper
 

@@ -80,9 +80,9 @@ class PrioritizedLevelReplay(Curriculum):
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
         if not isinstance(task_space, gym.spaces.Discrete) and not isinstance(task_space, gym.spaces.MultiDiscrete):
             raise ValueError(f"Task space must be discrete or multi-discrete, got {task_space}.")
-
         if "num_actors" in task_sampler_kwargs_dict:
             print(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+        
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
         self._num_steps = num_steps             # Number of steps stored in rollouts and used to update task sampler
@@ -91,7 +91,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self.tasks = self._enumerate_tasks(task_space)
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-        self._task_sampler = TaskSampler(task_space, self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(self._num_steps, self._num_processes, self._task_sampler.requires_value_buffers, action_space=action_space)
         self._rollouts.to(device)
         self.num_updates = 0    # Used to ensure proper usage
