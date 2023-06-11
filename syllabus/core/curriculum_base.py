@@ -21,7 +21,6 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
-        print(self.tasks)
 
         if self.n_tasks == 0:
             print("Warning: Task space is empty. This will cause errors during sampling if no tasks are added.")

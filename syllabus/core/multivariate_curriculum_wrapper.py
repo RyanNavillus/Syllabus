@@ -1,25 +1,22 @@
+import typing
 import numpy as np
+import itertools
 from gym.spaces import Tuple, Dict
-from typing import Any, List, Union
-from syllabus.core import Curriculum
+from typing import Any, Callable, List, Union
+from syllabus.core import Curriculum, CurriculumWrapper
 
-class Uniform(Curriculum):
-    def _sample_distribution(self) -> List[float]:
-        """
-        Returns a sample distribution over the task space.
-        """
-        # Uniform distribution
-        return [1.0 / self.n_tasks for _ in range(self.n_tasks)]
-    
 
-class MultitaskUniform(Curriculum):
+class MultitaskWrapper(CurriculumWrapper):
     """
     Uniform sampling for task spaces with multiple subspaces (Tuple or Dict)
     """
-    def __init__(self, num_teams: int, *curriculum_args, **curriculum_kwargs):
-        print(num_teams)
-        super().__init__(*curriculum_args, **curriculum_kwargs)
-        self.num_teams = num_teams
+    def __init__(self, *args, num_components: int = None, component_names: List[str] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        assert num_components is not None or component_names is not None, "Must specify either num_components or component_names."
+        if num_components is not None:
+            self.task_space = Tuple([self.task_space for _ in range(num_components)])
+        elif component_names is not None:
+            self.task_space = Dict({name: self.task_space for name in component_names})
 
     def _sample_distribution(self) -> List[float]:
         """
@@ -27,14 +24,9 @@ class MultitaskUniform(Curriculum):
         """
         # Uniform distribution
         if isinstance(self.task_space, Tuple):
-            multivariate_dists = []
-            for space in self.task_space.spaces:
-                n_tasks = self._n_tasks(space)
-                multivariate_dists.append([1.0 / n_tasks for _ in range(n_tasks)])
+            multivariate_dists = [self.curriculum._sample_distribution() for _ in len(self.task_space.spaces)]
         elif isinstance(self.task_space, Tuple):
-            for name, space in self.task_space.spaces.items():
-                n_tasks = self._n_tasks(space)
-                multivariate_dists[name] = [1.0 / n_tasks for _ in range(n_tasks)]
+            multivariate_dists = {name: self.curriculum._sample_distribution() for name in self.task_space.keys()}
         else:
             raise NotImplementedError("Multivariate task space must be Tuple or Dict.")
         return multivariate_dists
@@ -66,6 +58,7 @@ class MultitaskUniform(Curriculum):
             multitask = np.array(multitask)
             return np.moveaxis(multitask, -1, 0)
         else:
-            raise NotImplementedError("Multivariate task space must be Tuple or Dict.")
-        
+            raise NotImplementedError("Multivariate task space must be Tuple or Dict.")    
 
+    def log_metrics(self, writer, step=None):
+        raise NotImplementedError("Multitask curriculum does not support logging metrics.")

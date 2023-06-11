@@ -196,8 +196,3 @@ if __name__ == "__main__":
     print("\n")
     print(f"Relative speed of native multiprocessing with Syllabus: {100 * native_speed / native_syllabus_speed_nostep:.2f}%")
     print(f"Relative speed Ray multiprocessing with Syllabus: {100 * ray_speed / ray_syllabus_speed_nostep:.2f}%")
-
-    # Test Queue multiprocess speed with Syllabus
-    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(NoopCurriculum,
-                                                                           sample_env.task_space,
-                                                                           random_start_tasks=10)

@@ -8,14 +8,49 @@ class NoopCurriculum(Curriculum):
     """
     Used to to test API without a curriculum.
     """
-    def __init__(self, *curriculum_args, **curriculum_kwargs):
+    def __init__(self, default_task, *curriculum_args, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
-
-    def _on_step(self, obs, rew, done, info) -> None:
-        pass
+        self.default_task = default_task
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Sample k tasks from the curriculum.
         """
-        return [self.task_space.sample() for _ in range(k)]
+        return [self.default_task for _ in range(k)]
+    
+    def _complete_task(self, task, success_prob) -> None:
+        """
+        Update the curriculum with a task and its success probability upon
+        success or failure.
+        """ 
+        pass
+
+    def _on_step(self, obs, rew, done, info) -> None:
+        """
+        Update the curriculum with the current step results from the environment.
+        """
+        pass
+
+    def _on_step_batch(self, step_results) -> None:
+        """
+        Update the curriculum with a batch of step results from the environment.
+        """
+        pass
+
+    def _on_episode(self, episode_return) -> None:
+        """
+        Update the curriculum with episode results from the environment.
+        """
+        pass
+
+    def _on_demand(self, metrics):
+        """
+        Update the curriculum with arbitrary inputs.
+        """
+        pass
+
+    def update_curriculum(self, update_data):
+        """
+        Update the curriculum with the specified update type.
+        """
+        pass
