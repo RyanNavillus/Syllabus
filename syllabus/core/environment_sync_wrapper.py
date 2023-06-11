@@ -89,6 +89,11 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 self.step_results = []
 
         return obs, rew, done, info
+    
+    def __getattr__(self, attr):
+        env_attr = getattr(self.env, attr, None)
+        if env_attr:
+            return env_attr
 
 
 class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
@@ -113,6 +118,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         self.update_on_step = update_on_step
         self.global_task_completion = global_task_completion
         self.task_completion = 0.0
+        self.warned_once = False
         self.step_results = []
         if task_space.contains(default_task):
             self.default_task = default_task
@@ -140,11 +146,14 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         }
         self.update_queue.put(update)
         self.task_completion = 0.0
-
+    
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
-            next_task = self.default_task if self.default_task else self.env.task
+            next_task = self.default_task if self.default_task is not None else self.env.task
+            if not self.warned_once:
+                print("\nTask queue was empty, selecting default task. This warning will not print again.\n")
+                self.warned_once = False
         else:
             next_task = self.task_queue.get()
         return self.env.reset(*args, new_task=next_task, **kwargs)
@@ -170,7 +179,12 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                 self.step_results = []
 
         return obs, rew, done, info
-
+    
+    def __getattr__(self, attr):
+        env_attr = getattr(self.env, attr, None)
+        if env_attr:
+            return env_attr
+    
 
 class RaySyncWrapper(gym.Wrapper):
     """
@@ -250,3 +264,8 @@ class RaySyncWrapper(gym.Wrapper):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         self.env.change_task(new_task)
+
+    def __getattr__(self, attr):
+        env_attr = getattr(self.env, attr, None)
+        if env_attr:
+            return env_attr

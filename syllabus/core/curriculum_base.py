@@ -1,6 +1,7 @@
 import typing
+import itertools
 from typing import Any, Callable, List, Tuple, Union
-
+import time 
 import gym
 import numpy as np
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
@@ -8,17 +9,22 @@ from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 import wandb
 from syllabus.core import enumerate_axes
 
-
+# TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
 class Curriculum:
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
+
     def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, task_names: Callable = None) -> None:
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
+        print(self.tasks)
+
+        if self.n_tasks == 0:
+            print("Warning: Task space is empty. This will cause errors during sampling if no tasks are added.")
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
@@ -29,6 +35,10 @@ class Curriculum:
             raise NotImplementedError(f"{type(list_or_size)}")
 
     @property
+    def n_tasks(self) -> int:
+        # TODO: Cache results
+        return self._n_tasks(self.task_space)
+    
     def _n_tasks(self, task_space: gym.Space = None) -> int:
         """
         Return the number of discrete tasks in the task_space.
@@ -44,17 +54,22 @@ class Curriculum:
         elif isinstance(task_space, Box):
             return None
         elif isinstance(task_space, gym.spaces.Tuple):
-            return sum([self._n_tasks(s) for s in task_space.spaces])
+            return sum([self._n_tasks(task_space=s) for s in task_space.spaces])
         elif isinstance(task_space, Dict):
-            return sum([self._n_tasks(s) for s in task_space.spaces.values()])
+            return sum([self._n_tasks(task_space=s) for s in task_space.spaces.values()])
         elif isinstance(task_space, MultiBinary):
             return Curriculum._sum_axes(task_space.nvec)
         elif isinstance(task_space, MultiDiscrete):
             return Curriculum._sum_axes(task_space.nvec)
+        elif task_space is None:
+            return 0
         else:
             raise NotImplementedError(f"Unsupported task space type: {type(task_space)}")
 
     @property
+    def tasks(self) -> List[tuple]:
+        return self._tasks(self.task_space)
+    
     def _tasks(self, task_space: gym.Space = None, sample_interval: float = None) -> List[tuple]:
         """
         Return the full list of discrete tasks in the task_space.
@@ -69,28 +84,36 @@ class Curriculum:
         elif isinstance(task_space, Box):
             raise NotImplementedError
         elif isinstance(task_space, gym.spaces.Tuple):
-            raise NotImplementedError
+            return list(itertools.product([self._tasks(task_space=s) for s in task_space.spaces]))
         elif isinstance(task_space, Dict):
-            raise NotImplementedError
+            return itertools.product([self._tasks(task_space=s) for s in task_space.spaces.values()])
         elif isinstance(task_space, MultiBinary):
             return list(enumerate_axes(task_space.nvec))
         elif isinstance(task_space, MultiDiscrete):
             return list(enumerate_axes(task_space.nvec))
+        elif task_space is None:
+            return []
         else:
             raise NotImplementedError
+        
+    def add_task(self, task: tuple) -> None:
+        """
+        Add a task to the curriculum.
+        """
+        raise NotImplementedError
 
     def _complete_task(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
-        """
+        """ 
         self.completed_tasks += 1
 
     def _on_step(self, obs, rew, done, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
-        raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+        raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
     def _on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
         """
@@ -148,20 +171,22 @@ class Curriculum:
         Returns a sample distribution over the task space.
         """
         # Uniform distribution
-        return [1.0 / self._n_tasks for _ in range(self._n_tasks)]
+        raise NotImplementedError
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Sample k tasks from the curriculum.
         """
+        assert self.n_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+
         if self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks:
-            task_dist = [0.0 / self._n_tasks for _ in range(self._n_tasks)]
+            task_dist = [0.0 / self.n_tasks for _ in range(self.n_tasks)]
             task_dist[0] = 1.0
         else:
             task_dist = self._sample_distribution()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
-        tasks = self._tasks
+        tasks = self.tasks
         n_tasks = len(tasks)
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]

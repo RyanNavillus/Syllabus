@@ -25,11 +25,11 @@ class CurriculumWrapper:
     def complete_task(self, task, success_prob):
         self.curriculum.complete_task(task, success_prob)
 
-    def _n_tasks(self):
-        return self.curriculum._n_tasks()
+    def n_tasks(self):
+        return self.curriculum.n_tasks()
 
-    def _tasks(self):
-        return self.curriculum._tasks()
+    def tasks(self):
+        return self.curriculum.tasks()
 
     def _on_step(self, task, step, reward, done):
         self.curriculum._on_step(task, step, reward, done)
@@ -54,10 +54,12 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     Meant to be used with the MultiprocessingSyncWrapper for Gym environments.
     """
     def __init__(self,
-                 curriculum,
+                 curriculum: Curriculum,
+                 num_envs: int,
                  task_queue: SimpleQueue,
                  update_queue: SimpleQueue):
         super().__init__(curriculum)
+        self.num_envs = num_envs
         self.task_queue = task_queue
         self.update_queue = update_queue
         self.update_thread = None
@@ -70,7 +72,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
-        initial_tasks = self.curriculum.sample(8)
+        # Add initial tasks for each environment
+        # TODO: Use num_envs parameter instead of hardcoding?
+        initial_tasks = self.curriculum.sample(self.num_envs)
         for task in initial_tasks:
             self.task_queue.put(task)
         self.update_thread.start()
@@ -165,14 +169,14 @@ class RayCurriculumWrapper(CurriculumWrapper):
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
 
-def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curriculum_kwargs):
+def make_multiprocessing_curriculum(curriculum_class, num_envs, *curriculum_args, **curriculum_kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
     curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue)
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, num_envs, task_queue, update_queue)
     mp_curriculum.start()
     return mp_curriculum, task_queue, update_queue
 
