@@ -10,6 +10,7 @@ class MultitaskWrapper(CurriculumWrapper):
     """
     Uniform sampling for task spaces with multiple subspaces (Tuple or Dict)
     """
+    # TODO: How do I use curriculum wrappers with the make_curriculum functions?
     def __init__(self, *args, num_components: int = None, component_names: List[str] = None, **kwargs):
         super().__init__(*args, **kwargs)
         assert num_components is not None or component_names is not None, "Must specify either num_components or component_names."
