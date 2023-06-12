@@ -17,12 +17,12 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            make_ray_curriculum)
 
 
-N_ENVS = 8
-N_EPISODES = 500
+N_ENVS = 128
+N_EPISODES = 16
 
 class MultivariateNethackTaskWrapper(NethackTaskWrapper):
     def reset(self, new_task: int = None, **kwargs):
-        assert len(new_task) == 16
+        assert len(new_task) == 16, new_task
         if new_task is not None:
             self.change_task(new_task[0])
 
@@ -112,11 +112,9 @@ if __name__ == "__main__":
     sample_env = create_nethack_env()
 
     # Test Queue multiprocess speed with Syllabus
-    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(MultitaskUniform,
-                                                                           N_ENVS,
-                                                                           16,
-                                                                           Tuple(sample_env.task_space for _ in range(16)))
-    #curriculum = MultitaskWrapper(curriculum, num_components=8)
+    curriculum = Uniform(sample_env.task_space)
+    curriculum = MultitaskWrapper(curriculum, num_components=16)
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum, N_ENVS)
     print("\nRunning Python multiprocess test with Syllabus...")
     start = time.time()
     actors = []
@@ -133,7 +131,9 @@ if __name__ == "__main__":
     print(f"Python multiprocess test with Syllabus passed: {native_syllabus_speed:.2f}s")
 
     # Test Ray multiprocess speed with Syllabus
-    curriculum = make_ray_curriculum(MultitaskUniform, 16, Tuple(sample_env.task_space for _ in range(16)))
+    curriculum = Uniform(sample_env.task_space)
+    curriculum = MultitaskWrapper(curriculum, num_components=16)
+    curriculum = make_ray_curriculum(curriculum)
     #curriculum = MultitaskWrapper(curriculum, num_components=8)
     print("\nRunning Ray multiprocess test with Syllabus...")
     start = time.time()

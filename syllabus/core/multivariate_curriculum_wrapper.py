@@ -25,7 +25,7 @@ class MultitaskWrapper(CurriculumWrapper):
         """
         # Uniform distribution
         if isinstance(self.task_space, Tuple):
-            multivariate_dists = [self.curriculum._sample_distribution() for _ in len(self.task_space.spaces)]
+            multivariate_dists = [self.curriculum._sample_distribution() for _ in self.task_space.spaces]
         elif isinstance(self.task_space, Tuple):
             multivariate_dists = {name: self.curriculum._sample_distribution() for name in self.task_space.keys()}
         else:

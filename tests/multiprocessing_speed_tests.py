@@ -15,8 +15,8 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            make_ray_curriculum)
 
 
-N_ENVS = 8
-N_EPISODES = 50
+N_ENVS = 128
+N_EPISODES = 16
 
 
 def create_nethack_env():
@@ -193,5 +193,5 @@ if __name__ == "__main__":
     print(f"Ray multiprocess test with Syllabus (no step updates) passed: {ray_syllabus_speed_nostep:.2f}s")
 
     print("\n")
-    print(f"Relative speed of native multiprocessing with Syllabus: {100 * native_speed / native_syllabus_speed_nostep:.2f}%")
-    print(f"Relative speed Ray multiprocessing with Syllabus: {100 * ray_speed / ray_syllabus_speed_nostep:.2f}%")
+    print(f"Relative speed of native multiprocessing with Syllabus without step updates: {100 * native_speed / native_syllabus_speed_nostep:.2f}%")
+    print(f"Relative speed Ray multiprocessing with Syllabus without step updates: {100 * ray_speed / ray_syllabus_speed_nostep:.2f}%")
