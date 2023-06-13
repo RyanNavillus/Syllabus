@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("./level_replay/")
 
-from .uniform import Uniform, MultitaskUniform
+from .uniform import Uniform
 from .noop import NoopCurriculum
 from .learning_progress import LearningProgressCurriculum
 from .simple_box import SimpleBoxCurriculum

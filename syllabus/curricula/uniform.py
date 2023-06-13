@@ -1,7 +1,8 @@
 import numpy as np
 from gym.spaces import Tuple, Dict
 from typing import Any, List, Union
-from syllabus.core import Curriculum
+from syllabus.core import Curriculum, increment_task_space
+
 
 class Uniform(Curriculum):
     def _sample_distribution(self) -> List[float]:
@@ -11,35 +12,9 @@ class Uniform(Curriculum):
         # Uniform distribution
         return [1.0 / self.n_tasks for _ in range(self.n_tasks)]
     
+    def add_task(self, task: tuple) -> None:
+        self.task_space = increment_task_space(self.task_space)
 
-class MultitaskUniform(Curriculum):
-    """
-    Uniform sampling for task spaces with multiple subspaces (Tuple or Dict)
-    """
-    def __init__(self, num_teams: int, *curriculum_args, **curriculum_kwargs):
-        print(num_teams)
-        super().__init__(*curriculum_args, **curriculum_kwargs)
-        self.num_teams = num_teams
-
-    def _sample_distribution(self) -> List[float]:
-        """
-        Returns a sample distribution over the task space.
-        """
-        # Uniform distribution
-        if isinstance(self.task_space, Tuple):
-            multivariate_dists = []
-            for space in self.task_space.spaces:
-                n_tasks = self._n_tasks(space)
-                multivariate_dists.append([1.0 / n_tasks for _ in range(n_tasks)])
-        elif isinstance(self.task_space, Tuple):
-            for name, space in self.task_space.spaces.items():
-                n_tasks = self._n_tasks(space)
-                multivariate_dists[name] = [1.0 / n_tasks for _ in range(n_tasks)]
-        else:
-            raise NotImplementedError("Multivariate task space must be Tuple or Dict.")
-        return multivariate_dists
-    
-    def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Sample k tasks from the curriculum.
         """

@@ -99,7 +99,7 @@ class Curriculum:
         """
         Add a task to the curriculum.
         """
-        raise NotImplementedError
+        raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
 
     def _complete_task(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
         """
@@ -133,6 +133,7 @@ class Curriculum:
         """
         raise NotImplementedError
 
+    # TODO: Move to curriculum sync wrapper?
     def update_curriculum(self, update_data: Dict):
         """
         Update the curriculum with the specified update type.
@@ -151,6 +152,8 @@ class Curriculum:
             self._on_demand(args)
         elif update_type == "complete":
             self._complete_task(*args)
+        elif update_type == "add_task":
+            self.add_task(args)
         elif update_type == "noop":
             # Used to request tasks from the synchronization layer
             pass

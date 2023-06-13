@@ -53,6 +53,9 @@ class CurriculumWrapper:
 
     def batch_update_curriculum(self, metrics):
         self.curriculum.batch_update_curriculum(metrics)
+    
+    def add_task(self, task):
+        self.curriculum.add_task(task)
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
@@ -73,6 +76,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.update_thread = None
         self.should_update = False
         self.queued_tasks = 0
+        self.added_tasks = []
 
     def start(self):
         """
@@ -84,7 +88,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         # TODO: Use num_envs parameter instead of hardcoding?
         initial_tasks = self.curriculum.sample(self.num_envs)
         for task in initial_tasks:
-            self.task_queue.put(task)
+            message = {
+                "next_task": task,
+            }
+            self.task_queue.put(message)
         self.update_thread.start()
 
     def stop(self):
@@ -114,8 +121,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             if requested_tasks > 0:
                 new_tasks = self.curriculum.sample(k=requested_tasks)
                 for task in new_tasks:
-                    self.task_queue.put(task)
+                    message = {
+                        "next_task": task,
+                        "added_tasks": self.added_tasks,
+                    }
+                    self.task_queue.put(message)
                     self.queued_tasks += 1
+                    self.added_tasks = []
             time.sleep(0.0001)
 
     def __del__(self):
@@ -124,6 +136,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
         writer.add_scalar("curriculum/task_queue_length", self.queued_tasks, step)
+
+    def add_task(self, task):
+        super().add_task(task)
+        self.added_tasks.append(task)
 
 
 def remote_call(func):

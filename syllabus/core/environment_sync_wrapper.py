@@ -65,7 +65,13 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 print("\nTask queue was empty, selecting default task. This warning will not print again.\n")
                 self.warned_once = False
         else:
-            next_task = self.task_queue.get()
+            # TODO: Test this
+            message = self.task_queue.get()
+            next_task = message["next_task"]
+            if "added_tasks" in message:
+                added_tasks = message["added_tasks"]
+                for add_task in added_tasks:
+                    self.env.add_task(add_task)
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
@@ -89,6 +95,13 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 self.step_results = []
 
         return obs, rew, done, info
+    
+    def add_task(self, task):
+        update = {
+            "update_type": "add_task",
+            "metrics": task
+        }
+        self.update_queue.put(update)
     
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
@@ -155,7 +168,11 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                 print("\nTask queue was empty, selecting default task. This warning will not print again.\n")
                 self.warned_once = False
         else:
-            next_task = self.task_queue.get()
+            # TODO: Test this
+            message = self.task_queue.get()
+            next_task = message["next_task"]
+            if "add_task" in message:
+                self.env.add_task(message["add_task"])
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
@@ -179,6 +196,14 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                 self.step_results = []
 
         return obs, rew, done, info
+
+    def add_task(self, task):
+        update = {
+            "update_type": "add_task",
+            "metrics": task
+        }
+        print("update")
+        self.update_queue.put(update)
     
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
@@ -264,6 +289,9 @@ class RaySyncWrapper(gym.Wrapper):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         self.env.change_task(new_task)
+
+    def add_task(self, task):
+        self.curriculum.add_task.remote(task)
 
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)

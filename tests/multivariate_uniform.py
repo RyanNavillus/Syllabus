@@ -7,7 +7,7 @@ import ray
 
 from nle.env.tasks import NetHackScore
 from syllabus.examples import NethackTaskWrapper
-from syllabus.curricula import NoopCurriculum, Uniform, MultitaskUniform
+from syllabus.curricula import NoopCurriculum, Uniform
 from syllabus.core import (MultiProcessingSyncWrapper,
                            RaySyncWrapper,
                            RayCurriculumWrapper,
@@ -134,7 +134,6 @@ if __name__ == "__main__":
     curriculum = Uniform(sample_env.task_space)
     curriculum = MultitaskWrapper(curriculum, num_components=16)
     curriculum = make_ray_curriculum(curriculum)
-    #curriculum = MultitaskWrapper(curriculum, num_components=8)
     print("\nRunning Ray multiprocess test with Syllabus...")
     start = time.time()
     remotes = []

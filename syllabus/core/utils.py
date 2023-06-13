@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 from itertools import product
 from typing import Union
@@ -28,3 +29,6 @@ def enumerate_axes(list_or_size: Union[np.ndarray, int]):
         return tuple(product(*[enumerate_axes(x) for x in list_or_size]))
     else:
         raise NotImplementedError(f"{type(list_or_size)}")
+
+def increment_task_space(task_space):
+    return gym.spaces.Discrete(task_space.n + 1)

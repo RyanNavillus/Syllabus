@@ -2,7 +2,7 @@
 from .environment_task_wrapper import TaskWrapper, PettingZooTaskWrapper
 
 # Curriculum Code
-from .utils import decorate_all_functions, UsageError, enumerate_axes
+from .utils import decorate_all_functions, UsageError, enumerate_axes, increment_task_space
 from .curriculum_base import Curriculum
 from .curriculum_sync_wrapper import (CurriculumWrapper,
                                       MultiProcessingCurriculumWrapper,
