@@ -202,7 +202,6 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
             "update_type": "add_task",
             "metrics": task
         }
-        print("update")
         self.update_queue.put(update)
     
     def __getattr__(self, attr):

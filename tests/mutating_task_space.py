@@ -28,13 +28,13 @@ class MutableNethackTaskWrapper(NethackTaskWrapper):
 
 def create_nethack_env():
     env = NetHackScore()
-    env = NethackTaskWrapper(env)
+    env = MutableNethackTaskWrapper(env)
     return env
 
 
 def create_nethack_env_queue(task_queue, update_queue, update_on_step=True):
     env = NetHackScore()
-    env = NethackTaskWrapper(env)
+    env = MutableNethackTaskWrapper(env)
     env = MultiProcessingSyncWrapper(env,
                                      task_queue,
                                      update_queue,
@@ -46,7 +46,7 @@ def create_nethack_env_queue(task_queue, update_queue, update_on_step=True):
 
 def create_nethack_env_ray(update_on_step=True):
     env = NetHackScore()
-    env = NethackTaskWrapper(env)
+    env = MutableNethackTaskWrapper(env)
     env = RaySyncWrapper(env, update_on_step=update_on_step, default_task=0, task_space=env.task_space)
     return env
 

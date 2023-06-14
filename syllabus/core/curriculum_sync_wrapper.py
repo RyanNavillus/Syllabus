@@ -194,6 +194,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
         self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
         self.unwrapped = None
         self.task_space = curriculum.task_space
+        self.added_tasks = []
 
     # If you choose to override a function, you will need to forward the call to the remote curriculum.
     # This method is shown here as an example. If you remove it, the same functionality will be provided automatically.
@@ -203,8 +204,14 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
+    def add_task(self, task):
+        super().add_task(task)
+        self.added_tasks.append(task)
+
 def make_ray_curriculum(curriculum, actor_name="curriculum"):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
     return RayCurriculumWrapper(curriculum, actor_name=actor_name)
+
+
