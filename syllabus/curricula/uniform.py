@@ -1,7 +1,7 @@
 import numpy as np
 from gym.spaces import Tuple, Dict
 from typing import Any, List, Union
-from syllabus.core import Curriculum, increment_task_space
+from syllabus.core import Curriculum
 
 
 class Uniform(Curriculum):
@@ -10,8 +10,8 @@ class Uniform(Curriculum):
         Returns a sample distribution over the task space.
         """
         # Uniform distribution
-        return [1.0 / self.n_tasks for _ in range(self.n_tasks)]
+        return [1.0 / self.num_tasks for _ in range(self.num_tasks)]
     
-    def add_task(self, task: tuple) -> None:
-        self.task_space = increment_task_space(self.task_space)
+    def add_task(self, task: Any) -> None:
+        self.task_space.add_task(task)
 

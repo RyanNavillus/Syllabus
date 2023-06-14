@@ -6,7 +6,7 @@ from multiprocessing import SimpleQueue, Process
 
 import ray
 
-from nle.env.tasks import NetHackScore
+from nle.env.tasks import NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold
 from syllabus.examples import NethackTaskWrapper
 from syllabus.curricula import NoopCurriculum, Uniform
 from syllabus.core import (MultiProcessingSyncWrapper,
@@ -14,6 +14,7 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            MultiProcessingCurriculumWrapper,
                            make_multiprocessing_curriculum,
                            make_ray_curriculum)
+from syllabus.task_space import TaskSpace
 
 
 N_ENVS = 128
@@ -23,7 +24,14 @@ N_EPISODES = 16
 class MutableNethackTaskWrapper(NethackTaskWrapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.task_space = gym.spaces.Discrete(5)
+        task_list = [
+            NetHackScore,
+            NetHackStaircase,
+            NetHackStaircasePet,
+            NetHackOracle,
+            NetHackGold
+        ]
+        self.task_space = TaskSpace(gym.spaces.Discrete(len(task_list)), task_list)
 
 
 def create_nethack_env():
@@ -75,7 +83,7 @@ def run_episodes(curriculum=None, update_on_step=True):
             task = curriculum.sample()[0]
             ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum, update_on_step=update_on_step))
             curriculum._complete_task(task, success_prob=random.random())
-            if curriculum.task_space.n < 7:
+            if curriculum.task_space.num_tasks < 7:
                 curriculum.add_task("")
         else:
             ep_rews.append(run_episode(env))
@@ -86,7 +94,7 @@ def run_episodes_queue(task_queue, update_queue, update_on_step=True):
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
-        if env.task_space.n < 7:
+        if env.task_space.num_tasks < 7:
             env.add_task("")
 
 
@@ -97,7 +105,7 @@ def run_episodes_ray_syllabus(update_on_step=True):
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
-        if env.task_space.n < 7:
+        if env.task_space.num_tasks < 7:
             env.add_task("")
 
 

@@ -14,6 +14,7 @@ from nle.env.tasks import (NetHackScore,
                            NetHackEat,
                            NetHackScout)
 from syllabus.core import TaskWrapper
+from syllabus.task_space import TaskSpace
 
 
 class NethackTaskWrapper(TaskWrapper):
@@ -75,7 +76,8 @@ class NethackTaskWrapper(TaskWrapper):
                 task_list.append(task)
 
         self.task_list = task_list
-        self.task_space = spaces.Discrete(len(self.task_list))
+        gym_space = spaces.Discrete(len(self.task_list))
+        self.task_space = TaskSpace(gym_space, task_list)
 
         # Add goal space to observation
         self.observation_space = copy.deepcopy(self.env.observation_space)

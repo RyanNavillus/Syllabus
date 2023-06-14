@@ -7,6 +7,7 @@ import gym
 import ray
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 from syllabus.core import Curriculum, TaskWrapper, PettingZooTaskWrapper
+from syllabus.task_space import TaskSpace
 
 
 class MultiProcessingSyncWrapper(gym.Wrapper):
@@ -21,8 +22,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  update_queue: SimpleQueue,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  default_task=None,
-                 task_space: gym.Space = None,
+                 task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
+        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
         self.task_queue = task_queue

@@ -108,8 +108,6 @@ if __name__ == "__main__":
     native_speed = end - start
     print(f"Python single process test passed: {native_speed:.2f}s")
 
-    # TODO: Test single process speed with Syllabus (with and without step updates)
-
     # Test Queue multiprocess speed with Syllabus
     curriculum = NoopCurriculum(0, sample_env.task_space, random_start_tasks=10)
     curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum, N_ENVS)
@@ -127,17 +125,6 @@ if __name__ == "__main__":
     del curriculum
     native_syllabus_speed = end - start
     print(f"Python multiprocess test with Syllabus passed: {native_syllabus_speed:.2f}s")
-
-    # Test Ray multi process
-    print("\nRunning Ray multiprocess test...")
-    start = time.time()
-    remotes = []
-    for _ in range(N_ENVS):
-        remotes.append(run_episodes_ray.remote())
-    ray.get(remotes)
-    end = time.time()
-    ray_speed = end - start
-    print(f"Ray multiprocess test passed: {ray_speed:.2f}s")
 
     # Test Ray multiprocess speed with Syllabus
     curriculum = NoopCurriculum(0, sample_env.task_space, random_start_tasks=10)

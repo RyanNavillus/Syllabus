@@ -97,6 +97,7 @@ def run_episodes_ray():
 
 if __name__ == "__main__":
     sample_env = create_nethack_env()
+    # TODO: Test single process speed with Syllabus (with and without step updates)
 
     # Test Queue multiprocess speed
     print("\nRunning Python multiprocess test...")

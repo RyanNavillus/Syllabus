@@ -77,7 +77,7 @@ class LearningProgressCurriculum(Curriculum):
     #     return self._p_slow.keys()
 
     def _sample_distribution(self) -> List[float]:
-        if self.n_tasks == 0:
+        if self.num_tasks == 0:
             return []
 
         task_lps = []
@@ -91,7 +91,7 @@ class LearningProgressCurriculum(Curriculum):
 
         # If tasks all have the same lp, return uniform distribution
         if task_lps_std == 0:
-            return [1 / self.n_tasks for _ in self.tasks]
+            return [1 / self.num_tasks for _ in self.tasks]
         task_lps_standard = [(task_lp - task_lps_mean) / task_lps_std for task_lp in task_lps]
 
         # Sigmoid
