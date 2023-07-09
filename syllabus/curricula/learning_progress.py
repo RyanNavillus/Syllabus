@@ -10,6 +10,7 @@ from gym.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
+from syllabus.task_space import TaskSpace
 
 
 class LearningProgressCurriculum(Curriculum):
@@ -18,13 +19,16 @@ class LearningProgressCurriculum(Curriculum):
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
-    def __init__(self, task_space: gym.Space = None, **kwargs):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
+    def __init__(self, task_space: TaskSpace, **kwargs):
         super().__init__(task_space, **kwargs)
         # Save task list to file to coordinate between multiple processes
         self._p_slow = defaultdict(float)    # Map from task to slow EMA process
         self._p_fast = defaultdict(float)    # Map from task to fast EMA process
         self.task_space = task_space
-        if isinstance(self.task_space, Discrete) or isinstance(self.task_space, MultiDiscrete):
+        if isinstance(self.task_space.gym_space, Discrete) or isinstance(self.task_space.gym_space, MultiDiscrete):
             for task in self.tasks:
                 self._p_fast[task] = 0.0
                 self._p_slow[task] = 0.0

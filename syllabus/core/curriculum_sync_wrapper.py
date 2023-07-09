@@ -85,8 +85,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
         # Add initial tasks for each environment
-        # TODO: Use num_envs parameter instead of hardcoding?
-        initial_tasks = self.curriculum.sample(self.num_envs)
+        # TODO: Why is this necessary? The environment already requests an initial task.
+        initial_tasks = self.curriculum.sample(self.num_envs*2)
         for task in initial_tasks:
             message = {
                 "next_task": task,

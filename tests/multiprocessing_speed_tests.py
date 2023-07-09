@@ -21,6 +21,7 @@ N_EPISODES = 16
 
 
 if __name__ == "__main__":
+    ray.init()
     sample_env = create_nethack_env()
     # TODO: Test single process speed with Syllabus (with and without step updates)
 

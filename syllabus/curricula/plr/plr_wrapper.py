@@ -1,10 +1,11 @@
 import gym
 import torch
 import numpy as np
+from typing import Any, Callable, Dict, List, Union, Tuple
 
 from syllabus.curricula.plr import TaskSampler
 from syllabus.core import Curriculum, UsageError, enumerate_axes
-from typing import Any, Callable, Dict, List, Union, Tuple
+from syllabus.task_space import TaskSpace
 
 
 class RolloutStorage(object):
@@ -66,8 +67,10 @@ class RolloutStorage(object):
 
 
 class PrioritizedLevelReplay(Curriculum):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = True
     def __init__(self,
-                 task_space: gym.Space,
+                 task_space: TaskSpace,
                  *curriculum_args,
                  task_sampler_kwargs_dict: dict = {},
                  action_space: gym.Space = None,
@@ -76,10 +79,11 @@ class PrioritizedLevelReplay(Curriculum):
                  num_processes: int = 64,
                  gamma: float = 0.999,
                  gae_lambda: float = 0.95,
+                 suppress_usage_warnings=False,
                  **curriculum_kwargs):
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
-        if not isinstance(task_space, gym.spaces.Discrete) and not isinstance(task_space, gym.spaces.MultiDiscrete):
-            raise ValueError(f"Task space must be discrete or multi-discrete, got {task_space}.")
+        if not isinstance(task_space.gym_space, gym.spaces.Discrete) and not isinstance(task_space.gym_space, gym.spaces.MultiDiscrete):
+            raise ValueError(f"Task space must be discrete or multi-discrete, got {task_space.gym_space}.")
         if "num_actors" in task_sampler_kwargs_dict:
             print(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         
@@ -89,7 +93,8 @@ class PrioritizedLevelReplay(Curriculum):
         self._num_processes = num_processes     # Number of parallel environments
         self._gamma = gamma
         self._gae_lambda = gae_lambda
-        self.tasks = self._enumerate_tasks(task_space)
+        self._supress_usage_warnings = suppress_usage_warnings
+        #self.tasks = self._enumerate_tasks(task_space)
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(self._num_steps, self._num_processes, self._task_sampler.requires_value_buffers, action_space=action_space)
@@ -168,7 +173,7 @@ class PrioritizedLevelReplay(Curriculum):
         Update the curriculum with a task and its success probability upon
         success or failure.
         """
-        if self.num_updates == 0 and self.num_samples > self._num_processes * 2:
+        if not self._supress_usage_warnings and self.num_updates == 0 and self.num_samples > self._num_processes * 2:
             raise UsageError("PLR has not been updated yet. Please call update_curriculum() in your learner process.")
 
     def _enumerate_tasks(self, space):

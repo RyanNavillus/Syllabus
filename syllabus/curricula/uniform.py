@@ -4,7 +4,10 @@ from typing import Any, List, Union
 from syllabus.core import Curriculum
 
 
-class Uniform(Curriculum):
+class UniformCurriculum(Curriculum):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
     def _sample_distribution(self) -> List[float]:
         """
         Returns a sample distribution over the task space.

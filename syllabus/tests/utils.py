@@ -14,8 +14,8 @@ def run_episode(env, new_task=None, curriculum=None):
     while not done:
         action = env.action_space.sample()
         obs, rew, done, info = env.step(action)
-        if curriculum:
-            curriculum.on_step(obs, rew, done, info)
+        if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
+            curriculum._on_step(obs, rew, done, info)
         ep_rew += rew
     return ep_rew
 
@@ -62,7 +62,7 @@ def test_native_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=1
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, curriculum.task_queue, curriculum.update_queue, True, num_episodes, update_on_step)
+        args = (env_fn, curriculum.task_queue, curriculum.update_queue, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
     else:
         target = run_episodes
         args = (env_fn, None, num_episodes)
@@ -84,7 +84,7 @@ def test_native_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=1
 def test_ray_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
     if curriculum:
         target = run_episodes_ray
-        args = (env_fn, True, num_episodes, update_on_step)
+        args = (env_fn, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
     else:
         target = run_episodes_ray
         args = (env_fn, False, num_episodes, update_on_step)
@@ -117,21 +117,3 @@ def create_nethack_env(*args, type=None, **kwargs):
     elif type == "ray":
         env = RaySyncWrapper(env, *args, default_task=NetHackScore, task_space=env.task_space, **kwargs)
     return env
-
-
-# def create_nethack_env_queue(task_queue, update_queue, update_on_step=True):
-#     env = create_nethack_env()
-#     env = MultiProcessingSyncWrapper(env,
-#                                      task_queue,
-#                                      update_queue,
-#                                      update_on_step=update_on_step,
-#                                      default_task=NetHackScore,
-#                                      task_space=env.task_space)
-#     return env
-
-
-# def create_nethack_env_ray(update_on_step=True):
-#     env = create_nethack_env()
-#     env = RaySyncWrapper(env, update_on_step=update_on_step, default_task=NetHackScore, task_space=env.task_space)
-#     return env
-
