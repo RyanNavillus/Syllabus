@@ -109,7 +109,7 @@ if __name__ == "__main__":
     print(f"Python single process test passed: {native_speed:.2f}s")
 
     # Test Queue multiprocess speed with Syllabus
-    curriculum = NoopCurriculum(0, sample_env.task_space, random_start_tasks=10)
+    curriculum = NoopCurriculum(NetHackScore, sample_env.task_space, random_start_tasks=10)
     curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum, N_ENVS)
     print("\nRunning Python multiprocess test with Syllabus...")
     start = time.time()
@@ -122,12 +122,13 @@ if __name__ == "__main__":
     for actor in actors:
         actor.join()
     end = time.time()
+    curriculum.stop()
     del curriculum
     native_syllabus_speed = end - start
     print(f"Python multiprocess test with Syllabus passed: {native_syllabus_speed:.2f}s")
 
     # Test Ray multiprocess speed with Syllabus
-    curriculum = NoopCurriculum(0, sample_env.task_space, random_start_tasks=10)
+    curriculum = NoopCurriculum(NetHackScore, sample_env.task_space, random_start_tasks=10)
     curriculum = make_ray_curriculum(curriculum)
     print("\nRunning Ray multiprocess test with Syllabus...")
     start = time.time()

@@ -24,31 +24,34 @@ class TaskSpace():
             encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
             decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
         elif isinstance(space, Tuple):
-            for task in tasks:
-                assert space.spaces == len(task), "Each task must have number of components equal to Tuple space length"
-            raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
-        elif isinstance(space, Dict):
-            raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
-        elif isinstance(space, MultiDiscrete):
-            raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
-        elif isinstance(space, MultiBinary):
-            raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
+            for i, task in enumerate(tasks):
+                assert self.count_tasks(space.spaces[i]) == len(task), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
+            results = [list(self._make_task_encoder(s, t)) for (s, t) in zip(space.spaces, tasks)]
+            encoders = [r[0] for r in results]
+            decoders = [r[1] for r in results]
+            encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
+            decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+            #raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
         else:
-            raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
+            encoder = lambda task: task
+            decoder = lambda task: task
         return encoder, decoder
 
     def decode(self, encoding):
+        """Convert the efficient task encoding to a task that can be used by the environment."""
         if not self.gym_space.contains(np.asarray(encoding, dtype=self.gym_space.dtype)):
             return None
         return self._decoder(encoding)
     
     def encode(self, task):
+        """Convert the task to an efficient encoding to speed up multiprocessing."""
         try:
             return self._encoder(task)
         except Exception as e:
             return None
     
     def add_task(self, task):
+        """Add a task to the task space. Only implemented for discrete spaces."""
         if task not in self._tasks:
             self._tasks.add(task)
             # TODO: Increment task space size
@@ -75,7 +78,7 @@ class TaskSpace():
     @property
     def tasks(self) -> List[Any]:
         # TODO: Can I just use _tasks?
-        return self.get_tasks()
+        return self._tasks
 
     def get_tasks(self, gym_space: Space = None, sample_interval: float = None) -> List[tuple]:
         """
@@ -122,9 +125,9 @@ class TaskSpace():
         elif isinstance(gym_space, Box):
             return None
         elif isinstance(gym_space, Tuple):
-            return sum([self.count_tasks(task_space=s) for s in gym_space.spaces])
+            return sum([self.count_tasks(gym_space=s) for s in gym_space.spaces])
         elif isinstance(gym_space, Dict):
-            return sum([self.count_tasks(task_space=s) for s in gym_space.spaces.values()])
+            return sum([self.count_tasks(gym_space=s) for s in gym_space.spaces.values()])
         elif isinstance(gym_space, MultiBinary):
             return TaskSpace._sum_axes(gym_space.nvec)
         elif isinstance(gym_space, MultiDiscrete):
@@ -138,7 +141,7 @@ class TaskSpace():
         return repr(self.decode(task))
     
     def contains(self, task):
-        return self.decode(task) in self._tasks
+        return task in self._tasks or self.decode(task) in self._tasks
     
     def increase_space(self, amount: Union[int, float] = 1):
         if isinstance(self.gym_space, Discrete):

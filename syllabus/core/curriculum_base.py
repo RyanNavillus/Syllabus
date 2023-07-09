@@ -34,7 +34,7 @@ class Curriculum:
 
     @property
     def tasks(self) -> List[tuple]:
-        return self.task_space.tasks
+        return list(self.task_space.tasks)
         
     def add_task(self, task: tuple) -> None:
         """

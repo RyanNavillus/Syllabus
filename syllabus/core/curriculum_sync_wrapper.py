@@ -26,18 +26,18 @@ class CurriculumWrapper:
         self.curriculum.complete_task(task, success_prob)
 
     @property
-    def n_tasks(self):
-        return self._n_tasks()
+    def num_tasks(self):
+        return self.task_space.num_tasks
     
-    def _n_tasks(self, task_space=None):
-        return self.curriculum._n_tasks(task_space=task_space)
+    def count_tasks(self, task_space=None):
+        return self.task_space.count_tasks(gym_space=task_space)
 
     @property
     def tasks(self):
-        return self._tasks()
+        return self.task_space.tasks   
 
-    def _tasks(self, task_space=None):
-        return self.curriculum._tasks(task_space=task_space)
+    def get_tasks(self, task_space=None):
+        return self.task_space.get_tasks(gym_space=task_space)
 
     def _on_step(self, task, step, reward, done):
         self.curriculum._on_step(task, step, reward, done)

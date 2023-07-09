@@ -32,6 +32,10 @@ class MutableNethackTaskWrapper(NethackTaskWrapper):
             NetHackGold
         ]
         self.task_space = TaskSpace(gym.spaces.Discrete(len(task_list)), task_list)
+    
+    def reset(self, new_task: int = None, **kwargs):
+        print(new_task)
+        super().reset(new_task=new_task, **kwargs)
 
 
 def create_nethack_env():

@@ -35,7 +35,7 @@ class NethackTaskWrapper(TaskWrapper):
         super().__init__(env)
         self.env = env
 
-        self.task: str = 6
+        self.task: str = NetHackScore
 
         observation_keys = list(self.env._observation_keys)
         observation_keys.remove("program_state")
@@ -95,17 +95,10 @@ class NethackTaskWrapper(TaskWrapper):
         self.env.__class__ = original_class
         self.env.__init__(**self._init_kwargs)
 
-    @property
-    def current_task(self):
-        return self.env.__class__
-
-    def _task_class(self, task):
-        return self.task_list[task]
-
     def _task_name(self, task):
-        return self._task_class(task).__name__
+        return task.__name__
 
-    def reset(self, new_task: int = None, **kwargs):
+    def reset(self, new_task = None, **kwargs):
         """
         Resets the environment along with all available tasks, and change the current task.
 
@@ -130,20 +123,20 @@ class NethackTaskWrapper(TaskWrapper):
         Ignores requests for unknown tasks or task changes outside of a reset.
         """
         # Ignore new task if mid episode
-        if self.current_task.__init__ != self._task_class(new_task).__init__ and not self.done:
+        if self.task.__init__ != new_task.__init__ and not self.done:
             print(f"Given task {self._task_name(new_task)} needs to be reinitialized.\
-                  Ignoring request to change task and keeping {self.current_task.__name__}")
+                  Ignoring request to change task and keeping {self.task.__name__}")
             return
 
         # Ignore if task is unknown
-        if new_task >= len(self.task_list):
-            print(f"Given task {self._task_name(self.task)} not in task list.\
+        if new_task not in self.task_list:
+            print(f"Given task {new_task} not in task list.\
                   Ignoring request to change task and keeping {self.env.__class__.__name__}")
             return
 
         # Update current task
         self.task = new_task
-        self.env.__class__ = self._task_class(new_task)
+        self.env.__class__ = new_task
 
         # If task requires reinitialization
         if type(self.env).__init__ != NetHackScore.__init__:
@@ -154,7 +147,8 @@ class NethackTaskWrapper(TaskWrapper):
 
     def _encode_goal(self):
         goal_encoding = np.zeros(len(self.task_list))
-        goal_encoding[self.task] = 1
+        index = self.task_list.index(self.task)
+        goal_encoding[index] = 1
         return goal_encoding
 
     def observation(self, observation):

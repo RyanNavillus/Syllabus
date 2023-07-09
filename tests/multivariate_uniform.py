@@ -17,11 +17,11 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            make_ray_curriculum)
 
 
-N_ENVS = 128
+N_ENVS = 1
 N_EPISODES = 16
 
 class MultivariateNethackTaskWrapper(NethackTaskWrapper):
-    def reset(self, new_task: int = None, **kwargs):
+    def reset(self, new_task = None, **kwargs):
         assert len(new_task) == 16, new_task
         if new_task is not None:
             self.change_task(new_task[0])
