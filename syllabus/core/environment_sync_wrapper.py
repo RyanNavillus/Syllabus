@@ -65,14 +65,14 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             # On a serious note, it seems that when cpu constrained, the curriculum process is not given cpu time
             # before full episodes finish. This means that the curriculum process is not able to sample new tasks in time.
             # In practice this occurs very few times during tests.
-            time.sleep(0.5)
+            time.sleep(1.0)
 
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
             next_task = self.default_task if self.default_task is not None else self.env.task
             if not self.warned_once:
-                print("\nTask queue was empty, selecting default task. This warning will not print again for this environment.\n")
+                print("WARNING: Task queue was empty, selecting default task. This warning will not print again for this environment.")
                 self.warned_once = False
         else:
             # TODO: Test this
