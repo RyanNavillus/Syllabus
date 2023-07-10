@@ -1,8 +1,10 @@
+import gym
 import random
 import ray
 import time
 from multiprocessing import Process
-
+from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
+from syllabus.task_space import TaskSpace
 def run_episode(env, new_task=None, curriculum=None):
     """Run a single episode of the environment."""
     if new_task:
@@ -102,8 +104,6 @@ def test_ray_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=10, 
 # Nethack Tests
 from nle.env.tasks import NetHackScore
 from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
-from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
-
 
 def create_nethack_env(*args, type=None, **kwargs):
     env = NetHackScore()
@@ -116,4 +116,28 @@ def create_nethack_env(*args, type=None, **kwargs):
                                         **kwargs)
     elif type == "ray":
         env = RaySyncWrapper(env, *args, default_task=NetHackScore, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Minigrid Tests
+from gym_minigrid.envs import DoorKeyEnv
+from syllabus.core import ReinitTaskWrapper
+from gym_minigrid.register import env_list
+
+def create_minigrid_env(*args, type=None, **kwargs):
+    env = gym.make("MiniGrid-DoorKey-5x5-v0")
+
+    def create_env(task):
+        return gym.make(task)
+
+    task_space = TaskSpace(gym.spaces.Discrete(len(env_list)), env_list)
+    env = ReinitTaskWrapper(env, create_env, task_space=task_space)
+    if type == "queue":
+        env = MultiProcessingSyncWrapper(env,
+                                        *args,
+                                        default_task="MiniGrid-DoorKey-5x5-v0",
+                                        task_space=env.task_space,
+                                        **kwargs)
+    elif type == "ray":
+        env = RaySyncWrapper(env, *args, default_task="MiniGrid-DoorKey-5x5-v0", task_space=env.task_space, **kwargs)
     return env

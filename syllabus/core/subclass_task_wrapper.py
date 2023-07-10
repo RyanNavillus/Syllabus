@@ -7,9 +7,10 @@ import gym
 from gym import spaces
 
 from syllabus.core import TaskWrapper
-
+from syllabus.task_space import TaskSpace
 
 class SubclassTaskWrapper(TaskWrapper):
+    # TODO: Automated tests
     """
     This is a general wrapper for tasks defined as subclasses of a base environment.
 
@@ -21,7 +22,7 @@ class SubclassTaskWrapper(TaskWrapper):
         super().__init__(env)
 
         self.task_list = task_subclasses
-        self.task_space = spaces.Discrete(len(self.task_list))
+        self.task_space = TaskSpace(spaces.Discrete(len(self.task_list)), self.task_list)
         self._env_init_kwargs = env_init_kwargs  # kwargs for reinitializing the base environment
 
         # Add goal space to observation
@@ -44,11 +45,8 @@ class SubclassTaskWrapper(TaskWrapper):
     def current_task(self):
         return self.env.__class__
 
-    def _task_class(self, task):
-        return self.task_list[task]
-
     def _task_name(self, task):
-        return self._task_class(task).__name__
+        return self.task.__name__
 
     def reset(self, new_task: int = None, **kwargs):
         """

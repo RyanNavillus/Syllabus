@@ -4,6 +4,7 @@ from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
 
 class TaskWrapper(gym.Wrapper):
+    # TODO: Update to new TaskSpace API
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.task_completion = 0.0

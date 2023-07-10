@@ -53,23 +53,31 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         # Update curriculum
         update = {
             "update_type": "complete",
-            "metrics": (self.env.task, self.task_completion),
+            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
             "request_sample": True
         }
         self.update_queue.put(update)
         self.task_completion = 0.0
+
+        # Solve race condition with expert software engineering
+        if self.task_queue.empty():
+            # Give it a sec, race conditions aren't real :)
+            # On a serious note, it seems that when cpu constrained, the curriculum process is not given cpu time
+            # before full episodes finish. This means that the curriculum process is not able to sample new tasks in time.
+            # In practice this occurs very few times during tests.
+            time.sleep(0.5)
 
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
             next_task = self.default_task if self.default_task is not None else self.env.task
             if not self.warned_once:
-                print("\nTask queue was empty, selecting default task. This warning will not print again.\n")
+                print("\nTask queue was empty, selecting default task. This warning will not print again for this environment.\n")
                 self.warned_once = False
         else:
             # TODO: Test this
             message = self.task_queue.get()
-            next_task = message["next_task"]
+            next_task = self.task_space.decode(message["next_task"])
             if "added_tasks" in message:
                 added_tasks = message["added_tasks"]
                 for add_task in added_tasks:
@@ -123,7 +131,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                  update_queue: SimpleQueue,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  default_task=None,
-                 task_space: gym.Space = None,
+                 task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         super().__init__(env)
         self.env = env
@@ -241,7 +249,7 @@ class RaySyncWrapper(gym.Wrapper):
         # Update curriculum
         update = {
             "update_type": "complete",
-            "metrics": (self.env.task, self.task_completion),
+            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
             "request_sample": True
         }
         self.curriculum.update_curriculum.remote(update)
@@ -249,7 +257,7 @@ class RaySyncWrapper(gym.Wrapper):
 
         # Sample new task
         sample = ray.get(self.curriculum.sample.remote())
-        next_task = sample[0]
+        next_task = self.task_space.decode(sample[0])
 
         return self.env.reset(*args, new_task=next_task, **kwargs)
 

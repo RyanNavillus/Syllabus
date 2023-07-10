@@ -86,12 +86,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.should_update = True
         # Add initial tasks for each environment
         # TODO: Why is this necessary? The environment already requests an initial task.
-        initial_tasks = self.curriculum.sample(self.num_envs*2)
-        for task in initial_tasks:
-            message = {
-                "next_task": task,
-            }
-            self.task_queue.put(message)
         self.update_thread.start()
 
     def stop(self):
@@ -122,13 +116,12 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 new_tasks = self.curriculum.sample(k=requested_tasks)
                 for task in new_tasks:
                     message = {
-                        "next_task": task,
+                        "next_task": self.task_space.encode(task),
                         "added_tasks": self.added_tasks,
                     }
                     self.task_queue.put(message)
                     self.queued_tasks += 1
                     self.added_tasks = []
-            time.sleep(0.0001)
 
     def __del__(self):
         self.stop()
