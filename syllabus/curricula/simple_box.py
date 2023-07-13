@@ -8,6 +8,9 @@ class SimpleBoxCurriculum(Curriculum):
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
     def __init__(self,
                  *curriculum_args,
                  steps: int = 5,

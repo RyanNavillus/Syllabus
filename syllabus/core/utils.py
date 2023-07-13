@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 from itertools import product
 from typing import Union

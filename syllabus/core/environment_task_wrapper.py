@@ -4,6 +4,7 @@ from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
 
 class TaskWrapper(gym.Wrapper):
+    # TODO: Update to new TaskSpace API
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.task_completion = 0.0
@@ -30,6 +31,9 @@ class TaskWrapper(gym.Wrapper):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         raise NotImplementedError
+    
+    def add_task(self, task):
+        raise NotImplementedError("This environment does not support adding tasks.")
 
     def _task_completion(self, obs, rew, done, info) -> float:
         """
@@ -68,6 +72,12 @@ class TaskWrapper(gym.Wrapper):
         info["task_completion"] = self.task_completion
 
         return self.observation(obs), rew, done, info
+    
+    def __getattr__(self, attr):
+        env_attr = self.env.__class__.__dict__.get(attr, None)
+
+        if env_attr and callable(env_attr):
+            return env_attr
 
 
 class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
@@ -78,3 +88,11 @@ class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
     @property
     def agents(self):
         return self.env.agents
+    
+    def __getattr__(self, attr):
+        env_attr = getattr(self.env, attr, None)
+        if env_attr:
+            return env_attr
+    
+    def get_current_task(self):
+        return self.current_task

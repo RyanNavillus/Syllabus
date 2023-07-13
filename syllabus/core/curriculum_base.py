@@ -1,96 +1,59 @@
 import typing
+import itertools
 from typing import Any, Callable, List, Tuple, Union
-
+import time 
 import gym
 import numpy as np
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 
 import wandb
 from syllabus.core import enumerate_axes
+from syllabus.task_space import TaskSpace
 
-
+# TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
 class Curriculum:
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    def __init__(self, task_space: gym.Space, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
 
-    def _sum_axes(list_or_size: Union[list, int]):
-        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
-            return list_or_size
-        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
-            return np.prod([Curriculum._sum_axes(x) for x in list_or_size])
-        else:
-            raise NotImplementedError(f"{type(list_or_size)}")
+        if self.num_tasks == 0:
+            print("Warning: Task space is empty. This will cause errors during sampling if no tasks are added.")
 
     @property
-    def _n_tasks(self, task_space: gym.Space = None) -> int:
-        """
-        Return the number of discrete tasks in the task_space.
-        Returns None for continuous spaces.
-        Graph space not implemented.
-        """
-        # TODO: Test these implementations
-        if task_space is None:
-            task_space = self.task_space
-
-        if isinstance(task_space, Discrete):
-            return task_space.n
-        elif isinstance(task_space, Box):
-            return None
-        elif isinstance(task_space, gym.spaces.Tuple):
-            return sum([self._n_tasks(s) for s in task_space.spaces])
-        elif isinstance(task_space, Dict):
-            return sum([self._n_tasks(s) for s in task_space.spaces.values()])
-        elif isinstance(task_space, MultiBinary):
-            return Curriculum._sum_axes(task_space.nvec)
-        elif isinstance(task_space, MultiDiscrete):
-            return Curriculum._sum_axes(task_space.nvec)
-        else:
-            raise NotImplementedError(f"Unsupported task space type: {type(task_space)}")
+    def num_tasks(self) -> int:
+        # TODO: Cache results
+        return self.task_space.num_tasks
 
     @property
-    def _tasks(self, task_space: gym.Space = None, sample_interval: float = None) -> List[tuple]:
+    def tasks(self) -> List[tuple]:
+        return list(self.task_space.tasks)
+        
+    def add_task(self, task: tuple) -> None:
         """
-        Return the full list of discrete tasks in the task_space.
-        Return a sample of the tasks for continuous spaces if sample_interval is specified.
-        Can be overridden to exclude invalid tasks within the space.
+        Add a task to the curriculum.
         """
-        if task_space is None:
-            task_space = self.task_space
-
-        if isinstance(task_space, Discrete):
-            return list(range(task_space.n))
-        elif isinstance(task_space, Box):
-            raise NotImplementedError
-        elif isinstance(task_space, gym.spaces.Tuple):
-            raise NotImplementedError
-        elif isinstance(task_space, Dict):
-            raise NotImplementedError
-        elif isinstance(task_space, MultiBinary):
-            return list(enumerate_axes(task_space.nvec))
-        elif isinstance(task_space, MultiDiscrete):
-            return list(enumerate_axes(task_space.nvec))
-        else:
-            raise NotImplementedError
+        raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
 
     def _complete_task(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
-        """
+        """ 
         self.completed_tasks += 1
 
     def _on_step(self, obs, rew, done, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
-        raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+        raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
     def _on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
         """
@@ -111,6 +74,7 @@ class Curriculum:
         """
         raise NotImplementedError
 
+    # TODO: Move to curriculum sync wrapper?
     def update_curriculum(self, update_data: Dict):
         """
         Update the curriculum with the specified update type.
@@ -129,6 +93,8 @@ class Curriculum:
             self._on_demand(args)
         elif update_type == "complete":
             self._complete_task(*args)
+        elif update_type == "add_task":
+            self.add_task(args)
         elif update_type == "noop":
             # Used to request tasks from the synchronization layer
             pass
@@ -148,20 +114,22 @@ class Curriculum:
         Returns a sample distribution over the task space.
         """
         # Uniform distribution
-        return [1.0 / self._n_tasks for _ in range(self._n_tasks)]
+        raise NotImplementedError
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Sample k tasks from the curriculum.
         """
+        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+
         if self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks:
-            task_dist = [0.0 / self._n_tasks for _ in range(self._n_tasks)]
+            task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
             task_dist[0] = 1.0
         else:
             task_dist = self._sample_distribution()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
-        tasks = self._tasks
+        tasks = self.tasks
         n_tasks = len(tasks)
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]
@@ -177,7 +145,7 @@ class Curriculum:
             task_dist = self._sample_distribution()
             if self.task_names:
                 for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{self.task_names(self._tasks[idx])}_prob", prob, step)
+                    writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
             else:
                 for idx, prob in enumerate(task_dist):
                     writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)

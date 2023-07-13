@@ -25,11 +25,19 @@ class CurriculumWrapper:
     def complete_task(self, task, success_prob):
         self.curriculum.complete_task(task, success_prob)
 
-    def _n_tasks(self):
-        return self.curriculum._n_tasks()
+    @property
+    def num_tasks(self):
+        return self.task_space.num_tasks
+    
+    def count_tasks(self, task_space=None):
+        return self.task_space.count_tasks(gym_space=task_space)
 
-    def _tasks(self):
-        return self.curriculum._tasks()
+    @property
+    def tasks(self):
+        return self.task_space.tasks   
+
+    def get_tasks(self, task_space=None):
+        return self.task_space.get_tasks(gym_space=task_space)
 
     def _on_step(self, task, step, reward, done):
         self.curriculum._on_step(task, step, reward, done)
@@ -45,6 +53,9 @@ class CurriculumWrapper:
 
     def batch_update_curriculum(self, metrics):
         self.curriculum.batch_update_curriculum(metrics)
+    
+    def add_task(self, task):
+        self.curriculum.add_task(task)
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
@@ -54,15 +65,18 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     Meant to be used with the MultiprocessingSyncWrapper for Gym environments.
     """
     def __init__(self,
-                 curriculum,
+                 curriculum: Curriculum,
+                 num_envs: int,
                  task_queue: SimpleQueue,
                  update_queue: SimpleQueue):
         super().__init__(curriculum)
+        self.num_envs = num_envs
         self.task_queue = task_queue
         self.update_queue = update_queue
         self.update_thread = None
         self.should_update = False
         self.queued_tasks = 0
+        self.added_tasks = []
 
     def start(self):
         """
@@ -70,9 +84,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
-        initial_tasks = self.curriculum.sample(8)
-        for task in initial_tasks:
-            self.task_queue.put(task)
+        # Add initial tasks for each environment
+        # TODO: Why is this necessary? The environment already requests an initial task.
         self.update_thread.start()
 
     def stop(self):
@@ -102,9 +115,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             if requested_tasks > 0:
                 new_tasks = self.curriculum.sample(k=requested_tasks)
                 for task in new_tasks:
-                    self.task_queue.put(task)
+                    message = {
+                        "next_task": self.task_space.encode(task),
+                        "added_tasks": self.added_tasks,
+                    }
+                    self.task_queue.put(message)
                     self.queued_tasks += 1
-            time.sleep(0.0001)
+                    self.added_tasks = []
 
     def __del__(self):
         self.stop()
@@ -113,6 +130,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         super().log_metrics(writer, step=step)
         writer.add_scalar("curriculum/task_queue_length", self.queued_tasks, step)
 
+    def add_task(self, task):
+        super().add_task(task)
+        self.added_tasks.append(task)
 
 
 def remote_call(func):
@@ -134,6 +154,23 @@ def remote_call(func):
     return wrapper
 
 
+def make_multiprocessing_curriculum(curriculum, num_envs):
+    """
+    Helper function for creating a MultiProcessingCurriculumWrapper.
+    """
+    task_queue = SimpleQueue()
+    update_queue = SimpleQueue()
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, num_envs, task_queue, update_queue)
+    mp_curriculum.start()
+    return mp_curriculum, task_queue, update_queue
+
+
+@ray.remote
+class RayWrapper(CurriculumWrapper):
+    def __init__(self, curriculum: Curriculum) -> None:
+        super().__init__(curriculum)
+
+
 @decorate_all_functions(remote_call)
 class RayCurriculumWrapper(CurriculumWrapper):
     """
@@ -145,16 +182,12 @@ class RayCurriculumWrapper(CurriculumWrapper):
     for convenience.
     # TODO: Implement the Curriculum methods explicitly
     """
-    def __init__(self, curriculum_class, *curriculum_args, actor_name="curriculum", **curriculum_kwargs) -> None:
-        sample_curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
-
-        super().__init__(sample_curriculum)
-        ray_curriculum_class = ray.remote(curriculum_class).options(name=actor_name)
-        curriculum = ray_curriculum_class.remote(*curriculum_args, **curriculum_kwargs)
-        self.curriculum = curriculum
+    def __init__(self, curriculum, actor_name="curriculum") -> None:
+        super().__init__(curriculum)
+        self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
         self.unwrapped = None
-        self.task_space = sample_curriculum.task_space
-        del sample_curriculum
+        self.task_space = curriculum.task_space
+        self.added_tasks = []
 
     # If you choose to override a function, you will need to forward the call to the remote curriculum.
     # This method is shown here as an example. If you remove it, the same functionality will be provided automatically.
@@ -164,21 +197,14 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
+    def add_task(self, task):
+        super().add_task(task)
+        self.added_tasks.append(task)
 
-def make_multiprocessing_curriculum(curriculum_class, *curriculum_args, **curriculum_kwargs):
-    """
-    Helper function for creating a MultiProcessingCurriculumWrapper.
-    """
-    curriculum = curriculum_class(*curriculum_args, **curriculum_kwargs)
-    task_queue = SimpleQueue()
-    update_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue)
-    mp_curriculum.start()
-    return mp_curriculum, task_queue, update_queue
-
-
-def make_ray_curriculum(curriculum_class, *curriculum_args, actor_name="curriculum", **curriculum_kwargs):
+def make_ray_curriculum(curriculum, actor_name="curriculum"):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
-    return RayCurriculumWrapper(curriculum_class, *curriculum_args, actor_name=actor_name, **curriculum_kwargs)
+    return RayCurriculumWrapper(curriculum, actor_name=actor_name)
+
+

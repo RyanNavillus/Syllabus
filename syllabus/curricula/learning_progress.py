@@ -10,6 +10,7 @@ from gym.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
+from syllabus.task_space import TaskSpace
 
 
 class LearningProgressCurriculum(Curriculum):
@@ -18,14 +19,17 @@ class LearningProgressCurriculum(Curriculum):
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
-    def __init__(self, task_space: gym.Space = None, **kwargs):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
+    def __init__(self, task_space: TaskSpace, **kwargs):
         super().__init__(task_space, **kwargs)
         # Save task list to file to coordinate between multiple processes
         self._p_slow = defaultdict(float)    # Map from task to slow EMA process
         self._p_fast = defaultdict(float)    # Map from task to fast EMA process
         self.task_space = task_space
-        if isinstance(self.task_space, Discrete) or isinstance(self.task_space, MultiDiscrete):
-            for task in self._tasks:
+        if isinstance(self.task_space.gym_space, Discrete) or isinstance(self.task_space.gym_space, MultiDiscrete):
+            for task in self.tasks:
                 self._p_fast[task] = 0.0
                 self._p_slow[task] = 0.0
         #print(f"Creating curriculum with {self._n_tasks} tasks: {self._tasks} from task space: {self.task_space}")
@@ -77,11 +81,11 @@ class LearningProgressCurriculum(Curriculum):
     #     return self._p_slow.keys()
 
     def _sample_distribution(self) -> List[float]:
-        if self._n_tasks == 0:
+        if self.num_tasks == 0:
             return []
 
         task_lps = []
-        for task in self._tasks:
+        for task in self.tasks:
             task_lps.append(self._lp_metric(task))
 
         # Standardize
@@ -91,7 +95,7 @@ class LearningProgressCurriculum(Curriculum):
 
         # If tasks all have the same lp, return uniform distribution
         if task_lps_std == 0:
-            return [1 / self._n_tasks for _ in self._tasks]
+            return [1 / self.num_tasks for _ in self.tasks]
         task_lps_standard = [(task_lp - task_lps_mean) / task_lps_std for task_lp in task_lps]
 
         # Sigmoid

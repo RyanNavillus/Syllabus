@@ -9,7 +9,7 @@ from pettingzoo.butterfly import pistonball_v6
 from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
 
 from syllabus.core import PettingZooTaskWrapper
-
+from syllabus.task_space import TaskSpace
 
 class PistonballTaskWrapper(PettingZooTaskWrapper):
     """
@@ -25,7 +25,7 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
 
         # Task completion metrics
         self.episode_return = 0
-        self.task_space = spaces.Discrete(11)   # 0.1 - 1.0 friction
+        self.task_space = TaskSpace(spaces.Discrete(11), list(range(11)))   # 0.1 - 1.0 friction
 
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided

@@ -7,7 +7,7 @@ import gym
 from gym import spaces
 
 from syllabus.core import TaskWrapper
-
+from syllabus.task_space import TaskSpace
 
 class MinihackTaskWrapper(TaskWrapper):
     """
@@ -24,7 +24,7 @@ class MinihackTaskWrapper(TaskWrapper):
 
         # Task completion metrics
         self.episode_return = 0
-        self.task_space = spaces.Discrete(1000)
+        self.task_space = TaskSpace(spaces.Discrete(1000), list(range(1000)))
 
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided
