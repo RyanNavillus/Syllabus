@@ -39,16 +39,11 @@ class TaskSpace():
 
     def decode(self, encoding):
         """Convert the efficient task encoding to a task that can be used by the environment."""
-        if not self.gym_space.contains(np.asarray(encoding, dtype=self.gym_space.dtype)):
-            return None
         return self._decoder(encoding)
     
     def encode(self, task):
         """Convert the task to an efficient encoding to speed up multiprocessing."""
-        try:
-            return self._encoder(task)
-        except Exception as e:
-            return None
+        return self._encoder(task)
     
     def add_task(self, task):
         """Add a task to the task space. Only implemented for discrete spaces."""

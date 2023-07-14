@@ -36,6 +36,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.step_results = []
         self.default_task = default_task
         self.warned_once = False
+        self._first_episode = True
         if default_task is not None and not task_space.contains(default_task):
             raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
@@ -49,15 +50,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def reset(self, *args, **kwargs):
         self.step_results = []
-
-        # Update curriculum
-        update = {
-            "update_type": "complete",
-            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
-            "request_sample": True
-        }
-        self.update_queue.put(update)
-        self.task_completion = 0.0
 
         # Solve race condition with expert software engineering
         if self.task_queue.empty():
@@ -86,13 +78,13 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
-
         if "task_completion" in info:
             if self.global_task_completion is not None:
                 self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
             else:
-                self.task_completion = info["task_completion"]
+                self.task_completion = info["task_completion"]        
 
+        # Update curriculum with step info
         if self.update_on_step:
             self.step_results.append((obs, rew, done, info))
             if len(self.step_results) >= 1000 or done:
@@ -103,6 +95,16 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 }
                 self.update_queue.put(update)
                 self.step_results = []
+
+        # Update curriculum with task completion info
+        if self.update_on_step or done:
+            update = {
+                "update_type": "complete",
+                "metrics": (self.task_space.encode(self.env.task), self.task_completion),
+                "request_sample": done
+            }
+            self.update_queue.put(update)
+            self.task_completion = 0.0
 
         return obs, rew, done, info
     
@@ -164,7 +166,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         # Update curriculum
         update = {
             "update_type": "complete",
-            "metrics": (self.env.task, self.task_completion),
+            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
             "request_sample": True
         }
         self.update_queue.put(update)
@@ -179,7 +181,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                 self.warned_once = False
         else:
             message = self.task_queue.get()
-            next_task = message["next_task"]
+            next_task = self.task_space.decode(message["next_task"])
             if "add_task" in message:
                 self.env.add_task(message["add_task"])
         return self.env.reset(*args, new_task=next_task, **kwargs)

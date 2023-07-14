@@ -34,13 +34,13 @@ class LearningProgressCurriculum(Curriculum):
                 self._p_slow[task] = 0.0
         #print(f"Creating curriculum with {self._n_tasks} tasks: {self._tasks} from task space: {self.task_space}")
 
-    def _complete_task(self, task: int, success_prob: float):
+    def update_on_complete(self, task: int, success_prob: float):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
         if task is None:
             return
-        super()._complete_task(task, success_prob)
+        super().update_on_complete(task, success_prob)
 
         k_slow = 2.0 / (55 + 1.0)
         k_fast = 2.0 / (30 + 1.0)

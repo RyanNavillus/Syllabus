@@ -42,33 +42,33 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
 
-    def _complete_task(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
+    def update_on_complete(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
         """ 
         self.completed_tasks += 1
 
-    def _on_step(self, obs, rew, done, info) -> None:
+    def update_on_step(self, obs, rew, done, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def _on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
         for step_result in step_results:
-            self._on_step(*step_result)
+            self.update_on_step(*step_result)
 
-    def _on_episode(self, episode_return: float, trajectory: List = None) -> None:
+    def update_on_episode(self, episode_return: float, trajectory: List = None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """
         raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def _on_demand(self, metrics: Dict):
+    def update_on_demand(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """
@@ -83,16 +83,16 @@ class Curriculum:
         args = update_data["metrics"]
 
         if update_type == "step":
-            self._on_step(*args)
+            self.update_on_step(*args)
         elif update_type == "step_batch":
-            self._on_step_batch(*args)
+            self.update_on_step_batch(*args)
         elif update_type == "episode":
-            self._on_episode(*args)
+            self.update_on_episode(*args)
         elif update_type == "on_demand":
             # Directly pass metrics without expanding
-            self._on_demand(args)
+            self.update_on_demand(args)
         elif update_type == "complete":
-            self._complete_task(*args)
+            self.update_on_complete(*args)
         elif update_type == "add_task":
             self.add_task(args)
         elif update_type == "noop":
