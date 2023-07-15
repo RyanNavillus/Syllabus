@@ -168,7 +168,7 @@ class PrioritizedLevelReplay(Curriculum):
         """
         raise NotImplementedError("PrioritizedLevelReplay does not support the episode updates. Use on_demand from the learner process.")
 
-    def update_on_complete(self, task: Any, success_prob: float) -> None:
+    def update_task_progress(self, task: Any, success_prob: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.

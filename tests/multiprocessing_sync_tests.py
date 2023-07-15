@@ -18,8 +18,8 @@ from syllabus.tests import SyncTestCurriculum, SyncTestEnv
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum, RayCurriculumWrapper
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_synctest_env
 
-N_ENVS = 4
-N_EPISODES = 2
+N_ENVS = 128
+N_EPISODES = 300
 
 if __name__ == "__main__":
     ray.init()
@@ -33,17 +33,21 @@ if __name__ == "__main__":
 
     def evaluate_curriculum(curriculum, num_envs=N_ENVS):
         stats = curriculum.get_stats()
-        assert stats["total_reward"] == 10 * num_envs * N_EPISODES, f"Curriculum total reward is {stats['total_reward']}, expected {10 * N_ENVS * N_EPISODES}"
+        assert stats["total_reward"] == 100 * num_envs * N_EPISODES, f"Curriculum total reward is {stats['total_reward']}, expected {10 * N_ENVS * N_EPISODES}"
         for task, count in stats["task_counts"].items():
-            assert count == num_envs, f"Curriculum task {task} count is {count}, expected {num_envs}"
+            if task == "error task":
+                assert count == 0, f"Received completed error tasks, expected 0"
+            else:
+                assert count == num_envs, f"Curriculum task '{task}' count is {count}, expected {num_envs}"
+        assert stats["total_dones"] == num_envs * N_EPISODES, f"Curriculum total dones is {stats['total_dones']}, expected {num_envs * N_EPISODES}"
         
 
 
     # Test single process speed
-    print("RUNNING: Python single process test (4 envs)...")
-    test_curriculum = SyncTestCurriculum(4, N_EPISODES, sample_env.task_space)
-    native_speed = test_single_process(create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=4, num_episodes=N_EPISODES)
-    evaluate_curriculum(test_curriculum, num_envs=4)
+    print("RUNNING: Python single process test ...")
+    test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
+    native_speed = test_single_process(create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+    evaluate_curriculum(test_curriculum, num_envs=N_ENVS)
     print(f"PASSED: single process test passed: {native_speed:.2f}s")
 
     # Test Queue multiprocess speed with Syllabus

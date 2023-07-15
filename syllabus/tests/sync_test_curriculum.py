@@ -20,15 +20,16 @@ class SyncTestCurriculum(ManualCurriculum):
         self.num_envs = num_envs
         self.num_episodes = num_episodes
         self.task_counts = {task: 0 for task in task_list}
+        self.task_counts["error task"] = 0
         self.total_reward = 0
         self.total_dones = 0
 
-    def update_on_complete(self, task: typing.Any, success_prob: float) -> None:
+    def update_task_progress(self, task: typing.Any, progress: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
         """
-        if success_prob > 0.999:
+        if progress > 0.999:
             self.task_counts[task] += 1
 
     def update_on_step(self, obs, rew, done, info) -> None:
@@ -36,7 +37,8 @@ class SyncTestCurriculum(ManualCurriculum):
         Update the curriculum with the current step results from the environment.
         """
         self.total_reward += rew
-        self.total_dones += 1
+        if done:
+            self.total_dones += 1
 
     def get_stats(self):
         return {
@@ -48,7 +50,7 @@ class SyncTestCurriculum(ManualCurriculum):
     def sample(self, k: int = 1) -> Union[List, Any]:
         remaining_tasks = self.remaining_tasks()
         if remaining_tasks < k:
-            return super().sample(k=remaining_tasks) + ["error task"] * (k - remaining_tasks)
+            tasks = super().sample(k=remaining_tasks) + ["error task"] * (k - remaining_tasks)
         else:
             tasks = super().sample(k=k)
         return tasks

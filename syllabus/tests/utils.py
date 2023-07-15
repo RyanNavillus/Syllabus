@@ -20,7 +20,7 @@ def run_episode(env, new_task=None, curriculum=None):
             curriculum.update_on_step(obs, rew, done, info)
         ep_rew += rew
     if curriculum and "task_completion" in info:
-        curriculum.update_on_complete(env.task, success_prob=info["task_completion"])
+        curriculum.update_task_progress(env.task, info["task_completion"])
     return ep_rew
 
 
@@ -81,14 +81,14 @@ def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None
 
     end = time.time()
     native_speed = end - start
-    time.sleep(3)
+    time.sleep(3.0)
     return native_speed
 
 
 def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
     if curriculum:
         target = run_episodes_ray
-        args = (env_fn, env_args, env_kwargs, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
+        args = (env_fn, env_args, env_kwargs, True, num_episodes, update_on_step)
     else:
         target = run_episodes_ray
         args = (env_fn, env_args, env_kwargs, False, num_episodes, update_on_step)
@@ -121,7 +121,7 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 from nle.env.tasks import NetHackScore
 from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
 
-def create_nethack_env(env_args, env_kwargs, *args, type=None, **kwargs):
+def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
     if type == "queue":
@@ -140,7 +140,7 @@ from gym_minigrid.envs import DoorKeyEnv
 from syllabus.core import ReinitTaskWrapper
 from gym_minigrid.register import env_list
 
-def create_minigrid_env(env_args, env_kwargs, *args, type=None, **kwargs):
+def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = gym.make("MiniGrid-DoorKey-5x5-v0", **env_kwargs)
 
     def create_env(task):

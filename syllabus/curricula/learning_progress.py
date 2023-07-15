@@ -34,18 +34,18 @@ class LearningProgressCurriculum(Curriculum):
                 self._p_slow[task] = 0.0
         #print(f"Creating curriculum with {self._n_tasks} tasks: {self._tasks} from task space: {self.task_space}")
 
-    def update_on_complete(self, task: int, success_prob: float):
+    def update_task_progress(self, task: int, progress: float):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
         if task is None:
             return
-        super().update_on_complete(task, success_prob)
+        super().update_task_progress(task, progress)
 
         k_slow = 2.0 / (55 + 1.0)
         k_fast = 2.0 / (30 + 1.0)
-        self._p_slow[task] = (success_prob * k_slow) + (self._p_slow[task] * (1.0 - k_slow))
-        self._p_fast[task] = (success_prob * k_fast) + (self._p_fast[task] * (1.0 - k_fast))
+        self._p_slow[task] = (progress * k_slow) + (self._p_slow[task] * (1.0 - k_slow))
+        self._p_fast[task] = (progress * k_fast) + (self._p_fast[task] * (1.0 - k_fast))
 
     def _lp_metric(self, task: int, reweight: bool = True) -> float:
         """

@@ -42,11 +42,11 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
 
-    def update_on_complete(self, task: typing.Any, success_prob: Tuple[float, bool]) -> None:
+    def update_task_progress(self, task: typing.Any, progress: Tuple[float, bool]) -> None:
         """
-        Update the curriculum with a task and its success probability upon
-        success or failure.
-        """ 
+        Update the curriculum with a task and its progress.
+        Progress of 1.0 or True indicates a complete task.
+        """
         self.completed_tasks += 1
 
     def update_on_step(self, obs, rew, done, info) -> None:
@@ -91,8 +91,8 @@ class Curriculum:
         elif update_type == "on_demand":
             # Directly pass metrics without expanding
             self.update_on_demand(args)
-        elif update_type == "complete":
-            self.update_on_complete(*args)
+        elif update_type == "task_progress":
+            self.update_task_progress(*args)
         elif update_type == "add_task":
             self.add_task(args)
         elif update_type == "noop":

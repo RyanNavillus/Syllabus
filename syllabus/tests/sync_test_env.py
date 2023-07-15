@@ -4,12 +4,13 @@ from syllabus.task_space import TaskSpace
 from syllabus.core import TaskEnv
 
 class SyncTestEnv(TaskEnv):
-    def __init__(self, num_episodes):
+    def __init__(self, num_episodes, num_steps=100):
         super().__init__()
+        self.num_steps = num_steps
         self.action_space = gym.spaces.Discrete(2)
-        self.observation_space = gym.spaces.Tuple((gym.spaces.Discrete(10), gym.spaces.Discrete(2)))
+        self.observation_space = gym.spaces.Tuple((gym.spaces.Discrete(self.num_steps), gym.spaces.Discrete(2)))
         self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes+1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
-        self.task = "task 1"
+        self.task = "error_task"
 
     def reset(self, new_task=None):
         if new_task == "error task":
@@ -23,7 +24,7 @@ class SyncTestEnv(TaskEnv):
 
         obs = self.observation((self._turn, action))
         rew = 1
-        done = self._turn >= 10
+        done = self._turn >= self.num_steps
         info = {"content": "step", "task_completion": self._task_completion(obs, rew, done, {})}
         return obs, rew, done, info
 

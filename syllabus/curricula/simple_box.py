@@ -18,19 +18,19 @@ class SimpleBoxCurriculum(Curriculum):
                  required_successes: int = 10,
                  **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
-        assert isinstance(self.task_space, Box), "SimpleBoxCurriculum only supports Box task spaces."
+        assert isinstance(self.task_space.gym_space, Box), "SimpleBoxCurriculum only supports Box task spaces."
 
         self.success_threshold = success_threshold
         self.required_successes = required_successes
 
-        full_range = self.task_space.high[1] - self.task_space.low[0]
-        midpoint = self.task_space.low[0] + (full_range / 2.0)
+        full_range = self.task_space.gym_space.high[1] - self.task_space.gym_space.low[0]
+        midpoint = self.task_space.gym_space.low[0] + (full_range / 2.0)
         self.step_size = (full_range / 2.0) / steps
         self.max_range = (midpoint - self.step_size, midpoint + self.step_size)
         self.consecutive_successes = 0
         self.max_reached = False
 
-    def update_on_complete(self, task: typing.Any, success_prob: float) -> None:
+    def update_task_progress(self, task: typing.Any, success_prob: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
@@ -46,11 +46,11 @@ class SimpleBoxCurriculum(Curriculum):
 
         # If we have enough successes in a row, update task
         if self.consecutive_successes >= self.required_successes:
-            new_low = max(self.max_range[0] - self.step_size, self.task_space.low[0])
-            new_high = min(self.max_range[1] + self.step_size, self.task_space.high[1])
+            new_low = max(self.max_range[0] - self.step_size, self.task_space.gym_space.low[0])
+            new_high = min(self.max_range[1] + self.step_size, self.task_space.gym_space.high[1])
             self.max_range = (new_low, new_high)
             self.consecutive_successes = 0
-            if new_low == self.task_space.low[0] and new_high == self.task_space.high[1]:
+            if new_low == self.task_space.gym_space.low[0] and new_high == self.task_space.gym_space.high[1]:
                 self.max_reached = True
 
     def sample(self, k: int = 1) -> Union[List, Any]:
