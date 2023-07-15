@@ -1,8 +1,6 @@
 import sys
 
-sys.path.append("./level_replay/")
-
-from .uniform import UniformCurriculum
+from .domain_randomization import DomainRandomization
 from .noop import NoopCurriculum
 from .manual import ManualCurriculum
 from .learning_progress import LearningProgressCurriculum

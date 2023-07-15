@@ -953,11 +953,12 @@ class Crop(nn.Module):
     def forward(self, inputs, coordinates):
         """Calculates centered crop around given x,y coordinates.
         Args:
-           inputs [B x H x W]
-           coordinates [B x 2] x,y coordinates
+        inputs [B x H x W]
+        coordinates [B x 2] x,y coordinates
         Returns:
-           [B x H' x W'] inputs cropped and centered around x,y coordinates.
+        [B x H' x W'] inputs cropped and centered around x,y coordinates.
         """
+
         assert inputs.shape[1] == self.height
         assert inputs.shape[2] == self.width
 

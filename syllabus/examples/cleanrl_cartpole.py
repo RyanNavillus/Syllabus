@@ -17,7 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 # Syllabus imports
 from syllabus.core import TaskWrapper, MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
-from syllabus.examples import CartPoleTaskWrapper
+from syllabus.examples.task_wrappers import CartPoleTaskWrapper
 
 
 def parse_args():
