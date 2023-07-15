@@ -6,7 +6,7 @@ import numpy as np
 import gym
 import ray
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-from syllabus.core import Curriculum, TaskWrapper, PettingZooTaskWrapper
+from syllabus.core import Curriculum, TaskWrapper, TaskEnv, PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
 
 
@@ -225,7 +225,7 @@ class RaySyncWrapper(gym.Wrapper):
                  default_task=None,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        assert isinstance(env, TaskWrapper) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
+        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.update_on_step = update_on_step    # Disable to improve performance 10x
