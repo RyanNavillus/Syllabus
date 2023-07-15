@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Syllabus's documentation!
-====================================
+Syllabus Documentation
+======================
 
 Syllabus is a library for using curriculum learning to train reinforcement learning agents. It provides a Curriculum API from
 defining curriculum learning algorithms, implementations of popular curriculum learning methods, and a framework for synchronizing 
@@ -19,8 +19,10 @@ We also have preliminary support and examples for multiagent PettingZoo environm
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   :glob:
 
-   *
+   self
+   quickstart
+   curriculum
+   taskspace
    api-docs/modules
 
