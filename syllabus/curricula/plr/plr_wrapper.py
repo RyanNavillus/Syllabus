@@ -102,7 +102,7 @@ class PrioritizedLevelReplay(Curriculum):
         self.num_updates = 0    # Used to ensure proper usage
         self.num_samples = 0    # Used to ensure proper usage
 
-    def _on_demand(self, metrics: Dict):
+    def update_on_demand(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """
@@ -150,25 +150,25 @@ class PrioritizedLevelReplay(Curriculum):
         self.num_samples += 1
         return [self._task_sampler.sample() for k in range(k+1)]
 
-    def _on_step(self, obs, rew, done, info) -> None:
+    def update_on_step(self, obs, rew, done, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         raise NotImplementedError("PrioritizedLevelReplay does not support the step updates. Use on_demand from the learner process.")
 
-    def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
         raise NotImplementedError("PrioritizedLevelReplay does not support the step updates. Use on_demand from the learner process.")
 
-    def _on_episode(self, episode_return: float, trajectory: List = None) -> None:
+    def update_on_episode(self, episode_return: float, trajectory: List = None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """
         raise NotImplementedError("PrioritizedLevelReplay does not support the episode updates. Use on_demand from the learner process.")
 
-    def _complete_task(self, task: Any, success_prob: float) -> None:
+    def update_task_progress(self, task: Any, success_prob: float) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.

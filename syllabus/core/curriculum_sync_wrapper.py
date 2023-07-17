@@ -22,8 +22,8 @@ class CurriculumWrapper:
     def sample(self, k: int = 1):
         return self.curriculum.sample(k=k)
 
-    def complete_task(self, task, success_prob):
-        self.curriculum.complete_task(task, success_prob)
+    def update_task_progress(self, task, progress):
+        self.curriculum.update_task_progress(task, progress)
 
     @property
     def num_tasks(self):
@@ -39,14 +39,14 @@ class CurriculumWrapper:
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
 
-    def _on_step(self, task, step, reward, done):
-        self.curriculum._on_step(task, step, reward, done)
+    def update_on_step(self, task, step, reward, done):
+        self.curriculum.update_on_step(task, step, reward, done)
 
     def log_metrics(self, writer, step=None):
         self.curriculum.log_metrics(writer, step=step)
 
-    def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
-        self.curriculum._on_step_batch(step_results)
+    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+        self.curriculum.update_on_step_batch(step_results)
 
     def update_curriculum(self, metrics):
         self.curriculum.update_curriculum(metrics)
@@ -66,16 +66,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     """
     def __init__(self,
                  curriculum: Curriculum,
-                 num_envs: int,
                  task_queue: SimpleQueue,
                  update_queue: SimpleQueue):
         super().__init__(curriculum)
-        self.num_envs = num_envs
         self.task_queue = task_queue
         self.update_queue = update_queue
         self.update_thread = None
         self.should_update = False
-        self.queued_tasks = 0
         self.added_tasks = []
 
     def start(self):
@@ -84,8 +81,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
-        # Add initial tasks for each environment
-        # TODO: Why is this necessary? The environment already requests an initial task.
         self.update_thread.start()
 
     def stop(self):
@@ -105,10 +100,15 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 batch_updates = self.update_queue.get()
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
-                # Count updates with "request_sample" set to True
-                requests = sum([result["request_sample"] for result in batch_updates if "request_sample" in result])
-                requested_tasks += requests
-                self.queued_tasks -= requests
+
+                for update in batch_updates:
+                    # Count updates with "request_sample" set to True
+                    if "request_sample" in update and update["request_sample"]:
+                        requested_tasks += 1
+                    # Decode task
+                    if update["update_type"] == "task_progress":
+                        update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
+                
                 self.batch_update_curriculum(batch_updates)
 
             # Sample new tasks
@@ -120,7 +120,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                         "added_tasks": self.added_tasks,
                     }
                     self.task_queue.put(message)
-                    self.queued_tasks += 1
                     self.added_tasks = []
 
     def __del__(self):
@@ -128,7 +127,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        writer.add_scalar("curriculum/task_queue_length", self.queued_tasks, step)
+        #writer.add_scalar("curriculum/task_queue_length", self.queued_tasks, step)
 
     def add_task(self, task):
         super().add_task(task)
@@ -154,13 +153,13 @@ def remote_call(func):
     return wrapper
 
 
-def make_multiprocessing_curriculum(curriculum, num_envs):
+def make_multiprocessing_curriculum(curriculum):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, num_envs, task_queue, update_queue)
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue)
     mp_curriculum.start()
     return mp_curriculum, task_queue, update_queue
 
@@ -194,7 +193,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    def _on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
     def add_task(self, task):

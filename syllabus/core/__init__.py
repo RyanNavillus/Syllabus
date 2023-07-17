@@ -1,5 +1,6 @@
 # Environment Code
 from .environment_task_wrapper import TaskWrapper, PettingZooTaskWrapper
+from .environment_task_env import TaskEnv, PettingZooTaskEnv
 
 # Curriculum Code
 from .utils import decorate_all_functions, UsageError, enumerate_axes

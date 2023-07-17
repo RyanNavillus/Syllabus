@@ -17,57 +17,58 @@ def run_episode(env, new_task=None, curriculum=None):
         action = env.action_space.sample()
         obs, rew, done, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum._on_step(obs, rew, done, info)
+            curriculum.update_on_step(obs, rew, done, info)
         ep_rew += rew
+    if curriculum and "task_completion" in info:
+        curriculum.update_task_progress(env.task, info["task_completion"])
     return ep_rew
 
 
-def run_episodes(env_fn, curriculum=None, num_episodes=10):
+def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10):
     """Run multiple episodes of the environment."""
-    env = env_fn()
+    env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         if curriculum:
             task = curriculum.sample()[0]
             ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum))
-            curriculum._complete_task(task, success_prob=random.random())
         else:
             ep_rews.append(run_episode(env))
 
 
-def run_episodes_queue(env_fn, task_queue, update_queue, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(task_queue, update_queue, type="queue", update_on_step=update_on_step) if sync else env_fn()
+def run_episodes_queue(env_fn, env_args, env_kwargs, task_queue, update_queue, sync=True, num_episodes=10, update_on_step=True):
+    env = env_fn(task_queue, update_queue, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
 
 @ray.remote
-def run_episodes_ray(env_fn, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(type="ray", update_on_step=update_on_step) if sync else env_fn()
+def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, update_on_step=True):
+    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
 
 
-def test_single_process(env_fn, curriculum=None, num_envs=2, num_episodes=10):
+def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
     start = time.time()
     for _ in range(num_envs):
-        run_episodes(env_fn, curriculum=curriculum, num_episodes=num_episodes)
+        run_episodes(env_fn, env_args, env_kwargs, curriculum=curriculum, num_episodes=num_episodes)
     end = time.time()
     native_speed = end - start
     return native_speed
 
 
-def test_native_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
+def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
     start = time.time()
 
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, curriculum.task_queue, curriculum.update_queue, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
+        args = (env_fn, env_args, env_kwargs, curriculum.task_queue, curriculum.update_queue, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
     else:
         target = run_episodes
-        args = (env_fn, None, num_episodes)
+        args = (env_fn, env_args, env_kwargs, (), num_episodes)
 
     # Run episodes
     actors = []
@@ -80,16 +81,17 @@ def test_native_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=1
 
     end = time.time()
     native_speed = end - start
+    time.sleep(3.0)
     return native_speed
 
 
-def test_ray_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
+def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
     if curriculum:
         target = run_episodes_ray
-        args = (env_fn, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
+        args = (env_fn, env_args, env_kwargs, True, num_episodes, update_on_step)
     else:
         target = run_episodes_ray
-        args = (env_fn, False, num_episodes, update_on_step)
+        args = (env_fn, env_args, env_kwargs, False, num_episodes, update_on_step)
 
     start = time.time()
     remotes = []
@@ -100,13 +102,27 @@ def test_ray_multiprocess(env_fn, curriculum=None, num_envs=2, num_episodes=10, 
     ray_speed = end - start
     return ray_speed
 
+# Sync Test Environment
+from syllabus.tests import SyncTestEnv
+def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = SyncTestEnv(*env_args, **env_kwargs)
+    if type == "queue":
+        env = MultiProcessingSyncWrapper(env,
+                                        *args,
+                                        default_task="error task",
+                                        task_space=env.task_space,
+                                        **kwargs)
+    elif type == "ray":
+        env = RaySyncWrapper(env, *args, default_task="error task", task_space=env.task_space, **kwargs)
+    return env
+
 
 # Nethack Tests
 from nle.env.tasks import NetHackScore
 from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
 
-def create_nethack_env(*args, type=None, **kwargs):
-    env = NetHackScore()
+def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
     if type == "queue":
         env = MultiProcessingSyncWrapper(env,
@@ -124,8 +140,8 @@ from gym_minigrid.envs import DoorKeyEnv
 from syllabus.core import ReinitTaskWrapper
 from gym_minigrid.register import env_list
 
-def create_minigrid_env(*args, type=None, **kwargs):
-    env = gym.make("MiniGrid-DoorKey-5x5-v0")
+def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = gym.make("MiniGrid-DoorKey-5x5-v0", **env_kwargs)
 
     def create_env(task):
         return gym.make(task)

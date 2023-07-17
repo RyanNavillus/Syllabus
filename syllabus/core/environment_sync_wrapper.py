@@ -6,7 +6,7 @@ import numpy as np
 import gym
 import ray
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-from syllabus.core import Curriculum, TaskWrapper, PettingZooTaskWrapper
+from syllabus.core import Curriculum, TaskWrapper, TaskEnv, PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
 
 
@@ -21,7 +21,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  task_queue: SimpleQueue,
                  update_queue: SimpleQueue,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 default_task=None,
+                 default_task: Any = None,
+                 buffer_size: int = 1,
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
@@ -32,77 +33,70 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.task_space = task_space
         self.update_on_step = update_on_step
         self.global_task_completion = global_task_completion
-        self.task_completion = 0.0
-        self.step_results = []
+        self.task_progress = 0.0
+        self.step_updates = []
         self.default_task = default_task
         self.warned_once = False
+        self._first_episode = True
         if default_task is not None and not task_space.contains(default_task):
             raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
         # Request initial task
-        update = {
-            "update_type": "noop",
-            "metrics": None,
-            "request_sample": True
-        }
-        self.update_queue.put(update)
+        for _ in range(buffer_size):
+            update = {
+                "update_type": "noop",
+                "metrics": None,
+                "request_sample": True
+            }
+            self.update_queue.put(update)
 
     def reset(self, *args, **kwargs):
-        self.step_results = []
+        self.step_updates = []
+        self.task_progress = 0.0
 
-        # Update curriculum
-        update = {
-            "update_type": "complete",
-            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
-            "request_sample": True
-        }
-        self.update_queue.put(update)
-        self.task_completion = 0.0
-
-        # Solve race condition with expert software engineering
-        if self.task_queue.empty():
-            # Give it a sec, race conditions aren't real :)
-            # On a serious note, it seems that when cpu constrained, the curriculum process is not given cpu time
-            # before full episodes finish. This means that the curriculum process is not able to sample new tasks in time.
-            # In practice this occurs very few times during tests.
-            time.sleep(1.0)
-
-        # Sample new task
-        if self.task_queue.empty():
-            # Choose default task if it is set, or keep the current task
-            next_task = self.default_task if self.default_task is not None else self.env.task
-            if not self.warned_once:
-                print("WARNING: Task queue was empty, selecting default task. This warning will not print again for this environment.")
-                self.warned_once = False
-        else:
-            # TODO: Test this
-            message = self.task_queue.get()
-            next_task = self.task_space.decode(message["next_task"])
-            if "added_tasks" in message:
-                added_tasks = message["added_tasks"]
-                for add_task in added_tasks:
-                    self.env.add_task(add_task)
+        message = self.task_queue.get() # Blocks until a task is available
+        next_task = self.task_space.decode(message["next_task"])
+        if "added_tasks" in message:
+            added_tasks = message["added_tasks"]
+            for add_task in added_tasks:
+                self.env.add_task(add_task)
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
-
         if "task_completion" in info:
             if self.global_task_completion is not None:
-                self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
+                self.task_progress = self.global_task_completion(self.curriculum, obs, rew, done, info)
             else:
-                self.task_completion = info["task_completion"]
+                self.task_progress = info["task_completion"]
 
+        # Update curriculum with step info
         if self.update_on_step:
-            self.step_results.append((obs, rew, done, info))
-            if len(self.step_results) >= 1000 or done:
-                update = {
-                    "update_type": "step_batch",
-                    "metrics": (self.step_results,),
-                    "request_sample": False
-                }
-                self.update_queue.put(update)
-                self.step_results = []
+            # Environment outputs
+            self.step_updates.append({
+                "update_type": "step",
+                "metrics": (obs, rew, done, info),
+                "request_sample": False
+            })
+            # Task progress
+            self.step_updates.append({
+                "update_type": "task_progress",
+                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+                "request_sample": done
+            })
+            # Send batched updates
+            if len(self.step_updates) >= 1000 or done:
+                #print(len(self.step_updates))
+                self.update_queue.put(self.step_updates)
+                self.step_updates = []
+        elif done:
+            # Task progress
+            update = {
+                "update_type": "task_progress",
+                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+                "request_sample": True
+            }
+            self.update_queue.put(update)
 
         return obs, rew, done, info
     
@@ -164,7 +158,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         # Update curriculum
         update = {
             "update_type": "complete",
-            "metrics": (self.env.task, self.task_completion),
+            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
             "request_sample": True
         }
         self.update_queue.put(update)
@@ -179,7 +173,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
                 self.warned_once = False
         else:
             message = self.task_queue.get()
-            next_task = message["next_task"]
+            next_task = self.task_space.decode(message["next_task"])
             if "add_task" in message:
                 self.env.add_task(message["add_task"])
         return self.env.reset(*args, new_task=next_task, **kwargs)
@@ -195,7 +189,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
 
         if self.update_on_step:
             self.step_results.append((obs, rew, done, info))
-            if len(self.step_results) >= 1000 or done:
+            if len(self.step_results) >= 2000:
                 update = {
                     "update_type": "step_batch",
                     "metrics": (self.step_results,),
@@ -231,7 +225,7 @@ class RaySyncWrapper(gym.Wrapper):
                  default_task=None,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        assert isinstance(env, TaskWrapper) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
+        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.update_on_step = update_on_step    # Disable to improve performance 10x
@@ -248,8 +242,8 @@ class RaySyncWrapper(gym.Wrapper):
 
         # Update curriculum
         update = {
-            "update_type": "complete",
-            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
+            "update_type": "task_progress",
+            "metrics": (self.env.task, self.task_completion),
             "request_sample": True
         }
         self.curriculum.update_curriculum.remote(update)
@@ -257,7 +251,7 @@ class RaySyncWrapper(gym.Wrapper):
 
         # Sample new task
         sample = ray.get(self.curriculum.sample.remote())
-        next_task = self.task_space.decode(sample[0])
+        next_task = sample[0]
 
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
