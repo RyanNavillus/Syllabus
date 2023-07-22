@@ -103,6 +103,7 @@ class TaskSpace():
     
     @property
     def num_tasks(self) -> int:
+        # TODO: Cache results
         return self.count_tasks()
     
     def count_tasks(self, gym_space: Space = None) -> int:

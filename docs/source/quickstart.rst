@@ -3,7 +3,7 @@ Quickstart
 
 To use Syllabus with your existing training code you need to:
 
-1. Create a Syllabus Curriculum.
+1. Create a Syllabus :mod:`Curriculum <syllabus.core.curriculum_base.Curriculum>`.
 
 2. Wrap the curriculum with a Syllabus synchronization wrapper.
 

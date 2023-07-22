@@ -22,6 +22,7 @@ We also have preliminary support and examples for multiagent PettingZoo environm
 
    self
    quickstart
-   curriculum
+   curricula/curriculum
    taskspace
+   logging
    modules
