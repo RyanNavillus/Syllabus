@@ -10,30 +10,31 @@ from syllabus.examples.task_wrappers import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
 
 # Define a task space
-task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)), [])
+if __name__ == "__main__":
+    task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)), [])
 
-def env_creator(config):
-    env = gym.make("CartPole-v1")
-    # Wrap the environment to change tasks on reset()
-    env = CartPoleTaskWrapper(env)
-    # Add environment sync wrapper
-    env = RaySyncWrapper(env, default_task=(-0.02, 0.02), task_space=task_space)
-    return env
+    def env_creator(config):
+        env = gym.make("CartPole-v1")
+        # Wrap the environment to change tasks on reset()
+        env = CartPoleTaskWrapper(env)
+        # Add environment sync wrapper
+        env = RaySyncWrapper(env, default_task=(-0.02, 0.02), task_space=task_space)
+        return env
 
-ray.init(num_gpus=1)
-register_env("task_cartpole", env_creator)
+    #ray.init(num_gpus=1)
+    register_env("task_cartpole", env_creator)
 
-# Create the curriculum
-curriculum = SimpleBoxCurriculum(task_space)
-# Add the curriculum sync wrapper
-curriculum = make_ray_curriculum(curriculum)
+    # Create the curriculum
+    curriculum = SimpleBoxCurriculum(task_space)
+    # Add the curriculum sync wrapper
+    curriculum = make_ray_curriculum(curriculum)
 
-config = {
-        "env": "task_cartpole",
-        "num_gpus": 1,
-        "num_workers": 8,
-        "framework": "torch",
-}
+    config = {
+            "env": "task_cartpole",
+            "num_gpus": 1,
+            "num_workers": 8,
+            "framework": "torch",
+    }
 
-tuner = tune.Tuner("APEX", param_space=config)
-results = tuner.fit()
+    tuner = tune.Tuner("APEX", param_space=config)
+    results = tuner.fit()

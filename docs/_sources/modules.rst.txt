@@ -1,5 +1,5 @@
-API Documentation
-=================
+syllabus
+========
 
 .. toctree::
    :maxdepth: 4

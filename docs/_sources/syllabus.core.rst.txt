@@ -28,6 +28,14 @@ syllabus.core.environment\_sync\_wrapper module
    :undoc-members:
    :show-inheritance:
 
+syllabus.core.environment\_task\_env module
+-------------------------------------------
+
+.. automodule:: syllabus.core.environment_task_env
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 syllabus.core.environment\_task\_wrapper module
 -----------------------------------------------
 

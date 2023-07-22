@@ -10,7 +10,7 @@ import ray
 from gym_minigrid.register import env_list
 
 from syllabus.examples import NethackTaskWrapper
-from syllabus.curricula import NoopCurriculum, UniformCurriculum, LearningProgressCurriculum, PrioritizedLevelReplay
+from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
 from syllabus.core import (MultiProcessingSyncWrapper,
                            RaySyncWrapper,
                            MultiProcessingCurriculumWrapper,
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     sample_env = create_minigrid_env()
     curricula = [
         NoopCurriculum("MiniGrid-DoorKey-5x5-v0", sample_env.task_space, random_start_tasks=10),
-        UniformCurriculum(sample_env.task_space, random_start_tasks=10),
+        DomainRandomization(sample_env.task_space, random_start_tasks=10),
         LearningProgressCurriculum(sample_env.task_space, random_start_tasks=10),
         PrioritizedLevelReplay(sample_env.task_space, random_start_tasks=10, device="cpu", suppress_usage_warnings=True)
     ]

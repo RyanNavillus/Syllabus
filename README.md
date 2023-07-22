@@ -1,26 +1,25 @@
 # Syllabus
 
-Syllabus is an API for designing curricula for reinforcement learning agents, as well as a framework for synchronizing those curricula across environments running in multiple processes. It currently has support for environments run with Python native multiprocessing or Ray actors, which includes RL libraries such as RLLib, CleanRL, Stable Baselines 3, and Monobeast (Torchbeast). We currently have working examples with **CleanRL**, **RLLib**, and **Monobeast (Torchbeast)**. We also have preliminary support and examples for multiagent **PettingZoo** environments.
+Syllabus is an API for designing curricula for reinforcement learning agents, as well as a framework for synchronizing those curricula across environments running in multiple processes. Curriculum Learning in some form has been behind many of the greatest successes in reinforcement learning, so Syllabus is designed to make those methods more accessible to researchers. It currently supports running environments with Python native multiprocessing or Ray actors, which includes RL libraries such as RLLib, CleanRL, Stable Baselines 3, and Monobeast (Torchbeast). We currently have working examples with **CleanRL**, **RLLib**, and **Monobeast (Torchbeast)**. We also have preliminary support and examples for multiagent **PettingZoo** environments.
 
+WIP Documentation is available at https://ryannavillus.github.io/Syllabus/index.html
 
 
 ## How it works
 
-Syllabus uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment outputs, while the environment receives tasks and sends outputs. The environment can run the provided task in the next episode and the curriculum can use the outputs to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information. Adding Syllabus's functionality to existing RL training code requires only a few additions.
+Syllabus's multiprocessing infrastructure uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment outputs, while the environment receives tasks and sends outputs. The environment can run the provided task in the next episode and the curriculum can use the outputs to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information. Adding Syllabus's functionality to existing RL training code requires only a few additions.
 
-To use syllabus for your curriculum learning project, you need:
+To use syllabus for your curriculum learning project you need an environment that supports multiple tasks, then you need can create:
 
-* A curriculum that subclasses `Curriculum` or follows its API.
-* An environment that supports multiple tasks.
-* A wrapper that subclasses `TaskWrapper` allowing you to set a new task on `reset()`.
-* Learning code that uses python multiprocessing or ray actors to parallelize environments.
+* A `TaskSpace` object that defines the range of tasks that you want your curriculum to support. In most cases these are simple Discrete or Box spaces.
+* A curriculum that subclasses `Curriculum` or follows its API. Many of these are already provided by Syllabus.
+* Either an environment that subclasses `TaskEnv` or a wrapper that subclasses `TaskWrapper` allowing you to set a new task on `reset()`. Examples and generic implementations are available in Syllabus.
 
-All of the global coordination is handled automatically by Syllabus's synchronization wrappers.
-
+If your RL learning code uses python native multiprocessing or ray actors to parallelize environments, then all of the global coordination is handled automatically by Syllabus's synchronization wrappers.
 
 ## Example
 
-This is a simple example of using Syllabus to synchronize a curriculum for CartPole using RLLib. CartPole doesn't normally support multiple tasks so we make a slight modification, allowing us to change the initialization range for the cart (the range from which the cart's initial location is selected). We also implement a `SimpleBoxCurriculum` which increases the initialization range whenever a specific reward threshold is met. We can use the `TaskWrapper` class to implement this new functionality for CartPole and to change the task on `reset()`.
+This is a simple example of using Syllabus to synchronize a curriculum for CartPole using RLLib. CartPole doesn't normally support multiple tasks so we make a slight modification, allowing us to change the initialization range for the cart (the range from which the cart's initial location is selected). We also implement a `SimpleBoxCurriculum` which increases the initialization range whenever a specific reward threshold is met. We can use the `TaskWrapper` class to implement this new functionality for CartPole and allow us to change the task on `reset()`.
 
 ```python
 from syllabus import TaskWrapper
@@ -57,9 +56,9 @@ With just a few modifications to our base learning code, we can train an agent w
 ![Example Diff](./example_diff.png)
 
 
-As you can see, we just wrap the task-enabled CartPole environment with a `RaySyncWrapper`, and create a curriculum with the `make_ray_curriculum()` function. They automatically communicate with each other to sample tasks from your curriculum, use them in the environments, and update the curriculum with environment outputs. That's it! Now you can implement as many curricula as you want, and as long as they follow the `Curriculum` API, you can hot-swap them in this code.
+As you can see, we just wrap the task-enabled CartPole environment with a `RaySyncWrapper`, then create a curriculum and wrap it with the `make_ray_curriculum()` function. They automatically communicate with each other to sample tasks from your curriculum, use them in the environments, and update the curriculum with environment outputs. That's it! Now you can implement as many curricula as you want, and as long as they follow the `Curriculum` API, you can hot-swap them in this code. Syllabus allows you to ignore the multiprocessing and focus on developing environments or curriculum learning methods. If you find that the existing multiprocessing infrastructure doesn't serve your use case well enough, please [create an issue](https://github.com/RyanNavillus/Syllabus/issues/new/choose) so that we can work with you to support it.
 
-For more examples, take a look at our examples folder. We currently have examples for the following combinations of RL components:
+For more examples, take a look at our examples folder. We currently have [examples](https://github.com/RyanNavillus/Syllabus/tree/main/syllabus/examples) for the following combinations of RL components:
 
 | RL Library    | Environment                       | Curriculum Method         |
 | --------------|-----------------------------------|---------------------------|
@@ -69,17 +68,14 @@ For more examples, take a look at our examples folder. We currently have example
 | RLLib         | CartPole-v1 (Gym)                 | SimpleBoxCurriculum       |
 | TorchBeast    | NetHackScore-v0 (Gym API)         | LearningProgress          |
 
-If you write any new examples and would like to share them, please create a PR!
+If you write any new examples and would like to share them, please create a pull request!
 
 
 # Custom Curricula and Environments
-As you can see, adding a curriculum implemented in Syllabus to any environment with a task-wrapper in Syllabus only takes a few lines of code. To create your own curriculum, all you need to do is write a subclass of Syllabus's `Curriculum` class and pass that to the curriculum creation function. `Curriculum` provides multiple methods for updating your curriculum, each meant for a different context.
-* `_on_step()` is called once for each environment step by the environment synchronization wrapper.
-* `_on_episode()` will be called once for each completed episode  by the environment synchronization wrapper (**not yet implemented**).
-* `_complete_task()` is called after each episode  by the environment synchronization wrapper. It receives a boolean or float value indicating whether the selected task was completed in the previous episode.
-* `_on_demand()` is meant to be called by the central learner process to update a curriculum with information from the training process, such as TD errors or gradient norms. It is never used by the individual environments.
 
-Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. If you choose not to use `_on_step()` to update your curriculum, set `update_on_step=False` when initializing the environment synchronization wrapper to improve performance (An exception with the same suggestion is raised by default).
+To create your own curriculum, all you need to do is write a subclass of Syllabus's `Curriculum` class. `Curriculum` provides multiple methods for updating your curriculum, each meant for a different context. By subclassing the `Curriculum` class, your method will automatically work with all of Syllabus's provided tools and infrastructure.
+
+Details on implementing your own curriculum can be found on the [documentation wesbite](https://ryannavillus.github.io/Syllabus/curricula/custom_curricula.html).
 
 To write a custom task wrapper for an environment, simply subclass the `TaskWrapper` for gym environments or `PettingZooTaskWrapper` for pettingzoo environments. If changing the task only requires you to edit properties of the environment, you can do so in the `change_task()` method. This is called before the internal environment's `reset()` function when you pass a `new_task` to the wrapped environment's `reset()`. If you need to perform more complex operations, you can also override the `reset()` method or other environment methods.
 

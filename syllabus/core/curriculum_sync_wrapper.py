@@ -11,19 +11,12 @@ from syllabus.core import Curriculum, decorate_all_functions
 
 
 class CurriculumWrapper:
-    """
-    Wrapper class for adding multiprocessing synchronization to a curriculum.
+    """Wrapper class for adding multiprocessing synchronization to a curriculum.
     """
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
         self.task_space = curriculum.task_space
         self.unwrapped = curriculum
-
-    def sample(self, k: int = 1):
-        return self.curriculum.sample(k=k)
-
-    def update_task_progress(self, task, progress):
-        self.curriculum.update_task_progress(task, progress)
 
     @property
     def num_tasks(self):
@@ -38,6 +31,12 @@ class CurriculumWrapper:
 
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
+      
+    def sample(self, k=1):
+        return self.curriculum.sample(k=k)
+
+    def update_task_progress(self, task, progress):
+        self.curriculum.update_task_progress(task, progress)
 
     def update_on_step(self, task, step, reward, done):
         self.curriculum.update_on_step(task, step, reward, done)
@@ -45,24 +44,21 @@ class CurriculumWrapper:
     def log_metrics(self, writer, step=None):
         self.curriculum.log_metrics(writer, step=step)
 
-    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results):
         self.curriculum.update_on_step_batch(step_results)
 
     def update_curriculum(self, metrics):
         self.curriculum.update_curriculum(metrics)
 
     def batch_update_curriculum(self, metrics):
-        self.curriculum.batch_update_curriculum(metrics)
+        self.curriculum.update_curriculum_batch(metrics)
     
     def add_task(self, task):
         self.curriculum.add_task(task)
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
-    """
-    Subclass of LearningProgress Curriculum that uses multiprocessing SimpleQueues
-    to share tasks and receive feedback from the environment.
-    Meant to be used with the MultiprocessingSyncWrapper for Gym environments.
+    """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper.
     """
     def __init__(self,
                  curriculum: Curriculum,

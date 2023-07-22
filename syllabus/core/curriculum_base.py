@@ -12,11 +12,18 @@ from syllabus.task_space import TaskSpace
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
 class Curriculum:
-    """
-    Base class and API for defining curricula to interface with Gym environments.
+    """Base class and API for defining curricula to interface with Gym environments.
     """
 
     def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+        """Initialize the base Curriculum
+
+        :param task_space: the environment's task space from which new tasks are sampled
+        TODO: Implement this in a way that works with any curriculum, maybe as a wrapper
+        :param random_start_tasks: Number of uniform random tasks to sample before using the algorithm's sample method, defaults to 0
+        TODO: Use task space for this
+        :param task_names: Names of the tasks in the task space, defaults to None
+        """
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
@@ -29,56 +36,83 @@ class Curriculum:
 
     @property
     def num_tasks(self) -> int:
-        # TODO: Cache results
+        """Counts the number of tasks in the task space.
+
+        :return: Returns the number of tasks in the task space if it is countable, TODO: -1 otherwise
+        """
         return self.task_space.num_tasks
 
     @property
     def tasks(self) -> List[tuple]:
+        """List all of the tasks in the task space.
+
+        :return: List of tasks if task space is enumerable, TODO: empty list otherwise?
+        """
         return list(self.task_space.tasks)
         
-    def add_task(self, task: tuple) -> None:
-        """
-        Add a task to the curriculum.
-        """
+    def add_task(self, task: typing.Any) -> None:
+        # TODO
         raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
 
     def update_task_progress(self, task: typing.Any, progress: Tuple[float, bool]) -> None:
-        """
-        Update the curriculum with a task and its progress.
-        Progress of 1.0 or True indicates a complete task.
+        """Update the curriculum with a task and its progress.
+
+        :param task: Task for which progress is being updated.
+        :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
         """
         self.completed_tasks += 1
 
-    def update_on_step(self, obs, rew, done, info) -> None:
-        """
-        Update the curriculum with the current step results from the environment.
+    def update_on_step(self, obs: typing.Any, rew: float, done: bool, info: dict) -> None:
+        """ Update the curriculum with the current step results from the environment.
+
+        :param obs: Observation from teh environment
+        :param rew: Reward from the environment
+        :param done: True if the episode ended on this step, False otherwise
+        :param info: Extra information from the environment
+        :raises NotImplementedError:
         """
         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
     def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
-        """
-        Update the curriculum with a batch of step results from the environment.
+        """Update the curriculum with a batch of step results from the environment.
+
+        This method can be overridden to provide a more efficient implementation. It is used
+        as a convenience function and to optimize the multiprocessing message passing throughput.
+
+        :param step_results: List of step results
         """
         for step_result in step_results:
             self.update_on_step(*step_result)
 
     def update_on_episode(self, episode_return: float, trajectory: List = None) -> None:
+        """Update the curriculum with episode results from the environment.
+
+        :param episode_return: Episodic return
+        :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
+        :raises NotImplementedError:
         """
-        Update the curriculum with episode results from the environment.
-        """
-        raise NotImplementedError("Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+        raise NotImplementedError("Not yet implemented.")
 
     def update_on_demand(self, metrics: Dict):
-        """
-        Update the curriculum with arbitrary inputs.
+        """Update the curriculum with arbitrary inputs.
+
+
+        :param metrics: Arbitrary dictionary of information. Can be used to provide gradient/error based
+                        updates from the training process.
+        :raises NotImplementedError:
         """
         raise NotImplementedError
 
     # TODO: Move to curriculum sync wrapper?
-    def update_curriculum(self, update_data: Dict):
+    def update_curriculum(self, update_data: typing.Dict[str, tuple]):
+        """Update the curriculum with the specified update type.
+        TODO: Change method header to not use dictionary, use enums?
+
+        :param update_data: Dictionary
+        :type update_data: Dictionary with "update_type" key which maps to one of ["step", "step_batch", "episode", "on_demand", "task_progress", "add_task", "noop"] and "args" with a tuple of the appropriate arguments for the given "update_type".
+        :raises NotImplementedError:
         """
-        Update the curriculum with the specified update type.
-        """
+
         update_type = update_data["update_type"]
         args = update_data["metrics"]
 
@@ -102,23 +136,26 @@ class Curriculum:
             raise NotImplementedError(f"Update type {update_type} not implemented.")
         self.n_updates += 1
 
-    def batch_update_curriculum(self, update_data: List[Dict]):
-        """
-        Update the curriculum with the specified update type.
+    def update_curriculum_batch(self, update_data: List[Dict]):
+        """Update the curriculum with batch of updates.
+
+        :param update_data: List of updates or potentially varying types
         """
         for update in update_data:
             self.update_curriculum(update)
 
     def _sample_distribution(self) -> List[float]:
+        """Returns a sample distribution over the task space.
+
+        Any curriculum that maintains a true probability distribution should implement this method to retrieve it.
         """
-        Returns a sample distribution over the task space.
-        """
-        # Uniform distribution
         raise NotImplementedError
 
     def sample(self, k: int = 1) -> Union[List, Any]:
-        """
-        Sample k tasks from the curriculum.
+        """Sample k tasks from the curriculum.
+
+        :param k: Number of tasks to sample, defaults to 1
+        :return: Either returns a single task if k=1, or a list of k tasks
         """
         assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
@@ -135,11 +172,11 @@ class Curriculum:
         return [tasks[i] for i in task_idx]
 
     def log_metrics(self, writer, step=None):
-        """
-        Log the task distribution to wandb.
+        """Log the task distribution to the provided tensorboard writer.
 
-        Paramaters:
-            task_dist: List of task probabilities. Must be a valid probability distribution.
+        # TODO: Clean up and support wandb
+        # TODO: Conditional imports
+        :param writer: Tensorboard summary writer.
         """
         try:
             task_dist = self._sample_distribution()

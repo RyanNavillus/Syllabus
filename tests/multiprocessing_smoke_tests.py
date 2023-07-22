@@ -8,7 +8,7 @@ import ray
 
 from nle.env.tasks import NetHackScore
 from syllabus.examples import NethackTaskWrapper
-from syllabus.curricula import NoopCurriculum, UniformCurriculum, LearningProgressCurriculum, PrioritizedLevelReplay
+from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
 from syllabus.core import (MultiProcessingSyncWrapper,
                            RaySyncWrapper,
                            MultiProcessingCurriculumWrapper,
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     sample_env = create_nethack_env()
     curricula = [
         (NoopCurriculum, (NetHackScore, sample_env.task_space), {}),
-        (UniformCurriculum, (sample_env.task_space,), {}),
+        (DomainRandomization, (sample_env.task_space,), {}),
         (LearningProgressCurriculum, (sample_env.task_space,), {}),
         (PrioritizedLevelReplay, (sample_env.task_space,), {"device":"cpu", "suppress_usage_warnings":True, "num_processes":N_ENVS}),
     ]
