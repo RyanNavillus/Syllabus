@@ -39,4 +39,5 @@ To incorporate feedback from the environment, the API provides multiple methods:
    :caption: Contents:
 
    self
+   implemented_curricula
    custom_curricula

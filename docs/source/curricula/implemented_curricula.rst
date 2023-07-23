@@ -7,8 +7,8 @@ but rarely highlighted in the literature,such as simulated annealing of difficul
 have several popular curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning progress curriculum
 introduced in Kanitscheider et al. 2021.
 
---------------------
-Domain Randomization
---------------------
+----------------------------------------------------------------------
+:mod: `Domain Randomization <syllabus.curricula.domain_randomization>`
+----------------------------------------------------------------------
 
 Domain Randomization is a simple but strong baseline for curriculum learning. It just uniformly samples a task from the task space.
