@@ -166,18 +166,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../taskspace.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../syllabus.core.html">syllabus.core package</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../syllabus.curricula.plr.html">syllabus.curricula.plr package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">syllabus.core package</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">syllabus.curricula.plr package</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../syllabus.examples.html">syllabus.examples package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">syllabus.examples package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../syllabus.task_space.html">syllabus.task_space package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">syllabus.task_space package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.tests.html">syllabus.tests package</a></li>
 </ul>
 </li>
 </ul>
@@ -221,7 +221,7 @@
 <p>Syllabus’s Curriculum API is a unified interface for curriculum learning methods. Curricula following this API
 can be used with all of Syllabus’s infrastructure. We hope that future curriculum learning research will provide
 implementations following this API to encourage reproducibility and ease of use.</p>
-<p>The full documentation for the curriculum class can be found <a class="reference internal" href="../syllabus.core.html"><span class="doc">syllabus.core package</span></a></p>
+<p>The full documentation for the curriculum class can be found <a class="reference internal" href="../modules/syllabus.core.html"><span class="doc">syllabus.core package</span></a></p>
 <p>The Curriculum class has three main jobs:</p>
 <ul class="simple">
 <li><p>Maintain a sampling distribution over the task space.</p></li>
@@ -232,17 +232,23 @@ implementations following this API to encourage reproducibility and ease of use.
 a deterministic sequence of tasks, or a single constant task depending on the curriculum learning method.</p>
 <p>To incorporate feedback from the environment, the API provides multiple methods:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_step" title="syllabus.core.curriculum_base.Curriculum.update_on_step"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step</span></code></a></p></li>
-<li><p><a class="reference internal" href="../syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress</span></code></a></p></li>
-<li><p><a class="reference internal" href="../syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a></p></li>
-<li><p><a class="reference internal" href="../syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="syllabus.core.curriculum_base.Curriculum.update_on_step_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step_batch</span></code></a></p></li>
-<li><p><a class="reference internal" href="../syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_curriculum_batch" title="syllabus.core.curriculum_base.Curriculum.update_curriculum_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_curriculum_batch</span></code></a></p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_step" title="syllabus.core.curriculum_base.Curriculum.update_on_step"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step</span></code></a></p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress</span></code></a></p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a></p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="syllabus.core.curriculum_base.Curriculum.update_on_step_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step_batch</span></code></a></p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_curriculum_batch" title="syllabus.core.curriculum_base.Curriculum.update_curriculum_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_curriculum_batch</span></code></a></p></li>
 </ul>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_curricula.html">Creating Your Own Curriculum</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom_curricula.html#required-methods">Required Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_curricula.html#curriculum-dependent-methods">Curriculum Dependent Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_curricula.html#recommended-methods">Recommended Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_curricula.html#optional-methods">Optional Methods</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>

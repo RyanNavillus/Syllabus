@@ -7,7 +7,7 @@ Syllabus's Curriculum API is a unified interface for curriculum learning methods
 can be used with all of Syllabus's infrastructure. We hope that future curriculum learning research will provide
 implementations following this API to encourage reproducibility and ease of use.
 
-The full documentation for the curriculum class can be found :doc:`../syllabus.core`
+The full documentation for the curriculum class can be found :doc:`../modules/syllabus.core`
 
 The Curriculum class has three main jobs:
 
