@@ -2,10 +2,10 @@ import typing
 import numpy as np
 from typing import Any, Dict, List, Union
 from syllabus.core import Curriculum
-from syllabus.curricula import ManualCurriculum
+from syllabus.curricula import SequentialCurriculum
 
 
-class SyncTestCurriculum(ManualCurriculum):
+class SyncTestCurriculum(SequentialCurriculum):
     """
     Base class and API for defining curricula to interface with Gym environments.
     """

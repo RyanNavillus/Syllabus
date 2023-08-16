@@ -4,7 +4,7 @@ from typing import Any, List, Union
 from syllabus.core import Curriculum
 
 
-class ManualCurriculum(Curriculum):
+class SequentialCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
