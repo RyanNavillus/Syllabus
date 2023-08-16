@@ -5,6 +5,8 @@ from syllabus.core import Curriculum
 
 
 class DomainRandomization(Curriculum):
+    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
+    """
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 

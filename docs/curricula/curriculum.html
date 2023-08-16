@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Creating Your Own Curriculum" href="custom_curricula.html" /><link rel="prev" title="Quickstart" href="../quickstart.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Implemented Curriculum Learning Methods" href="implemented_curricula.html" /><link rel="prev" title="Quickstart" href="../quickstart.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>Curriculum - Syllabus 0.3 documentation</title>
@@ -160,12 +160,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current has-children"><a class="current reference internal" href="#">Curriculum</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Curriculum</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Curriculum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html">Implemented Curriculum Learning Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_curricula.html">Creating Your Own Curriculum</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../taskspace.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">syllabus.core package</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -242,6 +243,14 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented_curricula.html">Implemented Curriculum Learning Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html#domain-randomization"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html#sequential-curriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Sequential</span> <span class="pre">Curriculum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html#simple-box-curriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">Box</span> <span class="pre">Curriculum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html#learning-progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html#prioritized-level-replay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="custom_curricula.html">Creating Your Own Curriculum</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="custom_curricula.html#required-methods">Required Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_curricula.html#curriculum-dependent-methods">Curriculum Dependent Methods</a></li>
@@ -258,12 +267,12 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="custom_curricula.html">
+          <a class="next-page" href="implemented_curricula.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Creating Your Own Curriculum</div>
+                <div class="title">Implemented Curriculum Learning Methods</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

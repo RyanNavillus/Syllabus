@@ -160,12 +160,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Curriculum</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../curricula/implemented_curricula.html">Implemented Curriculum Learning Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../taskspace.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">syllabus.core package</a></li>
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">syllabus.curricula package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -272,6 +273,7 @@
 <dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.DomainRandomization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.domain_randomization.</span></span><span class="sig-name descname"><span class="pre">DomainRandomization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
+<p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES">
 <span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES" title="Permalink to this definition">#</a></dt>
@@ -319,37 +321,6 @@ TODO: Support task spaces aside from Discrete</p>
 <dt class="sig sig-object py" id="syllabus.curricula.learning_progress.LearningProgressCurriculum.update_task_progress">
 <span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.learning_progress.LearningProgressCurriculum.update_task_progress" title="Permalink to this definition">#</a></dt>
 <dd><p>Update the success rate for the given task using a fast and slow exponential moving average.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.curricula.manual">
-<span id="syllabus-curricula-manual-module"></span><h2>syllabus.curricula.manual module<a class="headerlink" href="#module-syllabus.curricula.manual" title="Permalink to this heading">#</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.manual.ManualCurriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.manual.</span></span><span class="sig-name descname"><span class="pre">ManualCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_repeats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.manual.ManualCurriculum" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.curricula.manual.ManualCurriculum.REQUIRES_CENTRAL_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.manual.ManualCurriculum.REQUIRES_CENTRAL_UPDATES" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.curricula.manual.ManualCurriculum.REQUIRES_STEP_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.manual.ManualCurriculum.REQUIRES_STEP_UPDATES" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.manual.ManualCurriculum.remaining_tasks">
-<span class="sig-name descname"><span class="pre">remaining_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.manual.ManualCurriculum.remaining_tasks" title="Permalink to this definition">#</a></dt>
-<dd><p>Return the number of tasks remaining in the manual curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.manual.ManualCurriculum.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.curricula.manual.ManualCurriculum.sample" title="Permalink to this definition">#</a></dt>
-<dd><p>Choose the next k tasks from the list.</p>
 </dd></dl>
 
 </dd></dl>
@@ -418,6 +389,37 @@ TODO: Support task spaces aside from Discrete</p>
 <span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success_prob</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.update_task_progress" title="Permalink to this definition">#</a></dt>
 <dd><p>Update the curriculum with a task and its success probability upon
 success or failure.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-syllabus.curricula.sequential">
+<span id="syllabus-curricula-sequential-module"></span><h2>syllabus.curricula.sequential module<a class="headerlink" href="#module-syllabus.curricula.sequential" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.sequential.</span></span><span class="sig-name descname"><span class="pre">SequentialCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_repeats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES">
+<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_STEP_UPDATES">
+<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_STEP_UPDATES" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.remaining_tasks">
+<span class="sig-name descname"><span class="pre">remaining_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.remaining_tasks" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the number of tasks remaining in the manual curriculum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.sample" title="Permalink to this definition">#</a></dt>
+<dd><p>Choose the next k tasks from the list.</p>
 </dd></dl>
 
 </dd></dl>
@@ -538,16 +540,6 @@ success or failure.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-syllabus.curricula.manual">syllabus.curricula.manual module</a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.manual.ManualCurriculum"><code class="docutils literal notranslate"><span class="pre">ManualCurriculum</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.manual.ManualCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">ManualCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.manual.ManualCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">ManualCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.manual.ManualCurriculum.remaining_tasks"><code class="docutils literal notranslate"><span class="pre">ManualCurriculum.remaining_tasks()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.manual.ManualCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">ManualCurriculum.sample()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#module-syllabus.curricula.noop">syllabus.curricula.noop module</a><ul>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
@@ -560,6 +552,16 @@ success or failure.</p>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step_batch()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_task_progress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-syllabus.curricula.sequential">syllabus.curricula.sequential module</a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.remaining_tasks"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.remaining_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.sample()</span></code></a></li>
 </ul>
 </li>
 </ul>

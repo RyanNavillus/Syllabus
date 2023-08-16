@@ -25,4 +25,4 @@ We also have preliminary support and examples for multiagent PettingZoo environm
    curricula/curriculum
    taskspace
    logging
-   modules
+   modules/modules

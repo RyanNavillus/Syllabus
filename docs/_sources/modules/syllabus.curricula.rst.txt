@@ -28,18 +28,18 @@ syllabus.curricula.learning\_progress module
    :undoc-members:
    :show-inheritance:
 
-syllabus.curricula.manual module
---------------------------------
-
-.. automodule:: syllabus.curricula.manual
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 syllabus.curricula.noop module
 ------------------------------
 
 .. automodule:: syllabus.curricula.noop
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+syllabus.curricula.sequential module
+------------------------------------
+
+.. automodule:: syllabus.curricula.sequential
    :members:
    :undoc-members:
    :show-inheritance:

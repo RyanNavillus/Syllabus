@@ -14,7 +14,7 @@ from nle.env.tasks import (NetHackScore,
                            NetHackEat,
                            NetHackScout)
 
-from syllabus.curricula import ManualCurriculum
+from syllabus.curricula import SequentialCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_nethack_env
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     manual_tasks = [NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold, NetHackEat, NetHackScout]
     num_repeats = [N_ENVS * N_EPISODES] * len(manual_tasks)
-    curriculum = ManualCurriculum(manual_tasks, sample_env.task_space, num_repeats=num_repeats, repeat_list=False)
+    curriculum = SequentialCurriculum(manual_tasks, sample_env.task_space, num_repeats=num_repeats, repeat_list=False)
     print("")
     print("*" * 80)
     print("Testing curriculum:", curriculum.__class__.__name__)
