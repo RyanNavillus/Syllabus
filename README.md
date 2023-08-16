@@ -4,6 +4,20 @@ Syllabus is an API for designing curricula for reinforcement learning agents, as
 
 WIP Documentation is available at https://ryannavillus.github.io/Syllabus/index.html
 
+## Installation
+
+You can install the pip package with:
+```
+pip install Syllabus-RL
+```
+
+Or for the latest changes you can install from the repository directly;
+```
+git clone https://github.com/RyanNavillus/Syllabus.git
+cd Syllabus
+pip install -e .
+```
+
 
 ## How it works
 
