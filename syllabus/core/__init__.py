@@ -1,5 +1,5 @@
 # Environment Code
-from .environment_task_wrapper import TaskWrapper, PettingZooTaskWrapper
+from .task_wrapper import TaskWrapper, PettingZooTaskWrapper
 from .environment_task_env import TaskEnv, PettingZooTaskEnv
 
 # Curriculum Code
