@@ -7,20 +7,17 @@ from distutils.util import strtobool
 
 import gym
 import numpy as np
+import procgen  # pylint: disable=unused-import
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from procgen import ProcgenEnv
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
-from syllabus.core import (
-    make_multiprocessing_curriculum,
-    MultiProcessingSyncWrapper,
-    TaskWrapper,
-)
+
+from syllabus.core import (MultiProcessingSyncWrapper,
+                           make_multiprocessing_curriculum)
 from syllabus.curricula import PrioritizedLevelReplay
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.models import ProcgenAgent
 
 
 def parse_args():
@@ -95,7 +92,7 @@ def parse_args():
 def make_env(env_id, seed, task_queue, update_queue):
     def thunk():
         env = gym.make(f"procgen-{env_id}-v0", rand_seed=seed, distribution_mode="easy")
-        if args.curriculum:
+        if args.curriculum and task_queue is not None and update_queue is not None:
             env = ProcgenTaskWrapper(env, env_id, seed)
             env = MultiProcessingSyncWrapper(
                 env,
@@ -422,9 +419,10 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
+        seed = 5000
         eval_envs = gym.vector.AsyncVectorEnv(
             [
-                make_env(args.env_id, args.seed + i, task_queue, update_queue)
+                make_env(args.env_id, seed + i, None, None)
                 for i in range(args.num_envs)
             ]
         )
