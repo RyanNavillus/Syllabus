@@ -2,3 +2,5 @@ from .cartpole_task_wrapper import CartPoleTaskWrapper
 from .minihack_task_wrapper import MinihackTaskWrapper
 from .pistonball_task_wrapper import PistonballTaskWrapper
 from .nethack_task_wrapper import NethackTaskWrapper
+from .minigrid_task_wrapper import MinigridTaskWrapper
+from .procgen_task_wrapper import ProcgenTaskWrapper

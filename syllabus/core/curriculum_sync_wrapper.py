@@ -117,6 +117,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     }
                     self.task_queue.put(message)
                     self.added_tasks = []
+            time.sleep(0.01)
 
     def __del__(self):
         self.stop()

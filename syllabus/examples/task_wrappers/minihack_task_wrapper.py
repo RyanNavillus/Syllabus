@@ -9,6 +9,7 @@ from gym import spaces
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 
+
 class MinihackTaskWrapper(TaskWrapper):
     """
     This wrapper simply changes the seed of a Minigrid environment.

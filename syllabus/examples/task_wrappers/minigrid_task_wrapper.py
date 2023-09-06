@@ -1,94 +1,40 @@
 """ Task wrapper that can select a new MiniGrid task on reset. """
-import copy
-import time
-from typing import List
-import numpy as np
 import gym
-from gym import spaces
-from nle.env import base
-from nle.env.tasks import (NetHackScore,
-                           NetHackStaircase,
-                           NetHackStaircasePet,
-                           NetHackOracle,
-                           NetHackGold,
-                           NetHackEat,
-                           NetHackScout)
+import numpy as np
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
+
+from gym_minigrid.minigrid import OBJECT_TO_IDX, COLOR_TO_IDX
 
 
 class MinigridTaskWrapper(TaskWrapper):
     """
     This wrapper allows you to change the task of an NLE environment.
     """
-    def __init__(self, env: gym.Env, tasks: List[base.NLE] = None, use_provided_tasks: bool = True):
+    def __init__(self, env: gym.Env):
         super().__init__(env)
-        self.env = env
+        self.observation_space = gym.spaces.Box(
+            low=0,
+            high=255,
+            shape=(self.env.width, self.env.height, 3),  # number of cells
+            dtype='uint8'
+        )
+        m, n, c = self.observation_space.shape
+        self.observation_space = gym.spaces.Box(
+            self.observation_space.low[0, 0, 0],
+            self.observation_space.high[0, 0, 0], 
+            [c, m, n],
+            dtype=self.observation_space.dtype)
 
-        self.task: str = NetHackScore
+        # Set up task space
+        self.task_space = TaskSpace(gym.spaces.Discrete(4000), list(np.arange(4000)))
+        self.task = None
 
-        observation_keys = list(self.env._observation_keys)
-        observation_keys.remove("program_state")
-        observation_keys.remove("internal")
-        self._init_kwargs = {
-            "save_ttyrec_every": self.env._save_ttyrec_every,
-            "savedir": self.env.savedir,
-            "character": self.env.character,
-            "max_episode_steps": self.env._max_episode_steps,
-            "observation_keys": tuple(observation_keys),
-            "options": None,
-            "wizard": False,
-            "allow_all_yn_questions": self.env._allow_all_yn_questions,
-            "allow_all_modes": self.env._allow_all_modes,
-            "spawn_monsters": True,
-        }
+        # Time limit
+        # self._max_episode_steps = env.max_steps
+        # self._elapsed_steps = None
 
-        # This is set to False during reset
-        self.done = True
-
-        # Add nethack tasks provided by the base NLE
-        task_list: List[base.NLE] = []
-        if use_provided_tasks:
-            task_list = [
-                NetHackScore,
-                NetHackStaircase,
-                NetHackStaircasePet,
-                NetHackOracle,
-                NetHackGold,
-                NetHackEat,
-                NetHackScout,
-            ]
-
-        # Add in custom nethack tasks
-        if tasks:
-            for task in tasks:
-                assert isinstance(task, base.NLE), "Env must subclass the base NLE"
-                task_list.append(task)
-
-        self.task_list = task_list
-        gym_space = spaces.Discrete(len(self.task_list))
-        self.task_space = TaskSpace(gym_space, task_list)
-
-        # Add goal space to observation
-        self.observation_space = copy.deepcopy(self.env.observation_space)
-        self.observation_space["goal"] = spaces.MultiBinary(len(self.task_list))
-
-        # Task completion metrics
-        self.episode_return = 0
-
-        # Initialize all tasks
-        original_class = self.env.__class__
-        for task in task_list:
-            self.env.__class__ = task
-            self.env.__init__(**self._init_kwargs)
-
-        self.env.__class__ = original_class
-        self.env.__init__(**self._init_kwargs)
-
-    def _task_name(self, task):
-        return task.__name__
-
-    def reset(self, new_task = None, **kwargs):
+    def reset(self, new_task=None, **kwargs):
         """
         Resets the environment along with all available tasks, and change the current task.
 
@@ -103,8 +49,9 @@ class MinigridTaskWrapper(TaskWrapper):
 
         self.done = False
         self.episode_return = 0
+        # self._elapsed_steps = 0
 
-        return self.observation(self.env.reset(**kwargs))
+        return self.observation(self.env.reset(**kwargs)["image"])
 
     def change_task(self, new_task: int):
         """
@@ -112,107 +59,41 @@ class MinigridTaskWrapper(TaskWrapper):
 
         Ignores requests for unknown tasks or task changes outside of a reset.
         """
-        # Ignore new task if mid episode
-        if self.task.__init__ != new_task.__init__ and not self.done:
-            print(f"Given task {self._task_name(new_task)} needs to be reinitialized.\
-                  Ignoring request to change task and keeping {self.task.__name__}")
-            return
-
-        # Ignore if task is unknown
-        if new_task not in self.task_list:
-            print(f"Given task {new_task} not in task list.\
-                  Ignoring request to change task and keeping {self.env.__class__.__name__}")
-            return
-
-        # Update current task
-        self.task = new_task
-        self.env.__class__ = new_task
-
-        # If task requires reinitialization
-        if type(self.env).__init__ != NetHackScore.__init__:
-            # TODO: Allow spawn_monsters to be disabled
-            observation_keys = self.env._observation_keys
-            observation_keys.remove("internal")
-            self.env.__init__(**self._init_kwargs)
-
-    def _encode_goal(self):
-        goal_encoding = np.zeros(len(self.task_list))
-        index = self.task_list.index(self.task)
-        goal_encoding[index] = 1
-        return goal_encoding
-
-    def observation(self, observation):
-        """
-        Parses current inventory and new items gained this timestep from the observation.
-        Returns a modified observation.
-        """
-        # Add goal to observation
-        observation['goal'] = self._encode_goal()
-        return observation
-
-    def _task_completion(self, obs, rew, done, info):
-        # TODO: Add real task completion metrics
-        completion = 0.0
-        if self.task == 0:
-            completion = self.episode_return / 1000
-        elif self.task == 1:
-            completion = self.episode_return
-        elif self.task == 2:
-            completion = self.episode_return
-        elif self.task == 3:
-            completion = self.episode_return
-        elif self.task == 4:
-            completion = self.episode_return / 1000
-        elif self.task == 5:
-            completion = self.episode_return / 10
-        elif self.task == 6:
-            completion = self.episode_return / 100
-
-        return min(max(completion, 0.0), 1.0)
+        seed = int(new_task)
+        self.task = seed
+        self.env.seed(seed)
+        self.env.action_space.seed(seed)
+        self.env.observation_space.seed(seed)
 
     def step(self, action):
         """
         Step through environment and update task completion.
         """
+        # assert self._elapsed_steps is not None, "Cannot call env.step() before calling reset()"
         obs, rew, done, info = self.env.step(action)
+        obs = self.observation(obs["image"])
+
+        # # Check time limit
+        # self._elapsed_steps += 1
+        # if self._elapsed_steps >= self._max_episode_steps:
+        #     info['truncated'] = not done
+        #     info['truncated_obs'] = obs
+        #     done = True
+
         self.episode_return += rew
         self.done = done
         info["task_completion"] = self._task_completion(obs, rew, done, info)
-        return self.observation(obs), rew, done, info
 
+        return obs, rew, done, info
 
-if __name__ == "__main__":
-    def run_episode(env, task: str = None, verbose=1):
-        env.reset(new_task=task)
-        task_name = type(env.unwrapped).__name__
-        done = False
-        ep_rew = 0
-        while not done:
-            action = env.action_space.sample()
-            _, rew, done, _ = env.step(action)
-            ep_rew += rew
-        if verbose:
-            print(f"Episodic reward for {task_name}: {ep_rew}")
+    def observation(self, obs):
+        env = self.unwrapped
+        full_grid = env.grid.encode()
+        full_grid[env.agent_pos[0]][env.agent_pos[1]] = np.array([
+            OBJECT_TO_IDX['agent'],
+            COLOR_TO_IDX['red'],
+            env.agent_dir
+        ])
 
-    print("Testing NethackTaskWrapper")
-    N_EPISODES = 100
-
-    # Initialize NLE
-    nethack_env = NetHackScore()
-    nethack_task_env = NethackTaskWrapper(nethack_env)
-
-    start_time = time.time()
-
-    for _ in range(N_EPISODES):
-        run_episode(nethack_task_env, verbose=0)
-
-    end_time = time.time()
-    print(f"Run time same task: {end_time - start_time}")
-    start_time = time.time()
-
-    for _ in range(N_EPISODES):
-        nethack_task = nethack_task_env.task_space.sample()
-        run_episode(nethack_task_env, task=nethack_task, verbose=0)
-
-    end_time = time.time()
-    print(f"Run time swapping tasks: {end_time - start_time}")
+        obs = full_grid
+        return obs.transpose(2, 0, 1)

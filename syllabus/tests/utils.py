@@ -5,6 +5,25 @@ import time
 from multiprocessing import Process
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
 from syllabus.task_space import TaskSpace
+
+
+def evaluate_random_policy(make_env, num_episodes=100):
+    env = make_env()
+    episode_returns = []
+
+    for ep in range(num_episodes):
+        episode_return = 0
+        obs = env.reset()
+        done = False
+        while not done:
+            action = env.action_space.sample()
+            obs, rew, done, info = env.step(action)
+            episode_return += rew
+        episode_returns.append(episode_return)
+    avg_return = sum(episode_returns) / len(episode_returns)
+    print(f"Average Episodic Return: {avg_return}")
+
+
 def run_episode(env, new_task=None, curriculum=None):
     """Run a single episode of the environment."""
     if new_task:
