@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import PrioritizedLevelReplay
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 
 
@@ -81,7 +81,8 @@ def parse_args():
     # Curriculum arguments
     parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
         help="if toggled, this experiment will use curriculum learning")
-
+    parser.add_argument("--curriculum-method", type=str, default="plr",
+        help="curriculum method to use")
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
@@ -227,14 +228,20 @@ if __name__ == "__main__":
     if args.curriculum:
         sample_env = gym.make(f"procgen-{args.env_id}-v0")
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, args.seed)
-        curriculum = PrioritizedLevelReplay(
-            sample_env.task_space,
-            task_sampler_kwargs_dict={"rho": 0.01, "nu": 0},
-            num_steps=args.num_steps,
-            num_processes=args.num_envs,
-            gamma=args.gamma,
-            gae_lambda=args.gae_lambda,
-        )
+        if args.curriculum_method == "plr":
+            print("Using prioritized level replay.")
+            curriculum = PrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+            )
+        elif args.curriculum_method == "dr":
+            print("Using domain randomization.")
+            curriculum = DomainRandomization(sample_env.task_space)
+        else:
+            raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
         del sample_env
 
@@ -306,7 +313,7 @@ if __name__ == "__main__":
                     break
 
             # Syllabus curriculum update
-            if args.curriculum:
+            if args.curriculum and args.curriculum_method == "plr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
                 update = {

@@ -1,14 +1,11 @@
 import typing
-import itertools
 from typing import Any, Callable, List, Tuple, Union
-import time 
-import gym
 import numpy as np
-from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
+from gym.spaces import Dict
 
 import wandb
-from syllabus.core import enumerate_axes
 from syllabus.task_space import TaskSpace
+
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
 class Curriculum:
@@ -49,7 +46,7 @@ class Curriculum:
         :return: List of tasks if task space is enumerable, TODO: empty list otherwise?
         """
         return list(self.task_space.tasks)
-        
+
     def add_task(self, task: typing.Any) -> None:
         # TODO
         raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
@@ -189,4 +186,3 @@ class Curriculum:
         except wandb.errors.Error:
             # No need to crash over logging :)
             pass
-
