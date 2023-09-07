@@ -11,17 +11,18 @@ def evaluate_random_policy(make_env, num_episodes=100):
     env = make_env()
     episode_returns = []
 
-    for ep in range(num_episodes):
+    for _ in range(num_episodes):
         episode_return = 0
-        obs = env.reset()
+        _ = env.reset()
         done = False
         while not done:
             action = env.action_space.sample()
-            obs, rew, done, info = env.step(action)
+            _, rew, done, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
     avg_return = sum(episode_returns) / len(episode_returns)
     print(f"Average Episodic Return: {avg_return}")
+    return avg_return
 
 
 def run_episode(env, new_task=None, curriculum=None):

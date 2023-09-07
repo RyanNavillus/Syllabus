@@ -7,7 +7,7 @@ from distutils.util import strtobool
 
 import gym
 import numpy as np
-import procgen  # pylint: disable=unused-import
+import procgen  # noqa: F401
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -102,7 +102,6 @@ def make_env(env_id, seed, task_queue, update_queue):
                 default_task=1,
                 task_space=env.task_space,
             )
-        # env.unwrapped.env.env.env.seed(seed)
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
         return env
@@ -230,7 +229,7 @@ if __name__ == "__main__":
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, args.seed)
         curriculum = PrioritizedLevelReplay(
             sample_env.task_space,
-            task_sampler_kwargs_dict={"strategy": "one_step_td_error", "rho": 0.01, "nu": 0},
+            task_sampler_kwargs_dict={"rho": 0.01, "nu": 0},
             num_steps=args.num_steps,
             num_processes=args.num_envs,
             gamma=args.gamma,
@@ -421,7 +420,7 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        seed = 1
+        seed = 5001
         eval_envs = gym.vector.AsyncVectorEnv(
             [
                 make_env(args.env_id, seed + i, None, None)
