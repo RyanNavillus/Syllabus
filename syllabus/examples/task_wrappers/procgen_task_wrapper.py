@@ -11,7 +11,7 @@ class ProcgenTaskWrapper(TaskWrapper):
     def __init__(self, env: gym.Env, env_id: str, seed):
         super().__init__(env)
         self.env_id = env_id
-        self.task_space = TaskSpace(gym.spaces.Discrete(4000), list(np.arange(1, 4001)))
+        self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(1, 201)))
         self.task = seed
 
     def reset(self, new_task=None, **kwargs):
