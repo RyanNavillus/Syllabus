@@ -305,6 +305,8 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     break
+
+            # Syllabus curriculum update
             if args.curriculum:
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
@@ -419,7 +421,7 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        seed = 5000
+        seed = 1
         eval_envs = gym.vector.AsyncVectorEnv(
             [
                 make_env(args.env_id, seed + i, None, None)
@@ -434,18 +436,21 @@ if __name__ == "__main__":
         eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
         num_episodes = 100
         eval_returns = []
+        eval_lengths = []
         eval_obs = eval_envs.reset()
         while len(eval_returns) < num_episodes:
             eval_done = False
-            eval_ret = 0
             with torch.no_grad():
                 eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device))
             eval_obs, _, eval_done, eval_info = eval_envs.step(eval_action.cpu().numpy())
             for item in eval_info:
                 if "episode" in item.keys():
                     eval_returns.append(item['episode']['r'])
+                    eval_lengths.append(item['episode']['l'])
+
         mean_eval_returns = np.mean(eval_returns)
         stddev_eval_returns = np.std(eval_returns)
+        mean_eval_lengths = np.mean(eval_lengths)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -460,6 +465,8 @@ if __name__ == "__main__":
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
         writer.add_scalar("eval/mean_eval_return", mean_eval_returns, global_step)
         writer.add_scalar("eval/stddev_eval_return", stddev_eval_returns, global_step)
+        writer.add_scalar("eval/mean_eval_length", mean_eval_lengths, global_step)
 
+    eval_envs.close()
     envs.close()
     writer.close()
