@@ -159,7 +159,6 @@ class NNBase(nn.Module):
         return self._hidden_size
 
 
-
 class MLPBase(NNBase):
     """
     Multi-Layer Perceptron
@@ -261,8 +260,7 @@ class ResNetBase(NNBase):
         x = self.relu(self.flatten(x))
         x = self.relu(self.fc(x))
 
-
-        return self.critic_linear(x), x, rnn_hxs
+        return self.critic_linear(x), x
 
 
 class SmallNetBase(NNBase):
@@ -303,6 +301,10 @@ class Policy(nn.Module):
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
         super(Policy, self).__init__()
 
+        # Move observation shape channels to first dimension
+        h, w, c = obs_shape
+        obs_shape = (c, h, w)
+
         if base_kwargs is None:
             base_kwargs = {}
 
@@ -330,7 +332,7 @@ class Policy(nn.Module):
         raise NotImplementedError
 
     def act(self, inputs, deterministic=False):
-        value, actor_features, rnn_hxs = self.base(inputs)
+        value, actor_features = self.base(inputs)
         dist = self.dist(actor_features)
 
         if deterministic:
@@ -338,11 +340,9 @@ class Policy(nn.Module):
         else:
             action = dist.sample()
 
-        # action_log_probs = dist.log_probs(action)
         action_log_dist = dist.logits
-        dist_entropy = dist.entropy().mean()
 
-        return value, action, action_log_dist, rnn_hxs
+        return value, action, action_log_dist
 
     def get_value(self, inputs):
         value, _, _ = self.base(inputs)
@@ -360,11 +360,11 @@ class Policy(nn.Module):
 
 class ProcgenAgent(Policy):
     def get_value(self, x):
-        value, _ = self.base(x)
+        value, _ = self.base(x.permute((0, 3, 1, 2)))
         return value
 
     def get_action_and_value(self, x, action=None, full_log_probs=False):
-        value, actor_features = self.base(x)
+        value, actor_features = self.base(x.permute((0, 3, 1, 2)))
         dist = self.dist(actor_features)
 
         action = torch.squeeze(dist.sample())

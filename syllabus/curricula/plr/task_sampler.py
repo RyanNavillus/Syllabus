@@ -13,14 +13,14 @@ class TaskSampler:
         num_actors=1,
         strategy="value_l1",
         replay_schedule="proportionate",
-        score_transform="softmax",
+        score_transform="rank",
         temperature=0.1,
         eps=0.05,
         rho=1.0,
         nu=0.5,
         alpha=1.0,
         staleness_coef=0.1,
-        staleness_transform="rank",
+        staleness_transform="power",
         staleness_temperature=1.0,
     ):
         self.action_space = action_space

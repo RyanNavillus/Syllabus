@@ -18,7 +18,7 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-
+from syllabus.examples.models import ProcgenAgent
 
 def parse_args():
     # fmt: off
@@ -92,7 +92,7 @@ def parse_args():
 
 def make_env(env_id, seed, task_queue, update_queue):
     def thunk():
-        env = gym.make(f"procgen-{env_id}-v0", rand_seed=seed, distribution_mode="easy")
+        env = gym.make(f"procgen-{env_id}-v0", rand_seed=seed, distribution_mode="easy", start_level=0)
         if args.curriculum and task_queue is not None and update_queue is not None:
             env = ProcgenTaskWrapper(env, env_id, seed)
             env = MultiProcessingSyncWrapper(
@@ -261,7 +261,25 @@ if __name__ == "__main__":
     envs = gym.wrappers.TransformReward(envs, lambda reward: np.clip(reward, -10, 10))
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
+    # Evaluation environment
+    seed = 5001
+    eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(args.env_id, seed + i, None, None)
+            for i in range(args.num_envs)
+        ]
+    )
+    eval_envs.is_vector_env = True
+    eval_envs = gym.wrappers.RecordEpisodeStatistics(eval_envs)
+    if args.capture_video:
+        eval_envs = gym.wrappers.RecordVideo(eval_envs, f"videos/{run_name}")
+    eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
+    eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
+    eval_obs = eval_envs.reset()
+
+    # agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n).to(device)
     agent = Agent(envs).to(device)
+
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
@@ -427,28 +445,14 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        seed = 5001
-        eval_envs = gym.vector.AsyncVectorEnv(
-            [
-                make_env(args.env_id, seed + i, None, None)
-                for i in range(args.num_envs)
-            ]
-        )
-        eval_envs.is_vector_env = True
-        eval_envs = gym.wrappers.RecordEpisodeStatistics(eval_envs)
-        if args.capture_video:
-            eval_envs = gym.wrappers.RecordVideo(eval_envs, f"videos/{run_name}")
-        eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
-        eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
-        num_episodes = 100
+        num_episodes = 256
         eval_returns = []
         eval_lengths = []
-        eval_obs = eval_envs.reset()
+        # eval_obs = eval_envs.reset()
         while len(eval_returns) < num_episodes:
-            eval_done = False
             with torch.no_grad():
                 eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device))
-            eval_obs, _, eval_done, eval_info = eval_envs.step(eval_action.cpu().numpy())
+            eval_obs, _, _, eval_info = eval_envs.step(eval_action.cpu().numpy())
             for item in eval_info:
                 if "episode" in item.keys():
                     eval_returns.append(item['episode']['r'])
