@@ -19,6 +19,8 @@ from syllabus.core import (MultiProcessingSyncWrapper,
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.models import ProcgenAgent
+from .vecenv import VecNormalize, VecMonitor
+
 
 def parse_args():
     # fmt: off
@@ -181,6 +183,7 @@ class Agent(nn.Module):
         value = self.critic(hidden)
         logits = self.actor(hidden)
         dist = Categorical(logits=logits)
+
         if action is None:
             action = dist.sample()
 
@@ -257,8 +260,11 @@ if __name__ == "__main__":
     envs = gym.wrappers.RecordEpisodeStatistics(envs)
     if args.capture_video:
         envs = gym.wrappers.RecordVideo(envs, f"videos/{run_name}")
-    envs = gym.wrappers.NormalizeReward(envs, gamma=args.gamma)
-    envs = gym.wrappers.TransformReward(envs, lambda reward: np.clip(reward, -10, 10))
+    # envs = gym.wrappers.NormalizeReward(envs, gamma=args.gamma)
+    # envs = gym.wrappers.TransformReward(envs, lambda reward: np.clip(reward, -10, 10))
+    envs = VecMonitor(venv=envs, filename=None, keep_buf=100)
+    envs = VecNormalize(venv=envs, ob=False, ret=True)
+
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     # Evaluation environment
@@ -273,14 +279,18 @@ if __name__ == "__main__":
     eval_envs = gym.wrappers.RecordEpisodeStatistics(eval_envs)
     if args.capture_video:
         eval_envs = gym.wrappers.RecordVideo(eval_envs, f"videos/{run_name}")
-    eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
-    eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
+    # eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
+    # eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
+    eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
+    eval_envs = VecNormalize(venv=eval_envs, ob=False, ret=True)
+
     eval_obs = eval_envs.reset()
 
-    # agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n).to(device)
-    agent = Agent(envs).to(device)
+    agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
+    # agent = Agent(envs).to(device)
 
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    # optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -445,7 +455,7 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        num_episodes = 256
+        num_episodes = 128
         eval_returns = []
         eval_lengths = []
         # eval_obs = eval_envs.reset()

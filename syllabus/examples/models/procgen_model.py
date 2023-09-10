@@ -360,14 +360,15 @@ class Policy(nn.Module):
 
 class ProcgenAgent(Policy):
     def get_value(self, x):
-        value, _ = self.base(x.permute((0, 3, 1, 2)))
+        value, _ = self.base(x.permute((0, 3, 1, 2)) / 255.0)
         return value
 
     def get_action_and_value(self, x, action=None, full_log_probs=False):
-        value, actor_features = self.base(x.permute((0, 3, 1, 2)))
+        value, actor_features = self.base(x.permute((0, 3, 1, 2)) / 255.0)
         dist = self.dist(actor_features)
 
-        action = torch.squeeze(dist.sample())
+        if action is None:
+            action = torch.squeeze(dist.sample())
 
         action_log_probs = torch.squeeze(dist.log_probs(action))
         dist_entropy = dist.entropy()
