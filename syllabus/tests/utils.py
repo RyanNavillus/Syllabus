@@ -13,19 +13,16 @@ def evaluate_random_policy(make_env, num_episodes=100, seed=None, reseed_after_r
 
     for _ in range(num_episodes):
         episode_return = 0
-        _ = env.reset()
+        if reseed_after_reset:
+            _ = env.reset(new_task=seed)
+        else:
+            _ = env.reset()
         done = False
         while not done:
             action = env.action_space.sample()
             _, rew, done, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
-
-        # Episode seeding
-        if seed is not None and reseed_after_reset:
-            gym.utils.seeding.np_random(seed)
-            env.action_space.seed(seed)
-            env.observation_space.seed(seed)
 
     avg_return = sum(episode_returns) / len(episode_returns)
     print(f"Average Episodic Return: {avg_return}")

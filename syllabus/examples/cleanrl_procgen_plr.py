@@ -302,7 +302,7 @@ if __name__ == "__main__":
     train_eval_envs = wrap_vecenv(train_eval_envs)
     eval_obs = train_eval_envs.reset()
 
-    # Fill distribution eval environment
+    # Full distribution eval environment
     eval_envs = gym.vector.AsyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, None, None, num_levels=0)
