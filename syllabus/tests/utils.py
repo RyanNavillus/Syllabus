@@ -1,5 +1,4 @@
 import gym
-import random
 import ray
 import time
 from multiprocessing import Process
@@ -7,8 +6,9 @@ from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
 from syllabus.task_space import TaskSpace
 
 
-def evaluate_random_policy(make_env, num_episodes=100):
-    env = make_env()
+def evaluate_random_policy(make_env, num_episodes=100, seed=None, reseed_after_reset=False):
+    env = make_env(seed=seed)
+
     episode_returns = []
 
     for _ in range(num_episodes):
@@ -20,9 +20,16 @@ def evaluate_random_policy(make_env, num_episodes=100):
             _, rew, done, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
+
+        # Episode seeding
+        if seed is not None and reseed_after_reset:
+            gym.utils.seeding.np_random(seed)
+            env.action_space.seed(seed)
+            env.observation_space.seed(seed)
+
     avg_return = sum(episode_returns) / len(episode_returns)
     print(f"Average Episodic Return: {avg_return}")
-    return avg_return
+    return avg_return, episode_returns
 
 
 def run_episode(env, new_task=None, curriculum=None):

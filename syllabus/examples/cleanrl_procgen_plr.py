@@ -19,7 +19,8 @@ from syllabus.core import (MultiProcessingSyncWrapper,
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.models import ProcgenAgent
-from .vecenv import VecNormalize, VecMonitor
+from .vecenv import VecNormalize, VecMonitor, VecExtractDictObs
+from procgen import ProcgenEnv
 
 
 def parse_args():
@@ -92,23 +93,56 @@ def parse_args():
     return args
 
 
-def make_env(env_id, seed, task_queue, update_queue):
+def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
-        env = gym.make(f"procgen-{env_id}-v0", rand_seed=seed, distribution_mode="easy", start_level=0)
-        if args.curriculum and task_queue is not None and update_queue is not None:
+        env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=0, num_levels=num_levels)
+        if args.curriculum:
             env = ProcgenTaskWrapper(env, env_id, seed)
-            env = MultiProcessingSyncWrapper(
-                env,
-                task_queue,
-                update_queue,
-                update_on_step=False,
-                default_task=1,
-                task_space=env.task_space,
-            )
+            if task_queue is not None and update_queue is not None:
+                env = MultiProcessingSyncWrapper(
+                    env,
+                    task_queue,
+                    update_queue,
+                    update_on_step=False,
+                    default_task=1,
+                    task_space=env.task_space,
+                )
+        gym.utils.seeding.np_random(seed)
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
         return env
     return thunk
+
+
+def wrap_vecenv(vecenv):
+    vecenv.is_vector_env = True
+    vecenv = gym.wrappers.RecordEpisodeStatistics(vecenv)
+    if args.capture_video:
+        vecenv = gym.wrappers.RecordVideo(vecenv, f"videos/{run_name}")
+    vecenv = gym.wrappers.NormalizeReward(vecenv, gamma=args.gamma)
+    vecenv = gym.wrappers.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
+    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    return vecenv
+
+
+def evaluate(ev_envs):
+    num_episodes = 64
+    eval_returns = []
+    eval_lengths = []
+    eval_obs = ev_envs.reset()
+    while len(eval_returns) < num_episodes:
+        with torch.no_grad():
+            eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device))
+        eval_obs, _, _, eval_info = ev_envs.step(eval_action.cpu().numpy())
+        for item in eval_info:
+            if "episode" in item.keys():
+                eval_returns.append(item['episode']['r'])
+                eval_lengths.append(item['episode']['l'])
+
+    mean_returns = np.mean(eval_returns)
+    stddev_returns = np.std(eval_returns)
+    mean_lengths = np.mean(eval_lengths)
+    return mean_returns, stddev_returns, mean_lengths
 
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
@@ -249,45 +283,38 @@ if __name__ == "__main__":
         del sample_env
 
     # env setup
-    # envs = ProcgenEnv(num_envs=args.num_envs, env_name=args.env_id, num_levels=0, start_level=0, distribution_mode="easy")
     envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue)
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=200)
             for i in range(args.num_envs)
         ]
     )
-    envs.is_vector_env = True
-    envs = gym.wrappers.RecordEpisodeStatistics(envs)
-    if args.capture_video:
-        envs = gym.wrappers.RecordVideo(envs, f"videos/{run_name}")
-    # envs = gym.wrappers.NormalizeReward(envs, gamma=args.gamma)
-    # envs = gym.wrappers.TransformReward(envs, lambda reward: np.clip(reward, -10, 10))
-    envs = VecMonitor(venv=envs, filename=None, keep_buf=100)
-    envs = VecNormalize(venv=envs, ob=False, ret=True)
-
+    envs = wrap_vecenv(envs)
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
-    # Evaluation environment
-    seed = 5001
-    eval_envs = gym.vector.AsyncVectorEnv(
+    # Train seeds environment
+    train_eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, seed + i, None, None)
+            make_env(args.env_id, args.seed + i, None, None, num_levels=200)
             for i in range(args.num_envs)
         ]
     )
-    eval_envs.is_vector_env = True
-    eval_envs = gym.wrappers.RecordEpisodeStatistics(eval_envs)
-    if args.capture_video:
-        eval_envs = gym.wrappers.RecordVideo(eval_envs, f"videos/{run_name}")
-    # eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
-    # eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
-    eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
-    eval_envs = VecNormalize(venv=eval_envs, ob=False, ret=True)
+    train_eval_envs = wrap_vecenv(train_eval_envs)
+    eval_obs = train_eval_envs.reset()
 
+    # Fill distribution eval environment
+    eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(args.env_id, args.seed + i, None, None, num_levels=0)
+            for i in range(args.num_envs)
+        ]
+    )
+    eval_envs = wrap_vecenv(eval_envs)
     eval_obs = eval_envs.reset()
 
-    agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
-    # agent = Agent(envs).to(device)
+    # print(envs.single_observation_space, envs.single_action_space)
+    # agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
+    agent = Agent(envs).to(device)
 
     # optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
     optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
@@ -455,22 +482,8 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        num_episodes = 128
-        eval_returns = []
-        eval_lengths = []
-        # eval_obs = eval_envs.reset()
-        while len(eval_returns) < num_episodes:
-            with torch.no_grad():
-                eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device))
-            eval_obs, _, _, eval_info = eval_envs.step(eval_action.cpu().numpy())
-            for item in eval_info:
-                if "episode" in item.keys():
-                    eval_returns.append(item['episode']['r'])
-                    eval_lengths.append(item['episode']['l'])
-
-        mean_eval_returns = np.mean(eval_returns)
-        stddev_eval_returns = np.std(eval_returns)
-        mean_eval_lengths = np.mean(eval_lengths)
+        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths = evaluate(train_eval_envs)
+        mean_eval_returns, stddev_eval_returns, mean_eval_lengths = evaluate(eval_envs)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -483,9 +496,12 @@ if __name__ == "__main__":
         writer.add_scalar("losses/explained_variance", explained_var, global_step)
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
-        writer.add_scalar("eval/mean_eval_return", mean_eval_returns, global_step)
-        writer.add_scalar("eval/stddev_eval_return", stddev_eval_returns, global_step)
-        writer.add_scalar("eval/mean_eval_length", mean_eval_lengths, global_step)
+        writer.add_scalar("test_eval/mean_eval_return", mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
+        writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
+        writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
 
     eval_envs.close()
     envs.close()
