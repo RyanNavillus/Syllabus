@@ -318,3 +318,11 @@ class TaskSampler:
             weights = np.exp(np.array(scores) / temperature)
 
         return weights
+
+    def metrics(self):
+        return {
+            "task_scores": self.task_scores,
+            "unseen_task_weights": self.unseen_task_weights,
+            "task_staleness": self.task_staleness,
+            "proportion_seen": (self.num_tasks - (self.unseen_task_weights > 0).sum()) / self.num_tasks,
+        }

@@ -83,7 +83,7 @@ def parse_args():
 
     # Procgen arguments
     parser.add_argument("--full-dist", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-        help="Train on full distribution")
+        help="Train on full distribution of levels.")
 
     # Curriculum arguments
     parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     # env setup
     envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=200)
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=0 if args.full_dist else 200)
             for i in range(args.num_envs)
         ]
     )
