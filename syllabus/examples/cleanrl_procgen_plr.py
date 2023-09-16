@@ -81,6 +81,10 @@ def parse_args():
     parser.add_argument("--target-kl", type=float, default=None,
         help="the target KL divergence threshold")
 
+    # Procgen arguments
+    parser.add_argument("--full-dist", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
+        help="Train on full distribution")
+
     # Curriculum arguments
     parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
         help="if toggled, this experiment will use curriculum learning")
@@ -91,6 +95,26 @@ def parse_args():
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
     # fmt: on
     return args
+
+
+PROCGEN_RETURN_BOUNDS = {
+    "coinrun": (5, 10),
+    "starpilot": (2.5, 64),
+    "caveflyer": (3.5, 12),
+    "dodgeball": (1.5, 19),
+    "fruitbot": (-1.5, 32.4),
+    "chaser": (0.5, 13),
+    "miner": (1.5, 13),
+    "jumper": (3, 10),
+    "leaper": (3, 10),
+    "maze": (5, 10),
+    "bigfish": (1, 40),
+    "heist": (3.5, 10),
+    "climber": (2, 12.6),
+    "plunder": (4.5, 30),
+    "ninja": (3.5, 10),
+    "bossfight": (0.5, 13),
+}
 
 
 def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1):
@@ -121,7 +145,7 @@ def wrap_vecenv(vecenv):
         vecenv = gym.wrappers.RecordVideo(vecenv, f"videos/{run_name}")
     vecenv = gym.wrappers.NormalizeReward(vecenv, gamma=args.gamma)
     vecenv = gym.wrappers.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
-    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     return vecenv
 
 
@@ -142,7 +166,9 @@ def evaluate(ev_envs):
     mean_returns = np.mean(eval_returns)
     stddev_returns = np.std(eval_returns)
     mean_lengths = np.mean(eval_lengths)
-    return mean_returns, stddev_returns, mean_lengths
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    return mean_returns, stddev_returns, mean_lengths, normalized_mean_returns
 
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
@@ -246,6 +272,7 @@ if __name__ == "__main__":
             monitor_gym=True,
             save_code=True,
         )
+        wandb.run.log_code(".")
     writer = SummaryWriter(f"runs/{run_name}")
     writer.add_text(
         "hyperparameters",
@@ -313,11 +340,11 @@ if __name__ == "__main__":
     eval_obs = eval_envs.reset()
 
     # print(envs.single_observation_space, envs.single_action_space)
-    # agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
-    agent = Agent(envs).to(device)
+    agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
+    # agent = Agent(envs).to(device)
 
-    # optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-    optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    # optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -482,8 +509,8 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths = evaluate(train_eval_envs)
-        mean_eval_returns, stddev_eval_returns, mean_eval_lengths = evaluate(eval_envs)
+        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(train_eval_envs)
+        mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -499,9 +526,11 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/mean_eval_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
         writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
+        writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
         writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
         writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
         writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
+        writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
 
     eval_envs.close()
     envs.close()
