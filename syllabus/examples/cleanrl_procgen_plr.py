@@ -319,7 +319,7 @@ if __name__ == "__main__":
     envs = wrap_vecenv(envs)
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
-    # Train seeds environment
+    # Train seeds eval environment
     train_eval_envs = gym.vector.AsyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, None, None, num_levels=200)
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     # Full distribution eval environment
     eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, None, None, num_levels=0)
+            make_env(args.env_id, args.seed + i, None, None, num_levels=1)
             for i in range(args.num_envs)
         ]
     )
