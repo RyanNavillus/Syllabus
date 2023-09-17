@@ -6,15 +6,15 @@ from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
 from syllabus.task_space import TaskSpace
 
 
-def evaluate_random_policy(make_env, num_episodes=100, seed=None, reseed_after_reset=False):
-    env = make_env(seed=seed)
+def evaluate_random_policy(make_env, num_episodes=100, seeds=None, reseed_after_reset=False):
+    env = make_env(seed=seeds[0] if seeds else None)
 
     episode_returns = []
 
-    for _ in range(num_episodes):
+    for i in range(num_episodes):
         episode_return = 0
-        if reseed_after_reset:
-            _ = env.reset(new_task=seed)
+        if seeds:
+            _ = env.reset(new_task=seeds[i])
         else:
             _ = env.reset()
         done = False
@@ -23,7 +23,6 @@ def evaluate_random_policy(make_env, num_episodes=100, seed=None, reseed_after_r
             _, rew, done, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
-
     avg_return = sum(episode_returns) / len(episode_returns)
     print(f"Average Episodic Return: {avg_return}")
     return avg_return, episode_returns

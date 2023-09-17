@@ -119,7 +119,7 @@ PROCGEN_RETURN_BOUNDS = {
 
 def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
-        env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=0, num_levels=num_levels)
+        env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         if args.curriculum:
             env = ProcgenTaskWrapper(env, env_id, seed)
             if task_queue is not None and update_queue is not None:
@@ -128,7 +128,7 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
                     task_queue,
                     update_queue,
                     update_on_step=False,
-                    default_task=1,
+                    default_task=start_level,
                     task_space=env.task_space,
                 )
         gym.utils.seeding.np_random(seed)
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     # env setup
     envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 0)
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 200)
             for i in range(args.num_envs)
         ]
     )
@@ -320,19 +320,19 @@ if __name__ == "__main__":
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     # Train seeds eval environment
-    train_eval_envs = gym.vector.AsyncVectorEnv(
-        [
-            make_env(args.env_id, args.seed + i, None, None, num_levels=200)
-            for i in range(args.num_envs)
-        ]
-    )
-    train_eval_envs = wrap_vecenv(train_eval_envs)
-    eval_obs = train_eval_envs.reset()
+    # train_eval_envs = gym.vector.AsyncVectorEnv(
+    #     [
+    #         make_env(args.env_id, args.seed + i, None, None, num_levels=1 if args.curriculum else 200)
+    #         for i in range(args.num_envs)
+    #     ]
+    # )
+    # train_eval_envs = wrap_vecenv(train_eval_envs)
+    # eval_obs = train_eval_envs.reset()
 
     # Full distribution eval environment
     eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, None, None, num_levels=1)
+            make_env(args.env_id, args.seed + i, None, None, num_levels=0)
             for i in range(args.num_envs)
         ]
     )
@@ -509,7 +509,7 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(train_eval_envs)
+        # mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(train_eval_envs)
         mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
@@ -527,10 +527,10 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
         writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
-        writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
-        writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
-        writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
+        # writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
+        # writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
+        # writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
+        # writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
 
     eval_envs.close()
     envs.close()
