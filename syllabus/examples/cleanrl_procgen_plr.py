@@ -312,7 +312,7 @@ if __name__ == "__main__":
     # env setup
     envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=0 if args.full_dist else 200)
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 0)
             for i in range(args.num_envs)
         ]
     )
