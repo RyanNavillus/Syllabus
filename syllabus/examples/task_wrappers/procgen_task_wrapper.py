@@ -41,7 +41,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         """
         seed = int(new_task)
         self.task = seed
-        # self.env = gym.make(f"procgen-{self.env_id}-v0", start_level=seed, num_levels=200, distribution_mode="easy")
+        # self.env = gym.make(f"procgen-{self.env_id}-v0", start_level=seed, num_levels=1, distribution_mode="easy")
         # gym.utils.seeding.np_random(seed)
         self.env.seed(seed)
         self.env.action_space.seed(1)

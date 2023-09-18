@@ -23,6 +23,7 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None, reseed_after_
             _, rew, done, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
+    print(episode_returns)
     avg_return = sum(episode_returns) / len(episode_returns)
     print(f"Average Episodic Return: {avg_return}")
     return avg_return, episode_returns

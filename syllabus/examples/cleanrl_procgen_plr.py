@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, SequentialCurriculum
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.models import ProcgenAgent
 from .vecenv import VecNormalize, VecMonitor, VecExtractDictObs
@@ -153,6 +153,8 @@ def evaluate(ev_envs):
     num_episodes = 64
     eval_returns = []
     eval_lengths = []
+    seeds = [random.randint(0, 1000000) for _ in range(args.num_envs)]
+    ev_envs.seed(seeds)
     eval_obs = ev_envs.reset()
     while len(eval_returns) < num_episodes:
         with torch.no_grad():
@@ -307,6 +309,7 @@ if __name__ == "__main__":
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+
         del sample_env
 
     # env setup
@@ -332,12 +335,14 @@ if __name__ == "__main__":
     # Full distribution eval environment
     eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, None, None, num_levels=0)
+            make_env(args.env_id, args.seed + i, None, None, num_levels=1 if args.curriculum else 0)
             for i in range(args.num_envs)
         ]
     )
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs = eval_envs.reset()
+
+
 
     # print(envs.single_observation_space, envs.single_action_space)
     agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
