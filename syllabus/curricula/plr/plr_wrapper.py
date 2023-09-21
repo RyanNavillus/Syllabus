@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple, Union
 
+import numpy as np
 import gym
 import torch
 from gym.spaces import Discrete, MultiDiscrete
@@ -46,7 +47,7 @@ class RolloutStorage(object):
 
     def insert(self, masks, action_log_dist=None, value_preds=None, rewards=None, tasks=None):
         if self._requires_value_buffers:
-            assert (value_preds is not None and rewards is not None), f"Selected strategy {self._requires_value_buffers} requires value_preds and rewards"
+            assert (value_preds is not None and rewards is not None), "Selected strategy requires value_preds and rewards"
             if len(rewards.shape) == 3:
                 rewards = rewards.squeeze(2)
             self.value_preds[self.step].copy_(torch.as_tensor(value_preds))
@@ -63,6 +64,7 @@ class RolloutStorage(object):
         self.masks[0].copy_(self.masks[-1])
 
     def compute_returns(self, next_value, gamma, gae_lambda):
+        assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
         self.value_preds[-1] = next_value
         gae = 0
         for step in reversed(range(self.rewards.size(0))):
@@ -223,3 +225,18 @@ class PrioritizedLevelReplay(Curriculum):
             return list(range(space.n))
         else:
             return list(enumerate_axes(space.nvec))
+
+    def log_metrics(self, writer, step=None):
+        """Log the task distribution to the provided tensorboard writer.
+
+        """
+        super().log_metrics(writer, step)
+        metrics = self._task_sampler.metrics()
+        writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
+        writer.add_scalar("curriculum/score", metrics["score"], step)
+        for task in self.task_space.tasks:
+            writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
+            writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
+        # task_returns = {task: 0 for task in self.task_space.tasks}
+        # for actor, task_return in self._rollouts.returns[]:
+        #     writer.add_scalar(f"curriculum/task_{task - 1}_return", self._rollouts.returns[task - 1].mean(), step)

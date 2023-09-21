@@ -149,11 +149,14 @@ def wrap_vecenv(vecenv):
     return vecenv
 
 
-def evaluate(ev_envs):
-    num_episodes = 64
+def evaluate(ev_envs, use_train_seeds=False):
+    num_episodes = args.num_envs
     eval_returns = []
     eval_lengths = []
-    seeds = [random.randint(0, 1000000) for _ in range(args.num_envs)]
+    if use_train_seeds:
+        seeds = list(range(args.num_envs))
+    else:
+        seeds = [random.randint(0, 1000000) for _ in range(args.num_envs)]
     ev_envs.seed(seeds)
     eval_obs = ev_envs.reset()
     while len(eval_returns) < num_episodes:
@@ -302,6 +305,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1", "alpha": 1.0}
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -341,8 +345,6 @@ if __name__ == "__main__":
     )
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs = eval_envs.reset()
-
-
 
     # print(envs.single_observation_space, envs.single_action_space)
     agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
@@ -406,7 +408,6 @@ if __name__ == "__main__":
                 update = {
                     "update_type": "on_demand",
                     "metrics": {
-                        "action_log_dist": full_log_probs,
                         "value": value,
                         "next_value": next_value
                         if step == args.num_steps - 1
@@ -417,6 +418,7 @@ if __name__ == "__main__":
                     },
                 }
                 curriculum.update_curriculum(update)
+                # curriculum.log_metrics(writer, global_step)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -514,7 +516,7 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        # mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(train_eval_envs)
+        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
         mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
@@ -532,10 +534,10 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
         writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        # writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
-        # writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
-        # writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
-        # writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
+        writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
 
     eval_envs.close()
     envs.close()

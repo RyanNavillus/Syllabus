@@ -34,7 +34,7 @@ class TaskSampler:
         self.eps = eps
         self.rho = rho
         self.nu = nu
-        self.alpha = alpha
+        self.alpha = float(alpha)
         self.staleness_coef = staleness_coef
         self.staleness_transform = staleness_transform
         self.staleness_temperature = staleness_temperature
@@ -46,6 +46,9 @@ class TaskSampler:
         self.task_staleness = np.array([0.0] * self.num_tasks, dtype=np.float)
 
         self.next_task_index = 0  # Only used for sequential strategy
+
+        # Logging metrics
+        self._last_score = 0.0
 
         if not self.requires_value_buffers and self.action_space is None:
             raise ValueError(
@@ -80,7 +83,7 @@ class TaskSampler:
         self.unseen_task_weights[task_idx] = 0.0  # No longer unseen
 
         old_score = self.task_scores[task_idx]
-        self.task_scores[task_idx] = (1 - self.alpha) * old_score + self.alpha * score
+        self.task_scores[task_idx] = (1.0 - self.alpha) * old_score + self.alpha * score
 
     def _partial_update_task_score(self, actor_index, task_idx, score, num_steps, done=False):
         partial_score = self.partial_task_scores[actor_index][task_idx]
@@ -88,7 +91,6 @@ class TaskSampler:
 
         running_num_steps = partial_num_steps + num_steps
         merged_score = partial_score + (score - partial_score) * num_steps / float(running_num_steps)
-
         if done:
             self.partial_task_scores[actor_index][task_idx] = 0.0  # zero partial score, partial num_steps
             self.partial_task_steps[actor_index][task_idx] = 0
@@ -201,6 +203,7 @@ class TaskSampler:
                     score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
 
                 score = score_function(**score_function_kwargs)
+                self._last_score = score
                 num_steps = len(rollouts.tasks[start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
@@ -325,4 +328,5 @@ class TaskSampler:
             "unseen_task_weights": self.unseen_task_weights,
             "task_staleness": self.task_staleness,
             "proportion_seen": (self.num_tasks - (self.unseen_task_weights > 0).sum()) / self.num_tasks,
+            "score": self._last_score,
         }
