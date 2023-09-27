@@ -140,12 +140,13 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    vecenv = gym.wrappers.RecordEpisodeStatistics(vecenv)
-    if args.capture_video:
-        vecenv = gym.wrappers.RecordVideo(vecenv, f"videos/{run_name}")
-    vecenv = gym.wrappers.NormalizeReward(vecenv, gamma=args.gamma)
-    vecenv = gym.wrappers.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
-    # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    # vecenv = gym.wrappers.RecordEpisodeStatistics(vecenv)
+    # if args.capture_video:
+    #     vecenv = gym.wrappers.RecordVideo(vecenv, f"videos/{run_name}")
+    # vecenv = gym.wrappers.NormalizeReward(vecenv, gamma=args.gamma)
+    # vecenv = gym.wrappers.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
+    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
