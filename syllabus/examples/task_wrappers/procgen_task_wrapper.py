@@ -11,8 +11,14 @@ class ProcgenTaskWrapper(TaskWrapper):
     def __init__(self, env: gym.Env, env_id: str, seed):
         super().__init__(env)
         self.env_id = env_id
-        self.task_space = TaskSpace(gym.spaces.Discrete(4000), list(np.arange(1, 4001)))
+        self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(1, 201)))
         self.task = seed
+
+        self.observation_space = gym.spaces.Box(
+            self.observation_space.low[0, 0, 0],
+            self.observation_space.high[0, 0, 0],
+            [3, 64, 64],
+            dtype=np.float64)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -52,7 +58,9 @@ class ProcgenTaskWrapper(TaskWrapper):
         Step through environment and update task completion.
         """
         obs, rew, done, info = self.env.step(action)
-        return obs, rew, done, info
+        return self.observation(obs), rew, done, info
 
     def observation(self, obs):
-        return obs
+        if obs.shape[0] != 3:
+            obs = obs.transpose(2, 0, 1)
+        return obs.astype(np.float64) / 255.0

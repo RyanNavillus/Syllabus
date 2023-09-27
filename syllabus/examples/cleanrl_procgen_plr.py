@@ -161,7 +161,7 @@ def evaluate(ev_envs, use_train_seeds=False):
     eval_obs = ev_envs.reset()
     while len(eval_returns) < num_episodes:
         with torch.no_grad():
-            eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device))
+            eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=True)
         eval_obs, _, _, eval_info = ev_envs.step(eval_action.cpu().numpy())
         for item in eval_info:
             if "episode" in item.keys():
@@ -305,7 +305,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1", "alpha": 1.0}
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -326,16 +326,6 @@ if __name__ == "__main__":
     envs = wrap_vecenv(envs)
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
-    # Train seeds eval environment
-    # train_eval_envs = gym.vector.AsyncVectorEnv(
-    #     [
-    #         make_env(args.env_id, args.seed + i, None, None, num_levels=1 if args.curriculum else 200)
-    #         for i in range(args.num_envs)
-    #     ]
-    # )
-    # train_eval_envs = wrap_vecenv(train_eval_envs)
-    # eval_obs = train_eval_envs.reset()
-
     # Full distribution eval environment
     eval_envs = gym.vector.AsyncVectorEnv(
         [
@@ -350,8 +340,8 @@ if __name__ == "__main__":
     agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
     # agent = Agent(envs).to(device)
 
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-    # optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
+    # optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)

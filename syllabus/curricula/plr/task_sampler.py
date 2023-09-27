@@ -269,11 +269,13 @@ class TaskSampler:
             # Otherwise, sample a new level
             return self._sample_unseen_level()
 
-        else:  # Default to proportionate schedule
+        elif self.replay_schedule == "proportionate":  # Default to proportionate schedule
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
                 return self._sample_replay_level()
             else:
                 return self._sample_unseen_level()
+        else:
+            raise NotImplementedError(f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)

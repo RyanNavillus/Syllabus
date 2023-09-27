@@ -96,6 +96,66 @@ class Conv2d_tf(nn.Conv2d):
         )
 
 
+class Policy(nn.Module):
+    """
+    Actor-Critic module
+    """
+    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+        super(Policy, self).__init__()
+
+        if base_kwargs is None:
+            base_kwargs = {}
+
+        if len(obs_shape) == 3:
+            if arch == 'small':
+                base = SmallNetBase
+            else:
+                base = ResNetBase
+        elif len(obs_shape) == 1:
+            base = MLPBase
+
+        self.base = base(obs_shape[0], **base_kwargs)
+        self.dist = Categorical(self.base.output_size, num_actions)
+
+    @property
+    def is_recurrent(self):
+        return self.base.is_recurrent
+
+    @property
+    def recurrent_hidden_state_size(self):
+        """Size of rnn_hx."""
+        return self.base.recurrent_hidden_state_size
+
+    def forward(self, inputs):
+        raise NotImplementedError
+
+    def act(self, inputs, deterministic=False):
+        value, actor_features = self.base(inputs)
+        dist = self.dist(actor_features)
+
+        if deterministic:
+            action = dist.mode()
+        else:
+            action = dist.sample()
+
+        action_log_dist = dist.logits
+
+        return value, action, action_log_dist
+
+    def get_value(self, inputs):
+        value, _, _ = self.base(inputs)
+        return value
+
+    def evaluate_actions(self, inputs, rnn_hxs, masks, action):
+        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        dist = self.dist(actor_features)
+
+        action_log_probs = dist.log_probs(action)
+        dist_entropy = dist.entropy().mean()
+
+        return value, action_log_probs, dist_entropy, rnn_hxs
+
+
 class FixedCategorical(torch.distributions.Categorical):
     """
     Categorical distribution object
@@ -144,7 +204,6 @@ class NNBase(nn.Module):
 
         self._hidden_size = hidden_size
         self._recurrent = recurrent
-
 
     @property
     def is_recurrent(self):
@@ -294,81 +353,17 @@ class SmallNetBase(NNBase):
         return self.critic_linear(x), x
 
 
-class Policy(nn.Module):
-    """
-    Actor-Critic module 
-    """
-    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
-        super(Policy, self).__init__()
-
-        # Move observation shape channels to first dimension
-        h, w, c = obs_shape
-        obs_shape = (c, h, w)
-
-        if base_kwargs is None:
-            base_kwargs = {}
-
-        if len(obs_shape) == 3:
-            if arch == 'small':
-                base = SmallNetBase
-            else:
-                base = ResNetBase
-        elif len(obs_shape) == 1:
-            base = MLPBase
-
-        self.base = base(obs_shape[0], **base_kwargs)
-        self.dist = Categorical(self.base.output_size, num_actions)
-
-    @property
-    def is_recurrent(self):
-        return self.base.is_recurrent
-
-    @property
-    def recurrent_hidden_state_size(self):
-        """Size of rnn_hx."""
-        return self.base.recurrent_hidden_state_size
-
-    def forward(self, inputs):
-        raise NotImplementedError
-
-    def act(self, inputs, deterministic=False):
-        value, actor_features = self.base(inputs)
-        dist = self.dist(actor_features)
-
-        if deterministic:
-            action = dist.mode()
-        else:
-            action = dist.sample()
-
-        action_log_dist = dist.logits
-
-        return value, action, action_log_dist
-
-    def get_value(self, inputs):
-        value, _, _ = self.base(inputs)
-        return value
-
-    def evaluate_actions(self, inputs, rnn_hxs, masks, action):
-        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
-        dist = self.dist(actor_features)
-
-        action_log_probs = dist.log_probs(action)
-        dist_entropy = dist.entropy().mean()
-
-        return value, action_log_probs, dist_entropy, rnn_hxs
-
-
 class ProcgenAgent(Policy):
     def get_value(self, x):
-        value, _ = self.base(x.permute((0, 3, 1, 2)) / 255.0)
+        value, _ = self.base(x)
         return value
 
-    def get_action_and_value(self, x, action=None, full_log_probs=False):
-        value, actor_features = self.base(x.permute((0, 3, 1, 2)) / 255.0)
+    def get_action_and_value(self, x, action=None, full_log_probs=False, deterministic=False):
+        value, actor_features = self.base(x)
         dist = self.dist(actor_features)
 
         if action is None:
-            action = torch.squeeze(dist.sample())
+            action = torch.squeeze(dist.mode() if deterministic else dist.sample())
 
         action_log_probs = torch.squeeze(dist.log_probs(action))
         dist_entropy = dist.entropy()
