@@ -151,13 +151,13 @@ def wrap_vecenv(vecenv):
 
 
 def level_replay_evaluate(
-    args,
+    env_name,
     policy,
     num_episodes,
     device
 ):
-    eval_envs = ProcgenEnv(num_envs=args.num_envs, env_name=args.exp_name,
-                           num_levels=1, start_level=0,
+    eval_envs = ProcgenEnv(num_envs=num_episodes, env_name=env_name,
+                           num_levels=10, start_level=1,
                            distribution_mode="easy", paint_vel_info=False)
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
@@ -168,9 +168,10 @@ def level_replay_evaluate(
 
     while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
+            eval_obs = eval_obs.transpose(0, 3, 1, 2)
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=True)
 
-        eval_obs, _, done, infos = eval_envs.step(action)
+        eval_obs, _, done, infos = eval_envs.step(eval_action.cpu().numpy())
         print("level_replay_step")
 
         for info in infos:
@@ -541,7 +542,7 @@ if __name__ == "__main__":
         # Evaluate agent
         mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
         mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
-        mean_level_replay_eval_returns = level_replay_evaluate(args, agent, args.num_envs, device)
+        mean_level_replay_eval_returns = level_replay_evaluate(args.env_id, agent, args.num_envs, device)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
