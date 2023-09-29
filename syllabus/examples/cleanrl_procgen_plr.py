@@ -156,8 +156,8 @@ def level_replay_evaluate(
     num_episodes,
     device
 ):
-    eval_envs = ProcgenEnv(num_envs=num_episodes, env_name=env_name,
-                           num_levels=10, start_level=1,
+    eval_envs = ProcgenEnv(num_envs=1, env_name=env_name,
+                           num_levels=0, start_level=0,
                            distribution_mode="easy", paint_vel_info=False)
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
@@ -172,19 +172,21 @@ def level_replay_evaluate(
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=True)
 
         eval_obs, _, done, infos = eval_envs.step(eval_action.cpu().numpy())
-        print("level_replay_step")
 
         for info in infos:
             if 'episode' in info.keys():
                 eval_episode_rewards.append(info['episode']['r'])
 
     eval_envs.close()
-
-    return eval_episode_rewards
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def evaluate(ev_envs, use_train_seeds=False):
-    num_episodes = args.num_envs
+    num_episodes = 10
     eval_returns = []
     eval_lengths = []
     if use_train_seeds:
@@ -363,7 +365,7 @@ if __name__ == "__main__":
     # Full distribution eval environment
     eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, None, None, num_levels=1 if args.curriculum else 0)
+            make_env(args.env_id, args.seed + i, None, None, num_levels=0)
             for i in range(args.num_envs)
         ]
     )
@@ -374,8 +376,8 @@ if __name__ == "__main__":
     agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
     # agent = Agent(envs).to(device)
 
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-    # optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
+    # optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -542,7 +544,7 @@ if __name__ == "__main__":
         # Evaluate agent
         mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
         mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
-        mean_level_replay_eval_returns = level_replay_evaluate(args.env_id, agent, args.num_envs, device)
+        mean_level_replay_eval_returns, stddev_level_replay_eval_returns, normalized_mean_level_replay_eval_returns = level_replay_evaluate(args.env_id, agent, 10, device)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -559,8 +561,9 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
         writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/mean_level_replay_eval_return", np.mean(mean_level_replay_eval_returns), global_step)
-        writer.add_scalar("test_eval/stddev_level_replay_eval_return", np.std(mean_level_replay_eval_returns), global_step)
+        writer.add_scalar("test_eval/mean_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
+        writer.add_scalar("test_eval/normalized_mean_level_replay_eval_return", normalized_mean_level_replay_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
         writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
         writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
         writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
