@@ -363,13 +363,12 @@ class ProcgenAgent(Policy):
         dist = self.dist(actor_features)
 
         if action is None:
-            action = torch.squeeze(dist.mode() if deterministic else dist.sample())
-
+            action = dist.mode() if deterministic else dist.sample()
         action_log_probs = torch.squeeze(dist.log_probs(action))
         dist_entropy = dist.entropy()
 
         if full_log_probs:
             log_probs = torch.log(dist.probs)
-            return action, action_log_probs, dist_entropy, value, log_probs
+            return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
 
-        return action, action_log_probs, dist_entropy, value
+        return torch.squeeze(action), action_log_probs, dist_entropy, value
