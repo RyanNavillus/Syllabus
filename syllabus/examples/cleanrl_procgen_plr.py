@@ -168,7 +168,7 @@ def level_replay_evaluate(
 
     while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
-            eval_obs = eval_obs.transpose(0, 3, 1, 2)
+            eval_obs = eval_obs.transpose(0, 3, 1, 2) / 255.0
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=True)
 
         eval_obs, _, done, infos = eval_envs.step(eval_action.cpu().numpy())
