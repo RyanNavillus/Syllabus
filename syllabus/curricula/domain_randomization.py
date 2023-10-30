@@ -15,8 +15,8 @@ class DomainRandomization(Curriculum):
         Returns a sample distribution over the task space.
         """
         # Uniform distribution
+        print([1.0 / self.num_tasks for _ in range(self.num_tasks)])
         return [1.0 / self.num_tasks for _ in range(self.num_tasks)]
-    
+
     def add_task(self, task: Any) -> None:
         self.task_space.add_task(task)
-

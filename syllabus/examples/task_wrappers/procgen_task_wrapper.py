@@ -49,6 +49,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.task = seed
         # self.env = gym.make(f"procgen-{self.env_id}-v0", start_level=seed, num_levels=1, distribution_mode="easy")
         # gym.utils.seeding.np_random(seed)
+        print("taskwrapper seed", seed)
         self.env.seed(seed)
 
     def step(self, action):

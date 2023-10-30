@@ -353,7 +353,7 @@ if __name__ == "__main__":
         del sample_env
 
     # env setup
-    envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.SyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 200)
             for i in range(args.num_envs)
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     # Full distribution eval environment
-    eval_envs = gym.vector.AsyncVectorEnv(
+    eval_envs = gym.vector.SyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, None, None, num_levels=0)
             for i in range(args.num_envs)
