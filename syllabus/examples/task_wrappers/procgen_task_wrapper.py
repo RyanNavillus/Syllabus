@@ -13,12 +13,16 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.env_id = env_id
         self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(1, 201)))
         self.task = seed
+        self.seed(seed)
 
         self.observation_space = gym.spaces.Box(
             self.observation_space.low[0, 0, 0],
             self.observation_space.high[0, 0, 0],
             [3, 64, 64],
             dtype=np.float64)
+
+    def seed(self, seed):
+        self.env.unwrapped._venv.seed(seed, 0)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -32,7 +36,6 @@ class ProcgenTaskWrapper(TaskWrapper):
         # Change task if new one is provided
         if new_task is not None:
             self.change_task(new_task)
-
         self.done = False
         self.episode_return = 0
         # self._elapsed_steps = 0
@@ -49,8 +52,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.task = seed
         # self.env = gym.make(f"procgen-{self.env_id}-v0", start_level=seed, num_levels=1, distribution_mode="easy")
         # gym.utils.seeding.np_random(seed)
-        print("taskwrapper seed", seed)
-        self.env.seed(seed)
+        self.seed(seed)
 
     def step(self, action):
         """

@@ -131,6 +131,7 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
                     default_task=start_level,
                     task_space=env.task_space,
                 )
+        env.seed(seed)
         gym.utils.seeding.np_random(seed)
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
