@@ -162,7 +162,9 @@ def level_replay_evaluate(
                            distribution_mode="easy", paint_vel_info=False)
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
-    eval_envs = VecNormalize(venv=eval_envs, ob=False, ret=True)
+    # eval_envs = VecNormalize(venv=eval_envs, ob=False, ret=True)
+    eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
+    eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
 
     eval_episode_rewards = []
     eval_obs = eval_envs.reset()
@@ -354,7 +356,7 @@ if __name__ == "__main__":
         del sample_env
 
     # env setup
-    envs = gym.vector.SyncVectorEnv(
+    envs = gym.vector.AsyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 200)
             for i in range(args.num_envs)
@@ -364,7 +366,7 @@ if __name__ == "__main__":
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     # Full distribution eval environment
-    eval_envs = gym.vector.SyncVectorEnv(
+    eval_envs = gym.vector.AsyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, None, None, num_levels=0)
             for i in range(args.num_envs)
@@ -377,8 +379,8 @@ if __name__ == "__main__":
     agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
     # agent = Agent(envs).to(device)
 
-    # optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-    optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    # optimizer = optim.RMSprop(agent.parameters(), lr=args.learning_rate, eps=1e-5, alpha=0.99)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
