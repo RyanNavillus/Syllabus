@@ -157,6 +157,7 @@ def level_replay_evaluate(
     num_episodes,
     device
 ):
+    policy.eval()
     eval_envs = ProcgenEnv(num_envs=1, env_name=env_name,
                            num_levels=0, start_level=0,
                            distribution_mode="easy", paint_vel_info=False)
@@ -185,6 +186,7 @@ def level_replay_evaluate(
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
