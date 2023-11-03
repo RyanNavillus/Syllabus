@@ -167,7 +167,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
-            next_task = self.default_task if self.default_task is not None else self.env.task
+            next_task = self.default_task if self.default_task is not None else self.task_space.sample()
             if not self.warned_once:
                 print("\nTask queue was empty, selecting default task. This warning will not print again for this environment.\n")
                 self.warned_once = False

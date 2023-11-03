@@ -143,3 +143,7 @@ class TaskSpace():
         if isinstance(self.gym_space, Discrete):
             assert isinstance(amount, int), f"Discrete task space can only be increased by integer amount. Got {amount} instead."
             return Discrete(self.gym_space.n + amount)
+    
+    def sample(self):
+        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box)
+        return self.decode(self.gym_space.sample())
