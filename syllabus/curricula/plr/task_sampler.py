@@ -182,6 +182,7 @@ class TaskSampler:
                     score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
                 score = score_function(**score_function_kwargs)
                 num_steps = len(rollouts.tasks[start_t:t, actor_index])
+                # TODO: Check that task_idx_t is correct
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
 
                 start_t = t.item()
@@ -189,7 +190,7 @@ class TaskSampler:
                 # If there is only 1 step, we can't calculate the one-step td error
                 if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
                     continue
-
+                # TODO: Check this too
                 task_idx_t = tasks[start_t, actor_index].item()
 
                 # Store kwargs for score function
