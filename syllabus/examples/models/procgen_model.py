@@ -385,12 +385,19 @@ class SmallNetBase(NNBase):
 
 
 class ProcgenAgent(Policy):
+    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+        h, w, c = obs_shape
+        shape = (c, h, w)
+        super().__init__(shape, num_actions, arch=arch, base_kwargs=base_kwargs)
+
     def get_value(self, x):
-        value, _ = self.base(x)
+        new_x = x.permute((0, 3, 1, 2)) / 255.0
+        value, _ = self.base(new_x)
         return value
 
     def get_action_and_value(self, x, action=None, full_log_probs=False, deterministic=False):
-        value, actor_features = self.base(x)
+        new_x = x.permute((0, 3, 1, 2)) / 255.0
+        value, actor_features = self.base(new_x)
         dist = self.dist(actor_features)
 
         if action is None:

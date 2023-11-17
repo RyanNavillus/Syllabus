@@ -121,8 +121,8 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
     def thunk():
         env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = ProcgenTaskWrapper(env, env_id, seed)
         if args.curriculum:
-            env = ProcgenTaskWrapper(env, env_id, seed)
             if task_queue is not None and update_queue is not None:
                 env = MultiProcessingSyncWrapper(
                     env,
@@ -132,23 +132,18 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
                     default_task=start_level,
                     task_space=env.task_space,
                 )
-            env.seed(seed)
-
-        gym.utils.seeding.np_random(seed)
-        env.action_space.seed(seed)
-        env.observation_space.seed(seed)
+        # env.seed(seed)
+        # gym.utils.seeding.np_random(seed)
+        # env.action_space.seed(seed)
+        # env.observation_space.seed(seed)
         return env
     return thunk
 
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    if args.capture_video:
-        vecenv = gym.wrappers.RecordVideo(vecenv, f"videos/{run_name}")
-    vecenv = gym.wrappers.NormalizeReward(vecenv, gamma=args.gamma)
-    vecenv = gym.wrappers.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
-    # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
-    # vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
+    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
@@ -164,16 +159,15 @@ def level_replay_evaluate(
                            distribution_mode="easy", paint_vel_info=False)
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
-    # eval_envs = VecNormalize(venv=eval_envs, ob=False, ret=True)
-    eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
-    eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
+    eval_envs = VecNormalize(venv=eval_envs, ob=False, ret=True)
+    # eval_envs = gym.wrappers.NormalizeReward(eval_envs, gamma=args.gamma)
+    # eval_envs = gym.wrappers.TransformReward(eval_envs, lambda reward: np.clip(reward, -10, 10))
 
     eval_episode_rewards = []
     eval_obs = eval_envs.reset()
 
     while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
-            eval_obs = eval_obs.transpose(0, 3, 1, 2) / 255.0
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
 
         eval_obs, _, done, infos = eval_envs.step(eval_action.cpu().numpy())
@@ -319,7 +313,7 @@ if __name__ == "__main__":
             monitor_gym=True,
             save_code=True,
         )
-        wandb.run.log_code(".")
+        wandb.run.log_code("./syllabus/examples")
     writer = SummaryWriter(f"runs/{run_name}")
     writer.add_text(
         "hyperparameters",
@@ -361,7 +355,7 @@ if __name__ == "__main__":
     # env setup
     envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 200)
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 0)
             for i in range(args.num_envs)
         ]
     )
@@ -439,9 +433,7 @@ if __name__ == "__main__":
                     "update_type": "on_demand",
                     "metrics": {
                         "value": value,
-                        "next_value": next_value
-                        if step == args.num_steps - 1
-                        else None,
+                        "next_value": next_value,
                         "rew": reward,
                         "masks": torch.Tensor(1 - done),
                         "tasks": envs.get_attr("task"),
@@ -546,8 +538,8 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        # mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
-        # mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
+        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
+        mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
         mean_level_replay_eval_returns, stddev_level_replay_eval_returns, normalized_mean_level_replay_eval_returns = level_replay_evaluate(args.env_id, agent, 10, device)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
@@ -561,17 +553,17 @@ if __name__ == "__main__":
         writer.add_scalar("losses/explained_variance", explained_var, global_step)
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
-        # writer.add_scalar("test_eval/mean_eval_return", mean_eval_returns, global_step)
-        # writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
-        # writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
-        # writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/mean_eval_return", mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
+        writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
+        writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
         writer.add_scalar("test_eval/mean_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_level_replay_eval_return", normalized_mean_level_replay_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
-        # writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
-        # writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
-        # writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
-        # writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
+        writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
 
     eval_envs.close()
     envs.close()

@@ -15,11 +15,12 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.task = seed
         self.seed(seed)
 
-        self.observation_space = gym.spaces.Box(
-            self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0],
-            [3, 64, 64],
-            dtype=np.float64)
+        # self.observation_space = gym.spaces.Box(
+        #     self.observation_space.low[0, 0, 0],
+        #     self.observation_space.high[0, 0, 0],
+        #     [3, 64, 64],
+        #     dtype=np.float64)
+        self.observation_space = self.env.observation_space
 
     def seed(self, seed):
         self.env.unwrapped._venv.seed(seed, 0)
@@ -62,6 +63,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         return self.observation(obs), rew, done, info
 
     def observation(self, obs):
-        if obs.shape[0] != 3:
-            obs = obs.transpose(2, 0, 1)
-        return obs.astype(np.float64) / 255.0
+        return obs
+        # if obs.shape[0] != 3:
+        #     obs = obs.transpose(2, 0, 1)
+        # return obs.astype(np.float64) / 255.0
