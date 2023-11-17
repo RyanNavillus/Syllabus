@@ -4,6 +4,7 @@ import os
 import random
 import time
 from distutils.util import strtobool
+from collections import deque
 
 import gym
 import numpy as np
@@ -398,7 +399,7 @@ if __name__ == "__main__":
     next_obs = torch.Tensor(envs.reset()).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
     num_updates = args.total_timesteps // args.batch_size
-
+    episode_rewards = deque(maxlen=10)
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
@@ -425,6 +426,7 @@ if __name__ == "__main__":
 
             for item in info:
                 if "episode" in item.keys():
+                    episode_rewards.append(info['episode']['r'])
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
@@ -552,6 +554,7 @@ if __name__ == "__main__":
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+        writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
         writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
         writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
         writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
@@ -565,12 +568,12 @@ if __name__ == "__main__":
         # writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
         # writer.add_scalar("test_eval/mean_eval_length", mean_eval_lengths, global_step)
         # writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/mean_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
-        writer.add_scalar("test_eval/normalized_mean_level_replay_eval_return", normalized_mean_level_replay_eval_returns, global_step)
-        writer.add_scalar("test_eval/stddev_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
-        writer.add_scalar("train_eval/mean_level_replay_train_return", mean_level_replay_train_returns, global_step)
-        writer.add_scalar("train_eval/normalized_mean_level_replay_train_return", normalized_mean_level_replay_train_returns, global_step)
-        writer.add_scalar("train_eval/stddev_level_replay_train_return", mean_level_replay_train_returns, global_step)
+        writer.add_scalar("test_eval/mean_episode_return", mean_level_replay_eval_returns, global_step)
+        writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_level_replay_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_eval_return", mean_level_replay_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_episode_return", mean_level_replay_train_returns, global_step)
+        writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_level_replay_train_returns, global_step)
+        writer.add_scalar("train_eval/stddev_train_return", mean_level_replay_train_returns, global_step)
         # writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
         # writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
         # writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
