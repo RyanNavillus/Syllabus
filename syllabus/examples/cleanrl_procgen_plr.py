@@ -156,10 +156,11 @@ def level_replay_evaluate(
     env_name,
     policy,
     num_episodes,
-    device
+    device,
+    num_levels=0
 ):
     eval_envs = ProcgenEnv(num_envs=1, env_name=env_name,
-                           num_levels=0, start_level=0,
+                           num_levels=num_levels, start_level=0,
                            distribution_mode="easy", paint_vel_info=False)
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
@@ -367,14 +368,14 @@ if __name__ == "__main__":
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     # Full distribution eval environment
-    eval_envs = gym.vector.AsyncVectorEnv(
-        [
-            make_env(args.env_id, args.seed + i, None, None, num_levels=0)
-            for i in range(args.num_envs)
-        ]
-    )
-    eval_envs = wrap_vecenv(eval_envs)
-    eval_obs = eval_envs.reset()
+    # eval_envs = gym.vector.AsyncVectorEnv(
+    #     [
+    #         make_env(args.env_id, args.seed + i, None, None, num_levels=0)
+    #         for i in range(args.num_envs)
+    #     ]
+    # )
+    # eval_envs = wrap_vecenv(eval_envs)
+    # eval_obs = eval_envs.reset()
 
     # print(envs.single_observation_space, envs.single_action_space)
     agent = ProcgenAgent(envs.single_observation_space.shape, envs.single_action_space.n, arch="large", base_kwargs={'recurrent': False, 'hidden_size': 256}).to(device)
@@ -433,20 +434,20 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "plr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
+                tasks = envs.get_attr("task")
                 update = {
                     "update_type": "on_demand",
                     "metrics": {
                         "value": value,
-                        "next_value": next_value
-                        if step == args.num_steps - 1
-                        else None,
+                        "next_value": next_value,
                         "rew": reward,
                         "masks": torch.Tensor(1 - done),
-                        "tasks": envs.get_attr("task"),
+                        "tasks": tasks,
                     },
                 }
                 curriculum.update_curriculum(update)
-                # curriculum.log_metrics(writer, global_step)
+            if args.curriculum:
+                curriculum.log_metrics(writer, global_step)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -547,6 +548,7 @@ if __name__ == "__main__":
         # mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
         # mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
         mean_level_replay_eval_returns, stddev_level_replay_eval_returns, normalized_mean_level_replay_eval_returns = level_replay_evaluate(args.env_id, agent, 10, device)
+        mean_level_replay_train_returns, stddev_level_replay_train_returns, normalized_mean_level_replay_train_returns = level_replay_evaluate(args.env_id, agent, 10, device, num_levels=200)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -566,11 +568,14 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/mean_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_level_replay_eval_return", normalized_mean_level_replay_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_level_replay_eval_return", mean_level_replay_eval_returns, global_step)
+        writer.add_scalar("train_eval/mean_level_replay_train_return", mean_level_replay_train_returns, global_step)
+        writer.add_scalar("train_eval/normalized_mean_level_replay_train_return", normalized_mean_level_replay_train_returns, global_step)
+        writer.add_scalar("train_eval/stddev_level_replay_train_return", mean_level_replay_train_returns, global_step)
         # writer.add_scalar("train_eval/mean_eval_return", mean_train_eval_returns, global_step)
         # writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
         # writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
         # writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
 
-    eval_envs.close()
+    # eval_envs.close()
     envs.close()
     writer.close()

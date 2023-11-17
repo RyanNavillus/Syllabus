@@ -36,6 +36,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         # Change task if new one is provided
         if new_task is not None:
             self.change_task(new_task)
+
         self.done = False
         self.episode_return = 0
         # self._elapsed_steps = 0

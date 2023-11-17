@@ -163,7 +163,9 @@ class PrioritizedLevelReplay(Curriculum):
         )
 
         # Update task sampler
+        # print(self._rollouts.step )
         if self._rollouts.step == 0:
+            # print("success")
             if self._task_sampler.requires_value_buffers:
                 if "next_value" not in metrics:
                     raise KeyError(
