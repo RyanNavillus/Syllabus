@@ -70,6 +70,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.update_thread = None
         self.should_update = False
         self.added_tasks = []
+        self.num_assigned_tasks = 0
 
     def start(self):
         """
@@ -89,6 +90,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Continuously process completed tasks and sample new tasks.
         """
+        # TODO: Refactor long method? Write tests first
         while self.should_update:
             # Update curriculum with environment results:
             requested_tasks = 0
@@ -109,7 +111,15 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
             # Sample new tasks
             if requested_tasks > 0:
-                new_tasks = self.curriculum.sample(k=requested_tasks)
+                # TODO: Make this an option
+                if self.num_assigned_tasks < self.task_space.num_tasks:
+                    # Sample unseen tasks sequentially before using curriculum method
+                    # TODO: Make a real API for this
+                    new_tasks = list(self.task_space._tasks)[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
+                else:
+                    new_tasks = self.curriculum.sample(k=requested_tasks)
+                self.num_assigned_tasks += requested_tasks
+                # print("new_tasks", new_tasks)
                 for task in new_tasks:
                     message = {
                         "next_task": self.task_space.encode(task),
