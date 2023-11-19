@@ -422,7 +422,7 @@ if __name__ == "__main__":
 
             for item in info:
                 if "episode" in item.keys():
-                    episode_rewards.append(info['episode']['r'])
+                    episode_rewards.append(item['episode']['r'])
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
@@ -433,6 +433,16 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
                 tasks = envs.get_attr("task")
+
+                # Why is this necessary?
+                new_tasks = []
+                for i, task in enumerate(tasks):
+                    if task is None:
+                        new_tasks.append(0)
+                    else:
+                        new_tasks.append(task)
+
+                tasks = new_tasks
                 update = {
                     "update_type": "on_demand",
                     "metrics": {
@@ -543,8 +553,8 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
-        mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
+        # mean_train_eval_returns, stddev_train_eval_returns, mean_train_eval_lengths, normalized_mean_train_eval_returns = evaluate(eval_envs, use_train_seeds=True)
+        # mean_eval_returns, stddev_eval_returns, mean_eval_lengths, normalized_mean_eval_returns = evaluate(eval_envs)
         mean_level_replay_eval_returns, stddev_level_replay_eval_returns, normalized_mean_level_replay_eval_returns = level_replay_evaluate(args.env_id, agent, 10, device)
         mean_level_replay_train_returns, stddev_level_replay_train_returns, normalized_mean_level_replay_train_returns = level_replay_evaluate(args.env_id, agent, 10, device, num_levels=200)
 
