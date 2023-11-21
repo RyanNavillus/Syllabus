@@ -396,6 +396,9 @@ if __name__ == "__main__":
     next_done = torch.zeros(args.num_envs).to(device)
     num_updates = args.total_timesteps // args.batch_size
     episode_rewards = deque(maxlen=10)
+    completed_episodes = 0
+    prev_tasks = envs.get_attr("task")
+
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
@@ -422,6 +425,7 @@ if __name__ == "__main__":
 
             for item in info:
                 if "episode" in item.keys():
+                    completed_episodes += 1
                     episode_rewards.append(item['episode']['r'])
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
@@ -432,7 +436,7 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "plr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
-                tasks = envs.get_attr("task")
+                tasks = prev_tasks
 
                 # Why is this necessary?
                 new_tasks = []
@@ -441,8 +445,8 @@ if __name__ == "__main__":
                         new_tasks.append(0)
                     else:
                         new_tasks.append(task)
-
                 tasks = new_tasks
+
                 update = {
                     "update_type": "on_demand",
                     "metrics": {
@@ -454,6 +458,7 @@ if __name__ == "__main__":
                     },
                 }
                 curriculum.update_curriculum(update)
+                prev_tasks = envs.get_attr("task")
             if args.curriculum:
                 curriculum.log_metrics(writer, global_step)
 
@@ -584,6 +589,7 @@ if __name__ == "__main__":
         # writer.add_scalar("train_eval/stddev_eval_return", stddev_train_eval_returns, global_step)
         # writer.add_scalar("train_eval/mean_eval_length", mean_train_eval_lengths, global_step)
         # writer.add_scalar("train_eval/normalized_mean_eval_return", normalized_mean_train_eval_returns, global_step)
+        writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
     # eval_envs.close()
     envs.close()

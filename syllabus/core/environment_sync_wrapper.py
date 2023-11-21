@@ -113,6 +113,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             return env_attr
 
 
+# TODO: Fix this and refactor
 class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
     """
     This wrapper is used to set the task on reset for a Gym environments running

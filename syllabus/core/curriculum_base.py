@@ -177,11 +177,13 @@ class Curriculum:
         """
         try:
             task_dist = self._sample_distribution()
+            # if len(task_dist) > 10:
+            #     print("Only logging stats for 10 tasks.")
             if self.task_names:
-                for idx, prob in enumerate(task_dist):
+                for idx, prob in enumerate(task_dist[:10]):
                     writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
             else:
-                for idx, prob in enumerate(task_dist):
+                for idx, prob in enumerate(task_dist[:10]):
                     writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
         except wandb.errors.Error:
             # No need to crash over logging :)

@@ -103,7 +103,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     # Count updates with "request_sample" set to True
                     if "request_sample" in update and update["request_sample"]:
                         requested_tasks += 1
-                    # Decode task
+                    # Decode task and taks progress
                     if update["update_type"] == "task_progress":
                         update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
                 
@@ -112,7 +112,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             # Sample new tasks
             if requested_tasks > 0:
                 # TODO: Make this an option
-                if self.num_assigned_tasks < self.task_space.num_tasks:
+                if self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks:
                     # Sample unseen tasks sequentially before using curriculum method
                     # TODO: Make a real API for this
                     new_tasks = list(self.task_space._tasks)[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
@@ -134,7 +134,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        #writer.add_scalar("curriculum/task_queue_length", self.queued_tasks, step)
+        writer.add_scalar("curriculum/requested_tasks", self.num_assigned_tasks, step)
 
     def add_task(self, task):
         super().add_task(task)
