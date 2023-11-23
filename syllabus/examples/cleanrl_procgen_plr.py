@@ -121,7 +121,7 @@ PROCGEN_RETURN_BOUNDS = {
 def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
         env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
-        env = gym.wrappers.RecordEpisodeStatistics(env)
+        # env = gym.wrappers.RecordEpisodeStatistics(env)
         env = ProcgenTaskWrapper(env, env_id, seed)
         if args.curriculum:
             if task_queue is not None and update_queue is not None:
@@ -329,7 +329,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-
+    print(device)
     # Curriculum setup
     task_queue = update_queue = None
     if args.curriculum:
@@ -422,10 +422,11 @@ if __name__ == "__main__":
             next_obs, reward, done, info = envs.step(action.cpu().numpy())
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
+            completed_episodes += sum(done)
 
             for item in info:
                 if "episode" in item.keys():
-                    completed_episodes += 1
+                    print("Completed Episodes: ", completed_episodes)
                     episode_rewards.append(item['episode']['r'])
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)

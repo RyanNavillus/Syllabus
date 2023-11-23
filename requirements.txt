@@ -1,5 +1,5 @@
-pettingzoo==1.19.0
-supersuit==3.5.0
+#pettingzoo==1.19.0
+#supersuit==3.5.0
 gym==0.23.1
 numpy==1.23.3
 wandb>=0.15.3

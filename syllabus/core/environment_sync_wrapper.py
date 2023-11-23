@@ -41,21 +41,29 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         if default_task is not None and not task_space.contains(default_task):
             raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
+        # Debugging
+        self._env_idx = int(self.env.task)
+        self._num_episodes = -1
+
         # Request initial task
         for _ in range(buffer_size):
             update = {
                 "update_type": "noop",
                 "metrics": None,
-                "request_sample": True
+                "request_sample": True,
+                "request_id": f"{self._env_idx}_{self._num_episodes}"
             }
             self.update_queue.put(update)
+            # print("Request Sent:", update["request_id"])
 
     def reset(self, *args, **kwargs):
         self.step_updates = []
         self.task_progress = 0.0
+        self._num_episodes += 1
 
         message = self.task_queue.get() # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
+        # print("Sample Recv:", message["sample_id"])
         if "added_tasks" in message:
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
@@ -86,7 +94,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             })
             # Send batched updates
             if len(self.step_updates) >= 1000 or done:
-                #print(len(self.step_updates))
                 self.update_queue.put(self.step_updates)
                 self.step_updates = []
         elif done:
@@ -94,19 +101,21 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "request_sample": True
+                "request_sample": True,
+                "request_id": f"{self._env_idx}_{self._num_episodes}"
             }
             self.update_queue.put(update)
+            # print("Request Sent:", update["request_id"])
 
         return obs, rew, done, info
-    
+
     def add_task(self, task):
         update = {
             "update_type": "add_task",
             "metrics": task
         }
         self.update_queue.put(update)
-    
+
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
         if env_attr:

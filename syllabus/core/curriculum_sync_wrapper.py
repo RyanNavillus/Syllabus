@@ -91,6 +91,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         Continuously process completed tasks and sample new tasks.
         """
         # TODO: Refactor long method? Write tests first
+        # print("Update thread started")
         while self.should_update:
             # Update curriculum with environment results:
             requested_tasks = 0
@@ -106,7 +107,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     # Decode task and taks progress
                     if update["update_type"] == "task_progress":
                         update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
-                
+                    # print("Request Recv:", update["request_id"])
                 self.batch_update_curriculum(batch_updates)
 
             # Sample new tasks
@@ -118,20 +119,22 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     new_tasks = list(self.task_space._tasks)[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
                 else:
                     new_tasks = self.curriculum.sample(k=requested_tasks)
-                self.num_assigned_tasks += requested_tasks
-                # print("new_tasks", new_tasks)
-                for task in new_tasks:
+                for i, task in enumerate(new_tasks):
                     message = {
                         "next_task": self.task_space.encode(task),
                         "added_tasks": self.added_tasks,
+                        "sample_id": self.num_assigned_tasks + i,
                     }
+                    # print("Sample Sent: ", message["sample_id"])
                     self.task_queue.put(message)
                     self.added_tasks = []
+                self.num_assigned_tasks += requested_tasks
+                # print("Total assigned tasks:", self.num_assigned_tasks)
             time.sleep(0.01)
 
     def __del__(self):
         self.stop()
-    
+
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
         writer.add_scalar("curriculum/requested_tasks", self.num_assigned_tasks, step)
