@@ -4,8 +4,6 @@ from typing import Any, List, Union
 import numpy as np
 from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space, Tuple
 
-#from syllabus.core import enumerate_axes
-
 
 class TaskSpace():
     def __init__(self, gym_space, tasks):
@@ -31,7 +29,6 @@ class TaskSpace():
             decoders = [r[1] for r in results]
             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
-            #raise NotImplementedError(f"Task space not implemented for this gym space: {self.gym_space}")
         else:
             encoder = lambda task: task
             decoder = lambda task: task
@@ -40,11 +37,11 @@ class TaskSpace():
     def decode(self, encoding):
         """Convert the efficient task encoding to a task that can be used by the environment."""
         return self._decoder(encoding)
-    
+
     def encode(self, task):
         """Convert the task to an efficient encoding to speed up multiprocessing."""
         return self._encoder(task)
-    
+
     def add_task(self, task):
         """Add a task to the task space. Only implemented for discrete spaces."""
         if task not in self._tasks:
@@ -61,7 +58,7 @@ class TaskSpace():
             return np.prod([TaskSpace._sum_axes(x) for x in list_or_size])
         else:
             raise NotImplementedError(f"{type(list_or_size)}")
-        
+
     def _enumerate_axes(self, list_or_size: Union[np.ndarray, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
             return tuple(range(list_or_size))
@@ -100,12 +97,12 @@ class TaskSpace():
             return []
         else:
             raise NotImplementedError
-    
+
     @property
     def num_tasks(self) -> int:
         # TODO: Cache results
         return self.count_tasks()
-    
+
     def count_tasks(self, gym_space: Space = None) -> int:
         """
         Return the number of discrete tasks in the task_space.
@@ -132,14 +129,21 @@ class TaskSpace():
             return 0
         else:
             raise NotImplementedError(f"Unsupported task space type: {type(gym_space)}")
-    
+
     def task_name(self, task):
         return repr(self.decode(task))
-    
+
     def contains(self, task):
         return task in self._tasks or self.decode(task) in self._tasks
-    
+
     def increase_space(self, amount: Union[int, float] = 1):
         if isinstance(self.gym_space, Discrete):
             assert isinstance(amount, int), f"Discrete task space can only be increased by integer amount. Got {amount} instead."
             return Discrete(self.gym_space.n + amount)
+
+    def sample(self):
+        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box)
+        return self.decode(self.gym_space.sample())
+
+    def list_tasks(self):
+        return list(self._tasks)

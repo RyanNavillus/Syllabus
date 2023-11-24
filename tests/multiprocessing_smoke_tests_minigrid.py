@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
         # Test Queue multiprocess speed with Syllabus
         test_curriculum = deepcopy(curriculum)
-        test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, N_ENVS)
+        test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum)
         print("\nRUNNING: Python multiprocess test with Syllabus...")
         native_syllabus_speed = test_native_multiprocess(create_minigrid_env, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")

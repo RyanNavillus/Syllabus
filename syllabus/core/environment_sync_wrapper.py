@@ -1,12 +1,13 @@
-import time
-from typing import Any, Callable, Dict
 from multiprocessing import SimpleQueue
-import numpy as np
+from typing import Any, Callable, Dict
 
 import gym
+import numpy as np
 import ray
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-from syllabus.core import Curriculum, TaskWrapper, TaskEnv, PettingZooTaskWrapper
+
+from syllabus.core import (Curriculum, PettingZooTaskWrapper, TaskEnv,
+                           TaskWrapper)
 from syllabus.task_space import TaskSpace
 
 
@@ -46,7 +47,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             update = {
                 "update_type": "noop",
                 "metrics": None,
-                "request_sample": True
+                "request_sample": True,
             }
             self.update_queue.put(update)
 
@@ -54,8 +55,10 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.step_updates = []
         self.task_progress = 0.0
 
-        message = self.task_queue.get() # Blocks until a task is available
+        message = self.task_queue.get()     # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
+
+        # Add any new tasks
         if "added_tasks" in message:
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
@@ -86,7 +89,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             })
             # Send batched updates
             if len(self.step_updates) >= 1000 or done:
-                #print(len(self.step_updates))
                 self.update_queue.put(self.step_updates)
                 self.step_updates = []
         elif done:
@@ -94,25 +96,26 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "request_sample": True
+                "request_sample": True,
             }
             self.update_queue.put(update)
 
         return obs, rew, done, info
-    
+
     def add_task(self, task):
         update = {
             "update_type": "add_task",
             "metrics": task
         }
         self.update_queue.put(update)
-    
+
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
-        if env_attr:
+        if env_attr is not None:
             return env_attr
 
 
+# TODO: Fix this and refactor
 class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
     """
     This wrapper is used to set the task on reset for a Gym environments running
@@ -167,7 +170,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
-            next_task = self.default_task if self.default_task is not None else self.env.task
+            next_task = self.default_task if self.default_task is not None else self.task_space.sample()
             if not self.warned_once:
                 print("\nTask queue was empty, selecting default task. This warning will not print again for this environment.\n")
                 self.warned_once = False

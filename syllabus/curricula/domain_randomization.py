@@ -16,7 +16,6 @@ class DomainRandomization(Curriculum):
         """
         # Uniform distribution
         return [1.0 / self.num_tasks for _ in range(self.num_tasks)]
-    
+
     def add_task(self, task: Any) -> None:
         self.task_space.add_task(task)
-

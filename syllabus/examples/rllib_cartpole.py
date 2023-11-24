@@ -1,13 +1,13 @@
 import gym
-import ray
-import numpy as np
-from ray.tune.registry import register_env
-from ray import tune
 from gym.spaces import Box
-from syllabus.core import TaskWrapper, RaySyncWrapper, make_ray_curriculum
+from ray import tune
+from ray.tune.registry import register_env
+
+from syllabus.core import RaySyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
-from syllabus.examples.task_wrappers import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
+
+from .task_wrappers import CartPoleTaskWrapper
 
 # Define a task space
 if __name__ == "__main__":
@@ -21,7 +21,6 @@ if __name__ == "__main__":
         env = RaySyncWrapper(env, default_task=(-0.02, 0.02), task_space=task_space)
         return env
 
-    #ray.init(num_gpus=1)
     register_env("task_cartpole", env_creator)
 
     # Create the curriculum
@@ -30,10 +29,10 @@ if __name__ == "__main__":
     curriculum = make_ray_curriculum(curriculum)
 
     config = {
-            "env": "task_cartpole",
-            "num_gpus": 1,
-            "num_workers": 8,
-            "framework": "torch",
+        "env": "task_cartpole",
+        "num_gpus": 1,
+        "num_workers": 8,
+        "framework": "torch",
     }
 
     tuner = tune.Tuner("APEX", param_space=config)
