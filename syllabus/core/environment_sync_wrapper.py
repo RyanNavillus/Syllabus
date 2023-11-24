@@ -111,7 +111,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
-        if env_attr:
+        if env_attr is not None:
             return env_attr
 
 
