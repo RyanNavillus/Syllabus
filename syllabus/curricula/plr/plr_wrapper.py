@@ -124,13 +124,9 @@ class PrioritizedLevelReplay(Curriculum):
         self.num_updates = 0  # Used to ensure proper usage
         self.num_samples = 0  # Used to ensure proper usage
 
-    def update_on_demand(self, metrics: Dict):
-        """
-        Update the curriculum with arbitrary inputs.
-        """
-        self.num_updates += 1
+    def _validate_metrics(self, metrics: Dict):
         try:
-            masks = metrics["masks"]
+            masks = torch.Tensor(1 - metrics["dones"])
             tasks = metrics["tasks"]
             tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
@@ -148,11 +144,29 @@ class PrioritizedLevelReplay(Curriculum):
             value = metrics["value"]
             rew = metrics["rew"]
         else:
-            if "action_log_dist" not in metrics:
+            try:
+                action_log_dist = metrics["action_log_dist"]
+            except KeyError as e:
                 raise KeyError(
                     f"'action_log_dist' must be provided in every update for the strategy {self._strategy}."
-                )
-            action_log_dist = metrics["action_log_dist"]
+                ) from e
+
+        if self._task_sampler.requires_value_buffers:
+            try:
+                next_value = metrics["next_value"]
+            except KeyError as e:
+                raise KeyError(
+                    f"'next_value' must be provided in the update every {self.num_steps} steps for the strategy {self._strategy}."
+                ) from e
+
+        return masks, tasks, value, rew, action_log_dist, next_value
+
+    def update_on_demand(self, metrics: Dict):
+        """
+        Update the curriculum with arbitrary inputs.
+        """
+        self.num_updates += 1
+        masks, tasks, value, rew, action_log_dist, next_value = self._validate_metrics(metrics)
 
         # Update rollouts
         self._rollouts.insert(
@@ -166,11 +180,6 @@ class PrioritizedLevelReplay(Curriculum):
         # Update task sampler
         if self._rollouts.step == 0:
             if self._task_sampler.requires_value_buffers:
-                if "next_value" not in metrics:
-                    raise KeyError(
-                        "'next_value' must be provided in the update every {self.num_steps} steps for the strategy {self._strategy}."
-                    )
-                next_value = metrics["next_value"]
                 self._rollouts.compute_returns(next_value, self._gamma, self._gae_lambda)
             self._task_sampler.update_with_rollouts(self._rollouts)
             self._rollouts.after_update()

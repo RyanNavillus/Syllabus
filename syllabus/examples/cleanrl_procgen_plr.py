@@ -265,7 +265,7 @@ if __name__ == "__main__":
         del sample_env
 
     # env setup
-    envs = gym.vector.SyncVectorEnv(
+    envs = gym.vector.AsyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=1 if args.curriculum else 0)
             for i in range(args.num_envs)
@@ -344,7 +344,7 @@ if __name__ == "__main__":
                         "value": value,
                         "next_value": next_value,
                         "rew": reward,
-                        "masks": torch.Tensor(1 - done),
+                        "dones": done,
                         "tasks": tasks,
                     },
                 }
@@ -471,6 +471,5 @@ if __name__ == "__main__":
         writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
-    # eval_envs.close()
     envs.close()
     writer.close()
