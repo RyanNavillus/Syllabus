@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 
@@ -15,11 +16,6 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.task = seed
         self.seed(seed)
 
-        # self.observation_space = gym.spaces.Box(
-        #     self.observation_space.low[0, 0, 0],
-        #     self.observation_space.high[0, 0, 0],
-        #     [3, 64, 64],
-        #     dtype=np.float64)
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
@@ -40,7 +36,6 @@ class ProcgenTaskWrapper(TaskWrapper):
 
         self.done = False
         self.episode_return = 0
-        # self._elapsed_steps = 0
 
         return self.observation(self.env.reset(**kwargs))
 
@@ -52,8 +47,6 @@ class ProcgenTaskWrapper(TaskWrapper):
         """
         seed = int(new_task)
         self.task = seed
-        # self.env = gym.make(f"procgen-{self.env_id}-v0", start_level=seed, num_levels=1, distribution_mode="easy")
-        # gym.utils.seeding.np_random(seed)
         self.seed(seed)
 
     def step(self, action):
@@ -65,6 +58,3 @@ class ProcgenTaskWrapper(TaskWrapper):
 
     def observation(self, obs):
         return obs
-        # if obs.shape[0] != 3:
-        #     obs = obs.transpose(2, 0, 1)
-        # return obs.astype(np.float64) / 255.0

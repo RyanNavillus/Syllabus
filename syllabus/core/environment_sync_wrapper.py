@@ -1,12 +1,13 @@
-import time
-from typing import Any, Callable, Dict
 from multiprocessing import SimpleQueue
-import numpy as np
+from typing import Any, Callable, Dict
 
 import gym
+import numpy as np
 import ray
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-from syllabus.core import Curriculum, TaskWrapper, TaskEnv, PettingZooTaskWrapper
+
+from syllabus.core import (Curriculum, PettingZooTaskWrapper, TaskEnv,
+                           TaskWrapper)
 from syllabus.task_space import TaskSpace
 
 
@@ -41,29 +42,23 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         if default_task is not None and not task_space.contains(default_task):
             raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
-        # Debugging
-        self._env_idx = int(self.env.task)
-        self._num_episodes = -1
-
         # Request initial task
         for _ in range(buffer_size):
             update = {
                 "update_type": "noop",
                 "metrics": None,
                 "request_sample": True,
-                "request_id": f"{self._env_idx}_{self._num_episodes}"
             }
             self.update_queue.put(update)
-            # print("Request Sent:", update["request_id"])
 
     def reset(self, *args, **kwargs):
         self.step_updates = []
         self.task_progress = 0.0
-        self._num_episodes += 1
 
-        message = self.task_queue.get() # Blocks until a task is available
+        message = self.task_queue.get()     # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
-        # print("Sample Recv:", message["sample_id"])
+
+        # Add any new tasks
         if "added_tasks" in message:
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
@@ -102,10 +97,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
                 "request_sample": True,
-                "request_id": f"{self._env_idx}_{self._num_episodes}"
             }
             self.update_queue.put(update)
-            # print("Request Sent:", update["request_id"])
 
         return obs, rew, done, info
 

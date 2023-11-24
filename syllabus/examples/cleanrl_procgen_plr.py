@@ -3,8 +3,8 @@ import argparse
 import os
 import random
 import time
-from distutils.util import strtobool
 from collections import deque
+from distutils.util import strtobool
 
 import gym
 import numpy as np
@@ -12,16 +12,17 @@ import procgen  # noqa: F401
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from procgen import ProcgenEnv
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, SequentialCurriculum
-from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from syllabus.curricula import (DomainRandomization, PrioritizedLevelReplay)
 from syllabus.examples.models import ProcgenAgent
-from .vecenv import VecNormalize, VecMonitor, VecExtractDictObs
-from procgen import ProcgenEnv
+from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+
+from .vecenv import VecExtractDictObs, VecMonitor, VecNormalize
 
 
 def parse_args():

@@ -1,10 +1,10 @@
 """ Task wrapper that can select a new MiniGrid task on reset. """
 import gym
 import numpy as np
+from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
+
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
-
-from gym_minigrid.minigrid import OBJECT_TO_IDX, COLOR_TO_IDX
 
 
 class MinigridTaskWrapper(TaskWrapper):
@@ -22,17 +22,13 @@ class MinigridTaskWrapper(TaskWrapper):
         m, n, c = self.observation_space.shape
         self.observation_space = gym.spaces.Box(
             self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0], 
+            self.observation_space.high[0, 0, 0],
             [c, m, n],
             dtype=self.observation_space.dtype)
 
         # Set up task space
         self.task_space = TaskSpace(gym.spaces.Discrete(4000), list(np.arange(4000)))
         self.task = None
-
-        # Time limit
-        # self._max_episode_steps = env.max_steps
-        # self._elapsed_steps = None
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -49,7 +45,6 @@ class MinigridTaskWrapper(TaskWrapper):
 
         self.done = False
         self.episode_return = 0
-        # self._elapsed_steps = 0
 
         return self.observation(self.env.reset(**kwargs)["image"])
 
@@ -62,8 +57,6 @@ class MinigridTaskWrapper(TaskWrapper):
         seed = int(new_task)
         self.task = seed
         self.env.seed(seed)
-        self.env.action_space.seed(seed)
-        self.env.observation_space.seed(seed)
 
     def step(self, action):
         """
@@ -72,13 +65,6 @@ class MinigridTaskWrapper(TaskWrapper):
         # assert self._elapsed_steps is not None, "Cannot call env.step() before calling reset()"
         obs, rew, done, info = self.env.step(action)
         obs = self.observation(obs["image"])
-
-        # # Check time limit
-        # self._elapsed_steps += 1
-        # if self._elapsed_steps >= self._max_episode_steps:
-        #     info['truncated'] = not done
-        #     info['truncated_obs'] = obs
-        #     done = True
 
         self.episode_return += rew
         self.done = done

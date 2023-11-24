@@ -1,12 +1,11 @@
-import ray
-import sys
-import time
 import threading
-import wandb
+import time
 from functools import wraps
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
+import ray
 from torch.multiprocessing import SimpleQueue
+
 from syllabus.core import Curriculum, decorate_all_functions
 
 
@@ -21,7 +20,7 @@ class CurriculumWrapper:
     @property
     def num_tasks(self):
         return self.task_space.num_tasks
-    
+
     def count_tasks(self, task_space=None):
         return self.task_space.count_tasks(gym_space=task_space)
 
@@ -31,7 +30,7 @@ class CurriculumWrapper:
 
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
-      
+
     def sample(self, k=1):
         return self.curriculum.sample(k=k)
 
@@ -52,7 +51,7 @@ class CurriculumWrapper:
 
     def batch_update_curriculum(self, metrics):
         self.curriculum.update_curriculum_batch(metrics)
-    
+
     def add_task(self, task):
         self.curriculum.add_task(task)
 
@@ -63,7 +62,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     def __init__(self,
                  curriculum: Curriculum,
                  task_queue: SimpleQueue,
-                 update_queue: SimpleQueue):
+                 update_queue: SimpleQueue,
+                 sequential_start: bool = True):
         super().__init__(curriculum)
         self.task_queue = task_queue
         self.update_queue = update_queue
@@ -71,6 +71,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.should_update = False
         self.added_tasks = []
         self.num_assigned_tasks = 0
+        # TODO: Check if task_space is enumerable
+        self.sequential_start = sequential_start
 
     def start(self):
         """
@@ -91,7 +93,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         Continuously process completed tasks and sample new tasks.
         """
         # TODO: Refactor long method? Write tests first
-        # print("Update thread started")
         while self.should_update:
             # Update curriculum with environment results:
             requested_tasks = 0
@@ -104,19 +105,17 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     # Count updates with "request_sample" set to True
                     if "request_sample" in update and update["request_sample"]:
                         requested_tasks += 1
-                    # Decode task and taks progress
+                    # Decode task and task progress
                     if update["update_type"] == "task_progress":
                         update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
-                    # print("Request Recv:", update["request_id"])
                 self.batch_update_curriculum(batch_updates)
 
             # Sample new tasks
             if requested_tasks > 0:
-                # TODO: Make this an option
-                if self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks:
+                # Sequentially sample task_space before using curriculum method
+                if self.sequential_start and self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks:
                     # Sample unseen tasks sequentially before using curriculum method
-                    # TODO: Make a real API for this
-                    new_tasks = list(self.task_space._tasks)[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
+                    new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
                 else:
                     new_tasks = self.curriculum.sample(k=requested_tasks)
                 for i, task in enumerate(new_tasks):
@@ -125,11 +124,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                         "added_tasks": self.added_tasks,
                         "sample_id": self.num_assigned_tasks + i,
                     }
-                    # print("Sample Sent: ", message["sample_id"])
                     self.task_queue.put(message)
                     self.added_tasks = []
                 self.num_assigned_tasks += requested_tasks
-                # print("Total assigned tasks:", self.num_assigned_tasks)
             time.sleep(0.01)
 
     def __del__(self):
@@ -210,10 +207,9 @@ class RayCurriculumWrapper(CurriculumWrapper):
         super().add_task(task)
         self.added_tasks.append(task)
 
+
 def make_ray_curriculum(curriculum, actor_name="curriculum"):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
     return RayCurriculumWrapper(curriculum, actor_name=actor_name)
-
-

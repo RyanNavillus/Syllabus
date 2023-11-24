@@ -1,11 +1,13 @@
 import gym
-from ray.tune.registry import register_env
-from ray import tune
 from gym.spaces import Box
+from ray import tune
+from ray.tune.registry import register_env
+
 from syllabus.core import RaySyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
-from .task_wrappers import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
+
+from .task_wrappers import CartPoleTaskWrapper
 
 # Define a task space
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
 from typing import Any, Dict, List, Tuple, Union
 
-import numpy as np
 import gym
 import torch
+import warnings
 from gym.spaces import Discrete, MultiDiscrete
+
 from syllabus.core import Curriculum, UsageError, enumerate_axes
 from syllabus.curricula.plr import TaskSampler
 from syllabus.task_space import TaskSpace
@@ -95,22 +96,22 @@ class PrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings=False,
         **curriculum_kwargs,
     ):
+        # Preprocess curriculum intialization args
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
         if not isinstance(task_space.gym_space, Discrete) and not isinstance(task_space.gym_space, MultiDiscrete):
             raise ValueError(
                 f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict:
-            print(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
-
+            warnings.warn(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
+
         self._num_steps = num_steps  # Number of steps stored in rollouts and used to update task sampler
         self._num_processes = num_processes  # Number of parallel environments
         self._gamma = gamma
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
-        # self.tasks = self._enumerate_tasks(task_space)
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
@@ -163,9 +164,7 @@ class PrioritizedLevelReplay(Curriculum):
         )
 
         # Update task sampler
-        # print(self._rollouts.step )
         if self._rollouts.step == 0:
-            # print("success")
             if self._task_sampler.requires_value_buffers:
                 if "next_value" not in metrics:
                     raise KeyError(
@@ -229,8 +228,8 @@ class PrioritizedLevelReplay(Curriculum):
             return list(enumerate_axes(space.nvec))
 
     def log_metrics(self, writer, step=None):
-        """Log the task distribution to the provided tensorboard writer.
-
+        """
+        Log the task distribution to the provided tensorboard writer.
         """
         super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
@@ -239,6 +238,3 @@ class PrioritizedLevelReplay(Curriculum):
         for task in list(self.task_space.tasks)[:10]:
             writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
             writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
-        # task_returns = {task: 0 for task in self.task_space.tasks}
-        # for actor, task_return in self._rollouts.returns[]:
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_return", self._rollouts.returns[task - 1].mean(), step)

@@ -2,7 +2,7 @@ import typing
 from typing import Any, Callable, List, Tuple, Union
 import numpy as np
 from gym.spaces import Dict
-
+import warnings
 import wandb
 from syllabus.task_space import TaskSpace
 
@@ -29,7 +29,7 @@ class Curriculum:
         self.n_updates = 0
 
         if self.num_tasks == 0:
-            print("Warning: Task space is empty. This will cause errors during sampling if no tasks are added.")
+            warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
 
     @property
     def num_tasks(self) -> int:
@@ -168,7 +168,7 @@ class Curriculum:
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]
 
-    def log_metrics(self, writer, step=None):
+    def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.
 
         # TODO: Clean up and support wandb
@@ -177,14 +177,15 @@ class Curriculum:
         """
         try:
             task_dist = self._sample_distribution()
-            # if len(task_dist) > 10:
-            #     print("Only logging stats for 10 tasks.")
+            if len(task_dist) > 10 and not log_full_dist:
+                warnings.warn("Only logging stats for 10 tasks.")
+                task_dist = task_dist[:10]
             if self.task_names:
-                for idx, prob in enumerate(task_dist[:10]):
+                for idx, prob in enumerate(task_dist):
                     writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
             else:
-                for idx, prob in enumerate(task_dist[:10]):
+                for idx, prob in enumerate(task_dist):
                     writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
         except wandb.errors.Error:
             # No need to crash over logging :)
-            pass
+            warnings.warn("Failed to log curriculum stats to wandb.")

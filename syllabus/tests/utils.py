@@ -1,20 +1,23 @@
-import gym
-import ray
 import time
 from multiprocessing import Process
+
+import gym
+import ray
+
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
 from syllabus.task_space import TaskSpace
 
 
-def evaluate_random_policy(make_env, num_episodes=100, seeds=None, reseed_after_reset=False):
+def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
     env = make_env(seed=seeds[0] if seeds else None)
-
     episode_returns = []
 
     for i in range(num_episodes):
         episode_return = 0
         if seeds:
             _ = env.reset(new_task=seeds[i])
+            env.action_space.seed(seeds[i])
+            env.observation_space.seed(seeds[i])
         else:
             _ = env.reset()
         done = False
@@ -23,7 +26,7 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None, reseed_after_
             _, rew, done, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
-    print(episode_returns)
+
     avg_return = sum(episode_returns) / len(episode_returns)
     print(f"Average Episodic Return: {avg_return}")
     return avg_return, episode_returns
@@ -128,6 +131,8 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
 
 # Sync Test Environment
 from syllabus.tests import SyncTestEnv
+
+
 def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
@@ -143,7 +148,10 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 # Nethack Tests
 from nle.env.tasks import NetHackScore
-from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
+
+from syllabus.examples.task_wrappers.nethack_task_wrapper import \
+    NethackTaskWrapper
+
 
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = NetHackScore(*env_args, **env_kwargs)
@@ -161,8 +169,10 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 # Minigrid Tests
 from gym_minigrid.envs import DoorKeyEnv
-from syllabus.core import ReinitTaskWrapper
 from gym_minigrid.register import env_list
+
+from syllabus.core import ReinitTaskWrapper
+
 
 def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = gym.make("MiniGrid-DoorKey-5x5-v0", **env_kwargs)
