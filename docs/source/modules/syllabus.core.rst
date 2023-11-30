@@ -36,14 +36,6 @@ syllabus.core.environment\_task\_env module
    :undoc-members:
    :show-inheritance:
 
-syllabus.core.environment\_task\_wrapper module
------------------------------------------------
-
-.. automodule:: syllabus.core.environment_task_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 syllabus.core.multivariate\_curriculum\_wrapper module
 ------------------------------------------------------
 
@@ -64,6 +56,14 @@ syllabus.core.subclass\_task\_wrapper module
 --------------------------------------------
 
 .. automodule:: syllabus.core.subclass_task_wrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+syllabus.core.task\_wrapper module
+----------------------------------
+
+.. automodule:: syllabus.core.task_wrapper
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,5 +1,7 @@
-syllabus.curricula.plr package
+Prioritized Level Replay (PLR) Curriculum
 ==============================
+
+Under construction.
 
 Submodules
 ----------

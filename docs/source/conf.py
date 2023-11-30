@@ -18,7 +18,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',]
 
 templates_path = ['_templates']
-exclude_patterns = []
 
 import sys
 import os

@@ -57,5 +57,3 @@ if __name__ == "__main__":
         print("\nRUNNING: Ray multiprocess test with Syllabus...")
         ray_syllabus_speed = test_ray_multiprocess(create_minigrid_env, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")
-
-

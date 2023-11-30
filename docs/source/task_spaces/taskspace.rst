@@ -12,3 +12,9 @@ This component is currently a work in progress. Future versions will include:
 - Train, test, and validation splits over the task space
 
 - Support for more complex task spaces (currently only Discrete, MultiDiscrete, and Box spaces are fully supported)
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   custom_taskwrapper
