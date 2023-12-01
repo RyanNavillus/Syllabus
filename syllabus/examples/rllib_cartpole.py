@@ -18,7 +18,9 @@ if __name__ == "__main__":
         # Wrap the environment to change tasks on reset()
         env = CartPoleTaskWrapper(env)
         # Add environment sync wrapper
-        env = RaySyncWrapper(env, default_task=(-0.02, 0.02), task_space=task_space)
+        env = RaySyncWrapper(
+            env, default_task=(-0.02, 0.02), task_space=task_space
+        )
         return env
 
     register_env("task_cartpole", env_creator)
