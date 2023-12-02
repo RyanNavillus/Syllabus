@@ -21,12 +21,14 @@ PLR requires L1 Value estimates from the training process to compute it's sampli
 
    .. tab:: CleanRL
 
+      Insert the following code at the end of the step loop. For example, `at line 216 in ppo.py <https://github.com/vwxyzjn/cleanrl/blob/e421c2e50b81febf639fced51a69e2602593d50d/cleanrl/ppo.py#L216>`_.
+
       .. code-block:: python
 
          for step in range(0, args.num_steps):
             ...
          
-         with torch.no_grad():
+            with torch.no_grad():
                next_value = agent.get_value(next_obs)
             tasks = envs.get_attr("task")
 
@@ -47,7 +49,7 @@ PLR requires L1 Value estimates from the training process to compute it's sampli
 
       .. code-block:: python
 
-         class CustomCallback(BaseCallback):
+         class PLRCallback(BaseCallback):
             def __init__(self, curriculum, verbose=0):
                super().__init__(verbose)
                self.curriculum = curriculum
