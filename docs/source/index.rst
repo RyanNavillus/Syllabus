@@ -25,5 +25,6 @@ We also have preliminary support and examples for multiagent PettingZoo environm
    background/curriculum_learning
    curricula/curriculum
    task_spaces/taskspace
+   evaluation/evaluation
    logging
    modules/modules
