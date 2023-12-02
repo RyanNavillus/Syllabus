@@ -122,7 +122,7 @@ PROCGEN_RETURN_BOUNDS = {
 def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
         env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
-        env = ProcgenTaskWrapper(env, env_id, seed)
+        env = ProcgenTaskWrapper(env, seed=seed)
         if args.curriculum:
             if task_queue is not None and update_queue is not None:
                 env = MultiProcessingSyncWrapper(
@@ -130,7 +130,6 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
                     task_queue,
                     update_queue,
                     update_on_step=False,
-                    default_task=start_level,
                     task_space=env.task_space,
                 )
         return env
@@ -243,7 +242,7 @@ if __name__ == "__main__":
     task_queue = update_queue = None
     if args.curriculum:
         sample_env = gym.make(f"procgen-{args.env_id}-v0")
-        sample_env = ProcgenTaskWrapper(sample_env, args.env_id, args.seed)
+        sample_env = ProcgenTaskWrapper(sample_env, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":

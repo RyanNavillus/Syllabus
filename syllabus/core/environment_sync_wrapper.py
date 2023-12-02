@@ -22,7 +22,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  task_queue: SimpleQueue,
                  update_queue: SimpleQueue,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 default_task: Any = None,
                  buffer_size: int = 1,
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
@@ -36,11 +35,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
         self.step_updates = []
-        self.default_task = default_task
         self.warned_once = False
         self._first_episode = True
-        if default_task is not None and not task_space.contains(default_task):
-            raise ValueError(f"Task space {task_space} does not contain default_task {default_task}")
 
         # Request initial task
         for _ in range(buffer_size):
@@ -214,7 +210,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         env_attr = getattr(self.env, attr, None)
         if env_attr:
             return env_attr
-    
+
 
 class RaySyncWrapper(gym.Wrapper):
     """
@@ -225,7 +221,6 @@ class RaySyncWrapper(gym.Wrapper):
     def __init__(self,
                  env,
                  update_on_step: bool = True,
-                 default_task=None,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
@@ -233,8 +228,6 @@ class RaySyncWrapper(gym.Wrapper):
         self.env = env
         self.update_on_step = update_on_step    # Disable to improve performance 10x
         self.task_space = task_space
-        if task_space.contains(default_task):
-            self.default_task = default_task
         self.curriculum = ray.get_actor("curriculum")
         self.task_completion = 0.0
         self.global_task_completion = global_task_completion

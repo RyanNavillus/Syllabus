@@ -147,6 +147,8 @@ class Policy(nn.Module):
 
         self.base = base(obs_shape[0], **base_kwargs)
         self.dist = Categorical(self.base.output_size, num_actions)
+        self.latent_dim_pi = 256
+        self.latent_dim_vf = 256
 
     @property
     def is_recurrent(self):
@@ -158,7 +160,9 @@ class Policy(nn.Module):
         return self.base.recurrent_hidden_state_size
 
     def forward(self, inputs):
-        raise NotImplementedError
+        value, actor_features, rnn_hxs = self.base(inputs, None, None)
+        dist = self.dist(actor_features)
+        return dist.sample(), value
 
     def act(self, inputs, deterministic=False):
         value, actor_features = self.base(inputs)

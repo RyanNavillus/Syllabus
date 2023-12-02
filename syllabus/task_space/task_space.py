@@ -6,10 +6,12 @@ from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space, T
 
 
 class TaskSpace():
-    def __init__(self, gym_space, tasks):
+    def __init__(self, gym_space, tasks=None):
         self.gym_space = gym_space
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
-        self._tasks = set(tasks)
+        if isinstance(gym_space, (Discrete, Tuple)):
+            assert tasks is not None, "Must specify tasks for discrete or tuple task spaces."
+            self._tasks = set(tasks)
 
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):
