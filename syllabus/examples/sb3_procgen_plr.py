@@ -1,32 +1,31 @@
-import gym
-import wandb
-import procgen
-import numpy as np
-from procgen import ProcgenEnv
-from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import VecExtractDictObs, VecMonitor, VecNormalize, VecTransposeImage
-
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import DomainRandomization, PrioritizedLevelReplay
-from syllabus.examples.models import ProcgenAgent
-from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from wandb.integration.sb3 import WandbCallback
-from stable_baselines3.common.callbacks import BaseCallback, CallbackList
-from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from typing import Callable
+
+import gym
+import procgen  # noqa: F401
+from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList
+from stable_baselines3.common.vec_env import (DummyVecEnv, VecMonitor,
+                                              VecNormalize)
+from wandb.integration.sb3 import WandbCallback
+
+import wandb
+from syllabus.core import (MultiProcessingSyncWrapper,
+                           make_multiprocessing_curriculum)
+from syllabus.curricula import PrioritizedLevelReplay
+from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 
 
 def make_env(task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
         env = gym.make("procgen-bigfish-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
-        # env = ProcgenTaskWrapper(env)
-        # env = MultiProcessingSyncWrapper(
-        #     env,
-        #     task_queue,
-        #     update_queue,
-        #     update_on_step=False,
-        #     task_space=env.task_space,
-        # )
+        env = ProcgenTaskWrapper(env)
+        env = MultiProcessingSyncWrapper(
+            env,
+            task_queue,
+            update_queue,
+            update_on_step=False,
+            task_space=env.task_space,
+        )
         return env
     return thunk
 
@@ -49,14 +48,6 @@ class CustomCallback(BaseCallback):
         self.curriculum = curriculum
 
     def _on_step(self) -> bool:
-        """
-        This method will be called by the model after each call to `env.step()`.
-
-        For child callback (of an `EventCallback`), this will be called
-        when the event is triggered.
-
-        :return: If the callback returns False, training is aborted early.
-        """
         tasks = self.training_env.venv.venv.venv.get_attr("task")
 
         update = {
@@ -83,15 +74,14 @@ run = wandb.init(
     project="sb3",
     entity="ryansullivan",
     sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-    # save_code=True,  # optional
+    save_code=True,  # optional
 )
 
 
 sample_env = gym.make("procgen-bigfish-v0")
-# sample_env = ProcgenTaskWrapper(sample_env)
-# curriculum = PrioritizedLevelReplay(sample_env.task_space, num_processes=64, num_steps=256)
-# curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
-task_queue = update_queue = None
+sample_env = ProcgenTaskWrapper(sample_env)
+curriculum = PrioritizedLevelReplay(sample_env.task_space, num_processes=64, num_steps=256)
+curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
 venv = DummyVecEnv(
     [
         make_env(task_queue, update_queue, num_levels=0)
@@ -99,7 +89,6 @@ venv = DummyVecEnv(
     ]
 )
 venv = wrap_vecenv(venv)
-# venv.observation_space = sample_env.observation_space
 
 model = PPO(
     "CnnPolicy",
@@ -116,14 +105,12 @@ model = PPO(
     tensorboard_log="runs/testing"
 )
 
-# model = PPO("CnnPolicy", venv, verbose=1, tensorboard_log=f"runs/{run.id}")
 wandb_callback = WandbCallback(
     model_save_path=f"models/{run.id}",
     verbose=2,
 )
-# plr_callback = CustomCallback(curriculum)
-# callback = CallbackList([wandb_callback, plr_callback])
-callback = wandb_callback
+plr_callback = CustomCallback(curriculum)
+callback = CallbackList([wandb_callback, plr_callback])
 model.learn(
     25000000,
     callback=callback,
