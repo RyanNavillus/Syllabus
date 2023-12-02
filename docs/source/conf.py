@@ -15,7 +15,8 @@ release = '0.3'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.intersphinx',]
+              'sphinx.ext.intersphinx',
+              'sphinx_tabs.tabs',]
 
 templates_path = ['_templates']
 
