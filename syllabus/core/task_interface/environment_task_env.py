@@ -1,7 +1,6 @@
 import gym
 import pettingzoo
-from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-    
+
 
 class TaskEnv(gym.Env):
     # TODO: Update to new TaskSpace API
@@ -31,7 +30,7 @@ class TaskEnv(gym.Env):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         raise NotImplementedError
-    
+
     def add_task(self, task):
         raise NotImplementedError("This environment does not support adding tasks.")
 
@@ -83,6 +82,6 @@ class PettingZooTaskEnv(TaskEnv, pettingzoo.ParallelEnv):
     @property
     def agents(self):
         return self.agents
-    
+
     def get_current_task(self):
         return self.task

@@ -3,19 +3,25 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
     bias_init(module.bias.data)
     return module
 
-init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                        constant_(x, 0))
 
-init_relu_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                        constant_(x, 0), nn.init.calculate_gain('relu'))
+init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
 
-init_tanh_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                        constant_(x, 0), np.sqrt(2))
+
+init_relu_ = lambda m: init(
+    m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), nn.init.calculate_gain('relu')
+)
+
+
+init_tanh_ = lambda m: init(
+    m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2)
+)
+
 
 def apply_init_(modules):
     """

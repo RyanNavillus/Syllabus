@@ -58,10 +58,10 @@ class TaskSampler:
         self.staleness_temperature = staleness_temperature
 
         self.unseen_task_weights = np.array([1.0] * self.num_tasks)
-        self.task_scores = np.array([0.0] * self.num_tasks, dtype=np.float)
-        self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=np.float)
+        self.task_scores = np.array([0.0] * self.num_tasks, dtype=float)
+        self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=float)
         self.partial_task_steps = np.zeros((num_actors, self.num_tasks), dtype=np.int64)
-        self.task_staleness = np.array([0.0] * self.num_tasks, dtype=np.float)
+        self.task_staleness = np.array([0.0] * self.num_tasks, dtype=float)
 
         self.next_task_index = 0  # Only used for sequential strategy
 
@@ -243,7 +243,7 @@ class TaskSampler:
     def _sample_replay_level(self):
         sample_weights = self.sample_weights()
         if np.isclose(np.sum(sample_weights), 0):
-            sample_weights = np.ones_like(sample_weights, dtype=np.float) / len(sample_weights)
+            sample_weights = np.ones_like(sample_weights, dtype=float) / len(sample_weights)
 
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
         task = self.tasks[task_idx]

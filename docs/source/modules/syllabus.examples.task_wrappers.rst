@@ -1,8 +1,7 @@
-syllabus.examples.task\_wrappers package
-========================================
+Example TaskWrappers
+=====================
 
-Submodules
-----------
+This directory includes a couple examples of task wrappers for different environments to help you get started with creating the task interface for your environment.
 
 syllabus.examples.task\_wrappers.cartpole\_task\_wrapper module
 ---------------------------------------------------------------

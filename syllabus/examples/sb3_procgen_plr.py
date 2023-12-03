@@ -2,17 +2,16 @@ from typing import Callable
 
 import gym
 import procgen  # noqa: F401
+import wandb
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.vec_env import (DummyVecEnv, VecMonitor,
                                               VecNormalize)
-from wandb.integration.sb3 import WandbCallback
-
-import wandb
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import PrioritizedLevelReplay
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from wandb.integration.sb3 import WandbCallback
 
 
 def make_env(task_queue, update_queue, start_level=0, num_levels=1):

@@ -1,6 +1,7 @@
 import typing
-import numpy as np
 from typing import Any, Dict, List, Union
+
+import numpy as np
 from syllabus.core import Curriculum
 from syllabus.curricula import SequentialCurriculum
 

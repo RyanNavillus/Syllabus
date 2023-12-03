@@ -5,7 +5,6 @@ import gym
 import numpy as np
 import ray
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-
 from syllabus.core import (Curriculum, PettingZooTaskWrapper, TaskEnv,
                            TaskWrapper)
 from syllabus.task_space import TaskSpace

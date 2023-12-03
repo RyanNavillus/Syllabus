@@ -17,7 +17,8 @@ release = '0.3'
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
               'sphinx_tabs.tabs',
-              'sphinx.ext.napoleon',]
+              'sphinx.ext.napoleon',
+              'sphinxcontrib.spelling']
 
 templates_path = ['_templates']
 

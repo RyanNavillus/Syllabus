@@ -13,18 +13,57 @@ and add them to existing training code. It takes only a few lines of code to add
 because of the shared Curriculum API, you can swap out different curriculum learning methods by changing a single line of code.
 
 It currently has support for environments run with Python native multiprocessing or Ray actors, which includes RLLib, CleanRL, 
-Stable Baselines 3, and Monobeast (Torchbeast). We currently have working examples with CleanRL, RLLib, and Monobeast (Torchbeast). 
+Stable Baselines 3, and Monobeast (Torchbeast). We have working examples with CleanRL, RLLib, Stable Baselines 3, and Monobeast (Torchbeast). 
 We also have preliminary support and examples for multiagent PettingZoo environments.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting Started:
 
    self
+   installation
    quickstart
-   background/curriculum_learning
-   curricula/curriculum
-   task_spaces/taskspace
    evaluation/evaluation
    logging
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Curriculum Learning Background:
+
+   background/curriculum_learning
+   background/ued
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Curriculum API:
+
+   modules/syllabus.core.curriculum
+   curricula/custom_curricula
+   curricula/implemented_curricula
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Curriculum Methods:
+
+   modules/syllabus.curricula.plr
+   modules/syllabus.curricula.domain_randomization
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Task Spaces:
+
+   modules/syllabus.task_space
+   modules/syllabus.core.task_interface
+   modules/syllabus.examples.task_wrappers
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Synchronization:
+
+   modules/syllabus.core
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Full Modules:
+
    modules/modules

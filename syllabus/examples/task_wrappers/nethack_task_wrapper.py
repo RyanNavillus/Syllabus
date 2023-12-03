@@ -2,17 +2,14 @@
 import copy
 import time
 from typing import List
-import numpy as np
+
 import gym
+import numpy as np
 from gym import spaces
 from nle.env import base
-from nle.env.tasks import (NetHackScore,
-                           NetHackStaircase,
-                           NetHackStaircasePet,
-                           NetHackOracle,
-                           NetHackGold,
-                           NetHackEat,
-                           NetHackScout)
+from nle.env.tasks import (NetHackEat, NetHackGold, NetHackOracle,
+                           NetHackScore, NetHackScout, NetHackStaircase,
+                           NetHackStaircasePet)
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 
@@ -24,9 +21,9 @@ class NethackTaskWrapper(TaskWrapper):
     This wrapper was designed to meet two goals.
         1. Allow us to change the task of the NLE environment at the start of an episode
         2. Allow us to use the predefined NLE task definitions without copying/modifying their code.
-           This allows us to integrate with other work on nethack tasks or curricula.
+           This makes it easier to integrate with other work on nethack tasks or curricula.
 
-    However, each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
+    Each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
     environment to change its task. This wrapper manipulates the __class__ property to achieve this,
     but does so in a safe way. Specifically, we ensure that the instance variables needed for each
     task are available and reset at the start of the episode regardless of which task is active.

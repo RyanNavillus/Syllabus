@@ -1,7 +1,7 @@
 import gym
-
-from syllabus.task_space import TaskSpace
 from syllabus.core import TaskEnv
+from syllabus.task_space import TaskSpace
+
 
 class SyncTestEnv(TaskEnv):
     def __init__(self, num_episodes, num_steps=100):

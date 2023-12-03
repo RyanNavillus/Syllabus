@@ -1,9 +1,10 @@
 import typing
-from typing import Any, Callable, List, Tuple, Union
-import numpy as np
-from gym.spaces import Dict
 import warnings
+from typing import Any, Callable, List, Tuple, Union
+
+import numpy as np
 import wandb
+from gym.spaces import Dict
 from syllabus.task_space import TaskSpace
 
 
@@ -101,7 +102,7 @@ class Curriculum:
         raise NotImplementedError
 
     # TODO: Move to curriculum sync wrapper?
-    def update_curriculum(self, update_data: typing.Dict[str, tuple]):
+    def update(self, update_data: typing.Dict[str, tuple]):
         """Update the curriculum with the specified update type.
         TODO: Change method header to not use dictionary, use enums?
 

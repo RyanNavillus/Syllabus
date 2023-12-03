@@ -1,13 +1,13 @@
+import warnings
 from typing import Any, Dict, List, Tuple, Union
 
 import gym
 import torch
-import warnings
 from gym.spaces import Discrete, MultiDiscrete
-
 from syllabus.core import Curriculum, UsageError, enumerate_axes
-from syllabus.curricula.plr import TaskSampler
 from syllabus.task_space import TaskSpace
+
+from .task_sampler import TaskSampler
 
 
 class RolloutStorage(object):

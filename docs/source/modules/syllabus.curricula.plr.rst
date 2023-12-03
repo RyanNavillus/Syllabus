@@ -1,3 +1,5 @@
+.. _Prioritzed Level Replay:
+
 Prioritized Level Replay (PLR) Curriculum
 =========================================
 
@@ -6,7 +8,7 @@ The implementation in this code base is based on the original implementation htt
 
 PLR has been sucessfully used to train agents in https://arxiv.org/pdf/2301.07608.pdf with a custom fitness function.
 
-Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task's learning progress is occasionally updated based on the current policy's capabnilities.
+Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task's learning progress is occasionally updated based on the current policy's capabilities.
 
 In practice prioritized level replay updates it's sampling distribution after each batch, and samples the single highest learning potential task more than 90% of the time. The sampling temperature and task diversity can can be increased by raising the `temperature` argument.
 
@@ -22,7 +24,10 @@ To intialize the curriculum, you will also need to provide the `num-processes` w
 
 PLR requires L1 Value estimates from the training process to compute it's sampling distirbution, so you need to add additional code to your training process to send these values to the curriculum. Below you can find examples of how to do this for some of the popular RL frameworks.
 
+.. _prioritized-level-replay-update:
+
 .. tabs::
+
 
    .. tab:: CleanRL
 

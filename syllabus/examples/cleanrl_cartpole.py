@@ -11,13 +11,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.distributions.categorical import Categorical
-from torch.utils.tensorboard import SummaryWriter
-
 # Syllabus imports
-from syllabus.core import TaskWrapper, MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
+                           make_multiprocessing_curriculum)
 from syllabus.curricula import SimpleBoxCurriculum
 from syllabus.examples.task_wrappers import CartPoleTaskWrapper
+from torch.distributions.categorical import Categorical
+from torch.utils.tensorboard import SummaryWriter
 
 
 def parse_args():
