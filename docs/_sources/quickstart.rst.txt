@@ -78,4 +78,4 @@ Use the matching native multiprocessing or ray multiprocessing wrapper to synchr
 Examples
 ^^^^^^^^
 
-For more help setting up Syllabus, check out our :ref `examples <Examples>`  of how to integrate Syllabus with various popular RL libraries. 
+For more help setting up Syllabus, check out our :ref:`examples <Examples>`  of how to integrate Syllabus with various popular RL libraries. 

@@ -266,7 +266,7 @@ that it is not in the middle of an episode to avoid unexpected behavior.</p>
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -332,7 +332,7 @@ calling the final reset.</p>
 </section>
 <section id="module-syllabus.examples.task_wrappers.minihack_task_wrapper">
 <span id="syllabus-examples-task-wrappers-minihack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.minihack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.minihack_task_wrapper" title="Permalink to this heading">#</a></h2>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE's task definition format.</p>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.minihack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">MinihackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper" title="Permalink to this definition">#</a></dt>
@@ -343,7 +343,7 @@ calling the final reset.</p>
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -366,7 +366,7 @@ info (optional dictionary): a dictionary containing extra information, this is o
 </section>
 <section id="module-syllabus.examples.task_wrappers.nethack_task_wrapper">
 <span id="syllabus-examples-task-wrappers-nethack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.nethack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.nethack_task_wrapper" title="Permalink to this heading">#</a></h2>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE's task definition format.</p>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">NethackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NLE</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_provided_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper" title="Permalink to this definition">#</a></dt>
@@ -419,7 +419,7 @@ calling the final reset.</p>
 </section>
 <section id="module-syllabus.examples.task_wrappers.pistonball_task_wrapper">
 <span id="syllabus-examples-task-wrappers-pistonball-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.pistonball_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper" title="Permalink to this heading">#</a></h2>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE's task definition format.</p>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.pistonball_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">PistonballTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper" title="Permalink to this definition">#</a></dt>
@@ -430,7 +430,7 @@ calling the final reset.</p>
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -487,20 +487,20 @@ calling the final reset.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed">
 <span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed" title="Permalink to this definition">#</a></dt>
-<dd><p>Sets the seed for this env's random number generator(s).</p>
+<dd><p>Sets the seed for this env’s random number generator(s).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Some environments use multiple pseudorandom number generators.
 We want to capture all such seeds used in order to ensure that
-there aren't accidental correlations between multiple generators.</p>
+there aren’t accidental correlations between multiple generators.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><dl class="simple">
-<dt>Returns the list of seeds used in this env's random</dt><dd><p>number generators. The first value in the list should be the
-&quot;main&quot; seed, or the value which a reproducer should pass to
-'seed'. Often, the main seed equals the provided 'seed', but
-this won't be true if seed=None, for example.</p>
+<dt>Returns the list of seeds used in this env’s random</dt><dd><p>number generators. The first value in the list should be the
+“main” seed, or the value which a reproducer should pass to
+‘seed’. Often, the main seed equals the provided ‘seed’, but
+this won’t be true if seed=None, for example.</p>
 </dd>
 </dl>
 </p>

@@ -243,7 +243,7 @@
         <article role="main">
           <section id="task-interface">
 <span id="taskinterface"></span><h1>Task Interface<a class="headerlink" href="#task-interface" title="Permalink to this heading">#</a></h1>
-<p>Each environment will define tasks in a different way. A &quot;task&quot; might be the environment seed, an intialization argument, or an entirely different subclass. The <a class="reference internal" href="#taskenv">TaskEnv</a> and <a class="reference internal" href="#taskwrapper">TaskWrapper</a> provides a simple interface to change the task of an environment.</p>
+<p>Each environment will define tasks in a different way. A “task” might be the environment seed, an intialization argument, or an entirely different subclass. The <a class="reference internal" href="#taskenv">TaskEnv</a> and <a class="reference internal" href="#taskwrapper">TaskWrapper</a> provides a simple interface to change the task of an environment.</p>
 <p>A task wrapper defines allows an existing environment to change its task when <cite>reset()</cite> is called. It can be used to map tasks from the task space to actual environment
 configurations, or to add entirely new tasks to an environment.
 To write a custom task wrapper for an environment, simply subclass the <a class="reference internal" href="#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a> for gym environments or <a class="reference internal" href="#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper" title="syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">PettingZooTaskWrapper</span></code></a> for pettingzoo environments.
@@ -252,13 +252,13 @@ Syllabus includes a task wrappers for common use cases, as well as examples of t
 <h2>Required Methods<a class="headerlink" href="#required-methods" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><dl class="simple">
-<dt><code class="xref py py-mod docutils literal notranslate"><span class="pre">change_task(task)</span></code> - Updates the environment configuration to play the provided task on the next episode.</dt><dd><p>This gets called before the wrapper's environment is reset.</p>
+<dt><code class="xref py py-mod docutils literal notranslate"><span class="pre">change_task(task)</span></code> - Updates the environment configuration to play the provided task on the next episode.</dt><dd><p>This gets called before the wrapper’s environment is reset.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <p>If changing the task only requires you to edit properties of the environment, you can do so in the <cite>change_task()</cite> method.
-This is called before the internal environment's <cite>reset()</cite> function when you pass a <cite>new_task</cite> to the wrapped environment's <cite>reset()</cite>.
+This is called before the internal environment’s <cite>reset()</cite> function when you pass a <cite>new_task</cite> to the wrapped environment’s <cite>reset()</cite>.
 If you need to perform more complex operations, you can also override the entire <cite>reset()</cite> method or other environment methods.</p>
 </section>
 <section id="optional-features">
@@ -315,7 +315,7 @@ TODO: Complete this implementation and find way to support centralized encodings
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.environment_task_env.TaskEnv.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -338,7 +338,7 @@ info (optional dictionary): a dictionary containing extra information, this is o
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.environment_task_env.TaskEnv.step" title="Permalink to this definition">#</a></dt>
 <dd><p>Steps the environment with the given action.
 Unlike the typical Gym environment, this method should also add the
-{&quot;task_completion&quot;: self.task_completion()} key to the info dictionary
+{“task_completion”: self.task_completion()} key to the info dictionary
 to support curricula that rely on this metric.</p>
 </dd></dl>
 
@@ -347,7 +347,7 @@ to support curricula that rely on this metric.</p>
 </section>
 <section id="module-syllabus.core.task_interface.reinit_task_wrapper">
 <span id="syllabus-core-task-interface-reinit-task-wrapper-module"></span><h3>syllabus.core.task_interface.reinit_task_wrapper module<a class="headerlink" href="#module-syllabus.core.task_interface.reinit_task_wrapper" title="Permalink to this heading">#</a></h3>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE's task definition format.</p>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.task_interface.reinit_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">ReinitTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper" title="Permalink to this definition">#</a></dt>
@@ -355,7 +355,7 @@ to support curricula that rely on this metric.</p>
 <p>This is a general wrapper for tasks defined as subclasses of a base environment.</p>
 <p>This wrapper reinitializes the environment with the provided env function at the start of each episode.
 This is a simple, general solution to using Syllabus with tasks that need to be reinitialized, but it is inefficient.
-It's likely that you can achieve better performance by using a more specialized wrapper.</p>
+It’s likely that you can achieve better performance by using a more specialized wrapper.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper.change_task">
 <span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper.change_task" title="Permalink to this definition">#</a></dt>
@@ -397,7 +397,7 @@ This is the identity function by default.</p>
 </section>
 <section id="module-syllabus.core.task_interface.subclass_task_wrapper">
 <span id="syllabus-core-task-interface-subclass-task-wrapper-module"></span><h3>syllabus.core.task_interface.subclass_task_wrapper module<a class="headerlink" href="#module-syllabus.core.task_interface.subclass_task_wrapper" title="Permalink to this heading">#</a></h3>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE's task definition format.</p>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.core.task_interface.subclass_task_wrapper.SubclassTaskWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.task_interface.subclass_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">SubclassTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_subclasses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Env</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">env_init_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.subclass_task_wrapper.SubclassTaskWrapper" title="Permalink to this definition">#</a></dt>
@@ -405,7 +405,7 @@ This is the identity function by default.</p>
 <p>This is a general wrapper for tasks defined as subclasses of a base environment.</p>
 <p>This wrapper reinitializes the environment with the provided env function at the start of each episode.
 This is a simple, general solution to using Syllabus with tasks that need to be reinitialized, but it is inefficient.
-It's likely that you can achieve better performance by using a more specialized wrapper.</p>
+It’s likely that you can achieve better performance by using a more specialized wrapper.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.task_interface.subclass_task_wrapper.SubclassTaskWrapper.change_task">
 <span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.subclass_task_wrapper.SubclassTaskWrapper.change_task" title="Permalink to this definition">#</a></dt>
@@ -488,7 +488,7 @@ TODO: Complete this implementation and find way to support centralized encodings
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.task_wrapper.TaskWrapper.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -509,16 +509,16 @@ info (optional dictionary): a dictionary containing extra information, this is o
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.task_interface.task_wrapper.TaskWrapper.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.task_wrapper.TaskWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Run one timestep of the environment's dynamics. When end of
+<dd><p>Run one timestep of the environment’s dynamics. When end of
 episode is reached, you are responsible for calling <cite>reset()</cite>
-to reset this environment's state.</p>
+to reset this environment’s state.</p>
 <p>Accepts an action and returns a tuple (observation, reward, done, info).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>action</strong> (<em>object</em>) -- an action provided by the agent</p>
+<dd class="field-odd"><p><strong>action</strong> (<em>object</em>) – an action provided by the agent</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>agent's observation of the current environment
+<dd class="field-even"><p>agent’s observation of the current environment
 reward (float) : amount of reward returned after previous action
 done (bool): whether the episode has ended, in which case further step() calls will return undefined results
 info (dict): contains auxiliary diagnostic information (helpful for debugging, logging, and sometimes learning)</p>

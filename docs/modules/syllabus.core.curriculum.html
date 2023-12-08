@@ -243,8 +243,8 @@
         <article role="main">
           <section id="curriculum">
 <span id="curriculum-api"></span><h1>Curriculum<a class="headerlink" href="#curriculum" title="Permalink to this heading">#</a></h1>
-<p>Syllabus's Curriculum API is a unified interface for curriculum learning methods. Curricula following this API
-can be used with all of Syllabus's infrastructure. We hope that future curriculum learning research will provide
+<p>Syllabus’s Curriculum API is a unified interface for curriculum learning methods. Curricula following this API
+can be used with all of Syllabus’s infrastructure. We hope that future curriculum learning research will provide
 implementations following this API to encourage reproducibility and ease of use.</p>
 <p>The full documentation for the curriculum class can be found <a class="reference internal" href="syllabus.core.html"><span class="doc">Global Synchronization</span></a></p>
 <p>The Curriculum class has three main jobs:</p>
@@ -301,7 +301,7 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 <dd><p>Sample k tasks from the curriculum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>k</strong> -- Number of tasks to sample, defaults to 1</p>
+<dd class="field-odd"><p><strong>k</strong> – Number of tasks to sample, defaults to 1</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Either returns a single task if k=1, or a list of k tasks</p>
@@ -327,10 +327,10 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 TODO: Change method header to not use dictionary, use enums?</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>update_data</strong> (<em>Dictionary with &quot;update_type&quot; key which maps to one</em><em> of </em><em>[</em><em>&quot;step&quot;</em><em>, </em><em>&quot;step_batch&quot;</em><em>, </em><em>&quot;episode&quot;</em><em>, </em><em>&quot;on_demand&quot;</em><em>, </em><em>&quot;task_progress&quot;</em><em>, </em><em>&quot;add_task&quot;</em><em>, </em><em>&quot;noop&quot;</em><em>] </em><em>and &quot;args&quot; with a tuple</em><em> of </em><em>the appropriate arguments for the given &quot;update_type&quot;.</em>) -- Dictionary</p>
+<dd class="field-odd"><p><strong>update_data</strong> (<em>Dictionary with &quot;update_type&quot; key which maps to one</em><em> of </em><em>[</em><em>&quot;step&quot;</em><em>, </em><em>&quot;step_batch&quot;</em><em>, </em><em>&quot;episode&quot;</em><em>, </em><em>&quot;on_demand&quot;</em><em>, </em><em>&quot;task_progress&quot;</em><em>, </em><em>&quot;add_task&quot;</em><em>, </em><em>&quot;noop&quot;</em><em>] </em><em>and &quot;args&quot; with a tuple</em><em> of </em><em>the appropriate arguments for the given &quot;update_type&quot;.</em>) – Dictionary</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> -- </p>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -341,7 +341,7 @@ TODO: Change method header to not use dictionary, use enums?</p>
 <dd><p>Update the curriculum with batch of updates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>update_data</strong> -- List of updates or potentially varying types</p>
+<dd class="field-odd"><p><strong>update_data</strong> – List of updates or potentially varying types</p>
 </dd>
 </dl>
 </dd></dl>
@@ -352,11 +352,11 @@ TODO: Change method header to not use dictionary, use enums?</p>
 <dd><p>Update the curriculum with arbitrary inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metrics</strong> -- Arbitrary dictionary of information. Can be used to provide gradient/error based
+<dd class="field-odd"><p><strong>metrics</strong> – Arbitrary dictionary of information. Can be used to provide gradient/error based
 updates from the training process.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> -- </p>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -368,12 +368,12 @@ updates from the training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>episode_return</strong> -- Episodic return</p></li>
-<li><p><strong>trajectory</strong> -- trajectory of (s, a, r, s, ...), defaults to None</p></li>
+<li><p><strong>episode_return</strong> – Episodic return</p></li>
+<li><p><strong>trajectory</strong> – trajectory of (s, a, r, s, …), defaults to None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> -- </p>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,14 +385,14 @@ updates from the training process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obs</strong> -- Observation from teh environment</p></li>
-<li><p><strong>rew</strong> -- Reward from the environment</p></li>
-<li><p><strong>done</strong> -- True if the episode ended on this step, False otherwise</p></li>
-<li><p><strong>info</strong> -- Extra information from the environment</p></li>
+<li><p><strong>obs</strong> – Observation from teh environment</p></li>
+<li><p><strong>rew</strong> – Reward from the environment</p></li>
+<li><p><strong>done</strong> – True if the episode ended on this step, False otherwise</p></li>
+<li><p><strong>info</strong> – Extra information from the environment</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> -- </p>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -405,7 +405,7 @@ updates from the training process.</p>
 as a convenience function and to optimize the multiprocessing message passing throughput.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>step_results</strong> -- List of step results</p>
+<dd class="field-odd"><p><strong>step_results</strong> – List of step results</p>
 </dd>
 </dl>
 </dd></dl>
@@ -417,8 +417,8 @@ as a convenience function and to optimize the multiprocessing message passing th
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>task</strong> -- Task for which progress is being updated.</p></li>
-<li><p><strong>progress</strong> -- Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
+<li><p><strong>task</strong> – Task for which progress is being updated.</p></li>
+<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
 </ul>
 </dd>
 </dl>

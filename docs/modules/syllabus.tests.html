@@ -301,7 +301,7 @@ success or failure.</p>
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -324,7 +324,7 @@ info (optional dictionary): a dictionary containing extra information, this is o
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv.step" title="Permalink to this definition">#</a></dt>
 <dd><p>Steps the environment with the given action.
 Unlike the typical Gym environment, this method should also add the
-{&quot;task_completion&quot;: self.task_completion()} key to the info dictionary
+{“task_completion”: self.task_completion()} key to the info dictionary
 to support curricula that rely on this metric.</p>
 </dd></dl>
 

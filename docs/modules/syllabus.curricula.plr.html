@@ -246,14 +246,14 @@
 <p>Prioritized Level Replay is a simple, yet effective curriculum learning method introduced in <a class="reference external" href="https://arxiv.org/pdf/2010.03934.pdf">https://arxiv.org/pdf/2010.03934.pdf</a>. See this paper for additional information on the method.
 The implementation in this code base is based on the original implementation <a class="reference external" href="https://github.com/facebookresearch/level-replay/tree/main">https://github.com/facebookresearch/level-replay/tree/main</a></p>
 <p>PLR has been sucessfully used to train agents in <a class="reference external" href="https://arxiv.org/pdf/2301.07608.pdf">https://arxiv.org/pdf/2301.07608.pdf</a> with a custom fitness function.</p>
-<p>Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task's learning progress is occasionally updated based on the current policy's capabilities.</p>
-<p>In practice prioritized level replay updates it's sampling distribution after each batch, and samples the single highest learning potential task more than 90% of the time. The sampling temperature and task diversity can can be increased by raising the <cite>temperature</cite> argument.</p>
+<p>Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task’s learning progress is occasionally updated based on the current policy’s capabilities.</p>
+<p>In practice prioritized level replay updates it’s sampling distribution after each batch, and samples the single highest learning potential task more than 90% of the time. The sampling temperature and task diversity can can be increased by raising the <cite>temperature</cite> argument.</p>
 <p>The default hyperparameters are tuned for Procgen. When applying PLR to a new environment, you may want to tune the <cite>staleness_coef</cite>, the replay probability <cite>rho</cite>, or alter the number of training seeds. You can change the number of training tasks by modifying your task space.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
 <p>PLR expects the environment to be determinstic with respect to the task, which is typically the seed. You may not see good results if your environment is deterministic for a given task.</p>
 <p>To intialize the curriculum, you will also need to provide the <cite>num-processes</cite> which is the number of parallel environments. We also recommend passing the same <cite>num_steps</cite>, <cite>gamma</cite>, and <cite>gae_lambda</cite> arguments that you use in your training process. You can set any PLR algorithmic options in the <cite>task_sampler_kwargs_dict</cite>. Please see the <a class="reference internal" href="#id2"><span class="std std-ref">TaskSampler</span></a> for a full list of options.</p>
-<p>PLR requires L1 Value estimates from the training process to compute it's sampling distirbution, so you need to add additional code to your training process to send these values to the curriculum. Below you can find examples of how to do this for some of the popular RL frameworks.</p>
+<p>PLR requires L1 Value estimates from the training process to compute it’s sampling distirbution, so you need to add additional code to your training process to send these values to the curriculum. Below you can find examples of how to do this for some of the popular RL frameworks.</p>
 <div class="sphinx-tabs docutils container" id="prioritized-level-replay-update">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">CleanRL</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Stable Baselines 3</button><button aria-controls="panel-0-0-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-2" name="0-2" role="tab" tabindex="-1">RLLib</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><p>Insert the following code at the end of the step loop. For example, <a class="reference external" href="https://github.com/vwxyzjn/cleanrl/blob/e421c2e50b81febf639fced51a69e2602593d50d/cleanrl/ppo.py#L216">at line 216 in ppo.py</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">num_steps</span><span class="p">):</span>
@@ -314,17 +314,17 @@ The implementation in this code base is based on the original implementation <a 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>task_space</strong> (<a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><em>TaskSpace</em></a>) -- The task space to use for the curriculum.</p></li>
-<li><p><strong>*curriculum_args</strong> -- Positional arguments to pass to the curriculum.</p></li>
-<li><p><strong>task_sampler_kwargs_dict</strong> (<em>dict</em>) -- Keyword arguments to pass to the task sampler. See TaskSampler for details.</p></li>
-<li><p><strong>action_space</strong> (<em>gym.Space</em>) -- The action space to use for the curriculum. Required for some strategies.</p></li>
-<li><p><strong>device</strong> (<em>str</em>) -- The device to use to store curriculum data, either &quot;cpu&quot; or &quot;cuda&quot;.</p></li>
-<li><p><strong>num_steps</strong> (<em>int</em>) -- The number of steps to store in the rollouts.</p></li>
-<li><p><strong>num_processes</strong> (<em>int</em>) -- The number of parallel environments.</p></li>
-<li><p><strong>gamma</strong> (<em>float</em>) -- The discount factor used to compute returns</p></li>
-<li><p><strong>gae_lambda</strong> (<em>float</em>) -- The GAE lambda value.</p></li>
-<li><p><strong>suppress_usage_warnings</strong> (<em>bool</em>) -- Whether to suppress warnings about improper usage.</p></li>
-<li><p><strong>**curriculum_kwargs</strong> -- Keyword arguments to pass to the curriculum.</p></li>
+<li><p><strong>task_space</strong> (<a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><em>TaskSpace</em></a>) – The task space to use for the curriculum.</p></li>
+<li><p><strong>*curriculum_args</strong> – Positional arguments to pass to the curriculum.</p></li>
+<li><p><strong>task_sampler_kwargs_dict</strong> (<em>dict</em>) – Keyword arguments to pass to the task sampler. See TaskSampler for details.</p></li>
+<li><p><strong>action_space</strong> (<em>gym.Space</em>) – The action space to use for the curriculum. Required for some strategies.</p></li>
+<li><p><strong>device</strong> (<em>str</em>) – The device to use to store curriculum data, either “cpu” or “cuda”.</p></li>
+<li><p><strong>num_steps</strong> (<em>int</em>) – The number of steps to store in the rollouts.</p></li>
+<li><p><strong>num_processes</strong> (<em>int</em>) – The number of parallel environments.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – The discount factor used to compute returns</p></li>
+<li><p><strong>gae_lambda</strong> (<em>float</em>) – The GAE lambda value.</p></li>
+<li><p><strong>suppress_usage_warnings</strong> (<em>bool</em>) – Whether to suppress warnings about improper usage.</p></li>
+<li><p><strong>**curriculum_kwargs</strong> – Keyword arguments to pass to the curriculum.</p></li>
 </ul>
 </dd>
 </dl>
@@ -350,7 +350,7 @@ The implementation in this code base is based on the original implementation <a 
 <dd><p>Sample k tasks from the curriculum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>k</strong> -- Number of tasks to sample, defaults to 1</p>
+<dd class="field-odd"><p><strong>k</strong> – Number of tasks to sample, defaults to 1</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Either returns a single task if k=1, or a list of k tasks</p>
@@ -428,20 +428,20 @@ success or failure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>tasks</strong> (<em>list</em>) -- List of tasks to sample from</p></li>
-<li><p><strong>action_space</strong> (<em>gym.spaces.Space</em>) -- Action space of the environment</p></li>
-<li><p><strong>num_actors</strong> (<em>int</em>) -- Number of actors/processes</p></li>
-<li><p><strong>strategy</strong> (<em>str</em>) -- Strategy for sampling tasks. One of &quot;value_l1&quot;, &quot;gae&quot;, &quot;policy_entropy&quot;, &quot;least_confidence&quot;, &quot;min_margin&quot;, &quot;one_step_td_error&quot;.</p></li>
-<li><p><strong>replay_schedule</strong> (<em>str</em>) -- Schedule for sampling replay levels. One of &quot;fixed&quot; or &quot;proportionate&quot;.</p></li>
-<li><p><strong>score_transform</strong> (<em>str</em>) -- Transform to apply to task scores. One of &quot;constant&quot;, &quot;max&quot;, &quot;eps_greedy&quot;, &quot;rank&quot;, &quot;power&quot;, &quot;softmax&quot;.</p></li>
-<li><p><strong>temperature</strong> (<em>float</em>) -- Temperature for score transform. Increasing temperature makes the sampling distribution more uniform.</p></li>
-<li><p><strong>eps</strong> (<em>float</em>) -- Epsilon for eps-greedy score transform.</p></li>
-<li><p><strong>rho</strong> (<em>float</em>) -- Proportion of seen tasks before replay sampling is allowed.</p></li>
-<li><p><strong>nu</strong> (<em>float</em>) -- Probability of sampling a replay level if using a fixed replay_schedule.</p></li>
-<li><p><strong>alpha</strong> (<em>float</em>) -- Linear interpolation weight for score updates. 0.0 means only use old scores, 1.0 means only use new scores.</p></li>
-<li><p><strong>staleness_coef</strong> (<em>float</em>) -- Linear interpolation weight for task staleness vs. task score. 0.0 means only use task score, 1.0 means only use staleness.</p></li>
-<li><p><strong>staleness_transform</strong> (<em>str</em>) -- Transform to apply to task staleness. One of &quot;constant&quot;, &quot;max&quot;, &quot;eps_greedy&quot;, &quot;rank&quot;, &quot;power&quot;, &quot;softmax&quot;.</p></li>
-<li><p><strong>staleness_temperature</strong> (<em>float</em>) -- Temperature for staleness transform. Increasing temperature makes the sampling distribution more uniform.</p></li>
+<li><p><strong>tasks</strong> (<em>list</em>) – List of tasks to sample from</p></li>
+<li><p><strong>action_space</strong> (<em>gym.spaces.Space</em>) – Action space of the environment</p></li>
+<li><p><strong>num_actors</strong> (<em>int</em>) – Number of actors/processes</p></li>
+<li><p><strong>strategy</strong> (<em>str</em>) – Strategy for sampling tasks. One of “value_l1”, “gae”, “policy_entropy”, “least_confidence”, “min_margin”, “one_step_td_error”.</p></li>
+<li><p><strong>replay_schedule</strong> (<em>str</em>) – Schedule for sampling replay levels. One of “fixed” or “proportionate”.</p></li>
+<li><p><strong>score_transform</strong> (<em>str</em>) – Transform to apply to task scores. One of “constant”, “max”, “eps_greedy”, “rank”, “power”, “softmax”.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – Temperature for score transform. Increasing temperature makes the sampling distribution more uniform.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – Epsilon for eps-greedy score transform.</p></li>
+<li><p><strong>rho</strong> (<em>float</em>) – Proportion of seen tasks before replay sampling is allowed.</p></li>
+<li><p><strong>nu</strong> (<em>float</em>) – Probability of sampling a replay level if using a fixed replay_schedule.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Linear interpolation weight for score updates. 0.0 means only use old scores, 1.0 means only use new scores.</p></li>
+<li><p><strong>staleness_coef</strong> (<em>float</em>) – Linear interpolation weight for task staleness vs. task score. 0.0 means only use task score, 1.0 means only use staleness.</p></li>
+<li><p><strong>staleness_transform</strong> (<em>str</em>) – Transform to apply to task staleness. One of “constant”, “max”, “eps_greedy”, “rank”, “power”, “softmax”.</p></li>
+<li><p><strong>staleness_temperature</strong> (<em>float</em>) – Temperature for staleness transform. Increasing temperature makes the sampling distribution more uniform.</p></li>
 </ul>
 </dd>
 </dl>

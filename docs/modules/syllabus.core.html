@@ -243,7 +243,7 @@
         <article role="main">
           <section id="global-synchronization">
 <span id="synchronization"></span><h1>Global Synchronization<a class="headerlink" href="#global-synchronization" title="Permalink to this heading">#</a></h1>
-<p>Syllabus's multiprocessing infrastructure uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment metrics, while the environment receives tasks and sends metrics. The environment runs the provided task in the next episode and the curriculum uses the metrics to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information.</p>
+<p>Syllabus’s multiprocessing infrastructure uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment metrics, while the environment receives tasks and sends metrics. The environment runs the provided task in the next episode and the curriculum uses the metrics to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
 <p>If your environment is vectorized with python multiprocessing (this is true for most libraries, including CleanRL, Stable Baselines 3, and Torchbeast) then you can wrap your curriculum and environment as follows:</p>
@@ -258,7 +258,7 @@
 <span class="n">env</span> <span class="o">=</span> <span class="n">RaySyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now that you've applied these wrappers, the environment will automatically receive tasks from the curriculum at the start of each episode. Depending on your environment wrapper options and curriculum method, the curriculum might also receive metrics from the environment at each step or at the end of the episode.</p>
+<p>Now that you’ve applied these wrappers, the environment will automatically receive tasks from the curriculum at the start of each episode. Depending on your environment wrapper options and curriculum method, the curriculum might also receive metrics from the environment at each step or at the end of the episode.</p>
 <p>You can also update the curriculum directly from the main learner process to incorporate training information. The exact update metrics will depend on your curriculum method, but the API is the same for all methods. You can see an example of how to do this in various RL libraries using <a class="reference internal" href="syllabus.curricula.plr.html#prioritized-level-replay-update"><span class="std std-ref">Prioritized Level Replay</span></a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">update</span> <span class="o">=</span> <span class="p">{</span>
    <span class="s2">&quot;update_type&quot;</span><span class="p">:</span> <span class="s2">&quot;on_demand&quot;</span><span class="p">,</span>
@@ -468,7 +468,7 @@ with a QueueLearningProgressCurriculum running on the main process.</p>
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.MultiProcessingSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -489,16 +489,16 @@ info (optional dictionary): a dictionary containing extra information, this is o
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.MultiProcessingSyncWrapper.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.MultiProcessingSyncWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Run one timestep of the environment's dynamics. When end of
+<dd><p>Run one timestep of the environment’s dynamics. When end of
 episode is reached, you are responsible for calling <cite>reset()</cite>
-to reset this environment's state.</p>
+to reset this environment’s state.</p>
 <p>Accepts an action and returns a tuple (observation, reward, done, info).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>action</strong> (<em>object</em>) -- an action provided by the agent</p>
+<dd class="field-odd"><p><strong>action</strong> (<em>object</em>) – an action provided by the agent</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>agent's observation of the current environment
+<dd class="field-even"><p>agent’s observation of the current environment
 reward (float) : amount of reward returned after previous action
 done (bool): whether the episode has ended, in which case further step() calls will return undefined results
 info (dict): contains auxiliary diagnostic information (helpful for debugging, logging, and sometimes learning)</p>
@@ -572,7 +572,7 @@ that it is not in the middle of an episode to avoid unexpected behavior.</p>
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RaySyncWrapper.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Resets the environment to an initial state and returns an initial
 observation.</p>
-<p>This method should also reset the environment's random number
+<p>This method should also reset the environment’s random number
 generator(s) if <cite>seed</cite> is an integer or if the environment has not
 yet initialized a random number generator. If the environment already
 has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
@@ -593,16 +593,16 @@ info (optional dictionary): a dictionary containing extra information, this is o
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RaySyncWrapper.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RaySyncWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Run one timestep of the environment's dynamics. When end of
+<dd><p>Run one timestep of the environment’s dynamics. When end of
 episode is reached, you are responsible for calling <cite>reset()</cite>
-to reset this environment's state.</p>
+to reset this environment’s state.</p>
 <p>Accepts an action and returns a tuple (observation, reward, done, info).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>action</strong> (<em>object</em>) -- an action provided by the agent</p>
+<dd class="field-odd"><p><strong>action</strong> (<em>object</em>) – an action provided by the agent</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>agent's observation of the current environment
+<dd class="field-even"><p>agent’s observation of the current environment
 reward (float) : amount of reward returned after previous action
 done (bool): whether the episode has ended, in which case further step() calls will return undefined results
 info (dict): contains auxiliary diagnostic information (helpful for debugging, logging, and sometimes learning)</p>

@@ -607,7 +607,7 @@ registered hooks while the latter silently ignores them.</p>
 <span id="syllabus-examples-cleanrl-procgen-plr-module"></span><h2>syllabus.examples.cleanrl_procgen_plr module<a class="headerlink" href="#module-syllabus.examples.cleanrl_procgen_plr" title="Permalink to this heading">#</a></h2>
 <p>An example applying Syllabus Prioritized Level Replay to Procgen. This code is based on <a class="reference external" href="https://github.com/facebookresearch/level-replay/blob/main/train.py">https://github.com/facebookresearch/level-replay/blob/main/train.py</a></p>
 <p>NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
-we rely on Minqi Jiang's custom branch of procgen found here: <a class="reference external" href="https://github.com/minqi/procgen">https://github.com/minqi/procgen</a></p>
+we rely on Minqi Jiang’s custom branch of procgen found here: <a class="reference external" href="https://github.com/minqi/procgen">https://github.com/minqi/procgen</a></p>
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.cleanrl_procgen_plr.evaluate">
 <span class="sig-prename descclassname"><span class="pre">syllabus.examples.cleanrl_procgen_plr.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev_envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_train_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.cleanrl_procgen_plr.evaluate" title="Permalink to this definition">#</a></dt>
@@ -655,7 +655,7 @@ Args:
 inputs [B x H x W]
 coordinates [B x 2] x,y coordinates
 Returns:
-[B x H' x W'] inputs cropped and centered around x,y coordinates.</p>
+[B x H’ x W’] inputs cropped and centered around x,y coordinates.</p>
 </dd></dl>
 
 </dd></dl>
@@ -862,7 +862,7 @@ be applied per-environment.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.vecenv.VecEnv.close_extras">
 <span class="sig-name descname"><span class="pre">close_extras</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.vecenv.VecEnv.close_extras" title="Permalink to this definition">#</a></dt>
-<dd><p>Clean up the  extra resources, beyond what's in this base class.
+<dd><p>Clean up the  extra resources, beyond what’s in this base class.
 Only runs when not self.closed.</p>
 </dd></dl>
 
@@ -936,7 +936,7 @@ already pending.</p>
 </dl>
 </li>
 <li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of &quot;episode done&quot; booleans</p></li>
+<li><p>dones: an array of “episode done” booleans</p></li>
 <li><p>infos: a sequence of info objects</p></li>
 </ul>
 </dd>
@@ -986,7 +986,7 @@ until step_async() is invoked again.</p>
 </dl>
 </li>
 <li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of &quot;episode done&quot; booleans</p></li>
+<li><p>dones: an array of “episode done” booleans</p></li>
 <li><p>infos: a sequence of info objects</p></li>
 </ul>
 </dd>
@@ -1049,7 +1049,7 @@ already pending.</p>
 </dl>
 </li>
 <li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of &quot;episode done&quot; booleans</p></li>
+<li><p>dones: an array of “episode done” booleans</p></li>
 <li><p>infos: a sequence of info objects</p></li>
 </ul>
 </dd>
@@ -1095,7 +1095,7 @@ until step_async() is invoked again.</p>
 </dl>
 </li>
 <li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of &quot;episode done&quot; booleans</p></li>
+<li><p>dones: an array of “episode done” booleans</p></li>
 <li><p>infos: a sequence of info objects</p></li>
 </ul>
 </dd>
@@ -1147,7 +1147,7 @@ until step_async() is invoked again.</p>
 </dl>
 </li>
 <li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of &quot;episode done&quot; booleans</p></li>
+<li><p>dones: an array of “episode done” booleans</p></li>
 <li><p>infos: a sequence of info objects</p></li>
 </ul>
 </dd>
@@ -1197,7 +1197,7 @@ already pending.</p>
 </dl>
 </li>
 <li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of &quot;episode done&quot; booleans</p></li>
+<li><p>dones: an array of “episode done” booleans</p></li>
 <li><p>infos: a sequence of info objects</p></li>
 </ul>
 </dd>
@@ -1216,8 +1216,8 @@ already pending.</p>
 <span id="syllabus-examples-vtrace-module"></span><h2>syllabus.examples.vtrace module<a class="headerlink" href="#module-syllabus.examples.vtrace" title="Permalink to this heading">#</a></h2>
 <p>Functions to compute V-trace off-policy actor critic targets.</p>
 <p>For details and theory see:</p>
-<p>&quot;IMPALA: Scalable Distributed Deep-RL with
-Importance Weighted Actor-Learner Architectures&quot;
+<p>“IMPALA: Scalable Distributed Deep-RL with
+Importance Weighted Actor-Learner Architectures”
 by Espeholt, Soyer, Munos et al.</p>
 <p>See <a class="reference external" href="https://arxiv.org/abs/1802.01561">https://arxiv.org/abs/1802.01561</a> for the full paper.</p>
 <dl class="py class">
