@@ -134,13 +134,13 @@ class Curriculum:
             raise NotImplementedError(f"Update type {update_type} not implemented.")
         self.n_updates += 1
 
-    def update_curriculum_batch(self, update_data: List[Dict]):
+    def update_batch(self, update_data: List[Dict]):
         """Update the curriculum with batch of updates.
 
         :param update_data: List of updates or potentially varying types
         """
         for update in update_data:
-            self.update_curriculum(update)
+            self.update(update)
 
     def _sample_distribution(self) -> List[float]:
         """Returns a sample distribution over the task space.

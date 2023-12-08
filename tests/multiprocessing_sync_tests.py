@@ -1,21 +1,8 @@
 """ Test curriculum synchronization across multiple processes. """
-import time
-import random
-from multiprocessing import SimpleQueue, Process
-from copy import deepcopy
-
 import ray
 
-from nle.env.tasks import (NetHackScore,
-                           NetHackStaircase,
-                           NetHackStaircasePet,
-                           NetHackOracle,
-                           NetHackGold,
-                           NetHackEat,
-                           NetHackScout)
-
-from syllabus.tests import SyncTestCurriculum, SyncTestEnv
-from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum, RayCurriculumWrapper
+from syllabus.tests import SyncTestCurriculum
+from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_synctest_env
 
 N_ENVS = 128
@@ -36,12 +23,10 @@ if __name__ == "__main__":
         assert stats["total_reward"] == 100 * num_envs * N_EPISODES, f"Curriculum total reward is {stats['total_reward']}, expected {10 * N_ENVS * N_EPISODES}"
         for task, count in stats["task_counts"].items():
             if task == "error task":
-                assert count == 0, f"Received completed error tasks, expected 0"
+                assert count == 0, "Received completed error tasks, expected 0"
             else:
                 assert count == num_envs, f"Curriculum task '{task}' count is {count}, expected {num_envs}"
         assert stats["total_dones"] == num_envs * N_EPISODES, f"Curriculum total dones is {stats['total_dones']}, expected {num_envs * N_EPISODES}"
-        
-
 
     # Test single process speed
     print("RUNNING: Python single process test ...")
@@ -52,7 +37,7 @@ if __name__ == "__main__":
 
     # Test Queue multiprocess speed with Syllabus
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
-    test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, N_ENVS)
+    test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = test_native_multiprocess(create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
     evaluate_curriculum(test_curriculum.curriculum)
@@ -63,7 +48,6 @@ if __name__ == "__main__":
     test_curriculum = make_ray_curriculum(test_curriculum)
     print("\nRUNNING: Ray multiprocess test with Syllabus...")
     ray_syllabus_speed = test_ray_multiprocess(create_synctest_env, env_args=(N_EPISODES,), num_envs=N_ENVS, num_episodes=N_EPISODES)
-    #evaluate_curriculum(test_curriculum)
+    # TODO: Implement Ray checks
+    # evaluate_curriculum(test_curriculum)
     print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")
-
-

@@ -139,7 +139,7 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, default_task="error task", task_space=env.task_space, **kwargs)
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
@@ -157,7 +157,7 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
             env, *args, task_space=env.task_space, **kwargs
         )
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, default_task=NetHackScore, task_space=env.task_space, **kwargs)
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
@@ -178,5 +178,5 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, default_task="MiniGrid-DoorKey-5x5-v0", task_space=env.task_space, **kwargs)
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
