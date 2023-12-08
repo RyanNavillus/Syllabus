@@ -15,10 +15,12 @@ release = '0.3'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.intersphinx',]
+              'sphinx.ext.intersphinx',
+              'sphinx_tabs.tabs',
+              'sphinx.ext.napoleon',
+              'sphinxcontrib.spelling']
 
 templates_path = ['_templates']
-exclude_patterns = []
 
 import sys
 import os

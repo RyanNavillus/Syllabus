@@ -118,5 +118,16 @@ To help people get started using Syllabus, I've added a few simple curriculum le
 | SimpleBoxCurriculum                   |                                                   |
 
 
+# Documentation
+
+To build the documentation, run the following commands:
+
+```
+cd docs/source
+sphinx-build -M html . ..
+```
+
+Then you can view it at docs/html/index.html
+
 ## Citing Syllabus
 To be added soon.

@@ -2,7 +2,6 @@ import gym
 from gym.spaces import Box
 from ray import tune
 from ray.tune.registry import register_env
-
 from syllabus.core import RaySyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
 from syllabus.task_space import TaskSpace

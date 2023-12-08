@@ -4,9 +4,8 @@ from functools import wraps
 from typing import List, Tuple
 
 import ray
-from torch.multiprocessing import SimpleQueue
-
 from syllabus.core import Curriculum, decorate_all_functions
+from torch.multiprocessing import SimpleQueue
 
 
 class CurriculumWrapper:
@@ -46,8 +45,8 @@ class CurriculumWrapper:
     def update_on_step_batch(self, step_results):
         self.curriculum.update_on_step_batch(step_results)
 
-    def update_curriculum(self, metrics):
-        self.curriculum.update_curriculum(metrics)
+    def update(self, metrics):
+        self.curriculum.update(metrics)
 
     def batch_update_curriculum(self, metrics):
         self.curriculum.update_curriculum_batch(metrics)

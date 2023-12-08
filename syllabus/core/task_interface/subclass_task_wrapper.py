@@ -2,12 +2,14 @@
 import copy
 import time
 from typing import List
-import numpy as np
-import gym
-from gym import spaces
 
-from syllabus.core import TaskWrapper
+import gym
+import numpy as np
+from gym import spaces
 from syllabus.task_space import TaskSpace
+
+from .task_wrapper import TaskWrapper
+
 
 class SubclassTaskWrapper(TaskWrapper):
     # TODO: Automated tests

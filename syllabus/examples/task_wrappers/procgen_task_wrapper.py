@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 

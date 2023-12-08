@@ -2,7 +2,6 @@
 import gym
 import numpy as np
 from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
-
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 

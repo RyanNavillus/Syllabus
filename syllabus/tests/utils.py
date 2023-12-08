@@ -3,7 +3,6 @@ from multiprocessing import Process
 
 import gym
 import ray
-
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
 from syllabus.task_space import TaskSpace
 
@@ -146,7 +145,6 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 # Nethack Tests
 from nle.env.tasks import NetHackScore
-
 from syllabus.examples.task_wrappers.nethack_task_wrapper import \
     NethackTaskWrapper
 
@@ -164,9 +162,8 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 
 # Minigrid Tests
-from gym_minigrid.envs import DoorKeyEnv    # noqa: F401
+from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
 from gym_minigrid.register import env_list
-
 from syllabus.core import ReinitTaskWrapper
 
 

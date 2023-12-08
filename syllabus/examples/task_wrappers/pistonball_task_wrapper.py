@@ -1,15 +1,10 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
-import copy
-import time
-from typing import List
-import numpy as np
 import gym
 from gym import spaces
 from pettingzoo.butterfly import pistonball_v6
-from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
-
 from syllabus.core import PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
+
 
 class PistonballTaskWrapper(PettingZooTaskWrapper):
     """

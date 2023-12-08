@@ -1,4 +1,8 @@
-# docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppo_procgenpy
+""" An example applying Syllabus Prioritized Level Replay to Procgen. This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
+
+NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
+we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
+"""
 import argparse
 import os
 import random
@@ -13,14 +17,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from procgen import ProcgenEnv
-from torch.distributions.categorical import Categorical
-from torch.utils.tensorboard import SummaryWriter
-
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import DomainRandomization, PrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from torch.utils.tensorboard import SummaryWriter
 
 from .vecenv import VecExtractDictObs, VecMonitor, VecNormalize
 
@@ -347,7 +349,7 @@ if __name__ == "__main__":
                         "tasks": tasks,
                     },
                 }
-                curriculum.update_curriculum(update)
+                curriculum.update(update)
             if args.curriculum:
                 curriculum.log_metrics(writer, global_step)
 

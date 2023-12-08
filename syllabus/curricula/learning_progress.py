@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from gym.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
-
 from syllabus.core import Curriculum
 from syllabus.task_space import TaskSpace
 

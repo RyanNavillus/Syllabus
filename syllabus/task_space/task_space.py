@@ -2,7 +2,8 @@ import itertools
 from typing import Any, List, Union
 
 import numpy as np
-from gym.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space, Tuple
+from gym.spaces import (Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space,
+                        Tuple)
 
 
 class TaskSpace():
