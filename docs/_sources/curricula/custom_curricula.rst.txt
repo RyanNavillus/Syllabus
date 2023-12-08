@@ -67,6 +67,7 @@ You can optionally choose to implement these additional methods:
 
 `update_curriculum_batch` and `update_on_step_batch` can be overridden to provide a more efficient curriculum-specific implementation. The default implementation simply iterates over the updates.
 
+
 Each curriculum also specifies two constants: REQUIRES_STEP_UPDATES and REQUIRES_CENTRAL_UPDATES.
 
 * REQUIRES_STEP_UPDATES - If True, the environment synchronization wrapper should set `update_on_step=True` to provide the curriculum with updates after each step.

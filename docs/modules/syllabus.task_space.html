@@ -2,13 +2,14 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus.tests package" href="syllabus.tests.html" /><link rel="prev" title="syllabus.examples.task_wrappers package" href="syllabus.examples.task_wrappers.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Task Interface" href="syllabus.core.task_interface.html" /><link rel="prev" title="Domain Randomization" href="syllabus.curricula.domain_randomization.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>syllabus.task_space package - Syllabus 0.3 documentation</title>
+        <title>Task Spaces - Syllabus 0.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -154,31 +155,54 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Curriculum</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/implemented_curricula.html">Implemented Curriculum Learning Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../taskspace.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 current has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">syllabus.core package</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.plr.html">syllabus.curricula.plr package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../background/curriculum_learning.html">Curriculum Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/ued.html">Unsupervised Environment Design</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.core.curriculum.html">Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/implemented_curricula.html">Curriculum Methods</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.core.task_interface.html">Task Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">syllabus.examples package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
-</ul>
-</li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">syllabus.task_space package</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a></li>
 </ul>
 </li>
 </ul>
@@ -217,16 +241,35 @@
           </label>
         </div>
         <article role="main">
-          <section id="syllabus-task-space-package">
-<h1>syllabus.task_space package<a class="headerlink" href="#syllabus-task-space-package" title="Permalink to this heading">#</a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
+          <section id="task-spaces">
+<span id="taskspace"></span><h1>Task Spaces<a class="headerlink" href="#task-spaces" title="Permalink to this heading">#</a></h1>
+<p>Syllabus provides the TaskSpace class as a way to represent the entire space of classes
+that are playable in an environment. This is necessary for sampling tasks from the
+entire task space.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
+<p>You can define a Discrete task space with 200 tasks as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gym.spaces</span> <span class="kn">import</span> <span class="n">Discrete</span>
+<span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">TaskSpace</span>
+
+<span class="n">task_space</span> <span class="o">=</span> <span class="n">TaskSpace</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">task_space</span> <span class="o">=</span> <span class="n">TaskSpace</span><span class="p">(</span><span class="n">Discrete</span><span class="p">(</span><span class="mi">200</span><span class="p">))</span>
+</pre></div>
+</div>
 </section>
+<section id="future-features">
+<h2>Future Features<a class="headerlink" href="#future-features" title="Permalink to this heading">#</a></h2>
+<p>This component is currently a work in progress. Future versions will include:</p>
+<ul class="simple">
+<li><p>Mutable Task Spaces</p></li>
+<li><p>Train, test, and validation splits over the task space</p></li>
+<li><p>Support for more complex task spaces (currently only Discrete, MultiDiscrete, and Box spaces are fully supported)</p></li>
+</ul>
 <section id="module-syllabus.task_space.task_space">
-<span id="syllabus-task-space-task-space-module"></span><h2>syllabus.task_space.task_space module<a class="headerlink" href="#module-syllabus.task_space.task_space" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-task-space-task-space-module"></span><h3>syllabus.task_space.task_space module<a class="headerlink" href="#module-syllabus.task_space.task_space" title="Permalink to this heading">#</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">TaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gym_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">TaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gym_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.add_task">
@@ -272,9 +315,19 @@ Can be overridden to exclude invalid tasks within the space.</p>
 <span class="sig-name descname"><span class="pre">increase_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.increase_space" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.list_tasks">
+<span class="sig-name descname"><span class="pre">list_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.list_tasks" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.num_tasks">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.num_tasks" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.sample" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -290,11 +343,6 @@ Can be overridden to exclude invalid tasks within the space.</p>
 </dd></dl>
 
 </section>
-<section id="module-syllabus.task_space.test_task_space">
-<span id="syllabus-task-space-test-task-space-module"></span><h2>syllabus.task_space.test_task_space module<a class="headerlink" href="#module-syllabus.task_space.test_task_space" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="module-syllabus.task_space">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.task_space" title="Permalink to this heading">#</a></h2>
 </section>
 </section>
 
@@ -303,23 +351,23 @@ Can be overridden to exclude invalid tasks within the space.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="syllabus.tests.html">
+          <a class="next-page" href="syllabus.core.task_interface.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">syllabus.tests package</div>
+                <div class="title">Task Interface</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="syllabus.examples.task_wrappers.html">
+          <a class="prev-page" href="syllabus.curricula.domain_randomization.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">syllabus.examples.task_wrappers package</div>
+                <div class="title">Domain Randomization</div>
                 
               </div>
             </a>
@@ -353,8 +401,9 @@ Can be overridden to exclude invalid tasks within the space.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">syllabus.task_space package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#">Task Spaces</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#future-features">Future Features</a><ul>
 <li><a class="reference internal" href="#module-syllabus.task_space.task_space">syllabus.task_space.task_space module</a><ul>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace"><code class="docutils literal notranslate"><span class="pre">TaskSpace</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.add_task"><code class="docutils literal notranslate"><span class="pre">TaskSpace.add_task()</span></code></a></li>
@@ -364,15 +413,17 @@ Can be overridden to exclude invalid tasks within the space.</p>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.encode"><code class="docutils literal notranslate"><span class="pre">TaskSpace.encode()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.get_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.get_tasks()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.increase_space"><code class="docutils literal notranslate"><span class="pre">TaskSpace.increase_space()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.list_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.list_tasks()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.num_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.num_tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.sample"><code class="docutils literal notranslate"><span class="pre">TaskSpace.sample()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.task_name"><code class="docutils literal notranslate"><span class="pre">TaskSpace.task_name()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.tasks</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-syllabus.task_space.test_task_space">syllabus.task_space.test_task_space module</a></li>
-<li><a class="reference internal" href="#module-syllabus.task_space">Module contents</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

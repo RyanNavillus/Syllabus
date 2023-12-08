@@ -2,13 +2,14 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Task Spaces" href="../taskspace.html" /><link rel="prev" title="Implemented Curriculum Learning Methods" href="implemented_curricula.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Curriculum Methods" href="implemented_curricula.html" /><link rel="prev" title="Curriculum" href="../modules/syllabus.core.curriculum.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>Creating Your Own Curriculum - Syllabus 0.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -154,31 +155,53 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="curriculum.html">Curriculum</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Curriculum</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="curriculum.html">Curriculum</a></li>
-<li class="toctree-l2"><a class="reference internal" href="implemented_curricula.html">Implemented Curriculum Learning Methods</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Creating Your Own Curriculum</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../taskspace.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">syllabus.core package</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">syllabus.curricula.plr package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../background/curriculum_learning.html">Curriculum Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/ued.html">Unsupervised Environment Design</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.curriculum.html">Curriculum</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented_curricula.html">Curriculum Methods</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">syllabus.examples package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">syllabus.examples package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">syllabus.task_space package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a></li>
 </ul>
 </li>
 </ul>
@@ -226,7 +249,7 @@ By subclassing the <cite>Curriculum</cite> class, your method will automatically
 <h2>Required Methods<a class="headerlink" href="#required-methods" title="Permalink to this heading">#</a></h2>
 <p>Your curriculum method is REQUIRED to implement the following methods:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.sample" title="syllabus.core.curriculum_base.Curriculum.sample"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sample(k:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1)</span></code></a> - Returns a list of <cite>k</cite> tasks sampled from the curriculum.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.sample" title="syllabus.core.curriculum_base.Curriculum.sample"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sample(k:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1)</span></code></a> - Returns a list of <cite>k</cite> tasks sampled from the curriculum.</p></li>
 </ul>
 <p>The <cite>sample</cite> method is how your curriculum decides which task the environments will play.
 Most methods use some combination of logic and probability distributions to choose tasks, but there are no restrictions on how you choose tasks.</p>
@@ -236,10 +259,10 @@ Most methods use some combination of logic and probability distributions to choo
 <p>Your curriculum will likely require some feedback from the RL training loop to guide its task selection. These might be rewards from the environment, error values from the agent, or some other metric that you define.
 Depending on which type of information your curriculum requires, you will need to implement one or more of the following methods:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress(task,</span> <span class="pre">progress)</span></code></a> - is called either after each step or each episode <sup>1</sup> . It receives a task name and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task.</p></li>
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_step" title="syllabus.core.curriculum_base.Curriculum.update_on_step"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step(obs,</span> <span class="pre">rew,</span> <span class="pre">done,</span> <span class="pre">info)</span></code></a> - is called once for each environment step.</p></li>
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a> - (<strong>Not yet implemented</strong>) will be called once for each completed episode by the environment synchronization wrapper.</p></li>
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_demand" title="syllabus.core.curriculum_base.Curriculum.update_on_demand"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_demand(metrics)</span></code></a> - is meant to be called by the main learner process to update a curriculum with information from the training process, such as TD errors or gradient norms. It is never used by the individual environments. It receives a dictionary of metrics of arbitrary types.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress(task,</span> <span class="pre">progress)</span></code></a> - is called either after each step or each episode <sup>1</sup> . It receives a task name and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_step" title="syllabus.core.curriculum_base.Curriculum.update_on_step"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step(obs,</span> <span class="pre">rew,</span> <span class="pre">done,</span> <span class="pre">info)</span></code></a> - is called once for each environment step.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a> - (<strong>Not yet implemented</strong>) will be called once for each completed episode by the environment synchronization wrapper.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_demand" title="syllabus.core.curriculum_base.Curriculum.update_on_demand"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_demand(metrics)</span></code></a> - is meant to be called by the main learner process to update a curriculum with information from the training process, such as TD errors or gradient norms. It is never used by the individual environments. It receives a dictionary of metrics of arbitrary types.</p></li>
 </ul>
 <p>Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. For example, the Learning Progress Curriculum
 only uses episodic task progress updates with <cite>update_task_progress</cite> and Prioritized Level Replay receives updates from the main process through <cite>update_on_demand</cite>.</p>
@@ -251,7 +274,7 @@ to prevent it from being called and improve performance (An exception with the s
 <p>For most curricula, we recommend implementing these methods to support convenience features in Syllabus:</p>
 <ul class="simple">
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">_sample_distribution()</span></code> - Returns a probability distribution over tasks</p></li>
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.log_metrics" title="syllabus.core.curriculum_base.Curriculum.log_metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">log_metrics(writer)</span></code></a> - Logs curriculum-specific metrics to the provided tensorboard or weights and biases logger.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics" title="syllabus.core.curriculum_base.Curriculum.log_metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">log_metrics(writer)</span></code></a> - Logs curriculum-specific metrics to the provided tensorboard or weights and biases logger.</p></li>
 </ul>
 <p>If your curriculum uses a probability distribution to sample tasks, you should implement <cite>_sample_distribution()</cite>. The default implementation of <cite>log_metrics</cite> will log the probabilities from <cite>_sample_distribution()</cite>
 for each task in a discrete task space to tensorboard or weights and biases. You can also override <cite>log_metrics</cite> to log other values for your specific curriculum.</p>
@@ -260,8 +283,8 @@ for each task in a discrete task space to tensorboard or weights and biases. You
 <h2>Optional Methods<a class="headerlink" href="#optional-methods" title="Permalink to this heading">#</a></h2>
 <p>You can optionally choose to implement these additional methods:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="syllabus.core.curriculum_base.Curriculum.update_on_step_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step_batch(update_list)</span></code></a> - Updates the curriculum with a batch of step updates.</p></li>
-<li><p><a class="reference internal" href="../modules/syllabus.core.html#syllabus.core.curriculum_base.Curriculum.update_curriculum_batch" title="syllabus.core.curriculum_base.Curriculum.update_curriculum_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_curriculum_batch(update_data)</span></code></a> - Updates the curriculum with a batch of data.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="syllabus.core.curriculum_base.Curriculum.update_on_step_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step_batch(update_list)</span></code></a> - Updates the curriculum with a batch of step updates.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_curriculum_batch" title="syllabus.core.curriculum_base.Curriculum.update_curriculum_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_curriculum_batch(update_data)</span></code></a> - Updates the curriculum with a batch of data.</p></li>
 </ul>
 <p><cite>update_curriculum_batch</cite> and <cite>update_on_step_batch</cite> can be overridden to provide a more efficient curriculum-specific implementation. The default implementation simply iterates over the updates.</p>
 <p>Each curriculum also specifies two constants: REQUIRES_STEP_UPDATES and REQUIRES_CENTRAL_UPDATES.</p>
@@ -277,23 +300,23 @@ for each task in a discrete task space to tensorboard or weights and biases. You
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../taskspace.html">
+          <a class="next-page" href="implemented_curricula.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Task Spaces</div>
+                <div class="title">Curriculum Methods</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="implemented_curricula.html">
+          <a class="prev-page" href="../modules/syllabus.core.curriculum.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Implemented Curriculum Learning Methods</div>
+                <div class="title">Curriculum</div>
                 
               </div>
             </a>

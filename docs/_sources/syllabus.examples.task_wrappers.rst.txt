@@ -44,6 +44,14 @@ syllabus.examples.task\_wrappers.pistonball\_task\_wrapper module
    :undoc-members:
    :show-inheritance:
 
+syllabus.examples.task\_wrappers.procgen\_task\_wrapper module
+--------------------------------------------------------------
+
+.. automodule:: syllabus.examples.task_wrappers.procgen_task_wrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

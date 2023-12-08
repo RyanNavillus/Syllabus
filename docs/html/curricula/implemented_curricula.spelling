@@ -1,9 +1,0 @@
-curricula/implemented_curricula.rst:7: (Jiang)  have several popular curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning
-curricula/implemented_curricula.rst:7: (et)  have several popular curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning
-curricula/implemented_curricula.rst:7: (al)  have several popular curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning
-curricula/implemented_curricula.rst:8: (Kanitscheider)  progress curriculum introduced in Kanitscheider et al. 2021.
-curricula/implemented_curricula.rst:8: (et)  progress curriculum introduced in Kanitscheider et al. 2021.
-curricula/implemented_curricula.rst:8: (al)  progress curriculum introduced in Kanitscheider et al. 2021.
-curricula/implemented_curricula.rst:20: (prespecified)  Plays a provided list of tasks in order for a prespecified number of episodes.
-curricula/implemented_curricula.rst:37: (reweighting)  By measuring the difference between the fast and slow EMAs and reweighting it to adjust for the time delay created by the EMA, this method can
-curricula/implemented_curricula.rst:47: (instantiations)  A curriculum learning method that estimates an agent's regret on particular environment instantiations and uses a prioritized replay buffer to
