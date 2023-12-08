@@ -1,12 +1,14 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import copy
 import time
-from typing import List, Callable, Tuple, Union
-import numpy as np
+from typing import Callable, List, Tuple, Union
+
 import gym
+import numpy as np
 from gym import spaces
 
-from syllabus.core import TaskWrapper
+from .task_wrapper import TaskWrapper
+
 
 class ReinitTaskWrapper(TaskWrapper):
     """
@@ -30,7 +32,7 @@ class ReinitTaskWrapper(TaskWrapper):
         This is the identity function by default.
         """
         return task
-    
+
     def decode_task(self, encoding):
         """ 
         Override to convert element of the MultiDiscrete task space into format usable by the reinit env_fn. 
@@ -76,13 +78,9 @@ class ReinitTaskWrapper(TaskWrapper):
 
 if __name__ == "__main__":
     from nle.env import base
-    from nle.env.tasks import (NetHackScore,
-                           NetHackStaircase,
-                           NetHackStaircasePet,
-                           NetHackOracle,
-                           NetHackGold,
-                           NetHackEat,
-                           NetHackScout)
+    from nle.env.tasks import (NetHackEat, NetHackGold, NetHackOracle,
+                               NetHackScore, NetHackScout, NetHackStaircase,
+                               NetHackStaircasePet)
 
     def run_episode(env, task: str = None, verbose=1):
         env.reset(new_task=task)

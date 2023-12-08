@@ -1,6 +1,6 @@
-=======================================
-Implemented Curriculum Learning Methods
-=======================================
+==================
+Curriculum Methods
+==================
 
 Syllabus has a small collection of curriculum learning methods implemented.These include simple techniques that are often used in practice
 but rarely highlighted in the literature,such as simulated annealing of difficulty, or sequential curricula of easy to hard tasks. We also

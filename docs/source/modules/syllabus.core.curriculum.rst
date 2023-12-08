@@ -33,11 +33,10 @@ To incorporate feedback from the environment, the API provides multiple methods:
 
 - :mod:`update_curriculum_batch <syllabus.core.curriculum_base.Curriculum.update_curriculum_batch>`
 
+syllabus.core.curriculum\_base module
+-------------------------------------
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   self
-   implemented_curricula
-   custom_curricula
+.. automodule:: syllabus.core.curriculum_base
+   :members:
+   :undoc-members:
+   :show-inheritance:
