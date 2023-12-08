@@ -1,7 +1,5 @@
-import typing
 from typing import Any, List, Union
 
-from gym.spaces import Box
 from syllabus.core import Curriculum
 
 
@@ -21,12 +19,12 @@ class NoopCurriculum(Curriculum):
         Sample k tasks from the curriculum.
         """
         return [self.default_task for _ in range(k)]
-    
+
     def update_task_progress(self, task, success_prob) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
-        """ 
+        """
         pass
 
     def update_on_step(self, obs, rew, done, info) -> None:
@@ -56,7 +54,7 @@ class NoopCurriculum(Curriculum):
     def add_task(self, task: tuple) -> None:
         pass
 
-    def update_curriculum(self, update_data):
+    def update(self, update_data):
         """
         Update the curriculum with the specified update type.
         """

@@ -1,4 +1,4 @@
-.. _Prioritzed Level Replay:
+.. _Prioritized Level Replay:
 
 Prioritized Level Replay (PLR) Curriculum
 =========================================

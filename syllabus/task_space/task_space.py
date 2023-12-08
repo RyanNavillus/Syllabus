@@ -7,12 +7,16 @@ from gym.spaces import (Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space,
 
 
 class TaskSpace():
-    def __init__(self, gym_space, tasks=None):
+    def __init__(self, gym_space: Union[Space, int], tasks=None):
+        if isinstance(gym_space, int):
+            # Syntactic sugar for discrete space
+            gym_space = Discrete(gym_space)
         self.gym_space = gym_space
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
-        if isinstance(gym_space, (Discrete, Tuple)):
-            assert tasks is not None, "Must specify tasks for discrete or tuple task spaces."
-            self._tasks = set(tasks)
+        if isinstance(gym_space, Discrete):
+            if tasks is None:
+                tasks = list(range(gym_space.n))
+        self._tasks = set(tasks)
 
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):

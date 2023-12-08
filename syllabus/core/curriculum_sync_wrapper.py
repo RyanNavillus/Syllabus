@@ -48,8 +48,8 @@ class CurriculumWrapper:
     def update(self, metrics):
         self.curriculum.update(metrics)
 
-    def batch_update_curriculum(self, metrics):
-        self.curriculum.update_curriculum_batch(metrics)
+    def batch_update(self, metrics):
+        self.curriculum.update_batch(metrics)
 
     def add_task(self, task):
         self.curriculum.add_task(task)
@@ -107,7 +107,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     # Decode task and task progress
                     if update["update_type"] == "task_progress":
                         update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
-                self.batch_update_curriculum(batch_updates)
+                self.batch_update(batch_updates)
 
             # Sample new tasks
             if requested_tasks > 0:
@@ -126,7 +126,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     self.task_queue.put(message)
                     self.added_tasks = []
                 self.num_assigned_tasks += requested_tasks
-            time.sleep(0.01)
+            # time.sleep(0.01)
 
     def __del__(self):
         self.stop()

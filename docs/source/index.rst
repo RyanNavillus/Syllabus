@@ -25,6 +25,7 @@ We also have preliminary support and examples for multiagent PettingZoo environm
    quickstart
    evaluation/evaluation
    logging
+   benchmarks
 
 .. toctree::
    :maxdepth: 1

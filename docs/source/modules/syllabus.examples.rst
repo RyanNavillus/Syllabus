@@ -1,5 +1,8 @@
-syllabus.examples package
-=========================
+.. _Examples:
+
+
+Examples
+========
 
 Subpackages
 -----------

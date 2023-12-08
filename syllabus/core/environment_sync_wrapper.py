@@ -161,7 +161,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         }
         self.update_queue.put(update)
         self.task_completion = 0.0
-    
+
         # Sample new task
         if self.task_queue.empty():
             # Choose default task if it is set, or keep the current task
@@ -241,7 +241,7 @@ class RaySyncWrapper(gym.Wrapper):
             "metrics": (self.env.task, self.task_completion),
             "request_sample": True
         }
-        self.curriculum.update_curriculum.remote(update)
+        self.curriculum.update.remote(update)
         self.task_completion = 0.0
 
         # Sample new task
@@ -269,7 +269,7 @@ class RaySyncWrapper(gym.Wrapper):
                     "metrics": (self.step_results,),
                     "request_sample": False
                 }
-                self.curriculum.update_curriculum.remote(update)
+                self.curriculum.update.remote(update)
                 self.step_results = []
 
         return obs, rew, done, info
