@@ -5,7 +5,7 @@ To use Syllabus with your existing training code you need to:
 
 1. Choose a Syllabus :ref:`Curriculum API`.
 
-2. Wrap the curriculum with a Syllabus synchronization wrapper.
+2. Wrap the curriculum with a Syllabus :ref:`synchronization wrapper <Synchronization>`.
 
 3. Wrap your environment with a Syllabus :ref:`TaskWrapper <TaskInterface>`.
 

@@ -1,3 +1,5 @@
+.. _Synchronization:
+
 Global Synchronization
 ======================
 
