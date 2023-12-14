@@ -4,9 +4,8 @@ from typing import Any, Callable, Dict
 import gym
 import numpy as np
 import ray
-from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-from syllabus.core import (Curriculum, PettingZooTaskWrapper, TaskEnv,
-                           TaskWrapper)
+# from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
+from syllabus.core import Curriculum, TaskEnv, TaskWrapper  #, PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
 
 
@@ -111,104 +110,104 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
 
 # TODO: Fix this and refactor
-class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
-    """
-    This wrapper is used to set the task on reset for a Gym environments running
-    on parallel processes created using multiprocessing.Process. Meant to be used
-    with a QueueLearningProgressCurriculum running on the main process.
-    """
-    def __init__(self,
-                 env,
-                 task_queue: SimpleQueue,
-                 update_queue: SimpleQueue,
-                 update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 default_task=None,
-                 task_space: TaskSpace = None,
-                 global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        super().__init__(env)
-        self.env = env
-        self.task_queue = task_queue
-        self.update_queue = update_queue
-        self.task_space = task_space
-        self.update_on_step = update_on_step
-        self.global_task_completion = global_task_completion
-        self.task_completion = 0.0
-        self.warned_once = False
-        self.step_results = []
-        if task_space.contains(default_task):
-            self.default_task = default_task
+# class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
+#     """
+#     This wrapper is used to set the task on reset for a Gym environments running
+#     on parallel processes created using multiprocessing.Process. Meant to be used
+#     with a QueueLearningProgressCurriculum running on the main process.
+#     """
+#     def __init__(self,
+#                  env,
+#                  task_queue: SimpleQueue,
+#                  update_queue: SimpleQueue,
+#                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
+#                  default_task=None,
+#                  task_space: TaskSpace = None,
+#                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
+#         super().__init__(env)
+#         self.env = env
+#         self.task_queue = task_queue
+#         self.update_queue = update_queue
+#         self.task_space = task_space
+#         self.update_on_step = update_on_step
+#         self.global_task_completion = global_task_completion
+#         self.task_completion = 0.0
+#         self.warned_once = False
+#         self.step_results = []
+#         if task_space.contains(default_task):
+#             self.default_task = default_task
 
-        # Request initial task
-        update = {
-            "update_type": "noop",
-            "metrics": None,
-            "request_sample": True
-        }
-        self.update_queue.put(update)
+#         # Request initial task
+#         update = {
+#             "update_type": "noop",
+#             "metrics": None,
+#             "request_sample": True
+#         }
+#         self.update_queue.put(update)
 
-    @property
-    def agents(self):
-        return self.env.agents
+#     @property
+#     def agents(self):
+#         return self.env.agents
 
-    def reset(self, *args, **kwargs):
-        self.step_results = []
+#     def reset(self, *args, **kwargs):
+#         self.step_results = []
 
-        # Update curriculum
-        update = {
-            "update_type": "complete",
-            "metrics": (self.task_space.encode(self.env.task), self.task_completion),
-            "request_sample": True
-        }
-        self.update_queue.put(update)
-        self.task_completion = 0.0
+#         # Update curriculum
+#         update = {
+#             "update_type": "complete",
+#             "metrics": (self.task_space.encode(self.env.task), self.task_completion),
+#             "request_sample": True
+#         }
+#         self.update_queue.put(update)
+#         self.task_completion = 0.0
 
-        # Sample new task
-        if self.task_queue.empty():
-            # Choose default task if it is set, or keep the current task
-            next_task = self.default_task if self.default_task is not None else self.task_space.sample()
-            if not self.warned_once:
-                print("\nTask queue was empty, selecting default task. This warning will not print again for this environment.\n")
-                self.warned_once = False
-        else:
-            message = self.task_queue.get()
-            next_task = self.task_space.decode(message["next_task"])
-            if "add_task" in message:
-                self.env.add_task(message["add_task"])
-        return self.env.reset(*args, new_task=next_task, **kwargs)
+#         # Sample new task
+#         if self.task_queue.empty():
+#             # Choose default task if it is set, or keep the current task
+#             next_task = self.default_task if self.default_task is not None else self.task_space.sample()
+#             if not self.warned_once:
+#                 print("\nTask queue was empty, selecting default task. This warning will not print again for this environment.\n")
+#                 self.warned_once = False
+#         else:
+#             message = self.task_queue.get()
+#             next_task = self.task_space.decode(message["next_task"])
+#             if "add_task" in message:
+#                 self.env.add_task(message["add_task"])
+#         return self.env.reset(*args, new_task=next_task, **kwargs)
 
-    def step(self, action):
-        obs, rew, done, info = self.env.step(action)
+#     def step(self, action):
+#         obs, rew, done, info = self.env.step(action)
 
-        if "task_completion" in info:
-            if self.global_task_completion is not None:
-                self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
-            else:
-                self.task_completion = info["task_completion"]
+#         if "task_completion" in info:
+#             if self.global_task_completion is not None:
+#                 self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
+#             else:
+#                 self.task_completion = info["task_completion"]
 
-        if self.update_on_step:
-            self.step_results.append((obs, rew, done, info))
-            if len(self.step_results) >= 2000:
-                update = {
-                    "update_type": "step_batch",
-                    "metrics": (self.step_results,),
-                    "request_sample": False
-                }
-                self.update_queue.put(update)
-                self.step_results = []
+#         if self.update_on_step:
+#             self.step_results.append((obs, rew, done, info))
+#             if len(self.step_results) >= 2000:
+#                 update = {
+#                     "update_type": "step_batch",
+#                     "metrics": (self.step_results,),
+#                     "request_sample": False
+#                 }
+#                 self.update_queue.put(update)
+#                 self.step_results = []
 
-        return obs, rew, done, info
+#         return obs, rew, done, info
 
-    def add_task(self, task):
-        update = {
-            "update_type": "add_task",
-            "metrics": task
-        }
-        self.update_queue.put(update)
+#     def add_task(self, task):
+#         update = {
+#             "update_type": "add_task",
+#             "metrics": task
+#         }
+#         self.update_queue.put(update)
     
-    def __getattr__(self, attr):
-        env_attr = getattr(self.env, attr, None)
-        if env_attr:
-            return env_attr
+#     def __getattr__(self, attr):
+#         env_attr = getattr(self.env, attr, None)
+#         if env_attr:
+#             return env_attr
 
 
 class RaySyncWrapper(gym.Wrapper):

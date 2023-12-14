@@ -117,7 +117,7 @@ class PrioritizedLevelReplay(Curriculum):
             raise ValueError(
                 f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
             )
-        if "num_actors" in task_sampler_kwargs_dict:
+        if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
