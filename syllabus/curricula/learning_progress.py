@@ -1,9 +1,8 @@
 import math
 import random
 from collections import defaultdict
-from typing import List, Tuple, Union
+from typing import List
 
-import gym
 import matplotlib.pyplot as plt
 import numpy as np
 from gym.spaces import Discrete, MultiDiscrete
@@ -151,10 +150,10 @@ if __name__ == "__main__":
     tasks = range(20)
     histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
 
-    curriculum = LearningProgressCurriculum(tasks)
+    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
     for i in range(len(histories[0][0])):
         for task in tasks:
-            curriculum.complete_task(task, histories[task][0][i])
+            curriculum.update_task_progress(task, histories[task][0][i])
         if i > 10:
             distribution, _ = curriculum._sample_distribution()
             print("[", end="")
@@ -166,7 +165,7 @@ if __name__ == "__main__":
 
     tasks = [0]
     histories = {task: generate_history(n=200, center=75, curve=0.1) for task in tasks}
-    curriculum = LearningProgressCurriculum(tasks)
+    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
     lp_raw = []
     lp_reweight = []
     p_fast = []
@@ -174,7 +173,7 @@ if __name__ == "__main__":
     true_probs = []
     estimates = []
     for estimate, true_prob in zip(histories[0][0], histories[0][1]):
-        curriculum.complete_task(tasks[0], estimate)
+        curriculum.update_task_progress(tasks[0], estimate)
         lp_raw.append(curriculum._lp_metric(tasks[0], reweight=False))
         lp_reweight.append(curriculum._lp_metric(tasks[0]))
         p_fast.append(curriculum._p_fast[0])
@@ -197,11 +196,11 @@ if __name__ == "__main__":
 
     # Z-score plot
     tasks = [i for i in range(50)]
-    curriculum = LearningProgressCurriculum(tasks)
+    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
     histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
     for i in range(len(histories[0][0])):
         for task in tasks:
-            curriculum.complete_task(task, histories[task][0][i])
+            curriculum.update_task_progress(task, histories[task][0][i])
     distribution, task_lps_standardized = curriculum._sample_distribution()
     x_axis = np.linspace(-3, 3, num=len(task_lps_standardized))
     sigmoid_axis = curriculum._sigmoid(x_axis, center=1.28, curve=3.0)
