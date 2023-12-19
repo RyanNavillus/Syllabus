@@ -2,7 +2,6 @@ import gym
 from gym.spaces import Box
 from ray import tune
 from ray.tune.registry import register_env
-
 from syllabus.core import RaySyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
 from syllabus.task_space import TaskSpace
@@ -11,14 +10,16 @@ from .task_wrappers import CartPoleTaskWrapper
 
 # Define a task space
 if __name__ == "__main__":
-    task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)), [])
+    task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)))
 
     def env_creator(config):
         env = gym.make("CartPole-v1")
         # Wrap the environment to change tasks on reset()
         env = CartPoleTaskWrapper(env)
         # Add environment sync wrapper
-        env = RaySyncWrapper(env, default_task=(-0.02, 0.02), task_space=task_space)
+        env = RaySyncWrapper(
+            env, default_task=(-0.02, 0.02), task_space=task_space
+        )
         return env
 
     register_env("task_cartpole", env_creator)

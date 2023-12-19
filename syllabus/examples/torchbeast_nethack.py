@@ -23,11 +23,8 @@ import threading
 import time
 import timeit
 import traceback
-from argparse import Namespace
-from typing import Callable
 
 import numpy as np
-
 import wandb
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)

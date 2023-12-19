@@ -1,9 +1,9 @@
 import time
+import warnings
 from multiprocessing import Process
 
 import gym
 import ray
-
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
 from syllabus.task_space import TaskSpace
 
@@ -69,6 +69,7 @@ def run_episodes_queue(env_fn, env_args, env_kwargs, task_queue, update_queue, s
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
 
+
 @ray.remote
 def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, update_on_step=True):
     env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
@@ -129,6 +130,7 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
     ray_speed = end - start
     return ray_speed
 
+
 # Sync Test Environment
 from syllabus.tests import SyncTestEnv
 
@@ -136,40 +138,40 @@ from syllabus.tests import SyncTestEnv
 def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
-        env = MultiProcessingSyncWrapper(env,
-                                        *args,
-                                        default_task="error task",
-                                        task_space=env.task_space,
-                                        **kwargs)
+        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, default_task="error task", task_space=env.task_space, **kwargs)
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
 # Nethack Tests
-from nle.env.tasks import NetHackScore
-
-from syllabus.examples.task_wrappers.nethack_task_wrapper import \
-    NethackTaskWrapper
+try:
+    from nle.env.tasks import NetHackScore
+    from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
+except ImportError:
+    warnings.warn("Unable to import nle.")
+    pass
 
 
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
     if type == "queue":
-        env = MultiProcessingSyncWrapper(env,
-                                        *args,
-                                        default_task=NetHackScore,
-                                        task_space=env.task_space,
-                                        **kwargs)
+        env = MultiProcessingSyncWrapper(
+            env, *args, task_space=env.task_space, **kwargs
+        )
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, default_task=NetHackScore, task_space=env.task_space, **kwargs)
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
 # Minigrid Tests
-from gym_minigrid.envs import DoorKeyEnv
-from gym_minigrid.register import env_list
+try:
+    from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
+    from gym_minigrid.register import env_list
+except ImportError:
+    warnings.warn("Unable to import gym_minigrid.")
+    pass
 
 from syllabus.core import ReinitTaskWrapper
 
@@ -183,11 +185,7 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     task_space = TaskSpace(gym.spaces.Discrete(len(env_list)), env_list)
     env = ReinitTaskWrapper(env, create_env, task_space=task_space)
     if type == "queue":
-        env = MultiProcessingSyncWrapper(env,
-                                        *args,
-                                        default_task="MiniGrid-DoorKey-5x5-v0",
-                                        task_space=env.task_space,
-                                        **kwargs)
+        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, default_task="MiniGrid-DoorKey-5x5-v0", task_space=env.task_space, **kwargs)
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env

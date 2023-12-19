@@ -1,7 +1,9 @@
-import gym
-import numpy as np
 from itertools import product
 from typing import Union
+
+import gym
+import numpy as np
+
 
 def decorate_all_functions(function_decorator):
     def decorator(cls):

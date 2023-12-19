@@ -1,9 +1,8 @@
 import gym
-import pettingzoo
-from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-    
+# import pettingzoo
 
-class TaskWrapper(gym.Wrapper):
+
+class TaskEnv(gym.Env):
     # TODO: Update to new TaskSpace API
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -31,7 +30,7 @@ class TaskWrapper(gym.Wrapper):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         raise NotImplementedError
-    
+
     def add_task(self, task):
         raise NotImplementedError("This environment does not support adding tasks.")
 
@@ -66,34 +65,23 @@ class TaskWrapper(gym.Wrapper):
         return observation
 
     def step(self, action):
-        obs, rew, done, info = self.env.step(action)
-
-        # Determine completion status of the current task
-        self.task_completion = self._task_completion(obs, rew, done, info)
-        info["task_completion"] = self.task_completion
-
-        return self.observation(obs), rew, done, info
-    
-    def __getattr__(self, attr):
-        env_attr = self.env.__class__.__dict__.get(attr, None)
-
-        if env_attr and callable(env_attr):
-            return env_attr
+        """
+        Steps the environment with the given action.
+        Unlike the typical Gym environment, this method should also add the
+        {"task_completion": self.task_completion()} key to the info dictionary
+        to support curricula that rely on this metric.
+        """
+        raise NotImplementedError
 
 
-class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
-    def __init__(self, env: pettingzoo.ParallelEnv):
-        super().__init__(env)
-        self.task = None
+# class PettingZooTaskEnv(TaskEnv, pettingzoo.ParallelEnv):
+#     def __init__(self):
+#         super().__init__()
+#         self.task = None
 
-    @property
-    def agents(self):
-        return self.env.agents
-    
-    def __getattr__(self, attr):
-        env_attr = getattr(self.env, attr, None)
-        if env_attr:
-            return env_attr
-    
-    def get_current_task(self):
-        return self.current_task
+#     @property
+#     def agents(self):
+#         return self.agents
+
+#     def get_current_task(self):
+#         return self.task

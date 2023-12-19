@@ -10,15 +10,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.distributions.categorical import Categorical
-
-
 from pettingzoo.butterfly import pistonball_v6
 from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
-
-from syllabus.core import make_multiprocessing_curriculum, PettingZooMultiProcessingSyncWrapper, TaskWrapper
+from syllabus.core import (PettingZooMultiProcessingSyncWrapper, TaskWrapper,
+                           make_multiprocessing_curriculum)
 from syllabus.curricula import PrioritizedLevelReplay
 from syllabus.examples import PistonballTaskWrapper
+from torch.distributions.categorical import Categorical
 
 
 class Agent(nn.Module):

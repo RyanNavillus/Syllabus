@@ -1,4 +1,8 @@
-# docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppo_procgenpy
+""" An example applying Syllabus Prioritized Level Replay to Procgen. This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
+
+NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
+we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
+"""
 import argparse
 import os
 import random
@@ -13,14 +17,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from procgen import ProcgenEnv
-from torch.distributions.categorical import Categorical
-from torch.utils.tensorboard import SummaryWriter
-
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import DomainRandomization, PrioritizedLevelReplay, LearningProgressCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from torch.utils.tensorboard import SummaryWriter
 
 from .vecenv import VecExtractDictObs, VecMonitor, VecNormalize
 
@@ -122,7 +124,7 @@ PROCGEN_RETURN_BOUNDS = {
 def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
         env = gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
-        env = ProcgenTaskWrapper(env, env_id, seed)
+        env = ProcgenTaskWrapper(env, seed=seed)
         if args.curriculum:
             if task_queue is not None and update_queue is not None:
                 env = MultiProcessingSyncWrapper(
@@ -130,7 +132,6 @@ def make_env(env_id, seed, task_queue, update_queue, start_level=0, num_levels=1
                     task_queue,
                     update_queue,
                     update_on_step=False,
-                    default_task=start_level,
                     task_space=env.task_space,
                 )
         return env
@@ -244,7 +245,7 @@ if __name__ == "__main__":
     task_queue = update_queue = None
     if args.curriculum:
         sample_env = gym.make(f"procgen-{args.env_id}-v0")
-        sample_env = ProcgenTaskWrapper(sample_env, args.env_id, args.seed)
+        sample_env = ProcgenTaskWrapper(sample_env, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
@@ -352,9 +353,9 @@ if __name__ == "__main__":
                         "tasks": tasks,
                     },
                 }
-                curriculum.update_curriculum(update)
-            # if args.curriculum:
-            #     curriculum.log_metrics(writer, global_step)
+                curriculum.update(update)
+            #if args.curriculum:
+            #    curriculum.log_metrics(writer, global_step)
 
         # bootstrap value if not done
         with torch.no_grad():

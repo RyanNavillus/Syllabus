@@ -1,27 +1,45 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and original PLR paper: https://arxiv.org/abs/2010.03934
-
+import gym
 import numpy as np
 import torch
 
 
 class TaskSampler:
+    """ Task sampler for Prioritized Level Replay (PLR)
+
+    Args:
+        tasks (list): List of tasks to sample from
+        action_space (gym.spaces.Space): Action space of the environment
+        num_actors (int): Number of actors/processes
+        strategy (str): Strategy for sampling tasks. One of "value_l1", "gae", "policy_entropy", "least_confidence", "min_margin", "one_step_td_error".
+        replay_schedule (str): Schedule for sampling replay levels. One of "fixed" or "proportionate".
+        score_transform (str): Transform to apply to task scores. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
+        temperature (float): Temperature for score transform. Increasing temperature makes the sampling distribution more uniform.
+        eps (float): Epsilon for eps-greedy score transform.
+        rho (float): Proportion of seen tasks before replay sampling is allowed.
+        nu (float): Probability of sampling a replay level if using a fixed replay_schedule.
+        alpha (float): Linear interpolation weight for score updates. 0.0 means only use old scores, 1.0 means only use new scores.
+        staleness_coef (float): Linear interpolation weight for task staleness vs. task score. 0.0 means only use task score, 1.0 means only use staleness.
+        staleness_transform (str): Transform to apply to task staleness. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
+        staleness_temperature (float): Temperature for staleness transform. Increasing temperature makes the sampling distribution more uniform.
+    """
     def __init__(
         self,
-        tasks,
-        action_space=None,
-        num_actors=1,
-        strategy="value_l1",
-        replay_schedule="proportionate",
-        score_transform="rank",
-        temperature=0.1,
-        eps=0.05,
-        rho=1.0,
-        nu=0.5,
-        alpha=1.0,
-        staleness_coef=0.1,
-        staleness_transform="power",
-        staleness_temperature=1.0,
+        tasks: list,
+        action_space: gym.spaces.Space = None,
+        num_actors: int = 1,
+        strategy: str = "value_l1",
+        replay_schedule: str = "proportionate",
+        score_transform: str = "rank",
+        temperature: float = 0.1,
+        eps: float = 0.05,
+        rho: float = 1.0,
+        nu: float = 0.5,
+        alpha: float = 1.0,
+        staleness_coef: float = 0.1,
+        staleness_transform: str = "power",
+        staleness_temperature: float = 1.0,
     ):
         self.action_space = action_space
         self.tasks = tasks
@@ -40,10 +58,10 @@ class TaskSampler:
         self.staleness_temperature = staleness_temperature
 
         self.unseen_task_weights = np.array([1.0] * self.num_tasks)
-        self.task_scores = np.array([0.0] * self.num_tasks, dtype=np.float)
-        self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=np.float)
+        self.task_scores = np.array([0.0] * self.num_tasks, dtype=float)
+        self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=float)
         self.partial_task_steps = np.zeros((num_actors, self.num_tasks), dtype=np.int64)
-        self.task_staleness = np.array([0.0] * self.num_tasks, dtype=np.float)
+        self.task_staleness = np.array([0.0] * self.num_tasks, dtype=float)
 
         self.next_task_index = 0  # Only used for sequential strategy
 
@@ -225,7 +243,7 @@ class TaskSampler:
     def _sample_replay_level(self):
         sample_weights = self.sample_weights()
         if np.isclose(np.sum(sample_weights), 0):
-            sample_weights = np.ones_like(sample_weights, dtype=np.float) / len(sample_weights)
+            sample_weights = np.ones_like(sample_weights, dtype=float) / len(sample_weights)
 
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
         task = self.tasks[task_idx]
@@ -270,7 +288,7 @@ class TaskSampler:
             # Otherwise, sample a new level
             return self._sample_unseen_level()
 
-        elif self.replay_schedule == "proportionate":  # Default to proportionate schedule
+        elif self.replay_schedule == "proportionate":
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
                 return self._sample_replay_level()
             else:

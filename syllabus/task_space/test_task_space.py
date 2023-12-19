@@ -30,4 +30,11 @@ if __name__ == "__main__":
     assert task_space.decode([-0.1, 1.0]) == None, f"Expected None, got {task_space.decode([1.2, 1.0])}"
     print("Box tests passed!")
 
+    # Test syntactic sugar
+    task_space = TaskSpace(3)
+    assert task_space.encode(0) == 0, f"Expected 0, got {task_space.encode(0)}"
+    assert task_space.encode(1) == 1, f"Expected 1, got {task_space.encode(1)}"
+    assert task_space.encode(2) == 2, f"Expected 2, got {task_space.encode(2)}"
+    assert task_space.encode(3) is None, f"Expected None, got {task_space.encode(3)}"
+
     print("All tests passed!")

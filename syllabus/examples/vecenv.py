@@ -1,8 +1,9 @@
-import gym
-import torch
-import numpy as np
 import time
 from collections import deque
+
+import gym
+import numpy as np
+import torch
 
 
 class VecEnv:

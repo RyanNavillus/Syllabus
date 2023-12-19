@@ -1,5 +1,6 @@
 import typing
 from typing import Any, List, Union
+
 from gym.spaces import Box
 from syllabus.core import Curriculum
 

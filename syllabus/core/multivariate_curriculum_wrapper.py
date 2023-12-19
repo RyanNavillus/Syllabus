@@ -1,8 +1,9 @@
-import typing
-import numpy as np
 import itertools
-from gym.spaces import Tuple, Dict
+import typing
 from typing import Any, Callable, List, Union
+
+import numpy as np
+from gym.spaces import Dict, Tuple
 from syllabus.core import Curriculum, CurriculumWrapper
 from syllabus.task_space import TaskSpace
 

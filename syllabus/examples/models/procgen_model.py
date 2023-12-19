@@ -3,19 +3,25 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
     bias_init(module.bias.data)
     return module
 
-init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                        constant_(x, 0))
 
-init_relu_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                        constant_(x, 0), nn.init.calculate_gain('relu'))
+init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
 
-init_tanh_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                        constant_(x, 0), np.sqrt(2))
+
+init_relu_ = lambda m: init(
+    m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), nn.init.calculate_gain('relu')
+)
+
+
+init_tanh_ = lambda m: init(
+    m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2)
+)
+
 
 def apply_init_(modules):
     """
@@ -147,6 +153,8 @@ class Policy(nn.Module):
 
         self.base = base(obs_shape[0], **base_kwargs)
         self.dist = Categorical(self.base.output_size, num_actions)
+        self.latent_dim_pi = 256
+        self.latent_dim_vf = 256
 
     @property
     def is_recurrent(self):
@@ -158,7 +166,9 @@ class Policy(nn.Module):
         return self.base.recurrent_hidden_state_size
 
     def forward(self, inputs):
-        raise NotImplementedError
+        value, actor_features, rnn_hxs = self.base(inputs, None, None)
+        dist = self.dist(actor_features)
+        return dist.sample(), value
 
     def act(self, inputs, deterministic=False):
         value, actor_features = self.base(inputs)

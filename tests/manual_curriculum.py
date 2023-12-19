@@ -1,7 +1,4 @@
 """ Test curriculum synchronization across multiple processes. """
-import time
-import random
-from multiprocessing import SimpleQueue, Process
 from copy import deepcopy
 
 import ray
@@ -53,5 +50,3 @@ if __name__ == "__main__":
     print("\nRUNNING: Ray multiprocess test with Syllabus...")
     ray_syllabus_speed = test_ray_multiprocess(create_nethack_env, num_envs=N_ENVS, num_episodes=N_EPISODES)
     print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")
-
-

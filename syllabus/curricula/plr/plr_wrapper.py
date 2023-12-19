@@ -1,13 +1,13 @@
+import warnings
 from typing import Any, Dict, List, Tuple, Union
 
 import gym
 import torch
-import warnings
 from gym.spaces import Discrete, MultiDiscrete
-
 from syllabus.core import Curriculum, UsageError, enumerate_axes
-from syllabus.curricula.plr import TaskSampler
 from syllabus.task_space import TaskSpace
+
+from .task_sampler import TaskSampler
 
 
 class RolloutStorage(object):
@@ -79,6 +79,21 @@ class RolloutStorage(object):
 
 
 class PrioritizedLevelReplay(Curriculum):
+    """ Prioritized Level Replay (PLR) Curriculum.
+
+    Args:
+        task_space (TaskSpace): The task space to use for the curriculum.
+        *curriculum_args: Positional arguments to pass to the curriculum.
+        task_sampler_kwargs_dict (dict): Keyword arguments to pass to the task sampler. See TaskSampler for details.
+        action_space (gym.Space): The action space to use for the curriculum. Required for some strategies.
+        device (str): The device to use to store curriculum data, either "cpu" or "cuda".
+        num_steps (int): The number of steps to store in the rollouts.
+        num_processes (int): The number of parallel environments.
+        gamma (float): The discount factor used to compute returns
+        gae_lambda (float): The GAE lambda value.
+        suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
+        **curriculum_kwargs: Keyword arguments to pass to the curriculum.
+    """
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = True
 
@@ -102,7 +117,7 @@ class PrioritizedLevelReplay(Curriculum):
             raise ValueError(
                 f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
             )
-        if "num_actors" in task_sampler_kwargs_dict:
+        if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)

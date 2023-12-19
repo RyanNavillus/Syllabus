@@ -13,13 +13,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.distributions.categorical import Categorical
-from torch.utils.tensorboard import SummaryWriter
 from gym.envs.registration import register
-
-from syllabus.core import make_multiprocessing_curriculum, MultiProcessingSyncWrapper, TaskWrapper
+from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
+                           make_multiprocessing_curriculum)
 from syllabus.curricula import PrioritizedLevelReplay
 from syllabus.examples import MinihackTaskWrapper
+from torch.distributions.categorical import Categorical
+from torch.utils.tensorboard import SummaryWriter
 
 
 def parse_args():

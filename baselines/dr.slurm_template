@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --partition=scavenger
+#SBATCH --job-name=syllabus
+#SBATCH --account=scavenger
+#SBATCH --requeue
+#SBATCH --gpus-per-task=1
+#SBATCH --cpus-per-gpu=8
+#SBATCH --time=24:0:0
+#SBATCH --ntasks=1
+#SBATCH --output=slurm/logs/%x_%j.out
+#SBATCH --exclude=legacygpu01
+
+# Load Python and Cuda
+module load Python3/3.8.15
+module load cuda/11.4.4
+nvcc --version
+
+env_id=$1
+seed=$2
+
+echo "Running env_id: $env_id and seed: $seed"
+
+srun python3 -m syllabus.examples.cleanrl_procgen_plr --curriculum --track --exp-name="Syllabus DR" --wandb-entity="ryansullivan" --env-id $env_id --seed $seed --curriculum-method="dr" 
