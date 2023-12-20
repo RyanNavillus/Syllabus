@@ -1,21 +1,11 @@
 """ Test curriculum synchronization across multiple processes. """
-import gym
-import time
-import random
-from multiprocessing import SimpleQueue, Process
+
 from copy import deepcopy
 
 import ray
 
-from gym_minigrid.register import env_list
-
-from syllabus.examples import NethackTaskWrapper
 from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           RaySyncWrapper,
-                           MultiProcessingCurriculumWrapper,
-                           make_multiprocessing_curriculum,
-                           make_ray_curriculum)
+from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_minigrid_env
 
 N_ENVS = 128

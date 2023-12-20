@@ -1,9 +1,9 @@
 import warnings
 from typing import Any, Dict, List, Tuple, Union
 
-import gym
+import gymnasium as gym
 import torch
-from gym.spaces import Discrete, MultiDiscrete
+from gymnasium.spaces import Discrete, MultiDiscrete
 from syllabus.core import Curriculum, UsageError, enumerate_axes
 from syllabus.task_space import TaskSpace
 
@@ -210,7 +210,7 @@ class PrioritizedLevelReplay(Curriculum):
         self.num_samples += 1
         return [self._task_sampler.sample() for _ in range(k)]
 
-    def update_on_step(self, obs, rew, done, info) -> None:
+    def update_on_step(self, obs, rew, term, trunc, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """

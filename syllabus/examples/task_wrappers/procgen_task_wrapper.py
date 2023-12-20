@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import numpy as np
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
@@ -17,7 +17,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        self.env.unwrapped._venv.seed(seed, 0)
+        self.env.gym_env.unwrapped._venv.seed(seed, 0)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -32,10 +32,8 @@ class ProcgenTaskWrapper(TaskWrapper):
         if new_task is not None:
             self.change_task(new_task)
 
-        self.done = False
-        self.episode_return = 0
-
-        return self.observation(self.env.reset(**kwargs))
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task: int):
         """
@@ -51,8 +49,8 @@ class ProcgenTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, done, info = self.env.step(action)
-        return self.observation(obs), rew, done, info
+        obs, rew, term, trunc, info = self.env.step(action)
+        return self.observation(obs), rew, term, trunc, info
 
     def observation(self, obs):
         return obs

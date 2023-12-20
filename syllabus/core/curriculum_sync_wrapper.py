@@ -1,5 +1,4 @@
 import threading
-import time
 from functools import wraps
 from typing import List, Tuple
 
@@ -36,8 +35,8 @@ class CurriculumWrapper:
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
 
-    def update_on_step(self, task, step, reward, done):
-        self.curriculum.update_on_step(task, step, reward, done)
+    def update_on_step(self, task, step, reward, term, trunc):
+        self.curriculum.update_on_step(task, step, reward, term, trunc)
 
     def log_metrics(self, writer, step=None):
         self.curriculum.log_metrics(writer, step=step)

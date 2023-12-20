@@ -21,7 +21,7 @@ class CartPoleTaskWrapper(TaskWrapper):
         self.env.state = self.env.np_random.uniform(low=low, high=high, size=(4,))
         self.task = new_task
 
-    def _task_completion(self, obs, rew, done, info) -> float:
+    def _task_completion(self, obs, rew, term, trunc, info) -> float:
         # Return percent of optimal reward
         self.total_reward += rew
         return self.total_reward / 500.0

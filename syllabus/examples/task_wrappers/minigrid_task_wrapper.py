@@ -1,5 +1,5 @@
 """ Task wrapper that can select a new MiniGrid task on reset. """
-import gym
+import gymnasium as gym
 import numpy as np
 from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
 from syllabus.core import TaskWrapper
@@ -62,14 +62,14 @@ class MinigridTaskWrapper(TaskWrapper):
         Step through environment and update task completion.
         """
         # assert self._elapsed_steps is not None, "Cannot call env.step() before calling reset()"
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, term, trunc, info = self.env.step(action)
         obs = self.observation(obs["image"])
 
         self.episode_return += rew
-        self.done = done
-        info["task_completion"] = self._task_completion(obs, rew, done, info)
+        self.done = term or trunc
+        info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
 
-        return obs, rew, done, info
+        return obs, rew, term, trunc, info
 
     def observation(self, obs):
         env = self.unwrapped

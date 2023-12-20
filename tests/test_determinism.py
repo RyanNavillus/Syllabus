@@ -1,6 +1,4 @@
-import random
-
-import gym
+import gymnasium as gym
 import procgen  # noqa: F401
 
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper

@@ -27,7 +27,7 @@ class NoopCurriculum(Curriculum):
         """
         pass
 
-    def update_on_step(self, obs, rew, done, info) -> None:
+    def update_on_step(self, obs, rew, term, trunc, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """

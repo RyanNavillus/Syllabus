@@ -3,7 +3,8 @@ import copy
 import time
 from typing import List
 
-import gym
+import gymnasium as gym
+from gymnasium.utils.step_api_compatibility import step_api_compatibility
 import numpy as np
 from gym import spaces
 from nle.env import base
@@ -95,7 +96,7 @@ class NethackTaskWrapper(TaskWrapper):
     def _task_name(self, task):
         return task.__name__
 
-    def reset(self, new_task = None, **kwargs):
+    def reset(self, new_task=None, **kwargs):
         """
         Resets the environment along with all available tasks, and change the current task.
 
@@ -157,7 +158,7 @@ class NethackTaskWrapper(TaskWrapper):
         observation['goal'] = self._encode_goal()
         return observation
 
-    def _task_completion(self, obs, rew, done, info):
+    def _task_completion(self, obs, rew, term, trunc, info):
         # TODO: Add real task completion metrics
         completion = 0.0
         if self.task == 0:
@@ -181,22 +182,22 @@ class NethackTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
         self.episode_return += rew
-        self.done = done
-        info["task_completion"] = self._task_completion(obs, rew, done, info)
-        return self.observation(obs), rew, done, info
+        self.done = term or trunc
+        info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
+        return self.observation(obs), rew, term, trunc, info
 
 
 if __name__ == "__main__":
     def run_episode(env, task: str = None, verbose=1):
         env.reset(new_task=task)
         task_name = type(env.unwrapped).__name__
-        done = False
+        term = trunc = False
         ep_rew = 0
-        while not done:
+        while not (term or trunc):
             action = env.action_space.sample()
-            _, rew, done, _ = env.step(action)
+            _, rew, term, trunc, _ = env.step(action)
             ep_rew += rew
         if verbose:
             print(f"Episodic reward for {task_name}: {ep_rew}")

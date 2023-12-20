@@ -1,11 +1,12 @@
 from multiprocessing import SimpleQueue
 from typing import Any, Callable, Dict
 
-import gym
+import gymnasium as gym
 import numpy as np
 import ray
 # from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
-from syllabus.core import Curriculum, TaskEnv, TaskWrapper  #, PettingZooTaskWrapper
+from gymnasium.utils.step_api_compatibility import step_api_compatibility
+from syllabus.core import Curriculum, TaskEnv, TaskWrapper  # , PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
 
 
@@ -60,10 +61,10 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
         if "task_completion" in info:
             if self.global_task_completion is not None:
-                self.task_progress = self.global_task_completion(self.curriculum, obs, rew, done, info)
+                self.task_progress = self.global_task_completion(self.curriculum, obs, rew, term, trunc, info)
             else:
                 self.task_progress = info["task_completion"]
 
@@ -72,20 +73,20 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             # Environment outputs
             self.step_updates.append({
                 "update_type": "step",
-                "metrics": (obs, rew, done, info),
+                "metrics": (obs, rew, term, trunc, info),
                 "request_sample": False
             })
             # Task progress
             self.step_updates.append({
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "request_sample": done
+                "request_sample": term or trunc
             })
             # Send batched updates
-            if len(self.step_updates) >= 1000 or done:
+            if len(self.step_updates) >= 1000 or term or trunc:
                 self.update_queue.put(self.step_updates)
                 self.step_updates = []
-        elif done:
+        elif term or trunc:
             # Task progress
             update = {
                 "update_type": "task_progress",
@@ -94,7 +95,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             }
             self.update_queue.put(update)
 
-        return obs, rew, done, info
+        return obs, rew, term, trunc, info
 
     def add_task(self, task):
         update = {
@@ -176,16 +177,16 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 #         return self.env.reset(*args, new_task=next_task, **kwargs)
 
 #     def step(self, action):
-#         obs, rew, done, info = self.env.step(action)
+#         obs, rew, term, trunc, info = self.env.step(action)
 
 #         if "task_completion" in info:
 #             if self.global_task_completion is not None:
-#                 self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
+#                 self.task_completion = self.global_task_completion(self.curriculum, obs, rew, term, trunc, info)
 #             else:
 #                 self.task_completion = info["task_completion"]
 
 #         if self.update_on_step:
-#             self.step_results.append((obs, rew, done, info))
+#             self.step_results.append((obs, rew, term, trunc, info))
 #             if len(self.step_results) >= 2000:
 #                 update = {
 #                     "update_type": "step_batch",
@@ -195,7 +196,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 #                 self.update_queue.put(update)
 #                 self.step_results = []
 
-#         return obs, rew, done, info
+#         return obs, rew, term, trunc, info
 
 #     def add_task(self, task):
 #         update = {
@@ -250,19 +251,19 @@ class RaySyncWrapper(gym.Wrapper):
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, term, trunc, info = self.env.step(action)
 
         if "task_completion" in info:
             if self.global_task_completion is not None:
                 # TODO: Hide rllib interface?
-                self.task_completion = self.global_task_completion(self.curriculum, obs, rew, done, info)
+                self.task_completion = self.global_task_completion(self.curriculum, obs, rew, term, trunc, info)
             else:
                 self.task_completion = info["task_completion"]
 
         # TODO: Optimize
         if self.update_on_step:
-            self.step_results.append((obs, rew, done, info))
-            if len(self.step_results) >= 1000 or done:
+            self.step_results.append((obs, rew, term, trunc, info))
+            if len(self.step_results) >= 1000 or term or trunc:
                 update = {
                     "update_type": "step_batch",
                     "metrics": (self.step_results,),
@@ -271,7 +272,7 @@ class RaySyncWrapper(gym.Wrapper):
                 self.curriculum.update.remote(update)
                 self.step_results = []
 
-        return obs, rew, done, info
+        return obs, rew, term, trunc, info
 
     def change_task(self, new_task):
         """

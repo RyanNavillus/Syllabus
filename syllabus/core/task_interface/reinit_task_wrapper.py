@@ -1,11 +1,8 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
-import copy
 import time
-from typing import Callable, List, Tuple, Union
+from typing import Callable, Tuple, Union
 
-import gym
-import numpy as np
-from gym import spaces
+import gymnasium as gym
 
 from .task_wrapper import TaskWrapper
 
@@ -63,7 +60,7 @@ class ReinitTaskWrapper(TaskWrapper):
         # Update current task
         if new_task not in self.task_envs:
             self.task_envs[new_task] = self.env_fn(self.decode_task(new_task))
-        
+
         self.env = self.task_envs[new_task]
         self.task = new_task
 
@@ -71,13 +68,12 @@ class ReinitTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, done, info = self.env.step(action)
-        info["task_completion"] = self._task_completion(obs, rew, done, info)
-        return self.observation(obs), rew, done, info
+        obs, rew, term, trunc, info = self.env.step(action)
+        info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
+        return self.observation(obs), rew, term, trunc, info
 
 
 if __name__ == "__main__":
-    from nle.env import base
     from nle.env.tasks import (NetHackEat, NetHackGold, NetHackOracle,
                                NetHackScore, NetHackScout, NetHackStaircase,
                                NetHackStaircasePet)
@@ -85,11 +81,11 @@ if __name__ == "__main__":
     def run_episode(env, task: str = None, verbose=1):
         env.reset(new_task=task)
         task_name = type(env.unwrapped).__name__
-        done = False
+        term = trunc = False
         ep_rew = 0
-        while not done:
+        while not (term or trunc):
             action = env.action_space.sample()
-            _, rew, done, _ = env.step(action)
+            _, rew, term, trunc, _ = env.step(action)
             ep_rew += rew
         if verbose:
             print(f"Episodic reward for {task_name}: {ep_rew}")
