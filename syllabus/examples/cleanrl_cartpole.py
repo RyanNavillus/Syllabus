@@ -6,16 +6,17 @@ import random
 import time
 from distutils.util import strtobool
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 # Syllabus imports
-from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
-                           make_multiprocessing_curriculum)
+from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import SimpleBoxCurriculum
 from syllabus.examples.task_wrappers import CartPoleTaskWrapper
+from syllabus.task_space import TaskSpace
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
 
@@ -82,20 +83,19 @@ def parse_args():
     return args
 
 
-def make_env(env_id, seed, idx, capture_video, run_name, task_queue, complete_queue, step_queue):
+def make_env(env_id, seed, idx, capture_video, run_name, task_queue, update_queue):
     def thunk():
         env = gym.make(env_id)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         if capture_video:
             if idx == 0:
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-        env.seed(seed)
+        # env.seed(seed)
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
         env = CartPoleTaskWrapper(env)
-        env = MultiProcessingSyncWrapper(env, task_queue, complete_queue, step_queue,
-                                         default_task=(-0.02, 0.02),
-                                         task_space=gym.spaces.Box(-0.3, 0.3, shape=(2,)),
+        env = MultiProcessingSyncWrapper(env, task_queue, update_queue,
+                                         task_space=TaskSpace(gym.spaces.Box(-0.3, 0.3, shape=(2,))),
                                          update_on_step=False)
         return env
 
@@ -167,13 +167,12 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
     # curriculum setup
-    curriculum, task_queue, complete_queue, step_queue = make_multiprocessing_curriculum(SimpleBoxCurriculum,
-                                                                                         gym.spaces.Box(-0.3, 0.3, shape=(2,)),
-                                                                                         random_start_tasks=10)
+    curriculum = SimpleBoxCurriculum(TaskSpace(gym.spaces.Box(-0.3, 0.3, shape=(2,))))
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
 
     # env setup
-    envs = gym.vector.SyncVectorEnv(
-        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, complete_queue, step_queue) for i in range(args.num_envs)]
+    envs = gym.vector.AsyncVectorEnv(
+        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, update_queue) for i in range(args.num_envs)]
     )
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
@@ -191,7 +190,8 @@ if __name__ == "__main__":
     # TRY NOT TO MODIFY: start the game
     global_step = 0
     start_time = time.time()
-    next_obs = torch.Tensor(envs.reset()).to(device)
+    next_obs, _ = envs.reset()
+    next_obs = torch.Tensor(next_obs).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
     num_updates = args.total_timesteps // args.batch_size
 
@@ -215,17 +215,18 @@ if __name__ == "__main__":
             logprobs[step] = logprob
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
+            next_obs, reward, term, trunc, infos = envs.step(action.cpu().numpy())
+            done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
 
-            for item in info:
-                if "episode" in item.keys():
-                    print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
-                    writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
-                    writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
-                    curriculum.log_metrics(step=global_step)
-                    break
+            if "final_info" in infos:
+                for info in infos["final_info"]:
+                    if info and "episode" in info:
+                        print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
+                        writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                        writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
+                        curriculum.log_metrics(writer, step=global_step)
 
         # bootstrap value if not done
         with torch.no_grad():

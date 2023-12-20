@@ -111,7 +111,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             # Sample new tasks
             if requested_tasks > 0:
                 # Sequentially sample task_space before using curriculum method
-                if self.sequential_start and self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks:
+                if (self.sequential_start and
+                        self.task_space.num_tasks is not None and
+                        self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
                     # Sample unseen tasks sequentially before using curriculum method
                     new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
                 else:

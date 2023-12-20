@@ -2,9 +2,9 @@
 import copy
 from typing import List
 
-import gym
+import gymnasium as gym
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from syllabus.task_space import TaskSpace
 
 from .task_wrapper import TaskWrapper
