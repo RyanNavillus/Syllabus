@@ -58,8 +58,8 @@ class SubclassTaskWrapper(TaskWrapper):
             self.change_task(new_task)
 
         self.done = False
-
-        return self.observation(self.env.reset(**kwargs))
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task: int):
         """

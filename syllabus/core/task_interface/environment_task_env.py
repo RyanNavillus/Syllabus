@@ -16,7 +16,9 @@ class TaskEnv(gym.Env):
             self.change_task(new_task)
             # TODO: Handle failure case for change task
             self.task = new_task
-        return self.observation(super().reset(*args, **kwargs))
+
+        obs, info = super().reset(*args, **kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task):
         """

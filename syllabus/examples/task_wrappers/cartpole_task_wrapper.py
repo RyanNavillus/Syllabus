@@ -14,7 +14,7 @@ class CartPoleTaskWrapper(TaskWrapper):
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")
             self.change_task(new_task)
-        return np.array(self.env.state, dtype=np.float32)
+        return np.array(self.env.state, dtype=np.float32), {}
 
     def change_task(self, new_task):
         low, high = new_task

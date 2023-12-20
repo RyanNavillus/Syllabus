@@ -1,5 +1,5 @@
-import gym
-from gym.spaces import Box
+import gymnasium as gym
+from gymnasium.spaces import Box
 from ray import tune
 from ray.tune.registry import register_env
 from syllabus.core import RaySyncWrapper, make_ray_curriculum
@@ -18,7 +18,7 @@ if __name__ == "__main__":
         env = CartPoleTaskWrapper(env)
         # Add environment sync wrapper
         env = RaySyncWrapper(
-            env, default_task=(-0.02, 0.02), task_space=task_space
+            env, task_space=task_space, update_on_step=False
         )
         return env
 

@@ -1,7 +1,5 @@
-from typing import Any, List, Union
+from typing import Any, List
 
-import numpy as np
-from gym.spaces import Dict, Tuple
 from syllabus.core import Curriculum
 
 

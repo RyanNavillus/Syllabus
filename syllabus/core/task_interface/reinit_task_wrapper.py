@@ -45,7 +45,8 @@ class ReinitTaskWrapper(TaskWrapper):
         if new_task is not None:
             self.change_task(new_task)
 
-        return self.observation(self.env.reset(**kwargs))
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task: Union[Tuple, int, float]):
         """
