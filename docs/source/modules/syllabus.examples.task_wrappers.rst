@@ -1,5 +1,5 @@
 Example TaskWrappers
-=====================
+====================
 
 This directory includes a couple examples of task wrappers for different environments to help you get started with creating the task interface for your environment.
 
@@ -35,13 +35,13 @@ syllabus.examples.task\_wrappers.nethack\_task\_wrapper module
    :undoc-members:
    :show-inheritance:
 
-syllabus.examples.task\_wrappers.pistonball\_task\_wrapper module
------------------------------------------------------------------
+.. syllabus.examples.task\_wrappers.pistonball\_task\_wrapper module
+.. -----------------------------------------------------------------
 
-.. automodule:: syllabus.examples.task_wrappers.pistonball_task_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: syllabus.examples.task_wrappers.pistonball_task_wrapper
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
 
 syllabus.examples.task\_wrappers.procgen\_task\_wrapper module
 --------------------------------------------------------------

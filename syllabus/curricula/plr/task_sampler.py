@@ -1,6 +1,6 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and original PLR paper: https://arxiv.org/abs/2010.03934
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 

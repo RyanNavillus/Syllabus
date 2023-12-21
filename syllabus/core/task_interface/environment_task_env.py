@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 # import pettingzoo
 
 
@@ -16,7 +16,9 @@ class TaskEnv(gym.Env):
             self.change_task(new_task)
             # TODO: Handle failure case for change task
             self.task = new_task
-        return self.observation(super().reset(*args, **kwargs))
+
+        obs, info = super().reset(*args, **kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task):
         """
@@ -34,14 +36,14 @@ class TaskEnv(gym.Env):
     def add_task(self, task):
         raise NotImplementedError("This environment does not support adding tasks.")
 
-    def _task_completion(self, obs, rew, done, info) -> float:
+    def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """
         Implement this function to indicate whether the selected task has been completed.
-        This can be determined using the observation, rewards, done, info or internal values
+        This can be determined using the observation, rewards, term, trunc, info or internal values
         from the environment. Intended to be used for automatic curricula.
         Returns a boolean or float value indicating binary completion or scalar degree of completion.
         """
-        return 1.0 if done else 0.0
+        return 1.0 if term or trunc else 0.0
 
     def _encode_goal(self):
         """

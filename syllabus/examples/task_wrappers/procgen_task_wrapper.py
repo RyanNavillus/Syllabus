@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import numpy as np
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
@@ -38,7 +38,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        self.env.unwrapped._venv.seed(seed, 0)
+        self.env.gym_env.unwrapped._venv.seed(seed, 0)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -49,13 +49,14 @@ class ProcgenTaskWrapper(TaskWrapper):
         since very few tasks override reset. If new_task is provided, we change the task before
         calling the final reset.
         """
+        self.episode_return = 0.0
+
         # Change task if new one is provided
         if new_task is not None:
             self.change_task(new_task)
 
-        self.episode_return = 0.0
-
-        return self.observation(self.env.reset(**kwargs))
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task: int):
         """
@@ -71,14 +72,14 @@ class ProcgenTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, term, trunc, info = self.env.step(action)
         self.episode_return += rew
 
         env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
         normalized_return = (self.episode_return - env_min) / (env_max - env_min)
         info["task_completion"] = normalized_return
 
-        return self.observation(obs), rew, done, info
+        return self.observation(obs), rew, term, trunc, info
 
     def observation(self, obs):
         return obs

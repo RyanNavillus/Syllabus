@@ -49,4 +49,4 @@ class SequentialCurriculum(Curriculum):
         """
         if self._task_index >= len(self.task_list):
             return 0
-        return (self.num_repeats[self._task_index] - self._repeat_index) + sum(repeat for repeat in self.num_repeats[self._task_index+1:])
+        return (self.num_repeats[self._task_index] - self._repeat_index) + sum(repeat for repeat in self.num_repeats[self._task_index + 1:])
