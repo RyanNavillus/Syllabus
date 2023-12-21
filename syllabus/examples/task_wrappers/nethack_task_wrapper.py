@@ -1,16 +1,18 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import copy
 import time
+
 from typing import List
+from nle.env import base
+from nle.env.tasks import (NetHackEat, NetHackGold, NetHackOracle,
+                            NetHackScore, NetHackScout, NetHackStaircase,
+                            NetHackStaircasePet)
 
 import gymnasium as gym
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
+from gymnasium import spaces
+
 import numpy as np
-from gym import spaces
-from nle.env import base
-from nle.env.tasks import (NetHackEat, NetHackGold, NetHackOracle,
-                           NetHackScore, NetHackScout, NetHackStaircase,
-                           NetHackStaircasePet)
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 

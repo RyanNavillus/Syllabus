@@ -1,10 +1,13 @@
 import numpy as np
+from gymnasium.spaces import Box
 from syllabus.core import TaskWrapper
+from syllabus.task_space import TaskSpace
 
 
 class CartPoleTaskWrapper(TaskWrapper):
     def __init__(self, env):
         super().__init__(env)
+        self.task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)))
         self.task = (-0.02, 0.02)
         self.total_reward = 0
 

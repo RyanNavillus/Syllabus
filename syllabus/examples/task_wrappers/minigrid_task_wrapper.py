@@ -1,7 +1,6 @@
 """ Task wrapper that can select a new MiniGrid task on reset. """
 import gymnasium as gym
 import numpy as np
-from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 
@@ -12,6 +11,11 @@ class MinigridTaskWrapper(TaskWrapper):
     """
     def __init__(self, env: gym.Env):
         super().__init__(env)
+        try:
+            from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
+        except ImportError:
+            warnings.warn("Unable to import gym_minigrid.")
+
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,

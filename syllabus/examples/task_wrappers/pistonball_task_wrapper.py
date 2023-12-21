@@ -1,6 +1,6 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import gymnasium as gym
-from gym import spaces
+from gymnasium import spaces
 from pettingzoo.butterfly import pistonball_v6
 from syllabus.core import PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace

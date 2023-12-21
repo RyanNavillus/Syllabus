@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     # Test Queue multiprocess speed with Syllabus
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
-    test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum)
+    test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = test_native_multiprocess(
         create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES

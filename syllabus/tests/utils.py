@@ -4,8 +4,11 @@ from multiprocessing import Process
 
 import gymnasium as gym
 import ray
+
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
+from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
+from syllabus.tests import SyncTestEnv
 
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
@@ -132,11 +135,20 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
 
 
 # Sync Test Environment
-from syllabus.tests import SyncTestEnv
-
-
 def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
+    if type == "queue":
+        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Cartpole Tests
+def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = gym.make("CartPole-v1", **env_kwargs)
+    env = CartPoleTaskWrapper(env)
+
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
@@ -148,11 +160,15 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from nle.env.tasks import NetHackScore
-        from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
+
+        from syllabus.examples.task_wrappers.nethack_task_wrapper import \
+            NethackTaskWrapper
     except ImportError:
         warnings.warn("Unable to import nle.")
+
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
+
     if type == "queue":
         env = MultiProcessingSyncWrapper(
             env, *args, task_space=env.task_space, **kwargs

@@ -3,7 +3,7 @@ import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 import numpy as np
-from gym.spaces import Dict
+from gymnasium.spaces import Dict
 from syllabus.task_space import TaskSpace
 
 

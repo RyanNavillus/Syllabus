@@ -9,7 +9,7 @@ class SyncTestEnv(TaskEnv):
         self.num_steps = num_steps
         self.action_space = gym.spaces.Discrete(2)
         self.observation_space = gym.spaces.Tuple((gym.spaces.Discrete(self.num_steps), gym.spaces.Discrete(2)))
-        self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes+1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
+        self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes + 1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
         self.task = "error_task"
 
     def reset(self, new_task=None):

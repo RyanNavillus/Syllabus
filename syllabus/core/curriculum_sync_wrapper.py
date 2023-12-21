@@ -3,8 +3,9 @@ from functools import wraps
 from typing import List, Tuple
 
 import ray
-from syllabus.core import Curriculum, decorate_all_functions
 from torch.multiprocessing import SimpleQueue
+
+from syllabus.core import Curriculum, decorate_all_functions
 
 
 class CurriculumWrapper:
@@ -160,13 +161,13 @@ def remote_call(func):
     return wrapper
 
 
-def make_multiprocessing_curriculum(curriculum):
+def make_multiprocessing_curriculum(curriculum, **kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue)
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
     mp_curriculum.start()
     return mp_curriculum, task_queue, update_queue
 
@@ -208,8 +209,8 @@ class RayCurriculumWrapper(CurriculumWrapper):
         self.added_tasks.append(task)
 
 
-def make_ray_curriculum(curriculum, actor_name="curriculum"):
+def make_ray_curriculum(curriculum, actor_name="curriculum", **kwargs):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
-    return RayCurriculumWrapper(curriculum, actor_name=actor_name)
+    return RayCurriculumWrapper(curriculum, actor_name=actor_name, **kwargs)
