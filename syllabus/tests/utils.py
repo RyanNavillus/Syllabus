@@ -1,4 +1,5 @@
 import time
+import warnings
 from multiprocessing import Process
 
 import gym
@@ -144,9 +145,12 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 
 # Nethack Tests
-from nle.env.tasks import NetHackScore
-from syllabus.examples.task_wrappers.nethack_task_wrapper import \
-    NethackTaskWrapper
+try:
+    from nle.env.tasks import NetHackScore
+    from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
+except ImportError:
+    warnings.warn("Unable to import nle.")
+    pass
 
 
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
@@ -162,8 +166,13 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 
 # Minigrid Tests
-from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
-from gym_minigrid.register import env_list
+try:
+    from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
+    from gym_minigrid.register import env_list
+except ImportError:
+    warnings.warn("Unable to import gym_minigrid.")
+    pass
+
 from syllabus.core import ReinitTaskWrapper
 
 

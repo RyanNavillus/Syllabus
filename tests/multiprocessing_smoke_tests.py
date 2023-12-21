@@ -26,7 +26,7 @@ if __name__ == "__main__":
         (NoopCurriculum, (NetHackScore, sample_env.task_space), {}),
         (DomainRandomization, (sample_env.task_space,), {}),
         (LearningProgressCurriculum, (sample_env.task_space,), {}),
-        (PrioritizedLevelReplay, (sample_env.task_space,), {"device":"cpu", "suppress_usage_warnings":True, "num_processes":N_ENVS}),
+        (PrioritizedLevelReplay, (sample_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
     ]
     for curriculum, args, kwargs in curricula:
         print("")

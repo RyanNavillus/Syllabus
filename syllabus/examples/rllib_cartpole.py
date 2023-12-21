@@ -10,7 +10,7 @@ from .task_wrappers import CartPoleTaskWrapper
 
 # Define a task space
 if __name__ == "__main__":
-    task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)), [])
+    task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)))
 
     def env_creator(config):
         env = gym.make("CartPole-v1")

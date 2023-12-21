@@ -1,6 +1,6 @@
 import gym
-import pettingzoo
-from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
+# import pettingzoo
+# from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
 
 class TaskWrapper(gym.Wrapper):
@@ -73,7 +73,7 @@ class TaskWrapper(gym.Wrapper):
         info["task_completion"] = self.task_completion
 
         return self.observation(obs), rew, done, info
-    
+
     def __getattr__(self, attr):
         env_attr = self.env.__class__.__dict__.get(attr, None)
 
@@ -81,19 +81,19 @@ class TaskWrapper(gym.Wrapper):
             return env_attr
 
 
-class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
-    def __init__(self, env: pettingzoo.ParallelEnv):
-        super().__init__(env)
-        self.task = None
+# class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
+#     def __init__(self, env: pettingzoo.ParallelEnv):
+#         super().__init__(env)
+#         self.task = None
 
-    @property
-    def agents(self):
-        return self.env.agents
+#     @property
+#     def agents(self):
+#         return self.env.agents
     
-    def __getattr__(self, attr):
-        env_attr = getattr(self.env, attr, None)
-        if env_attr:
-            return env_attr
+#     def __getattr__(self, attr):
+#         env_attr = getattr(self.env, attr, None)
+#         if env_attr:
+#             return env_attr
     
-    def get_current_task(self):
-        return self.current_task
+#     def get_current_task(self):
+#         return self.current_task

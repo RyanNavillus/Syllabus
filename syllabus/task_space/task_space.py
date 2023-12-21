@@ -12,19 +12,19 @@ class TaskSpace():
             # Syntactic sugar for discrete space
             gym_space = Discrete(gym_space)
         self.gym_space = gym_space
-        self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
         if isinstance(gym_space, Discrete):
             if tasks is None:
-                tasks = list(range(gym_space.n))
+                tasks = range(gym_space.n)
         self._tasks = set(tasks)
+        self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
 
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):
             assert space.n == len(tasks), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
             self._encode_map = {task: i for i, task in enumerate(tasks)}
             self._decode_map = {i: task for i, task in enumerate(tasks)}
-            encoder = lambda task: self._encode_map[task]
-            decoder = lambda task: self._decode_map[task]
+            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
+            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
         elif isinstance(space, Box):
             encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
             decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None

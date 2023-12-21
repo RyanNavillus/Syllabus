@@ -1,5 +1,5 @@
 import gym
-import pettingzoo
+# import pettingzoo
 
 
 class TaskEnv(gym.Env):
@@ -74,14 +74,14 @@ class TaskEnv(gym.Env):
         raise NotImplementedError
 
 
-class PettingZooTaskEnv(TaskEnv, pettingzoo.ParallelEnv):
-    def __init__(self):
-        super().__init__()
-        self.task = None
+# class PettingZooTaskEnv(TaskEnv, pettingzoo.ParallelEnv):
+#     def __init__(self):
+#         super().__init__()
+#         self.task = None
 
-    @property
-    def agents(self):
-        return self.agents
+#     @property
+#     def agents(self):
+#         return self.agents
 
-    def get_current_task(self):
-        return self.task
+#     def get_current_task(self):
+#         return self.task
