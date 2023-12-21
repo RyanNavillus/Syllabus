@@ -21,7 +21,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from procgen import ProcgenEnv
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import DomainRandomization, PrioritizedLevelReplay
+from syllabus.curricula import DomainRandomization, PrioritizedLevelReplay, LearningProgressCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from torch.utils.tensorboard import SummaryWriter
@@ -42,7 +42,7 @@ def parse_args():
                         help="if toggled, cuda will be enabled by default")
     parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, this experiment will be tracked with Weights and Biases")
-    parser.add_argument("--wandb-project-name", type=str, default="cleanRL",
+    parser.add_argument("--wandb-project-name", type=str, default="syllabus",
                         help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None,
                         help="the entity (team) of wandb's project")
@@ -200,9 +200,10 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
+            dir="/fs/nexus-scratch/rsulli/"
         )
         wandb.run.log_code("./syllabus/examples")
-    writer = SummaryWriter(f"runs/{run_name}")
+    writer = SummaryWriter(f"/fs/nexus-scratch/rsulli/runs/{run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -238,6 +239,9 @@ if __name__ == "__main__":
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
+        elif args.curriculum_method == "lp":
+            print("Using learning progress.")
+            curriculum = LearningProgressCurriculum(sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
@@ -337,8 +341,8 @@ if __name__ == "__main__":
                     },
                 }
                 curriculum.update(update)
-            if args.curriculum:
-                curriculum.log_metrics(writer, global_step)
+            #if args.curriculum:
+            #    curriculum.log_metrics(writer, global_step)
 
         # bootstrap value if not done
         with torch.no_grad():

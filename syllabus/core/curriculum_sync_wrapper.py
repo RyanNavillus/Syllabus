@@ -111,6 +111,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
             # Sample new tasks
             if requested_tasks > 0:
+                # TODO: Move this to curriculum, not sync wrapper
                 # Sequentially sample task_space before using curriculum method
                 if (self.sequential_start and
                         self.task_space.num_tasks is not None and
