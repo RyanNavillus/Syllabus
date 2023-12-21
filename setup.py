@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 extras = dict()
 extras['test'] = ['cmake', 'ninja', 'nle>=0.9.0', 'matplotlib>=3.7.1', 'scipy==1.10.0', 'tensorboard>=2.13.0']
-extras['docs'] = ['sphinx-tabs']
+extras['docs'] = ['sphinx-tabs', 'sphinxcontrib-spelling', 'furo']
 extras['all'] = extras['test'] + extras['docs']
 
 setup(
