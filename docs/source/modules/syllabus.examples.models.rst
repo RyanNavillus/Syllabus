@@ -21,11 +21,3 @@ syllabus.examples.models.procgen\_model module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: syllabus.examples.models
-   :members:
-   :undoc-members:
-   :show-inheritance:
