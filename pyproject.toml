@@ -15,7 +15,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version", "dependencies", "keywords"]
+dynamic = ["version", "dependencies", "keywords", "optional-dependencies"]
 
 [project.urls]
 "Homepage" = "https://github.com/RyanNavillus/Syllabus"

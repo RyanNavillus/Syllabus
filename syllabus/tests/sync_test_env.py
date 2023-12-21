@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 from syllabus.core import TaskEnv
 from syllabus.task_space import TaskSpace
 
@@ -9,7 +9,7 @@ class SyncTestEnv(TaskEnv):
         self.num_steps = num_steps
         self.action_space = gym.spaces.Discrete(2)
         self.observation_space = gym.spaces.Tuple((gym.spaces.Discrete(self.num_steps), gym.spaces.Discrete(2)))
-        self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes+1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
+        self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes + 1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
         self.task = "error_task"
 
     def reset(self, new_task=None):
@@ -18,14 +18,13 @@ class SyncTestEnv(TaskEnv):
         self.task = new_task
         self._turn = 0
         return 0.5, 1, False, {"content": "reset", "task": self.task}
-     
+
     def step(self, action):
         self._turn += 1
 
         obs = self.observation((self._turn, action))
         rew = 1
-        done = self._turn >= self.num_steps
-        info = {"content": "step", "task_completion": self._task_completion(obs, rew, done, {})}
-        return obs, rew, done, info
-
-
+        term = self._turn >= self.num_steps
+        trunc = False
+        info = {"content": "step", "task_completion": self._task_completion(obs, rew, term, trunc, {})}
+        return obs, rew, term, trunc, info

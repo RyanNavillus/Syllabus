@@ -1,5 +1,7 @@
-syllabus.examples.models package
-================================
+Example Models
+==============
+
+PyTorch models used in example scripts.
 
 Submodules
 ----------

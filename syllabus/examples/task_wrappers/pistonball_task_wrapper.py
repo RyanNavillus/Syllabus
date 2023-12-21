@@ -1,6 +1,6 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 from pettingzoo.butterfly import pistonball_v6
 from syllabus.core import PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
@@ -15,9 +15,6 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
         self.env = env
         self.env.unwrapped.task: str = 1
 
-        # This is set to False during reset
-        self.done = True
-
         # Task completion metrics
         self.episode_return = 0
         self.task_space = TaskSpace(spaces.Discrete(11), list(range(11)))   # 0.1 - 1.0 friction
@@ -27,7 +24,6 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
         # if new_task is not None:
         #     self.change_task(new_task)
 
-        self.done = False
         self.episode_return = 0
         if new_task is not None:
             task = new_task / 10

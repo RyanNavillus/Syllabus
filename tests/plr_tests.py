@@ -50,11 +50,11 @@ def run_episode(env, new_task=None, curriculum=None):
         obs = env.reset(new_task=new_task)
     else:
         obs = env.reset()
-    done = False
+    term = trunc = False
     ep_rew = 0
-    while not done:
+    while not (term or trunc):
         action = env.action_space.sample()
-        obs, rew, done, info = env.step(action)
+        obs, rew, term, trunc, info = env.step(action)
         update = {
             "update_type": "on_demand",
             "metrics": {

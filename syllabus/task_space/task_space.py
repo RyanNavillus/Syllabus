@@ -2,8 +2,7 @@ import itertools
 from typing import Any, List, Union
 
 import numpy as np
-from gym.spaces import (Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space,
-                        Tuple)
+from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space, Tuple
 
 
 class TaskSpace():
@@ -11,11 +10,15 @@ class TaskSpace():
         if isinstance(gym_space, int):
             # Syntactic sugar for discrete space
             gym_space = Discrete(gym_space)
+
         self.gym_space = gym_space
+
+        # Autogenerate task names for discrete spaces
         if isinstance(gym_space, Discrete):
             if tasks is None:
                 tasks = range(gym_space.n)
-        self._tasks = set(tasks)
+
+        self._tasks = set(tasks) if tasks is not None else None
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
 
     def _make_task_encoder(self, space, tasks):

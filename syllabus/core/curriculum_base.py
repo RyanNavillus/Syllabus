@@ -3,8 +3,7 @@ import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 import numpy as np
-import wandb
-from gym.spaces import Dict
+from gymnasium.spaces import Dict
 from syllabus.task_space import TaskSpace
 
 
@@ -60,12 +59,13 @@ class Curriculum:
         """
         self.completed_tasks += 1
 
-    def update_on_step(self, obs: typing.Any, rew: float, done: bool, info: dict) -> None:
+    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict) -> None:
         """ Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
         :param rew: Reward from the environment
-        :param done: True if the episode ended on this step, False otherwise
+        :param term: True if the episode ended on this step, False otherwise
+        :param trunc: True if the episode was truncated on this step, False otherwise
         :param info: Extra information from the environment
         :raises NotImplementedError:
         """
@@ -172,11 +172,10 @@ class Curriculum:
     def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.
 
-        # TODO: Clean up and support wandb
-        # TODO: Conditional imports
         :param writer: Tensorboard summary writer.
         """
         try:
+            import wandb
             task_dist = self._sample_distribution()
             if len(task_dist) > 10 and not log_full_dist:
                 warnings.warn("Only logging stats for 10 tasks.")
@@ -187,6 +186,8 @@ class Curriculum:
             else:
                 for idx, prob in enumerate(task_dist):
                     writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
+        except ImportError:
+            warnings.warn("Wandb is not installed. Skipping logging.")
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
