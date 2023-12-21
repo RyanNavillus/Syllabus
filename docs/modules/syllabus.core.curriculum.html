@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Creating Your Own Curriculum" href="../curricula/custom_curricula.html" /><link rel="prev" title="Unsupervised Environment Design" href="../background/ued.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Curriculum - Syllabus 0.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
@@ -179,6 +180,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -190,14 +192,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
@@ -242,7 +246,7 @@
         </div>
         <article role="main">
           <section id="curriculum">
-<span id="curriculum-api"></span><h1>Curriculum<a class="headerlink" href="#curriculum" title="Permalink to this heading">#</a></h1>
+<span id="curriculum-api"></span><h1>Curriculum<a class="headerlink" href="#curriculum" title="Link to this heading">#</a></h1>
 <p>Syllabus’s Curriculum API is a unified interface for curriculum learning methods. Curricula following this API
 can be used with all of Syllabus’s infrastructure. We hope that future curriculum learning research will provide
 implementations following this API to encourage reproducibility and ease of use.</p>
@@ -264,29 +268,31 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_curriculum_batch</span></code></p></li>
 </ul>
 <section id="module-syllabus.core.curriculum_base">
-<span id="syllabus-core-curriculum-base-module"></span><h2>syllabus.core.curriculum_base module<a class="headerlink" href="#module-syllabus.core.curriculum_base" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-core-curriculum-base-module"></span><h2>syllabus.core.curriculum_base module<a class="headerlink" href="#module-syllabus.core.curriculum_base" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_base.</span></span><span class="sig-name descname"><span class="pre">Curriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_base.</span></span><span class="sig-name descname"><span class="pre">Curriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class and API for defining curricula to interface with Gym environments.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.add_task">
-<span class="sig-name descname"><span class="pre">add_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.add_task" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.add_task" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.log_metrics">
-<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_full_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.log_metrics" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_full_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.log_metrics" title="Link to this definition">#</a></dt>
 <dd><p>Log the task distribution to the provided tensorboard writer.</p>
-<p># TODO: Clean up and support wandb
-# TODO: Conditional imports
-:param writer: Tensorboard summary writer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>writer</strong> – Tensorboard summary writer.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.num_tasks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.num_tasks" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.num_tasks" title="Link to this definition">#</a></dt>
 <dd><p>Counts the number of tasks in the task space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -297,7 +303,7 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.sample" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.sample" title="Link to this definition">#</a></dt>
 <dd><p>Sample k tasks from the curriculum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -311,7 +317,7 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 
 <dl class="py property">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.tasks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.tasks" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.tasks" title="Link to this definition">#</a></dt>
 <dd><p>List all of the tasks in the task space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -322,7 +328,7 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with the specified update type.
 TODO: Change method header to not use dictionary, use enums?</p>
 <dl class="field-list simple">
@@ -337,7 +343,7 @@ TODO: Change method header to not use dictionary, use enums?</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update_batch">
-<span class="sig-name descname"><span class="pre">update_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_batch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_batch" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with batch of updates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -348,7 +354,7 @@ TODO: Change method header to not use dictionary, use enums?</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update_on_demand">
-<span class="sig-name descname"><span class="pre">update_on_demand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_demand" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_on_demand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_demand" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with arbitrary inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -363,7 +369,7 @@ updates from the training process.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update_on_episode">
-<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with episode results from the environment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -380,14 +386,15 @@ updates from the training process.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update_on_step">
-<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_step" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_step" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with the current step results from the environment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obs</strong> – Observation from teh environment</p></li>
 <li><p><strong>rew</strong> – Reward from the environment</p></li>
-<li><p><strong>done</strong> – True if the episode ended on this step, False otherwise</p></li>
+<li><p><strong>term</strong> – True if the episode ended on this step, False otherwise</p></li>
+<li><p><strong>trunc</strong> – True if the episode was truncated on this step, False otherwise</p></li>
 <li><p><strong>info</strong> – Extra information from the environment</p></li>
 </ul>
 </dd>
@@ -399,7 +406,7 @@ updates from the training process.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update_on_step_batch">
-<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with a batch of step results from the environment.</p>
 <p>This method can be overridden to provide a more efficient implementation. It is used
 as a convenience function and to optimize the multiprocessing message passing throughput.</p>
@@ -412,7 +419,7 @@ as a convenience function and to optimize the multiprocessing message passing th
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.update_task_progress">
-<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with a task and its progress.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -514,9 +521,9 @@ as a convenience function and to optimize the multiprocessing message passing th
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=b489f392"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

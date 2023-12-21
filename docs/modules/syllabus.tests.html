@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus.curricula package" href="syllabus.curricula.html" /><link rel="prev" title="syllabus.examples.models package" href="syllabus.examples.models.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus.curricula package" href="syllabus.curricula.html" /><link rel="prev" title="Example Utils" href="syllabus.examples.utils.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>syllabus.tests package - Syllabus 0.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
@@ -179,6 +180,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -190,14 +192,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
@@ -242,47 +246,47 @@
         </div>
         <article role="main">
           <section id="syllabus-tests-package">
-<h1>syllabus.tests package<a class="headerlink" href="#syllabus-tests-package" title="Permalink to this heading">#</a></h1>
+<h1>syllabus.tests package<a class="headerlink" href="#syllabus-tests-package" title="Link to this heading">#</a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
 </section>
 <section id="module-syllabus.tests.sync_test_curriculum">
-<span id="syllabus-tests-sync-test-curriculum-module"></span><h2>syllabus.tests.sync_test_curriculum module<a class="headerlink" href="#module-syllabus.tests.sync_test_curriculum" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-tests-sync-test-curriculum-module"></span><h2>syllabus.tests.sync_test_curriculum module<a class="headerlink" href="#module-syllabus.tests.sync_test_curriculum" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.tests.sync_test_curriculum.</span></span><span class="sig-name descname"><span class="pre">SyncTestCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.tests.sync_test_curriculum.</span></span><span class="sig-name descname"><span class="pre">SyncTestCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum" title="syllabus.curricula.sequential.SequentialCurriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a></p>
 <p>Base class and API for defining curricula to interface with Gym environments.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_STEP_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_STEP_UPDATES" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_STEP_UPDATES" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.get_stats">
-<span class="sig-name descname"><span class="pre">get_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.get_stats" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.get_stats" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.sample" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.sample" title="Link to this definition">#</a></dt>
 <dd><p>Choose the next k tasks from the list.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_on_step">
-<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_on_step" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_on_step" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with the current step results from the environment.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_task_progress">
-<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_task_progress" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_task_progress" title="Link to this definition">#</a></dt>
 <dd><p>Update the curriculum with a task and its success probability upon
 success or failure.</p>
 </dd></dl>
@@ -291,37 +295,57 @@ success or failure.</p>
 
 </section>
 <section id="module-syllabus.tests.sync_test_env">
-<span id="syllabus-tests-sync-test-env-module"></span><h2>syllabus.tests.sync_test_env module<a class="headerlink" href="#module-syllabus.tests.sync_test_env" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-tests-sync-test-env-module"></span><h2>syllabus.tests.sync_test_env module<a class="headerlink" href="#module-syllabus.tests.sync_test_env" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_env.SyncTestEnv">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.tests.sync_test_env.</span></span><span class="sig-name descname"><span class="pre">SyncTestEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.tests.sync_test_env.</span></span><span class="sig-name descname"><span class="pre">SyncTestEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.environment_task_env.TaskEnv" title="syllabus.core.task_interface.environment_task_env.TaskEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskEnv</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_env.SyncTestEnv.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Resets the environment to an initial state and returns an initial
-observation.</p>
-<p>This method should also reset the environment’s random number
-generator(s) if <cite>seed</cite> is an integer or if the environment has not
-yet initialized a random number generator. If the environment already
-has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
-the RNG should not be reset.
-Moreover, <cite>reset</cite> should (in the typical use case) be called with an
-integer seed right after initialization and then never again.</p>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets the environment to an initial internal state, returning an initial observation and info.</p>
+<p>This method generates a new starting state often with some randomness to ensure that the agent explores the
+state space and learns a generalised policy about the environment. This randomness can be controlled
+with the <code class="docutils literal notranslate"><span class="pre">seed</span></code> parameter otherwise if the environment already has a random number generator and
+<a class="reference internal" href="#syllabus.tests.sync_test_env.SyncTestEnv.reset" title="syllabus.tests.sync_test_env.SyncTestEnv.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> is called with <code class="docutils literal notranslate"><span class="pre">seed=None</span></code>, the RNG is not reset.</p>
+<p>Therefore, <a class="reference internal" href="#syllabus.tests.sync_test_env.SyncTestEnv.reset" title="syllabus.tests.sync_test_env.SyncTestEnv.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> should (in the typical use case) be called with a seed right after initialization and then never again.</p>
+<p>For Custom environments, the first line of <a class="reference internal" href="#syllabus.tests.sync_test_env.SyncTestEnv.reset" title="syllabus.tests.sync_test_env.SyncTestEnv.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> should be <code class="docutils literal notranslate"><span class="pre">super().reset(seed=seed)</span></code> which implements
+the seeding correctly.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version v0.25: </span>The <code class="docutils literal notranslate"><span class="pre">return_info</span></code> parameter was removed and now info is expected to be returned.</p>
+</div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>the initial observation.
-info (optional dictionary): a dictionary containing extra information, this is only returned if return_info is set to true</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>optional int</em>) – The seed that is used to initialize the environment’s PRNG (<cite>np_random</cite>).
+If the environment does not already have a PRNG and <code class="docutils literal notranslate"><span class="pre">seed=None</span></code> (the default option) is passed,
+a seed will be chosen from some source of entropy (e.g. timestamp or /dev/urandom).
+However, if the environment already has a PRNG and <code class="docutils literal notranslate"><span class="pre">seed=None</span></code> is passed, the PRNG will <em>not</em> be reset.
+If you pass an integer, the PRNG will be reset even if it already exists.
+Usually, you want to pass an integer <em>right after the environment has been initialized and then never again</em>.
+Please refer to the minimal example above to see this paradigm in action.</p></li>
+<li><p><strong>options</strong> (<em>optional dict</em>) – Additional information to specify how the environment is reset (optional,
+depending on the specific environment)</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>observation (object)</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Observation of the initial state. This will be an element of <code class="xref py py-attr docutils literal notranslate"><span class="pre">observation_space</span></code></dt><dd><p>(typically a numpy array) and is analogous to the observation returned by <a class="reference internal" href="#syllabus.tests.sync_test_env.SyncTestEnv.step" title="syllabus.tests.sync_test_env.SyncTestEnv.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a>.</p>
+</dd>
+<dt>info (dictionary):  This dictionary contains auxiliary information complementing <code class="docutils literal notranslate"><span class="pre">observation</span></code>. It should be analogous to</dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">info</span></code> returned by <a class="reference internal" href="#syllabus.tests.sync_test_env.SyncTestEnv.step" title="syllabus.tests.sync_test_env.SyncTestEnv.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>observation (ObsType)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_env.SyncTestEnv.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv.step" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.sync_test_env.SyncTestEnv.step" title="Link to this definition">#</a></dt>
 <dd><p>Steps the environment with the given action.
 Unlike the typical Gym environment, this method should also add the
 {“task_completion”: self.task_completion()} key to the info dictionary
@@ -332,62 +356,67 @@ to support curricula that rely on this metric.</p>
 
 </section>
 <section id="module-syllabus.tests.utils">
-<span id="syllabus-tests-utils-module"></span><h2>syllabus.tests.utils module<a class="headerlink" href="#module-syllabus.tests.utils" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-tests-utils-module"></span><h2>syllabus.tests.utils module<a class="headerlink" href="#module-syllabus.tests.utils" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.utils.create_cartpole_env">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_cartpole_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_cartpole_env" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.create_minigrid_env">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_minigrid_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_minigrid_env" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_minigrid_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_minigrid_env" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.create_nethack_env">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_nethack_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_nethack_env" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_nethack_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_nethack_env" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.create_synctest_env">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_synctest_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_synctest_env" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">create_synctest_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.create_synctest_env" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.evaluate_random_policy">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_random_policy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.evaluate_random_policy" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_random_policy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.evaluate_random_policy" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.run_episode">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">run_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.run_episode" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">run_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.run_episode" title="Link to this definition">#</a></dt>
 <dd><p>Run a single episode of the environment.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.run_episodes">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">run_episodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.run_episodes" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">run_episodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.run_episodes" title="Link to this definition">#</a></dt>
 <dd><p>Run multiple episodes of the environment.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.run_episodes_queue">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">run_episodes_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.run_episodes_queue" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">run_episodes_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.run_episodes_queue" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.test_native_multiprocess">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">test_native_multiprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.test_native_multiprocess" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">test_native_multiprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.test_native_multiprocess" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.test_ray_multiprocess">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">test_ray_multiprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.test_ray_multiprocess" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">test_ray_multiprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.test_ray_multiprocess" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.tests.utils.test_single_process">
-<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">test_single_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.test_single_process" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.utils.</span></span><span class="sig-name descname"><span class="pre">test_single_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.utils.test_single_process" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="module-syllabus.tests">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.tests" title="Permalink to this heading">#</a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.tests" title="Link to this heading">#</a></h2>
 </section>
 </section>
 
@@ -405,14 +434,14 @@ to support curricula that rely on this metric.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="syllabus.examples.models.html">
+          <a class="prev-page" href="syllabus.examples.utils.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">syllabus.examples.models package</div>
+                <div class="title">Example Utils</div>
                 
               </div>
             </a>
@@ -469,6 +498,7 @@ to support curricula that rely on this metric.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-syllabus.tests.utils">syllabus.tests.utils module</a><ul>
+<li><a class="reference internal" href="#syllabus.tests.utils.create_cartpole_env"><code class="docutils literal notranslate"><span class="pre">create_cartpole_env()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.tests.utils.create_minigrid_env"><code class="docutils literal notranslate"><span class="pre">create_minigrid_env()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.tests.utils.create_nethack_env"><code class="docutils literal notranslate"><span class="pre">create_nethack_env()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.tests.utils.create_synctest_env"><code class="docutils literal notranslate"><span class="pre">create_synctest_env()</span></code></a></li>
@@ -493,9 +523,9 @@ to support curricula that rely on this metric.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=b489f392"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

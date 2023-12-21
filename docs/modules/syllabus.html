@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Examples" href="syllabus.examples.html" /><link rel="prev" title="syllabus" href="modules.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>syllabus package - Syllabus 0.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
@@ -179,6 +180,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -190,14 +192,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
@@ -242,9 +246,9 @@
         </div>
         <article role="main">
           <section id="syllabus-package">
-<h1>syllabus package<a class="headerlink" href="#syllabus-package" title="Permalink to this heading">#</a></h1>
+<h1>syllabus package<a class="headerlink" href="#syllabus-package" title="Link to this heading">#</a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">#</a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a><ul>
@@ -260,7 +264,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html#module-syllabus.core.environment_sync_wrapper">syllabus.core.environment_sync_wrapper module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.core.html#syllabus.core.environment_sync_wrapper.MultiProcessingSyncWrapper"><code class="docutils literal notranslate"><span class="pre">MultiProcessingSyncWrapper</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.core.html#syllabus.core.environment_sync_wrapper.PettingZooMultiProcessingSyncWrapper"><code class="docutils literal notranslate"><span class="pre">PettingZooMultiProcessingSyncWrapper</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.core.html#syllabus.core.environment_sync_wrapper.RaySyncWrapper"><code class="docutils literal notranslate"><span class="pre">RaySyncWrapper</span></code></a></li>
 </ul>
 </li>
@@ -280,11 +283,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.examples.html">Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.models.html">syllabus.examples.models package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html#module-syllabus.examples.models.minigrid_model">syllabus.examples.models.minigrid_model module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html#module-syllabus.examples.models.procgen_model">syllabus.examples.models.procgen_model module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html#module-syllabus.examples.models">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a><ul>
@@ -292,210 +294,19 @@
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.minigrid_task_wrapper">syllabus.examples.task_wrappers.minigrid_task_wrapper module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.minihack_task_wrapper">syllabus.examples.task_wrappers.minihack_task_wrapper module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.nethack_task_wrapper">syllabus.examples.task_wrappers.nethack_task_wrapper module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.pistonball_task_wrapper">syllabus.examples.task_wrappers.pistonball_task_wrapper module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.procgen_task_wrapper">syllabus.examples.task_wrappers.procgen_task_wrapper module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html#module-syllabus.examples.utils.vecenv">syllabus.examples.utils.vecenv module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html#module-syllabus.examples.utils.vtrace">syllabus.examples.utils.vtrace module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html#module-syllabus.examples.models">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.cleanrl_cartpole">syllabus.examples.cleanrl_cartpole module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_cartpole.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_cartpole.Agent.get_action_and_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_action_and_value()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_cartpole.Agent.get_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_value()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_cartpole.layer_init"><code class="docutils literal notranslate"><span class="pre">layer_init()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_cartpole.make_env"><code class="docutils literal notranslate"><span class="pre">make_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_cartpole.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.cleanrl_minigrid_plr">syllabus.examples.cleanrl_minigrid_plr module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minigrid_plr.make_env"><code class="docutils literal notranslate"><span class="pre">make_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minigrid_plr.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.cleanrl_minihack_plr">syllabus.examples.cleanrl_minihack_plr module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minihack_plr.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minihack_plr.Agent.get_action_and_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_action_and_value()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minihack_plr.Agent.get_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_value()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minihack_plr.layer_init"><code class="docutils literal notranslate"><span class="pre">layer_init()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minihack_plr.make_env"><code class="docutils literal notranslate"><span class="pre">make_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_minihack_plr.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.cleanrl_ppo_minigrid_base">syllabus.examples.cleanrl_ppo_minigrid_base module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_ppo_minigrid_base.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_ppo_minigrid_base.Agent.get_action_and_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_action_and_value()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_ppo_minigrid_base.Agent.get_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_value()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_ppo_minigrid_base.layer_init"><code class="docutils literal notranslate"><span class="pre">layer_init()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_ppo_minigrid_base.make_env"><code class="docutils literal notranslate"><span class="pre">make_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_ppo_minigrid_base.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.cleanrl_procgen">syllabus.examples.cleanrl_procgen module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.Agent.get_action_and_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_action_and_value()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.Agent.get_value"><code class="docutils literal notranslate"><span class="pre">Agent.get_value()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.ConvSequence"><code class="docutils literal notranslate"><span class="pre">ConvSequence</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.ConvSequence.forward"><code class="docutils literal notranslate"><span class="pre">ConvSequence.forward()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.ConvSequence.get_output_shape"><code class="docutils literal notranslate"><span class="pre">ConvSequence.get_output_shape()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.ResidualBlock"><code class="docutils literal notranslate"><span class="pre">ResidualBlock</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.ResidualBlock.forward"><code class="docutils literal notranslate"><span class="pre">ResidualBlock.forward()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.layer_init"><code class="docutils literal notranslate"><span class="pre">layer_init()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.make_env"><code class="docutils literal notranslate"><span class="pre">make_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.cleanrl_procgen_plr">syllabus.examples.cleanrl_procgen_plr module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen_plr.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen_plr.level_replay_evaluate"><code class="docutils literal notranslate"><span class="pre">level_replay_evaluate()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen_plr.make_env"><code class="docutils literal notranslate"><span class="pre">make_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen_plr.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.cleanrl_procgen_plr.wrap_vecenv"><code class="docutils literal notranslate"><span class="pre">wrap_vecenv()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.rllib_cartpole">syllabus.examples.rllib_cartpole module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.rllib_cartpole_base">syllabus.examples.rllib_cartpole_base module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.torchbeast_nethack">syllabus.examples.torchbeast_nethack module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.Crop"><code class="docutils literal notranslate"><span class="pre">Crop</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.Crop.forward"><code class="docutils literal notranslate"><span class="pre">Crop.forward()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.Net"><code class="docutils literal notranslate"><span class="pre">Net</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.NetHackNet"><code class="docutils literal notranslate"><span class="pre">NetHackNet</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.NetHackNet.forward"><code class="docutils literal notranslate"><span class="pre">NetHackNet.forward()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.NetHackNet.initial_state"><code class="docutils literal notranslate"><span class="pre">NetHackNet.initial_state()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.RandomNet"><code class="docutils literal notranslate"><span class="pre">RandomNet</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.RandomNet.forward"><code class="docutils literal notranslate"><span class="pre">RandomNet.forward()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.RandomNet.initial_state"><code class="docutils literal notranslate"><span class="pre">RandomNet.initial_state()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.ResettingEnvironment"><code class="docutils literal notranslate"><span class="pre">ResettingEnvironment</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.ResettingEnvironment.close"><code class="docutils literal notranslate"><span class="pre">ResettingEnvironment.close()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.ResettingEnvironment.initial"><code class="docutils literal notranslate"><span class="pre">ResettingEnvironment.initial()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.ResettingEnvironment.step"><code class="docutils literal notranslate"><span class="pre">ResettingEnvironment.step()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.act"><code class="docutils literal notranslate"><span class="pre">act()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.compute_baseline_loss"><code class="docutils literal notranslate"><span class="pre">compute_baseline_loss()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.compute_entropy_loss"><code class="docutils literal notranslate"><span class="pre">compute_entropy_loss()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.compute_policy_gradient_loss"><code class="docutils literal notranslate"><span class="pre">compute_policy_gradient_loss()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.create_buffers"><code class="docutils literal notranslate"><span class="pre">create_buffers()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.create_env"><code class="docutils literal notranslate"><span class="pre">create_env()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.get_batch"><code class="docutils literal notranslate"><span class="pre">get_batch()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.learn"><code class="docutils literal notranslate"><span class="pre">learn()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.nested_map"><code class="docutils literal notranslate"><span class="pre">nested_map()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.parse_logpaths"><code class="docutils literal notranslate"><span class="pre">parse_logpaths()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.torchbeast_nethack.train"><code class="docutils literal notranslate"><span class="pre">train()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.vecenv">syllabus.examples.vecenv module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.RunningMeanStd"><code class="docutils literal notranslate"><span class="pre">RunningMeanStd</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.RunningMeanStd.update"><code class="docutils literal notranslate"><span class="pre">RunningMeanStd.update()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.RunningMeanStd.update_from_moments"><code class="docutils literal notranslate"><span class="pre">RunningMeanStd.update_from_moments()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.TransposeImageProcgen"><code class="docutils literal notranslate"><span class="pre">TransposeImageProcgen</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.TransposeImageProcgen.observation"><code class="docutils literal notranslate"><span class="pre">TransposeImageProcgen.observation()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.TransposeObs"><code class="docutils literal notranslate"><span class="pre">TransposeObs</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv"><code class="docutils literal notranslate"><span class="pre">VecEnv</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.close"><code class="docutils literal notranslate"><span class="pre">VecEnv.close()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.close_extras"><code class="docutils literal notranslate"><span class="pre">VecEnv.close_extras()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.closed"><code class="docutils literal notranslate"><span class="pre">VecEnv.closed</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.get_images"><code class="docutils literal notranslate"><span class="pre">VecEnv.get_images()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.get_viewer"><code class="docutils literal notranslate"><span class="pre">VecEnv.get_viewer()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.metadata"><code class="docutils literal notranslate"><span class="pre">VecEnv.metadata</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.render"><code class="docutils literal notranslate"><span class="pre">VecEnv.render()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.reset"><code class="docutils literal notranslate"><span class="pre">VecEnv.reset()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.step"><code class="docutils literal notranslate"><span class="pre">VecEnv.step()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.step_async"><code class="docutils literal notranslate"><span class="pre">VecEnv.step_async()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.step_env"><code class="docutils literal notranslate"><span class="pre">VecEnv.step_env()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.step_wait"><code class="docutils literal notranslate"><span class="pre">VecEnv.step_wait()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.unwrapped"><code class="docutils literal notranslate"><span class="pre">VecEnv.unwrapped</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnv.viewer"><code class="docutils literal notranslate"><span class="pre">VecEnv.viewer</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvObservationWrapper"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvObservationWrapper.process"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper.process()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvObservationWrapper.reset"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper.reset()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvObservationWrapper.step_wait"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper.close"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.close()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper.get_images"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.get_images()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper.render"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.render()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper.reset"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.reset()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper.step_async"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.step_async()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecEnvWrapper.step_wait"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecExtractDictObs"><code class="docutils literal notranslate"><span class="pre">VecExtractDictObs</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecExtractDictObs.process"><code class="docutils literal notranslate"><span class="pre">VecExtractDictObs.process()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecMonitor"><code class="docutils literal notranslate"><span class="pre">VecMonitor</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecMonitor.reset"><code class="docutils literal notranslate"><span class="pre">VecMonitor.reset()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecMonitor.step_wait"><code class="docutils literal notranslate"><span class="pre">VecMonitor.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecNormalize"><code class="docutils literal notranslate"><span class="pre">VecNormalize</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecNormalize.reset"><code class="docutils literal notranslate"><span class="pre">VecNormalize.reset()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecNormalize.reset_agent"><code class="docutils literal notranslate"><span class="pre">VecNormalize.reset_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecNormalize.reset_alp_gmm"><code class="docutils literal notranslate"><span class="pre">VecNormalize.reset_alp_gmm()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecNormalize.reset_random"><code class="docutils literal notranslate"><span class="pre">VecNormalize.reset_random()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecNormalize.step_wait"><code class="docutils literal notranslate"><span class="pre">VecNormalize.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecPyTorchProcgen"><code class="docutils literal notranslate"><span class="pre">VecPyTorchProcgen</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecPyTorchProcgen.raw_venv"><code class="docutils literal notranslate"><span class="pre">VecPyTorchProcgen.raw_venv</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecPyTorchProcgen.reset"><code class="docutils literal notranslate"><span class="pre">VecPyTorchProcgen.reset()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecPyTorchProcgen.step_async"><code class="docutils literal notranslate"><span class="pre">VecPyTorchProcgen.step_async()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.VecPyTorchProcgen.step_wait"><code class="docutils literal notranslate"><span class="pre">VecPyTorchProcgen.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vecenv.update_mean_var_count_from_moments"><code class="docutils literal notranslate"><span class="pre">update_mean_var_count_from_moments()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples.vtrace">syllabus.examples.vtrace module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceFromLogitsReturns"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceFromLogitsReturns.behavior_action_log_probs"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.behavior_action_log_probs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceFromLogitsReturns.log_rhos"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.log_rhos</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceFromLogitsReturns.pg_advantages"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.pg_advantages</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceFromLogitsReturns.target_action_log_probs"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.target_action_log_probs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceFromLogitsReturns.vs"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.vs</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceReturns"><code class="docutils literal notranslate"><span class="pre">VTraceReturns</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceReturns.pg_advantages"><code class="docutils literal notranslate"><span class="pre">VTraceReturns.pg_advantages</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.VTraceReturns.vs"><code class="docutils literal notranslate"><span class="pre">VTraceReturns.vs</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.action_log_probs"><code class="docutils literal notranslate"><span class="pre">action_log_probs()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.from_importance_weights"><code class="docutils literal notranslate"><span class="pre">from_importance_weights()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.html#syllabus.examples.vtrace.from_logits"><code class="docutils literal notranslate"><span class="pre">from_logits()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.examples.html#module-syllabus.examples">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a><ul>
@@ -532,6 +343,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.tests.html#module-syllabus.tests.utils">syllabus.tests.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html#syllabus.tests.utils.create_cartpole_env"><code class="docutils literal notranslate"><span class="pre">create_cartpole_env()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html#syllabus.tests.utils.create_minigrid_env"><code class="docutils literal notranslate"><span class="pre">create_minigrid_env()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html#syllabus.tests.utils.create_nethack_env"><code class="docutils literal notranslate"><span class="pre">create_nethack_env()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html#syllabus.tests.utils.create_synctest_env"><code class="docutils literal notranslate"><span class="pre">create_synctest_env()</span></code></a></li>
@@ -548,16 +360,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.learning_progress">syllabus.curricula.learning_progress module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.learning_progress.LearningProgressCurriculum"><code class="docutils literal notranslate"><span class="pre">LearningProgressCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">LearningProgressCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">LearningProgressCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.on_step"><code class="docutils literal notranslate"><span class="pre">LearningProgressCurriculum.on_step()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">LearningProgressCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.noop">syllabus.curricula.noop module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
@@ -669,9 +471,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=b489f392"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

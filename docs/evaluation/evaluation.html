@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Logging" href="../logging.html" /><link rel="prev" title="Quickstart" href="../quickstart.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Logging" href="../logging.html" /><link rel="prev" title="Environment Support" href="../environments.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Evaluation - Syllabus 0.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
@@ -179,6 +180,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -190,14 +192,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">Example Models</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
@@ -242,8 +246,8 @@
         </div>
         <article role="main">
           <section id="evaluation">
-<h1>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this heading">#</a></h1>
-<p>Evaluating RL agents trained with curriculum learning requires special consideration. Typically training tasks are assumed to be drawn from the same distribution as the test tasks. However, curriculum learning methods modify the training task distribution to improve test performance. Therefore, training returns are not a good measure of performance. Agents shoudl be periodically evaluated during training on uniformly sampled tasks, ideally from a held out test set. You can see an example of this approach in  .</p>
+<h1>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading">#</a></h1>
+<p>Evaluating RL agents trained with curriculum learning requires special consideration. Typically training tasks are assumed to be drawn from the same distribution as the test tasks. However, curriculum learning methods modify the training task distribution to improve test performance. Therefore, training returns are not a good measure of performance. Agents should be periodically evaluated during training on uniformly sampled tasks, ideally from a held out test set. You can see an example of this approach in our <a class="reference external" href="https://github.com/RyanNavillus/Syllabus/tree/main/syllabus/examples">procgen script</a>.</p>
 <p>Correctly implementing this evaluation code can be surprisingly challenging, so we list a few guidelines to keep in mind here:
 * Make sure not to bias evaluation results towards shorter episodes. This is is easy to do by accident if you try to multiprocess evaluations. For example, if you run a vectorized environment and save the first 10 results, your test returns will be biased toward shorter episodes, which likely earned lower returns.
 * Reset the environments before each evaluation. This may seem obvious, but if you since some vectorized environments don’t allow you to directly reset the environments, some might be tempted to skip this step.
@@ -264,14 +268,14 @@
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../quickstart.html">
+          <a class="prev-page" href="../environments.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Quickstart</div>
+                <div class="title">Environment Support</div>
                 
               </div>
             </a>
@@ -299,9 +303,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=b489f392"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

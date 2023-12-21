@@ -23,6 +23,7 @@ We also have preliminary support and examples for multiagent PettingZoo environm
    self
    installation
    quickstart
+   environments
    evaluation/evaluation
    logging
    benchmarks
@@ -48,6 +49,7 @@ We also have preliminary support and examples for multiagent PettingZoo environm
 
    modules/syllabus.curricula.plr
    modules/syllabus.curricula.domain_randomization
+   modules/syllabus.curricula.learning_progress
 
 .. toctree::
    :maxdepth: 1
@@ -65,6 +67,7 @@ We also have preliminary support and examples for multiagent PettingZoo environm
 
 .. toctree::
    :maxdepth: 2
-   :caption: Full Modules:
+   :caption: Development:
 
+   Github <https://github.com/RyanNavillus/Syllabus>
    modules/modules
