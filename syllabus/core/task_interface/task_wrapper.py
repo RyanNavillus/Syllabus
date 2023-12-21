@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 # import pettingzoo
 # from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
@@ -35,14 +35,14 @@ class TaskWrapper(gym.Wrapper):
     def add_task(self, task):
         raise NotImplementedError("This environment does not support adding tasks.")
 
-    def _task_completion(self, obs, rew, done, info) -> float:
+    def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """
         Implement this function to indicate whether the selected task has been completed.
-        This can be determined using the observation, rewards, done, info or internal values
+        This can be determined using the observation, rewards, term, trunc, info or internal values
         from the environment. Intended to be used for automatic curricula.
         Returns a boolean or float value indicating binary completion or scalar degree of completion.
         """
-        return 1.0 if done else 0.0
+        return 1.0 if term or trunc else 0.0
 
     def _encode_goal(self):
         """
@@ -66,13 +66,13 @@ class TaskWrapper(gym.Wrapper):
         return observation
 
     def step(self, action):
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, term, trunc, info = self.env.step(action)
 
         # Determine completion status of the current task
-        self.task_completion = self._task_completion(obs, rew, done, info)
+        self.task_completion = self._task_completion(obs, rew, term, trunc, info)
         info["task_completion"] = self.task_completion
 
-        return self.observation(obs), rew, done, info
+        return self.observation(obs), rew, term, trunc, info
 
     def __getattr__(self, attr):
         env_attr = self.env.__class__.__dict__.get(attr, None)

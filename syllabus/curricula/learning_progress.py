@@ -1,11 +1,11 @@
 import math
 import random
+import warnings
 from collections import defaultdict
 from typing import List
 
-import matplotlib.pyplot as plt
 import numpy as np
-from gym.spaces import Discrete, MultiDiscrete
+from gymnasium.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
 from syllabus.core import Curriculum
 from syllabus.task_space import TaskSpace
@@ -30,7 +30,6 @@ class LearningProgressCurriculum(Curriculum):
             for task in self.tasks:
                 self._p_fast[task] = 0.0
                 self._p_slow[task] = 0.0
-        #print(f"Creating curriculum with {self._n_tasks} tasks: {self._tasks} from task space: {self.task_space}")
 
     def update_task_progress(self, task: int, progress: float):
         """
@@ -70,14 +69,6 @@ class LearningProgressCurriculum(Curriculum):
         exp_sum = sum([x * math.e**x for x in X])
         return [(x * math.e**x / exp_sum) for x in X]
 
-    # @property
-    # def _n_tasks(self):
-    #     return len(self._p_slow.keys())
-
-    # @property
-    # def _tasks(self):
-    #     return self._p_slow.keys()
-
     def _sample_distribution(self) -> List[float]:
         if self.num_tasks == 0:
             return []
@@ -103,7 +94,7 @@ class LearningProgressCurriculum(Curriculum):
         task_dist = self._softmax(task_lps_sigmoid)
         return task_dist
 
-    def on_step(self, obs, rew, done, info) -> None:
+    def on_step(self, obs, rew, term, trunc, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
@@ -132,20 +123,6 @@ if __name__ == "__main__":
             history.append(sample_binomial(p=success_prob))
             success_prob = sig(i)
         return history, probs
-
-    # TODO: Plot probabilities
-    def plot_history(true_probs, estimates, p_slow, p_fast, lp_reweight, lp_raw):
-        x_axis = range(0, len(true_probs))
-        plt.plot(x_axis, true_probs, color="#222222", label="True Success Probability")
-        plt.plot(x_axis, estimates, color="#888888", label="Estimated Success Probability")
-        plt.plot(x_axis, p_slow, color="#ee3333", label="p_slow")
-        plt.plot(x_axis, p_fast, color="#33ee33", label="p_fast")
-        plt.plot(x_axis, lp_raw, color="#c4c25b", label="Learning Progress")
-        plt.plot(x_axis, lp_reweight, color="#1544ee", label="Learning Progress Reweighted")
-        plt.xlabel('Time step')
-        plt.ylabel('Learning Progress')
-        plt.legend()
-        plt.show()
 
     tasks = range(20)
     histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
@@ -181,31 +158,50 @@ if __name__ == "__main__":
         true_probs.append(true_prob)
         estimates.append(estimate)
 
-    plot_history(true_probs, estimates, p_slow, p_fast, lp_reweight, lp_raw)
+    try:
+        import matplotlib.pyplot as plt
 
-    # Reweight Plot
-    x_axis = np.linspace(0, 1, num=100)
-    y_axis = []
-    for x in x_axis:
-        y_axis.append(curriculum._reweight(x))
-    plt.plot(x_axis, y_axis, color="blue", label="p_theta = 0.1")
-    plt.xlabel('p')
-    plt.ylabel('reweight')
-    plt.legend()
-    plt.show()
+        # TODO: Plot probabilities
+        def plot_history(true_probs, estimates, p_slow, p_fast, lp_reweight, lp_raw):
+            x_axis = range(0, len(true_probs))
+            plt.plot(x_axis, true_probs, color="#222222", label="True Success Probability")
+            plt.plot(x_axis, estimates, color="#888888", label="Estimated Success Probability")
+            plt.plot(x_axis, p_slow, color="#ee3333", label="p_slow")
+            plt.plot(x_axis, p_fast, color="#33ee33", label="p_fast")
+            plt.plot(x_axis, lp_raw, color="#c4c25b", label="Learning Progress")
+            plt.plot(x_axis, lp_reweight, color="#1544ee", label="Learning Progress Reweighted")
+            plt.xlabel('Time step')
+            plt.ylabel('Learning Progress')
+            plt.legend()
+            plt.show()
 
-    # Z-score plot
-    tasks = [i for i in range(50)]
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
-    histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
-    for i in range(len(histories[0][0])):
-        for task in tasks:
-            curriculum.update_task_progress(task, histories[task][0][i])
-    distribution, task_lps_standardized = curriculum._sample_distribution()
-    x_axis = np.linspace(-3, 3, num=len(task_lps_standardized))
-    sigmoid_axis = curriculum._sigmoid(x_axis, center=1.28, curve=3.0)
-    plt.plot(x_axis, norm.pdf(x_axis, 0, 1), color="blue", label="Normal distr")
-    plt.plot(x_axis, sigmoid_axis, color="orange", label="Sampling weight")
-    plt.xlabel('Z-scored distributed learning progress')
-    plt.legend()
-    plt.show()
+        plot_history(true_probs, estimates, p_slow, p_fast, lp_reweight, lp_raw)
+
+        # Reweight Plot
+        x_axis = np.linspace(0, 1, num=100)
+        y_axis = []
+        for x in x_axis:
+            y_axis.append(curriculum._reweight(x))
+        plt.plot(x_axis, y_axis, color="blue", label="p_theta = 0.1")
+        plt.xlabel('p')
+        plt.ylabel('reweight')
+        plt.legend()
+        plt.show()
+
+        # Z-score plot
+        tasks = [i for i in range(50)]
+        curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+        histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
+        for i in range(len(histories[0][0])):
+            for task in tasks:
+                curriculum.update_task_progress(task, histories[task][0][i])
+        distribution, task_lps_standardized = curriculum._sample_distribution()
+        x_axis = np.linspace(-3, 3, num=len(task_lps_standardized))
+        sigmoid_axis = curriculum._sigmoid(x_axis, center=1.28, curve=3.0)
+        plt.plot(x_axis, norm.pdf(x_axis, 0, 1), color="blue", label="Normal distr")
+        plt.plot(x_axis, sigmoid_axis, color="orange", label="Sampling weight")
+        plt.xlabel('Z-scored distributed learning progress')
+        plt.legend()
+        plt.show()
+    except ImportError:
+        warnings.warn("Matplotlib not installed. Plotting will not work.")

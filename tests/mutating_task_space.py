@@ -1,14 +1,13 @@
 """ Test curriculum synchronization across multiple processes. """
-import gym
+import gymnasium as gym
 import time
 import random
-from multiprocessing import SimpleQueue, Process
 
 import ray
 
 from nle.env.tasks import NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold
 from syllabus.examples import NethackTaskWrapper
-from syllabus.curricula import NoopCurriculum, Uniform
+from syllabus.curricula import Uniform
 from syllabus.core import (MultiProcessingSyncWrapper,
                            RaySyncWrapper,
                            MultiProcessingCurriculumWrapper,
@@ -32,7 +31,7 @@ class MutableNethackTaskWrapper(NethackTaskWrapper):
             NetHackGold
         ]
         self.task_space = TaskSpace(gym.spaces.Discrete(len(task_list)), task_list)
-    
+
     def reset(self, new_task: int = None, **kwargs):
         print(new_task)
         super().reset(new_task=new_task, **kwargs)
@@ -68,13 +67,13 @@ def run_episode(env, new_task=None, curriculum=None, update_on_step=True):
         obs = env.reset(new_task=new_task)
     else:
         obs = env.reset()
-    done = False
+    term = trunc = False
     ep_rew = 0
-    while not done:
+    while not (term or trunc):
         action = env.action_space.sample()
-        obs, rew, done, info = env.step(action)
+        obs, rew, term, trunc, info = env.step(action)
         if curriculum is not None and update_on_step:
-            curriculum._on_step(obs, rew, done, info)
+            curriculum._on_step(obs, rew, term, trunc, info)
         ep_rew += rew
     return ep_rew
 

@@ -1,11 +1,11 @@
 import threading
-import time
 from functools import wraps
 from typing import List, Tuple
 
 import ray
-from syllabus.core import Curriculum, decorate_all_functions
 from torch.multiprocessing import SimpleQueue
+
+from syllabus.core import Curriculum, decorate_all_functions
 
 
 class CurriculumWrapper:
@@ -36,8 +36,8 @@ class CurriculumWrapper:
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
 
-    def update_on_step(self, task, step, reward, done):
-        self.curriculum.update_on_step(task, step, reward, done)
+    def update_on_step(self, task, step, reward, term, trunc):
+        self.curriculum.update_on_step(task, step, reward, term, trunc)
 
     def log_metrics(self, writer, step=None):
         self.curriculum.log_metrics(writer, step=step)
@@ -113,7 +113,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             if requested_tasks > 0:
                 # TODO: Move this to curriculum, not sync wrapper
                 # Sequentially sample task_space before using curriculum method
-                if self.sequential_start and self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks:
+                if (self.sequential_start and
+                        self.task_space.num_tasks is not None and
+                        self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
                     # Sample unseen tasks sequentially before using curriculum method
                     new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
                 else:
@@ -160,13 +162,13 @@ def remote_call(func):
     return wrapper
 
 
-def make_multiprocessing_curriculum(curriculum):
+def make_multiprocessing_curriculum(curriculum, **kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue)
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
     mp_curriculum.start()
     return mp_curriculum, task_queue, update_queue
 
@@ -208,8 +210,8 @@ class RayCurriculumWrapper(CurriculumWrapper):
         self.added_tasks.append(task)
 
 
-def make_ray_curriculum(curriculum, actor_name="curriculum"):
+def make_ray_curriculum(curriculum, actor_name="curriculum", **kwargs):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
-    return RayCurriculumWrapper(curriculum, actor_name=actor_name)
+    return RayCurriculumWrapper(curriculum, actor_name=actor_name, **kwargs)

@@ -27,7 +27,7 @@ Depending on which type of information your curriculum requires, you will need t
 
 * :mod:`update_task_progress(task, progress) <syllabus.core.curriculum_base.Curriculum.update_task_progress>` - is called either after each step or each episode :sup:`1` . It receives a task name and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task.
 
-* :mod:`update_on_step(obs, rew, done, info)  <syllabus.core.curriculum_base.Curriculum.update_on_step>` - is called once for each environment step.
+* :mod:`update_on_step(obs, rew, term, trunc, info)  <syllabus.core.curriculum_base.Curriculum.update_on_step>` - is called once for each environment step.
 
 * :mod:`update_on_episode  <syllabus.core.curriculum_base.Curriculum.update_on_episode>` - (**Not yet implemented**) will be called once for each completed episode by the environment synchronization wrapper.
 

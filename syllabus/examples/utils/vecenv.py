@@ -3,7 +3,6 @@ from collections import deque
 
 import gym
 import numpy as np
-import torch
 
 
 class VecEnv:
@@ -155,12 +154,13 @@ class VecEnvObservationWrapper(VecEnvWrapper):
         pass
 
     def reset(self):
-        obs = self.venv.reset()
-        return self.process(obs)
+        obs, infos = self.venv.reset()
+        return self.process(obs), infos
 
     def step_wait(self):
-        obs, rews, dones, infos = self.venv.step_wait()
-        return self.process(obs), rews, dones, infos
+        print(self.venv)
+        obs, rews, terms, truncs, infos = self.venv.step_wait()
+        return self.process(obs), rews, terms, truncs, infos
 
 
 class VecExtractDictObs(VecEnvObservationWrapper):
@@ -189,14 +189,15 @@ class VecNormalize(VecEnvWrapper):
         self.epsilon = epsilon
 
     def step_wait(self):
-        obs, rews, news, infos = self.venv.step_wait()
+        obs, rews, terms, truncs, infos = self.venv.step_wait()
+        news = np.logical_or(terms, truncs)
         self.ret = self.ret * self.gamma + rews
         obs = self._obfilt(obs)
         if self.ret_rms:
             self.ret_rms.update(self.ret)
             rews = np.clip(rews / np.sqrt(self.ret_rms.var + self.epsilon), -self.cliprew, self.cliprew)
         self.ret[news] = 0.
-        return obs, rews, news, infos
+        return obs, rews, terms, truncs, infos
 
     def _obfilt(self, obs):
         if self.ob_rms:
@@ -208,23 +209,8 @@ class VecNormalize(VecEnvWrapper):
 
     def reset(self):
         self.ret = np.zeros(self.num_envs)
-        obs = self.venv.reset()
-        return self._obfilt(obs)
-
-    def reset_agent(self):
-        self.ret = np.zeros(self.num_envs)
-        obs = self.venv.reset_agent()
-        return self._obfilt(obs)
-
-    def reset_random(self):
-        self.ret = np.zeros(self.num_envs)
-        obs = self.venv.reset_random()
-        return self._obfilt(obs)
-
-    def reset_alp_gmm(self, level):
-        self.ret = np.zeros(self.num_envs)
-        obs = self.venv.reset_alp_gmm(level)
-        return self._obfilt(obs)
+        obs, infos = self.venv.reset()
+        return self._obfilt(obs), infos
 
 
 class VecMonitor(VecEnvWrapper):
@@ -242,16 +228,18 @@ class VecMonitor(VecEnvWrapper):
             self.eplen_buf = deque([], maxlen=keep_buf)
 
     def reset(self):
-        obs = self.venv.reset()
+        obs, infos = self.venv.reset()
         self.eprets = np.zeros(self.num_envs, 'f')
         self.eplens = np.zeros(self.num_envs, 'i')
-        return obs
+        return obs, infos
 
     def step_wait(self):
-        obs, rews, dones, infos = self.venv.step_wait()
+        obs, rews, terms, truncs, infos = self.venv.step_wait()
+        dones = np.logical_or(terms, truncs)
         self.eprets += rews
         self.eplens += 1
-
+        # Convert dict of lists to list of dicts
+        infos = [dict(zip(infos, t)) for t in zip(*infos.values())]
         newinfos = list(infos[:])
         for i in range(len(dones)):
             if dones[i]:
@@ -271,7 +259,7 @@ class VecMonitor(VecEnvWrapper):
                 if self.results_writer:
                     self.results_writer.write_row(epinfo)
                 newinfos[i] = info
-        return obs, rews, dones, newinfos
+        return obs, rews, terms, truncs, newinfos
 
 
 class RunningMeanStd():
@@ -304,101 +292,3 @@ def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var, 
     new_count = tot_count
 
     return new_mean, new_var, new_count
-
-
-class TransposeObs(gym.ObservationWrapper):
-    def __init__(self, env=None):
-        """
-        Transpose observation space (base class)
-        """
-        super(TransposeObs, self).__init__(env)
-
-
-class TransposeImageProcgen(TransposeObs):
-    def __init__(self, env=None, op=[0, 3, 2, 1]):
-        """
-        Transpose observation space for images
-        """
-        super(TransposeImageProcgen, self).__init__(env)
-        self.op = op
-        obs_shape = self.observation_space.shape
-        self.observation_space = gym.spaces.Box(
-            self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0], [
-                obs_shape[2], obs_shape[1], obs_shape[0]
-            ],
-            dtype=self.observation_space.dtype)
-
-    def observation(self, ob):
-        if ob.shape[0] == 1:
-            ob = ob[0]
-        return ob.transpose(self.op[0], self.op[1], self.op[2], self.op[3])
-
-
-class VecPyTorchProcgen(VecEnvWrapper):
-    def __init__(self, venv, device, level_sampler=None):
-        """
-        Environment wrapper that returns tensors (for obs and reward)
-        """
-        super(VecPyTorchProcgen, self).__init__(venv)
-        self.device = device
-
-        self.level_sampler = level_sampler
-
-        self.observation_space = gym.spaces.Box(
-            self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0],
-            [3, 64, 64],
-            dtype=self.observation_space.dtype)
-
-    @property
-    def raw_venv(self):
-        rvenv = self.venv
-        while hasattr(rvenv, 'venv'):
-            rvenv = rvenv.venv
-        return rvenv
-
-    def reset(self):
-        if self.level_sampler:
-            seeds = torch.zeros(self.venv.num_envs, dtype=torch.int)
-            for e in range(self.venv.num_envs):
-                seed = self.level_sampler.sample('sequential')
-                seeds[e] = seed
-                self.venv.seed(seed, e)
-
-        obs = self.venv.reset()
-        if obs.shape[1] != 3:
-            obs = obs.transpose(0, 3, 1, 2)
-        obs = torch.from_numpy(obs).float().to(self.device) / 255.
-
-        if self.level_sampler:
-            return obs, seeds
-        else:
-            return obs
-
-    def step_async(self, actions):
-        if isinstance(actions, torch.LongTensor) or len(actions.shape) > 1:
-            # Squeeze the dimension for discrete actions
-            actions = actions.squeeze(1)
-        # actions = actions.cpu().numpy()
-        self.venv.step_async(actions)
-
-    def step_wait(self):
-        obs, reward, done, info = self.venv.step_wait()
-        # print(f"stepping {info[0]['level_seed']}, done: {done}")
-
-        # reset environment here
-        if self.level_sampler:
-            for e in done.nonzero()[0]:
-                seed = self.level_sampler.sample()
-                self.venv.seed(seed, e)     # seed resets the corresponding level
-
-            # NB: This reset call propagates upwards through all VecEnvWrappers
-            obs = self.raw_venv.observe()['rgb']    # Note reset does not reset game instances, but only returns latest observations
-
-        if obs.shape[1] != 3:
-            obs = obs.transpose(0, 3, 1, 2)
-        obs = torch.from_numpy(obs).float().to(self.device) / 255.
-        reward = torch.from_numpy(reward).unsqueeze(dim=1).float()
-
-        return obs, reward, done, info

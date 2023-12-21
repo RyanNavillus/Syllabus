@@ -1,6 +1,6 @@
 import random
 
-import gym
+import gymnasium as gym
 import numpy as np
 import procgen  # noqa: F401
 from procgen import ProcgenEnv

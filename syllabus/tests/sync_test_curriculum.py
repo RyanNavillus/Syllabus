@@ -1,8 +1,6 @@
 import typing
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
-import numpy as np
-from syllabus.core import Curriculum
 from syllabus.curricula import SequentialCurriculum
 
 
@@ -33,12 +31,12 @@ class SyncTestCurriculum(SequentialCurriculum):
         if progress > 0.999:
             self.task_counts[task] += 1
 
-    def update_on_step(self, obs, rew, done, info) -> None:
+    def update_on_step(self, obs, rew, term, trunc, info) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         self.total_reward += rew
-        if done:
+        if term or trunc:
             self.total_dones += 1
 
     def get_stats(self):
