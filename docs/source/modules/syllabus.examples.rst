@@ -26,10 +26,10 @@ Subpackages
    syllabus.examples.task_wrappers
    syllabus.examples.utils
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: syllabus.examples
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: syllabus.examples
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
