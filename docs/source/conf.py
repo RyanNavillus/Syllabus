@@ -21,7 +21,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinxcontrib.spelling']
 
 templates_path = ['_templates']
-
+exclude_patterns = ['**/syllabus/examples/*.py']
 import sys
 import os
 sys.path.insert(0, os.path.abspath('../../syllabus'))

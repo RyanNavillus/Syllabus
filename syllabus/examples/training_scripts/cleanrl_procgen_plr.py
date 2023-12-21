@@ -18,15 +18,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
-from procgen import ProcgenEnv
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           make_multiprocessing_curriculum)
-from syllabus.curricula import DomainRandomization, PrioritizedLevelReplay, LearningProgressCurriculum
-from syllabus.examples.models import ProcgenAgent
-from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from torch.utils.tensorboard import SummaryWriter
 
-from .vecenv import VecExtractDictObs, VecMonitor, VecNormalize
+from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.curricula import DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
+from syllabus.examples.models import ProcgenAgent
+from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+
+from .vecenv import VecMonitor, VecNormalize
 
 
 def parse_args():

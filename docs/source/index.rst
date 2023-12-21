@@ -23,6 +23,7 @@ We also have preliminary support and examples for multiagent PettingZoo environm
    self
    installation
    quickstart
+   environments
    evaluation/evaluation
    logging
    benchmarks
