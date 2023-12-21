@@ -1,14 +1,6 @@
 syllabus.curricula package
 ==========================
 
-syllabus.curricula.learning\_progress module
---------------------------------------------
-
-.. automodule:: syllabus.curricula.learning_progress
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 syllabus.curricula.noop module
 ------------------------------
 

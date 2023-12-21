@@ -9,15 +9,17 @@ entire task space.
 
 Usage 
 ^^^^^
-You can define a Discrete task space with 200 tasks as follows:
+You can define a Discrete task space by providing either a Discrete gym space or an integer to the constructor:
 
 .. code-block:: python
 
    from gym.spaces import Discrete
    from syllabus.task_space import TaskSpace
 
-   task_space = TaskSpace(200)
+   # You can provide a gym space
    task_space = TaskSpace(Discrete(200))
+   # Or just an integer
+   task_space = TaskSpace(200)
 
 Future Features
 ^^^^^^^^^^^^^^^
