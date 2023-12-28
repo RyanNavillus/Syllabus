@@ -557,3 +557,11 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Other
+runs/
+models/
+nle_data/
+.vscode/
+docs/_sources/
+docs/doctrees/
