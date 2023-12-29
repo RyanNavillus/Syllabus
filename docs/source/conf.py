@@ -9,7 +9,7 @@
 project = 'Syllabus'
 copyright = '2023, Ryan Sullivan'
 author = 'Ryan Sullivan'
-release = '0.3'
+release = '0.5'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

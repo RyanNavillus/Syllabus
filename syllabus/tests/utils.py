@@ -2,10 +2,13 @@ import time
 import warnings
 from multiprocessing import Process
 
-import gym
+import gymnasium as gym
 import ray
-from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper
+
+from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
+from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
+from syllabus.tests import SyncTestEnv
 
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
@@ -20,10 +23,10 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
             env.observation_space.seed(seeds[i])
         else:
             _ = env.reset()
-        done = False
-        while not done:
+        term = trunc = False
+        while not (term or trunc):
             action = env.action_space.sample()
-            _, rew, done, _ = env.step(action)
+            _, rew, term, trunc, _ = env.step(action)
             episode_return += rew
         episode_returns.append(episode_return)
 
@@ -38,13 +41,13 @@ def run_episode(env, new_task=None, curriculum=None):
         obs = env.reset(new_task=new_task)
     else:
         obs = env.reset()
-    done = False
+    term = trunc = False
     ep_rew = 0
-    while not done:
+    while not (term or trunc):
         action = env.action_space.sample()
-        obs, rew, done, info = env.step(action)
+        obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(obs, rew, done, info)
+            curriculum.update_on_step(obs, rew, term, trunc, info)
         ep_rew += rew
     if curriculum and "task_completion" in info:
         curriculum.update_task_progress(env.task, info["task_completion"])
@@ -132,9 +135,6 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
 
 
 # Sync Test Environment
-from syllabus.tests import SyncTestEnv
-
-
 def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
@@ -144,18 +144,31 @@ def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     return env
 
 
+# Cartpole Tests
+def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = gym.make("CartPole-v1", **env_kwargs)
+    env = CartPoleTaskWrapper(env)
+
+    if type == "queue":
+        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
 # Nethack Tests
-try:
-    from nle.env.tasks import NetHackScore
-    from syllabus.examples.task_wrappers.nethack_task_wrapper import NethackTaskWrapper
-except ImportError:
-    warnings.warn("Unable to import nle.")
-    pass
-
-
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        from nle.env.tasks import NetHackScore
+
+        from syllabus.examples.task_wrappers.nethack_task_wrapper import \
+            NethackTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import nle.")
+
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
+
     if type == "queue":
         env = MultiProcessingSyncWrapper(
             env, *args, task_space=env.task_space, **kwargs
@@ -166,17 +179,12 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 
 # Minigrid Tests
-try:
-    from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
-    from gym_minigrid.register import env_list
-except ImportError:
-    warnings.warn("Unable to import gym_minigrid.")
-    pass
-
-from syllabus.core import ReinitTaskWrapper
-
-
 def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
+        from gym_minigrid.register import env_list
+    except ImportError:
+        warnings.warn("Unable to import gym_minigrid.")
     env = gym.make("MiniGrid-DoorKey-5x5-v0", **env_kwargs)
 
     def create_env(task):

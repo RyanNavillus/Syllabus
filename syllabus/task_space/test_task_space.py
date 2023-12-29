@@ -1,5 +1,4 @@
-import gym
-import syllabus
+import gymnasium as gym
 from syllabus.task_space import TaskSpace
 
 if __name__ == "__main__":

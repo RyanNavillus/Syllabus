@@ -1,11 +1,10 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import copy
-import time
 from typing import List
 
-import gym
+import gymnasium as gym
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from syllabus.task_space import TaskSpace
 
 from .task_wrapper import TaskWrapper
@@ -59,8 +58,8 @@ class SubclassTaskWrapper(TaskWrapper):
             self.change_task(new_task)
 
         self.done = False
-
-        return self.observation(self.env.reset(**kwargs))
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task: int):
         """
@@ -97,7 +96,7 @@ class SubclassTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, done, info = self.env.step(action)
-        self.done = done
-        info["task_completion"] = self._task_completion(obs, rew, done, info)
-        return self.observation(obs), rew, done, info
+        obs, rew, term, trunc, info = self.env.step(action)
+        self.done = term or trunc
+        info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
+        return self.observation(obs), rew, term, trunc, info
