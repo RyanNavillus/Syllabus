@@ -2,6 +2,6 @@ myArray=("bigfish" "bossfight" "caveflyer" "chaser" "climber" "coinrun" "dodgeba
 seeds=5
 for env in ${myArray[@]}; do
   for seed in $(seq $seeds); do
-    sbatch plr.slurm_template $env $seed
+    sbatch baselines/plr.slurm_template $env $seed
   done
 done
