@@ -24,8 +24,7 @@ from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curri
 from syllabus.curricula import DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-
-from .vecenv import VecMonitor, VecNormalize
+from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize
 
 
 def parse_args():
@@ -95,6 +94,9 @@ def parse_args():
                         help="if toggled, this experiment will use curriculum learning")
     parser.add_argument("--curriculum-method", type=str, default="plr",
                         help="curriculum method to use")
+    parser.add_argument("--num-eval-episodes", type=int, default=10,
+                        help="the number of episodes to evaluate the agent on after each policy update.")
+
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
@@ -126,7 +128,7 @@ def make_env(env_id, seed, task_queue, update_queue, curriculum=False, start_lev
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-        env = ProcgenTaskWrapper(env, seed=seed)
+        env = ProcgenTaskWrapper(env, env_id, seed=seed)
         if curriculum:
             if task_queue is not None and update_queue is not None:
                 env = MultiProcessingSyncWrapper(
@@ -185,6 +187,37 @@ def level_replay_evaluate(
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
+def fast_level_replay_evaluate(
+    eval_envs,
+    env_name,
+    policy,
+    num_episodes,
+    device,
+    num_levels=0
+):
+    policy.eval()
+    eval_obs, _ = eval_envs.reset()
+
+    eval_episode_rewards = [-1] * num_episodes
+
+    while -1 in eval_episode_rewards:
+        with torch.no_grad():
+            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+
+        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+        for i, info in enumerate(infos):
+            if 'episode' in info.keys():
+                eval_episode_rewards[i] = info['episode']['r']
+
+    # print(eval_episode_rewards)
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    policy.train()
+    return mean_returns, stddev_returns, normalized_mean_returns
+
+
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -222,7 +255,7 @@ if __name__ == "__main__":
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
-        sample_env = ProcgenTaskWrapper(sample_env, seed=args.seed)
+        sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
@@ -247,6 +280,7 @@ if __name__ == "__main__":
         del sample_env
 
     # env setup
+    print("Creating env")
     envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
@@ -261,8 +295,25 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
+    test_eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=0)
+            for i in range(args.num_eval_episodes)
+        ]
+    )
+    test_eval_envs = wrap_vecenv(test_eval_envs)
+
+    train_eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=200)
+            for i in range(args.num_eval_episodes)
+        ]
+    )
+    train_eval_envs = wrap_vecenv(train_eval_envs)
+
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
     agent = ProcgenAgent(
         envs.single_observation_space.shape,
         envs.single_action_space.n,
@@ -439,8 +490,8 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(args.env_id, agent, 10, device)
-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(args.env_id, agent, 10, device, num_levels=200)
+        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = fast_level_replay_evaluate(test_eval_envs, args.env_id, agent, 10, device)
+        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = fast_level_replay_evaluate(train_eval_envs, args.env_id, agent, 10, device)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)

@@ -3,6 +3,7 @@ from functools import wraps
 from typing import List, Tuple
 
 import ray
+import time
 from torch.multiprocessing import SimpleQueue
 
 from syllabus.core import Curriculum, decorate_all_functions
@@ -129,7 +130,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     self.task_queue.put(message)
                     self.added_tasks = []
                 self.num_assigned_tasks += requested_tasks
-            # time.sleep(0.01)
+            time.sleep(0.01)
 
     def __del__(self):
         self.stop()
