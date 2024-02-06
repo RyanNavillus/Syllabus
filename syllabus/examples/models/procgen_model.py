@@ -197,45 +197,6 @@ class Policy(nn.Module):
         return value, action_log_probs, dist_entropy, rnn_hxs
 
 
-class FixedCategorical(torch.distributions.Categorical):
-    """
-    Categorical distribution object
-    """
-    def sample(self):
-        return super().sample().unsqueeze(-1)
-
-    def log_probs(self, actions):
-        return (
-            super()
-            .log_prob(actions.squeeze(-1))
-            .view(actions.size(0), -1)
-            .sum(-1)
-            .unsqueeze(-1)
-        )
-
-    def mode(self):
-        return self.probs.argmax(dim=-1, keepdim=True)
-
-
-class Categorical(nn.Module):
-    """
-    Categorical distribution (NN module)
-    """
-    def __init__(self, num_inputs, num_outputs):
-        super(Categorical, self).__init__()
-
-        self.linear = init(
-            nn.Linear(num_inputs, num_outputs),
-            nn.init.orthogonal_,
-            lambda x: nn.init.constant_(x, 0),
-            gain=0.01
-        )
-
-    def forward(self, x):
-        x = self.linear(x)
-        return FixedCategorical(logits=x)
-
-
 class NNBase(nn.Module):
     """
     Actor-Critic network (base class)
@@ -322,7 +283,7 @@ class ResNetBase(NNBase):
     """
     Residual Network 
     """
-    def __init__(self, num_inputs, recurrent=False, hidden_size=256, channels=[16,32,32]):
+    def __init__(self, num_inputs, recurrent=False, hidden_size=256, channels=[16, 32, 32]):
         super(ResNetBase, self).__init__(recurrent, num_inputs, hidden_size)
 
         self.layer1 = self._make_layer(num_inputs, channels[0])
