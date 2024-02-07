@@ -196,7 +196,8 @@ def fast_level_replay_evaluate(
     num_levels=0
 ):
     policy.eval()
-    eval_obs, _ = eval_envs.reset()
+    possible_seeds = np.arange(0, num_levels + 1)
+    eval_obs, _ = eval_envs.reset(seed=list(np.random.choice(possible_seeds, size=num_episodes)))
 
     eval_episode_rewards = [-1] * num_episodes
 
@@ -206,7 +207,7 @@ def fast_level_replay_evaluate(
 
         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
         for i, info in enumerate(infos):
-            if 'episode' in info.keys():
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 
     # print(eval_episode_rewards)
@@ -490,8 +491,8 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = fast_level_replay_evaluate(test_eval_envs, args.env_id, agent, 10, device)
-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = fast_level_replay_evaluate(train_eval_envs, args.env_id, agent, 10, device)
+        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = fast_level_replay_evaluate(test_eval_envs, args.env_id, agent, args.num_eval_episodes, device, num_levels=0)
+        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = fast_level_replay_evaluate(train_eval_envs, args.env_id, agent, args.num_eval_episodes, device, num_levels=200)
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
