@@ -1,6 +1,6 @@
 import gymnasium as gym
-# import pettingzoo
-# from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
+import pettingzoo
+from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 
 
 class TaskWrapper(gym.Wrapper):
@@ -81,19 +81,23 @@ class TaskWrapper(gym.Wrapper):
             return env_attr
 
 
-# class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
-#     def __init__(self, env: pettingzoo.ParallelEnv):
-#         super().__init__(env)
-#         self.task = None
+class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
+    def __init__(self, env: pettingzoo.ParallelEnv):
+        super().__init__(env)
+        self.task = None
 
-#     @property
-#     def agents(self):
-#         return self.env.agents
-    
-#     def __getattr__(self, attr):
-#         env_attr = getattr(self.env, attr, None)
-#         if env_attr:
-#             return env_attr
-    
-#     def get_current_task(self):
-#         return self.current_task
+    @property
+    def agents(self):
+        return self.env.agents
+
+    def __getattr__(self, attr):
+        env_attr = getattr(self.env, attr, None)
+        if env_attr:
+            return env_attr
+
+    def get_current_task(self):
+        return self.current_task
+
+    def step(self, action):
+        obs, rew, term, info = self.env.step(action)
+        return obs, rew, term, info
