@@ -149,6 +149,14 @@ class Curriculum:
         """
         raise NotImplementedError
 
+    def _should_use_startup_sampling(self) -> bool:
+        return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
+
+    def _startup_sample(self) -> List:
+        task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
+        task_dist[0] = 1.0
+        return task_dist
+
     def sample(self, k: int = 1) -> Union[List, Any]:
         """Sample k tasks from the curriculum.
 
@@ -157,9 +165,8 @@ class Curriculum:
         """
         assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
-        if self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks:
-            task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
-            task_dist[0] = 1.0
+        if self._should_use_startup_sampling():
+            return self._startup_sample()
         else:
             task_dist = self._sample_distribution()
 
