@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple
 import cv2
 import gymnasium as gym
 import numpy as np
-import render_utils
+# import render_utils
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from nle import nethack
 from nle.env import base
@@ -377,117 +377,117 @@ class RenderCharImagesWithNumpyWrapper(gym.Wrapper):
         return obs
 
 
-class RenderCharImagesWithNumpyWrapperV2(gym.Wrapper):
-    """
-    Same as V1, but simpler and faster.
-    """
+# class RenderCharImagesWithNumpyWrapperV2(gym.Wrapper):
+#     """
+#     Same as V1, but simpler and faster.
+#     """
 
-    def __init__(
-        self,
-        env,
-        font_size=9,
-        crop_size=12,
-        rescale_font_size=(6, 6),
-    ):
-        super().__init__(env)
-        self.char_array = _initialize_char_array(font_size, rescale_font_size)
-        self.char_height = self.char_array.shape[2]
-        self.char_width = self.char_array.shape[3]
-        # Transpose for CHW
-        self.char_array = self.char_array.transpose(0, 1, 4, 2, 3)
-        self.char_array = np.ascontiguousarray(self.char_array)
-        self.crop_size = crop_size
+#     def __init__(
+#         self,
+#         env,
+#         font_size=9,
+#         crop_size=12,
+#         rescale_font_size=(6, 6),
+#     ):
+#         super().__init__(env)
+#         self.char_array = _initialize_char_array(font_size, rescale_font_size)
+#         self.char_height = self.char_array.shape[2]
+#         self.char_width = self.char_array.shape[3]
+#         # Transpose for CHW
+#         self.char_array = self.char_array.transpose(0, 1, 4, 2, 3)
+#         self.char_array = np.ascontiguousarray(self.char_array)
+#         self.crop_size = crop_size
 
-        crop_rows = crop_size or nethack.nethack.TERMINAL_SHAPE[0]
-        crop_cols = crop_size or nethack.nethack.TERMINAL_SHAPE[1]
+#         crop_rows = crop_size or nethack.nethack.TERMINAL_SHAPE[0]
+#         crop_cols = crop_size or nethack.nethack.TERMINAL_SHAPE[1]
 
-        self.chw_image_shape = (
-            3,
-            crop_rows * self.char_height,
-            crop_cols * self.char_width,
-        )
+#         self.chw_image_shape = (
+#             3,
+#             crop_rows * self.char_height,
+#             crop_cols * self.char_width,
+#         )
 
-        obs_spaces = {
-            "screen_image": gym.spaces.Box(
-                low=0, high=255, shape=self.chw_image_shape, dtype=np.uint8
-            )
-        }
-        obs_spaces.update(
-            [
-                (k, self.env.observation_space[k])
-                for k in self.env.observation_space
-                # if k not in ["tty_chars", "tty_colors"]
-            ]
-        )
-        self.observation_space = gym.spaces.Dict(obs_spaces)
+#         obs_spaces = {
+#             "screen_image": gym.spaces.Box(
+#                 low=0, high=255, shape=self.chw_image_shape, dtype=np.uint8
+#             )
+#         }
+#         obs_spaces.update(
+#             [
+#                 (k, self.env.observation_space[k])
+#                 for k in self.env.observation_space
+#                 # if k not in ["tty_chars", "tty_colors"]
+#             ]
+#         )
+#         self.observation_space = gym.spaces.Dict(obs_spaces)
 
-    def _populate_obs(self, obs):
-        screen = np.zeros(self.chw_image_shape, order="C", dtype=np.uint8)
-        render_utils.render_crop(
-            obs["tty_chars"],
-            obs["tty_colors"],
-            obs["tty_cursor"],
-            self.char_array,
-            screen,
-            crop_size=self.crop_size,
-        )
-        obs["screen_image"] = screen
+#     def _populate_obs(self, obs):
+#         screen = np.zeros(self.chw_image_shape, order="C", dtype=np.uint8)
+#         render_utils.render_crop(
+#             obs["tty_chars"],
+#             obs["tty_colors"],
+#             obs["tty_cursor"],
+#             self.char_array,
+#             screen,
+#             crop_size=self.crop_size,
+#         )
+#         obs["screen_image"] = screen
 
-    def step(self, action):
-        obs, reward, term, trunc, info = self.env.step(action)
-        self._populate_obs(obs)
-        return obs, reward, term, trunc, info
+#     def step(self, action):
+#         obs, reward, term, trunc, info = self.env.step(action)
+#         self._populate_obs(obs)
+#         return obs, reward, term, trunc, info
 
-    def reset(self):
-        obs, info = self.env.reset()
-        self._populate_obs(obs)
-        return obs, info
+#     def reset(self):
+#         obs, info = self.env.reset()
+#         self._populate_obs(obs)
+#         return obs, info
 
 
-if __name__ == "__main__":
-    def run_episode(env, task: str = None, verbose=1):
-        env.reset(new_task=task)
-        task_name = type(env.unwrapped).__name__
-        term = trunc = False
-        ep_rew = 0
-        while not (term or trunc):
-            action = env.action_space.sample()
-            _, rew, term, trunc, _ = env.step(action)
-            ep_rew += rew
-        if verbose:
-            print(f"Episodic reward for {task_name}: {ep_rew}")
+# if __name__ == "__main__":
+#     def run_episode(env, task: str = None, verbose=1):
+#         env.reset(new_task=task)
+#         task_name = type(env.unwrapped).__name__
+#         term = trunc = False
+#         ep_rew = 0
+#         while not (term or trunc):
+#             action = env.action_space.sample()
+#             _, rew, term, trunc, _ = env.step(action)
+#             ep_rew += rew
+#         if verbose:
+#             print(f"Episodic reward for {task_name}: {ep_rew}")
 
-    print("Testing NethackTaskWrapper")
-    N_EPISODES = 100
+#     print("Testing NethackTaskWrapper")
+#     N_EPISODES = 100
 
-    # Initialize NLE
-    nethack_env = NetHackScore()
-    nethack_env = GymV21CompatibilityV0(env=nethack_env)
+#     # Initialize NLE
+#     nethack_env = NetHackScore()
+#     nethack_env = GymV21CompatibilityV0(env=nethack_env)
 
-    nethack_task_env = NethackTaskWrapper(nethack_env)
+#     nethack_task_env = NethackTaskWrapper(nethack_env)
 
-    task_list = [
-        NetHackScore,
-        NetHackStaircase,
-        NetHackStaircasePet,
-        NetHackOracle,
-        NetHackGold,
-        NetHackEat,
-        NetHackScout,
-    ]
+#     task_list = [
+#         NetHackScore,
+#         NetHackStaircase,
+#         NetHackStaircasePet,
+#         NetHackOracle,
+#         NetHackGold,
+#         NetHackEat,
+#         NetHackScout,
+#     ]
 
-    start_time = time.time()
+#     start_time = time.time()
 
-    for _ in range(N_EPISODES):
-        run_episode(nethack_task_env, verbose=0)
+#     for _ in range(N_EPISODES):
+#         run_episode(nethack_task_env, verbose=0)
 
-    end_time = time.time()
-    print(f"Run time same task: {end_time - start_time}")
-    start_time = time.time()
+#     end_time = time.time()
+#     print(f"Run time same task: {end_time - start_time}")
+#     start_time = time.time()
 
-    for i in range(N_EPISODES):
-        nethack_task = task_list[i % 7]
-        run_episode(nethack_task_env, task=nethack_task, verbose=0)
+#     for i in range(N_EPISODES):
+#         nethack_task = task_list[i % 7]
+#         run_episode(nethack_task_env, task=nethack_task, verbose=0)
 
-    end_time = time.time()
-    print(f"Run time swapping tasks: {end_time - start_time}")
+#     end_time = time.time()
+#     print(f"Run time swapping tasks: {end_time - start_time}")

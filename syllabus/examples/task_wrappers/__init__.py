@@ -13,7 +13,7 @@ except ImportError  as e:
     warnings.warn(f"Unable to import the following minihack dependencies: {e.name}")
 
 try:
-    from .nethack_wrappers import NethackTaskWrapper, RenderCharImagesWithNumpyWrapperV2
+    from .nethack_wrappers import NethackTaskWrapper    #, RenderCharImagesWithNumpyWrapperV2
 except ImportError as e:
     warnings.warn(f"Unable to import the following nle dependencies: {e.name}")
 
