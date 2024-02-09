@@ -1,0 +1,16 @@
+modules/syllabus.curricula.plr.rst:9: (sucessfully)  PLR has been sucessfully used to train agents in 
+modules/syllabus.curricula.plr.rst:15: (hyperparameters)  The default hyperparameters are tuned for Procgen. When applying PLR to a new environment, you may want to tune the 
+modules/syllabus.curricula.plr.rst:15: (Procgen)  The default hyperparameters are tuned for Procgen. When applying PLR to a new environment, you may want to tune the 
+modules/syllabus.curricula.plr.rst:21: (determinstic)  PLR expects the environment to be determinstic with respect to the task, which is typically the seed. You may not see good results if your environment is deterministic for a given task.
+modules/syllabus.curricula.plr.rst:23: (intialize)  To intialize the curriculum, you will also need to provide the 
+modules/syllabus.curricula.plr.rst:25: (distirbution)  PLR requires L1 Value estimates from the training process to compute it's sampling distirbution, so you need to add additional code to your training process to send these values to the curriculum. Below you can find examples of how to do this for some of the popular RL frameworks.
+../../syllabus/curricula/plr/plr_wrapper.py:docstring of syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay:1: (cpu)  The device to use to store curriculum data, either "cpu" or "cuda".
+../../syllabus/curricula/plr/plr_wrapper.py:docstring of syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay:1: (cuda)  The device to use to store curriculum data, either "cpu" or "cuda".
+../../syllabus/curricula/plr/plr_wrapper.py:docstring of syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay:1: (rollouts)  The number of steps to store in the rollouts.
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (gae)  Strategy for sampling tasks. One of "value_l1", "gae", "policy_entropy", "least_confidence", "min_margin", "one_step_td_error".
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (td)  Strategy for sampling tasks. One of "value_l1", "gae", "policy_entropy", "least_confidence", "min_margin", "one_step_td_error".
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (eps)  Transform to apply to task scores. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (softmax)  Transform to apply to task scores. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (eps)  Epsilon for eps-greedy score transform.
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (eps)  Transform to apply to task staleness. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
+../../syllabus/curricula/plr/task_sampler.py:docstring of syllabus.curricula.plr.task_sampler.TaskSampler:1: (softmax)  Transform to apply to task staleness. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".

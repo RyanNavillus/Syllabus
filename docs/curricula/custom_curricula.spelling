@@ -1,0 +1,2 @@
+curricula/custom_curricula.rst:6: (subclassing)  By subclassing the 
+curricula/custom_curricula.rst:28: (boolean)   . It receives a task name and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task.
