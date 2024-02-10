@@ -161,7 +161,7 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from nle.env.tasks import NetHackScore
 
-        from syllabus.examples.task_wrappers.nethack_task_wrapper import \
+        from syllabus.examples.task_wrappers.nethack_wrappers import \
             NethackTaskWrapper
     except ImportError:
         warnings.warn("Unable to import nle.")
