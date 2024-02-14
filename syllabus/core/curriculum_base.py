@@ -12,7 +12,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, task_names: Callable = None, use_startup_behavior: bool = False, sampled_list: List[Tuple[str, int, int]] = None) -> None:
+    def __init__(self, task_space: TaskSpace, task_names: Callable = None, use_startup_behavior: bool = False, sampled_list: List[List[Tuple[str, int, int]]] = None) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -157,11 +157,11 @@ class Curriculum:
             return False
         return True
     
-    def _startup_sample(self, k: int, task_list: List[List[tuple]]) -> List:
+    def _startup_sample(self, k: int) -> List:
         if self.use_startup_behavior:
             sampled_tasks_per_env = [[] for _ in range(k)]
             for env_index in range(k):  
-                for behavior, episode, tasks in task_list[env_index]:
+                for behavior, episode, tasks in self.sampled_list[env_index]:
                     if behavior == "fix":
                         for _ in range(episode):
                             end_index = min(self.current_task_index + tasks, len(self.tasks))
