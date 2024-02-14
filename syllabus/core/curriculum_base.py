@@ -12,24 +12,27 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+    def __init__(self, task_space: TaskSpace, task_names: Callable = None, use_startup_behavior: bool = False, sampled_list: List[Tuple[str, int, int]] = None) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
         TODO: Implement this in a way that works with any curriculum, maybe as a wrapper
-        :param random_start_tasks: Number of uniform random tasks to sample before using the algorithm's sample method, defaults to 0
         TODO: Use task space for this
         :param task_names: Names of the tasks in the task space, defaults to None
         """
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
-        self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
+        self.use_startup_behavior = use_startup_behavior
+        self.current_task_index = 0
+        self.sampled_list = sampled_list
+
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
+        
 
     @property
     def num_tasks(self) -> int:
@@ -149,14 +152,31 @@ class Curriculum:
         """
         raise NotImplementedError
 
-    def _should_use_startup_sampling(self) -> bool:
-        return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
+    def _should_use_startup_sampling(self, flag: str) -> bool:
+        if flag == "finish":
+            return False
+        return True
+    
+    def _startup_sample(self, k: int, task_list: List[List[tuple]]) -> List:
+        if self.use_startup_behavior:
+            sampled_tasks_per_env = [[] for _ in range(k)]
+            for env_index in range(k):  
+                for behavior, episode, tasks in task_list[env_index]:
+                    if behavior == "fix":
+                        for _ in range(episode):
+                            end_index = min(self.current_task_index + tasks, len(self.tasks))
+                            sampled_tasks_per_env[env_index].extend(self.tasks[self.current_task_index:end_index])
+                            self.current_task_index = end_index
 
-    def _startup_sample(self) -> List:
-        task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
-        task_dist[0] = 1.0
-        return task_dist
+                    elif behavior == "random":
+                        for _ in range(episode):
+                            indices = np.random.choice(len(self.tasks), size=tasks, replace=False if tasks <= len(self.tasks) else True)
+                            sampled_tasks_per_env[env_index].extend([self.tasks[idx] for idx in indices])
 
+            self._should_use_startup_sampling("finish")
+            return sampled_tasks_per_env
+        return []
+        
     def sample(self, k: int = 1) -> Union[List, Any]:
         """Sample k tasks from the curriculum.
 
