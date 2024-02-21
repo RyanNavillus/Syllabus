@@ -187,9 +187,7 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 # Nethack Tests
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     from nle.env.tasks import NetHackScore
-
-    from syllabus.examples.task_wrappers.nethack_wrappers import \
-        NethackTaskWrapper
+    from syllabus.examples.task_wrappers.nethack_wrappers import NethackTaskWrapper
 
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)

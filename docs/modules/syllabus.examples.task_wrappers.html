@@ -1,15 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus.task_space package" href="syllabus.task_space.html" /><link rel="prev" title="syllabus.examples package" href="syllabus.examples.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Global Synchronization" href="syllabus.core.html" /><link rel="prev" title="Task Interface" href="syllabus.core.task_interface.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>syllabus.examples.task_wrappers package - Syllabus 0.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+        <title>Example TaskWrappers - Syllabus 0.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -123,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Syllabus 0.3 documentation</div></a>
+      <a href="../index.html"><div class="brand">Syllabus 0.5 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +147,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Syllabus 0.3 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.5 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -154,31 +155,58 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Curriculum</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/implemented_curricula.html">Implemented Curriculum Learning Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../taskspace.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 current has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">syllabus.core package</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.plr.html">syllabus.curricula.plr package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../background/curriculum_learning.html">Curriculum Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/ued.html">Unsupervised Environment Design</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.core.curriculum.html">Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/implemented_curricula.html">Curriculum Methods</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.core.task_interface.html">Task Interface</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example TaskWrappers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">syllabus</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="syllabus.html">syllabus package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="syllabus.examples.html">syllabus.examples package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">syllabus.examples.task_wrappers package</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">syllabus.task_space package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a></li>
 </ul>
 </li>
 </ul>
@@ -217,20 +245,18 @@
           </label>
         </div>
         <article role="main">
-          <section id="syllabus-examples-task-wrappers-package">
-<h1>syllabus.examples.task_wrappers package<a class="headerlink" href="#syllabus-examples-task-wrappers-package" title="Permalink to this heading">#</a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
-</section>
+          <section id="example-taskwrappers">
+<h1>Example TaskWrappers<a class="headerlink" href="#example-taskwrappers" title="Link to this heading">#</a></h1>
+<p>This directory includes a couple examples of task wrappers for different environments to help you get started with creating the task interface for your environment.</p>
 <section id="module-syllabus.examples.task_wrappers.cartpole_task_wrapper">
-<span id="syllabus-examples-task-wrappers-cartpole-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.cartpole_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.cartpole_task_wrapper" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-examples-task-wrappers-cartpole-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.cartpole_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.cartpole_task_wrapper" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.cartpole_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">CartPoleTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.environment_task_wrapper.TaskWrapper" title="syllabus.core.environment_task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.cartpole_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">CartPoleTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.change_task">
-<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.change_task" title="Link to this definition">#</a></dt>
 <dd><p>Changes the task of the existing environment to the new_task.</p>
 <p>Each environment will implement tasks differently. The easiest system would be to call a
 function or set an instance variable to change the task.</p>
@@ -241,51 +267,40 @@ that it is not in the middle of an episode to avoid unexpected behavior.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Resets the environment to an initial state and returns an initial
-observation.</p>
-<p>This method should also reset the environment’s random number
-generator(s) if <cite>seed</cite> is an integer or if the environment has not
-yet initialized a random number generator. If the environment already
-has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
-the RNG should not be reset.
-Moreover, <cite>reset</cite> should (in the typical use case) be called with an
-integer seed right after initialization and then never again.</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>observation (object): the initial observation.
-info (optional dictionary): a dictionary containing extra information, this is only returned if return_info is set to true</p>
-</dd>
-</dl>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset" title="syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
 </dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="module-syllabus.examples.task_wrappers.minigrid_task_wrapper">
-<span id="syllabus-examples-task-wrappers-minigrid-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.minigrid_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.minigrid_task_wrapper" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-examples-task-wrappers-minigrid-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.minigrid_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.minigrid_task_wrapper" title="Link to this heading">#</a></h2>
 <p>Task wrapper that can select a new MiniGrid task on reset.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.minigrid_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">MinigridTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NLE</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_provided_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.environment_task_wrapper.TaskWrapper" title="syllabus.core.environment_task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.minigrid_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">MinigridTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
 <p>This wrapper allows you to change the task of an NLE environment.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.change_task">
-<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.change_task" title="Link to this definition">#</a></dt>
 <dd><p>Change task by directly editing environment class.</p>
 <p>Ignores requests for unknown tasks or task changes outside of a reset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.observation">
-<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.observation" title="Permalink to this definition">#</a></dt>
-<dd><p>Parses current inventory and new items gained this timestep from the observation.
-Returns a modified observation.</p>
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.observation" title="Link to this definition">#</a></dt>
+<dd><p>Adds the goal encoding to the observation.
+Override to add additional task-specific observations.
+Returns a modified observation.
+TODO: Complete this implementation and find way to support centralized encodings</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.reset" title="Link to this definition">#</a></dt>
 <dd><p>Resets the environment along with all available tasks, and change the current task.</p>
 <p>This ensures that all instance variables are reset, not just the ones for the current task.
 We do this efficiently by keeping track of which reset functions have already been called,
@@ -295,7 +310,7 @@ calling the final reset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.step" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.step" title="Link to this definition">#</a></dt>
 <dd><p>Step through environment and update task completion.</p>
 </dd></dl>
 
@@ -303,72 +318,59 @@ calling the final reset.</p>
 
 </section>
 <section id="module-syllabus.examples.task_wrappers.minihack_task_wrapper">
-<span id="syllabus-examples-task-wrappers-minihack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.minihack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.minihack_task_wrapper" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-examples-task-wrappers-minihack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.minihack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.minihack_task_wrapper" title="Link to this heading">#</a></h2>
 <p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.minihack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">MinihackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.environment_task_wrapper.TaskWrapper" title="syllabus.core.environment_task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.minihack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">MinihackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
 <p>This wrapper simply changes the seed of a Minigrid environment.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Resets the environment to an initial state and returns an initial
-observation.</p>
-<p>This method should also reset the environment’s random number
-generator(s) if <cite>seed</cite> is an integer or if the environment has not
-yet initialized a random number generator. If the environment already
-has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
-the RNG should not be reset.
-Moreover, <cite>reset</cite> should (in the typical use case) be called with an
-integer seed right after initialization and then never again.</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>observation (object): the initial observation.
-info (optional dictionary): a dictionary containing extra information, this is only returned if return_info is set to true</p>
-</dd>
-</dl>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset" title="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
 </dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="module-syllabus.examples.task_wrappers.nethack_task_wrapper">
-<span id="syllabus-examples-task-wrappers-nethack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.nethack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.nethack_task_wrapper" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-examples-task-wrappers-nethack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.nethack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.nethack_task_wrapper" title="Link to this heading">#</a></h2>
 <p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">NethackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NLE</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_provided_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.environment_task_wrapper.TaskWrapper" title="syllabus.core.environment_task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">NethackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NLE</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_provided_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
 <p>This wrapper allows you to change the task of an NLE environment.</p>
 <dl class="simple">
 <dt>This wrapper was designed to meet two goals.</dt><dd><ol class="arabic simple">
 <li><p>Allow us to change the task of the NLE environment at the start of an episode</p></li>
 <li><p>Allow us to use the predefined NLE task definitions without copying/modifying their code.
-This allows us to integrate with other work on nethack tasks or curricula.</p></li>
+This makes it easier to integrate with other work on nethack tasks or curricula.</p></li>
 </ol>
 </dd>
 </dl>
-<p>However, each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
+<p>Each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
 environment to change its task. This wrapper manipulates the __class__ property to achieve this,
 but does so in a safe way. Specifically, we ensure that the instance variables needed for each
 task are available and reset at the start of the episode regardless of which task is active.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.change_task">
-<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.change_task" title="Link to this definition">#</a></dt>
 <dd><p>Change task by directly editing environment class.</p>
 <p>Ignores requests for unknown tasks or task changes outside of a reset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.observation">
-<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.observation" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.observation" title="Link to this definition">#</a></dt>
 <dd><p>Parses current inventory and new items gained this timestep from the observation.
 Returns a modified observation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.reset" title="Link to this definition">#</a></dt>
 <dd><p>Resets the environment along with all available tasks, and change the current task.</p>
 <p>This ensures that all instance variables are reset, not just the ones for the current task.
 We do this efficiently by keeping track of which reset functions have already been called,
@@ -378,45 +380,62 @@ calling the final reset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.step" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_task_wrapper.NethackTaskWrapper.step" title="Link to this definition">#</a></dt>
 <dd><p>Step through environment and update task completion.</p>
 </dd></dl>
 
 </dd></dl>
 
 </section>
-<section id="module-syllabus.examples.task_wrappers.pistonball_task_wrapper">
-<span id="syllabus-examples-task-wrappers-pistonball-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.pistonball_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper" title="Permalink to this heading">#</a></h2>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
+<section id="module-syllabus.examples.task_wrappers.procgen_task_wrapper">
+<span id="syllabus-examples-task-wrappers-procgen-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.procgen_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.procgen_task_wrapper" title="Link to this heading">#</a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.pistonball_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">PistonballTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.html#syllabus.core.environment_task_wrapper.PettingZooTaskWrapper" title="syllabus.core.environment_task_wrapper.PettingZooTaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">PettingZooTaskWrapper</span></code></a></p>
-<p>This wrapper simply changes the seed of a Minigrid environment.</p>
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.procgen_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">ProcgenTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<p>This wrapper allows you to change the task of an NLE environment.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Resets the environment to an initial state and returns an initial
-observation.</p>
-<p>This method should also reset the environment’s random number
-generator(s) if <cite>seed</cite> is an integer or if the environment has not
-yet initialized a random number generator. If the environment already
-has a random number generator and <cite>reset</cite> is called with <cite>seed=None</cite>,
-the RNG should not be reset.
-Moreover, <cite>reset</cite> should (in the typical use case) be called with an
-integer seed right after initialization and then never again.</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>observation (object): the initial observation.
-info (optional dictionary): a dictionary containing extra information, this is only returned if return_info is set to true</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.change_task">
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.change_task" title="Link to this definition">#</a></dt>
+<dd><p>Change task by directly editing environment class.</p>
+<p>Ignores requests for unknown tasks or task changes outside of a reset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.observation">
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.observation" title="Link to this definition">#</a></dt>
+<dd><p>Adds the goal encoding to the observation.
+Override to add additional task-specific observations.
+Returns a modified observation.
+TODO: Complete this implementation and find way to support centralized encodings</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets the environment along with all available tasks, and change the current task.</p>
+<p>This ensures that all instance variables are reset, not just the ones for the current task.
+We do this efficiently by keeping track of which reset functions have already been called,
+since very few tasks override reset. If new_task is provided, we change the task before
+calling the final reset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.step" title="Link to this definition">#</a></dt>
+<dd><p>Step through environment and update task completion.</p>
 </dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="module-syllabus.examples.task_wrappers">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.examples.task_wrappers" title="Permalink to this heading">#</a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.examples.task_wrappers" title="Link to this heading">#</a></h2>
 </section>
 </section>
 
@@ -425,23 +444,23 @@ info (optional dictionary): a dictionary containing extra information, this is o
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="syllabus.task_space.html">
+          <a class="next-page" href="syllabus.core.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">syllabus.task_space package</div>
+                <div class="title">Global Synchronization</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="syllabus.examples.html">
+          <a class="prev-page" href="syllabus.core.task_interface.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">syllabus.examples package</div>
+                <div class="title">Task Interface</div>
                 
               </div>
             </a>
@@ -475,8 +494,7 @@ info (optional dictionary): a dictionary containing extra information, this is o
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">syllabus.examples.task_wrappers package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#">Example TaskWrappers</a><ul>
 <li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.cartpole_task_wrapper">syllabus.examples.task_wrappers.cartpole_task_wrapper module</a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper"><code class="docutils literal notranslate"><span class="pre">CartPoleTaskWrapper</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">CartPoleTaskWrapper.change_task()</span></code></a></li>
@@ -512,9 +530,13 @@ info (optional dictionary): a dictionary containing extra information, this is o
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper">syllabus.examples.task_wrappers.pistonball_task_wrapper module</a><ul>
-<li><a class="reference internal" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper"><code class="docutils literal notranslate"><span class="pre">PistonballTaskWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset"><code class="docutils literal notranslate"><span class="pre">PistonballTaskWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.procgen_task_wrapper">syllabus.examples.task_wrappers.procgen_task_wrapper module</a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper"><code class="docutils literal notranslate"><span class="pre">ProcgenTaskWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">ProcgenTaskWrapper.change_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.observation"><code class="docutils literal notranslate"><span class="pre">ProcgenTaskWrapper.observation()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.reset"><code class="docutils literal notranslate"><span class="pre">ProcgenTaskWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed"><code class="docutils literal notranslate"><span class="pre">ProcgenTaskWrapper.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.step"><code class="docutils literal notranslate"><span class="pre">ProcgenTaskWrapper.step()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -531,9 +553,9 @@ info (optional dictionary): a dictionary containing extra information, this is o
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=db78e746"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

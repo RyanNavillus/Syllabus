@@ -149,6 +149,14 @@ class Curriculum:
         """
         raise NotImplementedError
 
+    def _should_use_startup_sampling(self) -> bool:
+        return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
+
+    def _startup_sample(self) -> List:
+        task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
+        task_dist[0] = 1.0
+        return task_dist
+
     def sample(self, k: int = 1) -> Union[List, Any]:
         """Sample k tasks from the curriculum.
 
@@ -157,15 +165,13 @@ class Curriculum:
         """
         # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
-        if self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks:
-            task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
-            task_dist[0] = 1.0
-        else:
-            task_dist = self._sample_distribution()
+        if self._should_use_startup_sampling():
+            return self._startup_sample()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
         tasks = self.tasks
         n_tasks = len(tasks)
+        task_dist = self._sample_distribution()
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]
 

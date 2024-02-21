@@ -123,8 +123,8 @@ To help people get started using Syllabus, I've added a few simple curriculum le
 To build the documentation, run the following commands:
 
 ```
-cd docs/source
-sphinx-build -M html . ..
+sphinx-build -M html ./docs/source ./docs
+cp -r ./docs/html/* ./docs && rm -R ./docs/html/*
 ```
 
 Then you can view it at docs/html/index.html
