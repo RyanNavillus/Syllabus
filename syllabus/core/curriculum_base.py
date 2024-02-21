@@ -167,12 +167,11 @@ class Curriculum:
 
         if self._should_use_startup_sampling():
             return self._startup_sample()
-        else:
-            task_dist = self._sample_distribution()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
         tasks = self.tasks
         n_tasks = len(tasks)
+        task_dist = self._sample_distribution()
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return [tasks[i] for i in task_idx]
 
