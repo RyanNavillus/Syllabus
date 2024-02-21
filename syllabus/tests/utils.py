@@ -4,8 +4,9 @@ from multiprocessing import Process
 
 import gymnasium as gym
 import ray
+from pettingzoo.utils.env import ParallelEnv
 
-from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
+from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
 from syllabus.tests import SyncTestEnv
@@ -35,7 +36,26 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
     return avg_return, episode_returns
 
 
-def run_episode(env, new_task=None, curriculum=None):
+def run_pettingzoo_episode(env, new_task=None, curriculum=None):
+    """Run a single episode of the environment."""
+    if new_task:
+        obs = env.reset(new_task=new_task)
+    else:
+        obs = env.reset()
+    term = trunc = False
+    ep_rew = 0
+    while env.agents:
+        action = {agent: env.action_space(agent).sample() for agent in env.agents}
+        obs, rew, term, trunc, info = env.step(action)
+        if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
+            curriculum.update_on_step(obs, rew, term, trunc, info)
+        ep_rew += sum(rew.values())
+    if curriculum and "task_completion" in info:
+        curriculum.update_task_progress(env.task, info["task_completion"])
+    return ep_rew
+
+
+def run_gymnasium_episode(env, new_task=None, curriculum=None):
     """Run a single episode of the environment."""
     if new_task:
         obs = env.reset(new_task=new_task)
@@ -54,6 +74,13 @@ def run_episode(env, new_task=None, curriculum=None):
     return ep_rew
 
 
+def run_episode(env, new_task=None, curriculum=None):
+    if isinstance(env, ParallelEnv):
+        return run_pettingzoo_episode(env, new_task, curriculum)
+    else:
+        return run_gymnasium_episode(env, new_task, curriculum)
+
+
 def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10):
     """Run multiple episodes of the environment."""
     env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
@@ -61,9 +88,10 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10)
     for _ in range(num_episodes):
         if curriculum:
             task = curriculum.sample()[0]
-            ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum))
+            rews = run_episode(env, new_task=task, curriculum=curriculum)
         else:
-            ep_rews.append(run_episode(env))
+            rews = run_episode(env)
+        ep_rews.append(rews)
 
 
 def run_episodes_queue(env_fn, env_args, env_kwargs, task_queue, update_queue, sync=True, num_episodes=10, update_on_step=True):
@@ -158,13 +186,10 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 # Nethack Tests
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
-    try:
-        from nle.env.tasks import NetHackScore
+    from nle.env.tasks import NetHackScore
 
-        from syllabus.examples.task_wrappers.nethack_task_wrapper import \
-            NethackTaskWrapper
-    except ImportError:
-        warnings.warn("Unable to import nle.")
+    from syllabus.examples.task_wrappers.nethack_wrappers import \
+        NethackTaskWrapper
 
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
@@ -196,4 +221,22 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
         env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Pistonball Tests
+def create_pistonball_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    from pettingzoo.butterfly import pistonball_v6  # noqa: F401
+
+    from syllabus.examples.task_wrappers import PistonballTaskWrapper
+    env = pistonball_v6.parallel_env()
+
+    def create_env(task):
+        return pistonball_v6.parallel_env(n_pistons=task)
+
+    env = PistonballTaskWrapper(env)
+    if type == "queue":
+        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env

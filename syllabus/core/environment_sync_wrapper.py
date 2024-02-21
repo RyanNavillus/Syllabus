@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict
 import gymnasium as gym
 import numpy as np
 import ray
-from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
+from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from syllabus.core import Curriculum
 from syllabus.core.task_interface import TaskEnv, TaskWrapper, PettingZooTaskWrapper
@@ -111,8 +111,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             return env_attr
 
 
-# TODO: Fix this and refactor
-class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
+class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
     """
     This wrapper is used to set the task on reset for a Gym environments running
     on parallel processes created using multiprocessing.Process. Meant to be used
@@ -151,10 +150,8 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
     def reset(self, *args, **kwargs):
         self.step_updates = []
         self.task_progress = 0.0
-
         message = self.task_queue.get()     # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
-
         # Add any new tasks
         if "added_tasks" in message:
             added_tasks = message["added_tasks"]
@@ -163,14 +160,14 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
-        obs, rews, dones, infos = self.env.step(action)
+        obs, rews, terms, truncs, infos = self.env.step(action)
         is_finished = (len(self.env.agents) == 0)
         # Update curriculum with step info
         if self.update_on_step:
             # Environment outputs
             self.step_updates.append({
                 "update_type": "step",
-                "metrics": (obs, rews, dones, infos),
+                "metrics": (obs, rews, terms, truncs, infos),
                 "request_sample": False
             })
             # Task progress
@@ -192,7 +189,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
             }
             self.update_queue.put(update)
 
-        return obs, rews, dones, infos
+        return obs, rews, terms, truncs, infos
 
     def add_task(self, task):
         update = {
@@ -221,7 +218,92 @@ class RaySyncWrapper(gym.Wrapper):
         assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
-        self.update_on_step = update_on_step    # Disable to improve performance 10x
+        self.update_on_step = update_on_step    # Disable to improve performance
+        self.task_space = task_space
+        self.curriculum = ray.get_actor("curriculum")
+        self.task_completion = 0.0
+        self.global_task_completion = global_task_completion
+        self.step_results = []
+
+    def reset(self, *args, **kwargs):
+        self.step_results = []
+
+        # Update curriculum
+        update = {
+            "update_type": "task_progress",
+            "metrics": (self.env.task, self.task_completion),
+            "request_sample": True
+        }
+        self.curriculum.update.remote(update)
+        self.task_completion = 0.0
+
+        # Sample new task
+        sample = ray.get(self.curriculum.sample.remote())
+        next_task = sample[0]
+
+        return self.env.reset(*args, new_task=next_task, **kwargs)
+
+    def step(self, action):
+        obs, rew, term, trunc, info = self.env.step(action)
+
+        if "task_completion" in info:
+            if self.global_task_completion is not None:
+                # TODO: Hide rllib interface?
+                self.task_completion = self.global_task_completion(self.curriculum, obs, rew, term, trunc, info)
+            else:
+                self.task_completion = info["task_completion"]
+
+        # TODO: Optimize
+        if self.update_on_step:
+            self.step_results.append((obs, rew, term, trunc, info))
+            if len(self.step_results) >= 1000 or term or trunc:
+                update = {
+                    "update_type": "step_batch",
+                    "metrics": (self.step_results,),
+                    "request_sample": False
+                }
+                self.curriculum.update.remote(update)
+                self.step_results = []
+
+        return obs, rew, term, trunc, info
+
+    def change_task(self, new_task):
+        """
+        Changes the task of the existing environment to the new_task.
+
+        Each environment will implement tasks differently. The easiest system would be to call a
+        function or set an instance variable to change the task.
+
+        Some environments may need to be reset or even reinitialized to change the task.
+        If you need to reset or re-init the environment here, make sure to check
+        that it is not in the middle of an episode to avoid unexpected behavior.
+        """
+        self.env.change_task(new_task)
+
+    def add_task(self, task):
+        self.curriculum.add_task.remote(task)
+
+    def __getattr__(self, attr):
+        env_attr = getattr(self.env, attr, None)
+        if env_attr:
+            return env_attr
+
+
+class PettingZooRaySyncWrapper(BaseParallelWrapper):
+    """
+    This wrapper is used to set the task on reset for a Gym environments running
+    on parallel processes created using ray. Meant to be used with a
+    RayLearningProgressCurriculum running on the main process.
+    """
+    def __init__(self,
+                 env,
+                 update_on_step: bool = True,
+                 task_space: gym.Space = None,
+                 global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
+        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
+        super().__init__(env)
+        self.env = env
+        self.update_on_step = update_on_step    # Disable to improve performance
         self.task_space = task_space
         self.curriculum = ray.get_actor("curriculum")
         self.task_completion = 0.0

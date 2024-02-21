@@ -31,9 +31,9 @@ class ReinitTaskWrapper(TaskWrapper):
         return task
 
     def decode_task(self, encoding):
-        """ 
-        Override to convert element of the MultiDiscrete task space into format usable by the reinit env_fn. 
-        This is the identity function by default.  
+        """
+        Override to convert element of the MultiDiscrete task space into format usable by the reinit env_fn.
+        This is the identity function by default.
         """
         return encoding
 
