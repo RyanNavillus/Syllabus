@@ -11,6 +11,13 @@ class TaskSpace():
             # Syntactic sugar for discrete space
             gym_space = Discrete(gym_space)
 
+        if isinstance(gym_space, MultiDiscrete):
+            # Syntactic sugar for discrete space
+            gym_space = MultiDiscrete(gym_space)
+            if tasks is None:
+                tasks = range(gym_space.n)
+
+
         self.gym_space = gym_space
 
         # Autogenerate task names for discrete spaces
@@ -39,6 +46,18 @@ class TaskSpace():
             decoders = [r[1] for r in results]
             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+
+        elif isinstance(space, MultiDiscrete):
+            if isinstance(space, MultiDiscrete):
+                assert space.nvec.ndim == len(tasks), f"Number of steps in a tasks ({space.nvec.ndim}) must match number of discrete options ({len(tasks)})"
+            
+            combinations = [p for p in itertools.product(*list)]
+            self._encode_map = {task: i for i, task in enumerate(combinations)}
+            self._decode_map = {i: task for i, task in enumerate(combinations)}
+            temp = ",".join(str(element) for element in task)
+            encoder = lambda task: self._encode_map[temp] if temp in self._encode_map else Nonefmp 
+            decoder = lambda task: self._decode_map[temp] if task in self._decode_map else None
+
         else:
             encoder = lambda task: task
             decoder = lambda task: task
