@@ -4,7 +4,7 @@ import pettingzoo
 import gymnasium as gym
 
 from nle.env.tasks import NetHackScore
-from syllabus.curricula import NoopCurriculum, DomainRandomization
+from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_pistonball_env, create_nethack_env, create_cartpole_env
 
@@ -17,8 +17,8 @@ if __name__ == "__main__":
     curricula = [
         (NoopCurriculum, create_pistonball_env, (0, pistonball_env.task_space), {}),
         (DomainRandomization, create_pistonball_env, (pistonball_env.task_space,), {}),
-        # (LearningProgressCurriculum, create_nethack_env, (create_pistonball_env.task_space,), {}),
-        # (PrioritizedLevelReplay, create_nethack_env, (create_pistonball_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
+        (LearningProgressCurriculum, create_pistonball_env, (pistonball_env.task_space,), {}),
+        (PrioritizedLevelReplay, create_pistonball_env, (pistonball_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
         # (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
     ]
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
         # Test Queue multiprocess speed with Syllabus
         test_curriculum = curriculum(*args, **kwargs)
-        test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum)
+        test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
         print("\nRUNNING: Python native multiprocess test with Syllabus...")
         native_syllabus_speed = test_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python native multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")

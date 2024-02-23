@@ -14,6 +14,7 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
         super().__init__(env)
         self.env = env
         self.env.unwrapped.task: str = 1
+        self.task = None
 
         # Task completion metrics
         self.episode_return = 0
@@ -31,5 +32,5 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
             self.env = pistonball_v6.parallel_env(
                 ball_friction=task, continuous=False, max_cycles=125
             )
-            self.env.unwrapped.task = new_task
+            self.task = new_task
         return self.observation(self.env.reset(**kwargs))

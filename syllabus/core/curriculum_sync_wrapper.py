@@ -96,11 +96,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         while self.should_update:
             # Update curriculum with environment results:
             requested_tasks = 0
-            while self.update_queue is not None and not self.update_queue.empty():
+            while not self.update_queue.empty():
                 batch_updates = self.update_queue.get()
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
-
                 for update in batch_updates:
                     # Count updates with "request_sample" set to True
                     if "request_sample" in update and update["request_sample"]:
