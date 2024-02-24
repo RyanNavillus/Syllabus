@@ -13,6 +13,11 @@ from syllabus.tests import SyncTestEnv
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
     env = make_env(seed=seeds[0] if seeds else None)
+
+    # Seed environment
+    env.action_space.seed(seeds[0])
+    env.observation_space.seed(seeds[0])
+
     episode_returns = []
 
     for i in range(num_episodes):
@@ -31,7 +36,7 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
         episode_returns.append(episode_return)
 
     avg_return = sum(episode_returns) / len(episode_returns)
-    print(f"Average Episodic Return: {avg_return}")
+    # print(f"Average Episodic Return: {avg_return}")
     return avg_return, episode_returns
 
 
