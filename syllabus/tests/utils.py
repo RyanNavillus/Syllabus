@@ -6,10 +6,10 @@ import gymnasium as gym
 import ray
 from pettingzoo.utils.env import ParallelEnv
 
-from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
+from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
-from syllabus.tests import SyncTestEnv
+from syllabus.tests import SyncTestEnv, PettingZooSyncTestEnv
 
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
@@ -48,10 +48,11 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None):
         action = {agent: env.action_space(agent).sample() for agent in env.agents}
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(obs, rew, term, trunc, info)
+            curriculum.update_on_step(obs, sum(rew.values()), all(term.values()), all(trunc.values()), info)
         ep_rew += sum(rew.values())
-    if curriculum and "task_completion" in info:
-        curriculum.update_task_progress(env.task, info["task_completion"])
+    if curriculum and len(info.values()) > 0 and "task_completion" in list(info.values())[0]:
+        task_progress = max([i["task_completion"] for i in info.values()])
+        curriculum.update_task_progress(env.task, task_progress)
     return ep_rew
 
 
@@ -162,13 +163,22 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
     return ray_speed
 
 
-# Sync Test Environment
-def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+# Sync Test Environments
+def create_synctest_gymnasium_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
         env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+def create_pettingzoo_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = PettingZooSyncTestEnv(*env_args, **env_kwargs)
+    if type == "queue":
+        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 

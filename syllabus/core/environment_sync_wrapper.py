@@ -162,13 +162,16 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
     def step(self, action):
         obs, rews, terms, truncs, infos = self.env.step(action)
 
+        if "task_completion" in list(infos.values())[0]:
+            self.task_progress = max([info["task_completion"] for info in infos.values()])
+
         is_finished = (len(self.env.agents) == 0) or all(terms.values())
         # Update curriculum with step info
         if self.update_on_step:
             # Environment outputs
             self.step_updates.append({
                 "update_type": "step",
-                "metrics": (obs, rews, terms, truncs, infos),
+                "metrics": (obs, sum(rews.values()), all(terms.values()), all(truncs.values()), list(infos.values())[0]),
                 "request_sample": False
             })
             # Task progress
