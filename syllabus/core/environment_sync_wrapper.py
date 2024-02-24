@@ -169,6 +169,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         # Update curriculum with step info
         if self.update_on_step:
             # Environment outputs
+            # TODO: Create a better system for aggregating step results in different ways. Maybe custom aggregation functions
             self.step_updates.append({
                 "update_type": "step",
                 "metrics": (obs, sum(rews.values()), all(terms.values()), all(truncs.values()), list(infos.values())[0]),
