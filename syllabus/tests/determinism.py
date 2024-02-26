@@ -120,7 +120,7 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
         env2.task_space.seed(0)
 
     term1 = trunc1 = term2 = trunc2 = {agent: False for agent in env1.agents}
-    while not (term1 or trunc1 or term2 or trunc2):
+    while not (all(term1.values()) or all(trunc1.values()) or all(term2.values()) or all(trunc2.values())):
         action1 = {agent: env1.action_space(agent).sample() for agent in env1.agents}
         action2 = {agent: env2.action_space(agent).sample() for agent in env2.agents}
 
@@ -132,7 +132,7 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
         obs1, rew1, term1, trunc1, info1 = env1.step(action1)
         obs2, rew2, term2, trunc2, info2 = env2.step(action2)
 
-        all_agents = set(obs1.keys()) + set(obs2.keys())
+        all_agents = set(obs1.keys()).intersection(set(obs2.keys()))
 
         # Check observations
         for agent in all_agents:
@@ -147,6 +147,7 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
         for agent in all_agents:
             rew1_agent = rew1[agent]
             rew2_agent = rew2[agent]
+
             if rew1_agent != rew2_agent:
                 if num_rews_failed == 0:
                     print_if_verbose(verbose, f"Step {step}: Rewards are not the same for agent {agent}: {rew1_agent} != {rew2_agent}. This message will not print for future steps.")
@@ -182,6 +183,7 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
 
     # Test full episode returns
     print_if_verbose(verbose, "\nTesting average episodic returns...")
+
     seeds = [task_space.sample() for _ in range(num_episodes)]
     return1, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=seeds)
     return2, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=seeds)

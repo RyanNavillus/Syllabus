@@ -29,7 +29,8 @@ class TaskSpace():
             if isinstance(gym_space, MultiDiscrete):
                 tasks = list(itertools.product(*[range(n) for n in gym_space.nvec]))
 
-        self._tasks = set(tasks) if tasks is not None else None
+        self._task_set = set(tasks) if tasks is not None else None
+        self._task_list = tasks
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
 
     def _make_task_encoder(self, space, tasks):
@@ -51,12 +52,10 @@ class TaskSpace():
             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
         elif isinstance(space, MultiDiscrete):
-            self._encode_map = {task: i for i, task in enumerate(tasks)}
-            self._decode_map = {i: task for i, task in enumerate(tasks)}
-            print(self._encode_map)
-            print(self._decode_map)
+            self._encode_map = {tuple(task): i for i, task in enumerate(tasks)}
+            self._decode_map = {i: tuple(task) for i, task in enumerate(tasks)}
             # temp = ",".join(str(element) for element in task)
-            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
+            encoder = lambda task: self._encode_map[tuple(task)] if tuple(task) in self._encode_map else None
             decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
         else:
             encoder = lambda task: task
@@ -73,12 +72,12 @@ class TaskSpace():
 
     def add_task(self, task):
         """Add a task to the task space. Only implemented for discrete spaces."""
-        if task not in self._tasks:
-            self._tasks.add(task)
+        if task not in self._task_set:
+            self._task_set.add(task)
             # TODO: Increment task space size
             self.gym_space = self.increase_space()
             # TODO: Optimize adding tasks
-            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._tasks)
+            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._task_set)
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
@@ -102,7 +101,7 @@ class TaskSpace():
     @property
     def tasks(self) -> List[Any]:
         # TODO: Can I just use _tasks?
-        return self._tasks
+        return self._task_list
 
     def get_tasks(self, gym_space: Space = None, sample_interval: float = None) -> List[tuple]:
         """
@@ -166,7 +165,7 @@ class TaskSpace():
         return repr(self.decode(task))
 
     def contains(self, task):
-        return task in self._tasks or self.decode(task) in self._tasks
+        return task in self._task_set or self.decode(task) in self._task_set
 
     def increase_space(self, amount: Union[int, float] = 1):
         if isinstance(self.gym_space, Discrete):
@@ -174,7 +173,11 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
-        return self.decode(self.gym_space.sample())
+        # TODO: Gross
+        if isinstance(self.gym_space, MultiDiscrete):
+            return self._task_list[np.random.choice(np.arange(len(self._task_list)))]
+        else:
+            return self.decode(self.gym_space.sample())
 
     def list_tasks(self):
-        return list(self._tasks)
+        return self._task_list
