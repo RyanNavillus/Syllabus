@@ -77,6 +77,9 @@ class TaskSpace():
         else:
             raise NotImplementedError(f"{type(list_or_size)}")
 
+    def seed(self, seed):
+        self.gym_space.seed(seed)
+
     @property
     def tasks(self) -> List[Any]:
         # TODO: Can I just use _tasks?
@@ -152,7 +155,6 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
-        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box)
         return self.decode(self.gym_space.sample())
 
     def list_tasks(self):

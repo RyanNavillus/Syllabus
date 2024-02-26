@@ -15,8 +15,8 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
     env = make_env(seed=seeds[0] if seeds else None)
 
     # Seed environment
-    env.action_space.seed(seeds[0])
-    env.observation_space.seed(seeds[0])
+    env.action_space.seed(0)
+    env.observation_space.seed(0)
 
     episode_returns = []
 
@@ -24,8 +24,8 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
         episode_return = 0
         if seeds:
             _ = env.reset(new_task=seeds[i])
-            env.action_space.seed(seeds[i])
-            env.observation_space.seed(seeds[i])
+            env.action_space.seed(0)
+            env.observation_space.seed(0)
         else:
             _ = env.reset()
         term = trunc = False
