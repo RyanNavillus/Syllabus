@@ -13,6 +13,14 @@ from syllabus.tests import SyncTestEnv, PettingZooSyncTestEnv
 
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
+    env = make_env()
+    if isinstance(env, ParallelEnv):
+        return evaluate_random_policy_pettingzoo(make_env, seeds=seeds, num_episodes=num_episodes)
+    else:
+        return evaluate_random_policy_gymnasium(make_env, seeds=seeds, num_episodes=num_episodes)
+
+
+def evaluate_random_policy_gymnasium(make_env, num_episodes=100, seeds=None):
     env = make_env(seed=seeds[0] if seeds else None)
 
     # Seed environment
@@ -34,6 +42,37 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
             action = env.action_space.sample()
             _, rew, term, trunc, _ = env.step(action)
             episode_return += rew
+        episode_returns.append(episode_return)
+
+    avg_return = sum(episode_returns) / len(episode_returns)
+    # print(f"Average Episodic Return: {avg_return}")
+    return avg_return, episode_returns
+
+
+def evaluate_random_policy_pettingzoo(make_env, num_episodes=100, seeds=None):
+    env = make_env(seed=seeds[0] if seeds else None)
+
+    # Seed environment
+    for agent in env.possible_agents:
+        env.action_space(agent).seed(0)
+        env.observation_space(agent).seed(0)
+
+    episode_returns = []
+
+    for i in range(num_episodes):
+        episode_return = 0
+        if seeds:
+            _ = env.reset(new_task=seeds[i])
+            for agent in env.possible_agents:
+                env.action_space(agent).seed(0)
+                env.observation_space(agent).seed(0)
+        else:
+            _ = env.reset()
+        term = trunc = {agent: False for agent in env.agents}
+        while not (all(term.values()) or all(trunc.values())):
+            actions = {agent: env.action_space(agent).sample() for agent in env.agents}
+            _, rew, term, trunc, _ = env.step(actions)
+            episode_return += sum(rew.values())
         episode_returns.append(episode_return)
 
     avg_return = sum(episode_returns) / len(episode_returns)

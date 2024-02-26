@@ -11,12 +11,23 @@ class TaskSpace():
             # Syntactic sugar for discrete space
             gym_space = Discrete(gym_space)
 
+        if isinstance(gym_space, tuple) and all([isinstance(x, int) for x in gym_space]):
+            # Syntactic sugar for multidiscrete space
+            gym_space = MultiDiscrete(gym_space)
+
+        # Expand Multidiscrete tasks
+        if isinstance(gym_space, MultiDiscrete) and tasks is not None:
+            # TODO: Add some check that task names are correct shape for gym space
+            tasks = list(itertools.product(*tasks))
+
         self.gym_space = gym_space
 
         # Autogenerate task names for discrete spaces
-        if isinstance(gym_space, Discrete):
-            if tasks is None:
+        if tasks is None:
+            if isinstance(gym_space, Discrete):
                 tasks = range(gym_space.n)
+            if isinstance(gym_space, MultiDiscrete):
+                tasks = list(itertools.product(*[range(n) for n in gym_space.nvec]))
 
         self._tasks = set(tasks) if tasks is not None else None
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
@@ -39,6 +50,14 @@ class TaskSpace():
             decoders = [r[1] for r in results]
             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+        elif isinstance(space, MultiDiscrete):
+            self._encode_map = {task: i for i, task in enumerate(tasks)}
+            self._decode_map = {i: task for i, task in enumerate(tasks)}
+            print(self._encode_map)
+            print(self._decode_map)
+            # temp = ",".join(str(element) for element in task)
+            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
+            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
         else:
             encoder = lambda task: task
             decoder = lambda task: task
