@@ -4,7 +4,11 @@ from typing import TypeVar
 import gym
 import gym_multi_car_racing
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
 from gymnasium import spaces
+from torch.distributions.normal import Normal
 from tqdm.auto import tqdm
 
 from syllabus.core import TaskWrapper, make_multiprocessing_curriculum
@@ -14,6 +18,83 @@ from syllabus.task_space import TaskSpace
 ObsType = TypeVar("ObsType")
 ActionType = TypeVar("ActionType")
 AgentID = TypeVar("AgentID")
+
+
+def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
+    torch.nn.init.orthogonal_(layer.weight, std)
+    torch.nn.init.constant_(layer.bias, bias_const)
+    return layer
+
+
+class Agent(nn.Module):
+    def __init__(self, envs):
+        super().__init__()
+        self.critic = nn.Sequential(
+            layer_init(
+                nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)
+            ),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 1), std=1.0),
+        )
+        self.actor_mean = nn.Sequential(
+            layer_init(
+                nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)
+            ),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 64)),
+            nn.Tanh(),
+            layer_init(
+                nn.Linear(64, np.prod(envs.single_action_space.shape)), std=0.01
+            ),
+        )
+        self.actor_logstd = nn.Parameter(
+            torch.zeros(1, np.prod(envs.single_action_space.shape))
+        )
+
+    def get_value(self, x):
+        return self.critic(x)
+
+    def get_action_and_value(self, x, action=None):
+        action_mean = self.actor_mean(x)
+        action_logstd = self.actor_logstd.expand_as(action_mean)
+        action_std = torch.exp(action_logstd)
+        probs = Normal(action_mean, action_std)
+        if action is None:
+            action = probs.sample()
+        return (
+            action,
+            probs.log_prob(action).sum(1),
+            probs.entropy().sum(1),
+            self.critic(x),
+        )
+
+
+def batchify_obs(obs, device):
+    """Converts PZ style observations to batch of torch arrays."""
+    obs = np.stack([obs[a] for a in obs], axis=0)
+    # transpose to be (batch, channel, height, width)
+    obs = obs.transpose(0, -1, 1, 2)
+    obs = torch.tensor(obs).to(device)
+
+    return obs
+
+
+def batchify(x, device):
+    """Converts PZ style returns to batch of torch arrays."""
+    x = np.stack([x[a] for a in x], axis=0)
+    x = torch.tensor(x).to(device)
+
+    return x
+
+
+def unbatchify(x, env):
+    """Converts np array to PZ style arguments."""
+    x = x.cpu().numpy()
+    x = {a: x[i] for i, a in enumerate(env.possible_agents)}
+
+    return x
 
 
 class MultiCarRacingParallelWrapper(TaskWrapper):
@@ -30,6 +111,16 @@ class MultiCarRacingParallelWrapper(TaskWrapper):
     def __init__(self, n_agents, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.n_agents = n_agents
+        self.task = None
+        self.episode_return = 0
+        self.task_space = TaskSpace(
+            spaces.Box(
+                low=np.array([-1.0, 0.0, 0.0]),
+                high=np.array([1.0, 1.0, 1.0]),
+                shape=(3,),
+                dtype=np.float32,
+            )
+        )
 
     def _actions_pz_to_np(self, action: dict[AgentID, ActionType]) -> np.ndarray:
         """
@@ -93,6 +184,18 @@ class MultiCarRacingParallelWrapper(TaskWrapper):
 
 
 if __name__ == "__main__":
+    """ALGO PARAMS"""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    ent_coef = 0.1
+    vf_coef = 0.1
+    clip_coef = 0.1
+    gamma = 0.99
+    batch_size = 32
+    stack_size = 4
+    frame_size = (96, 96)
+    max_cycles = 125
+    total_episodes = 100
+
     n_agents = 2
     env = gym.make(
         "MultiCarRacing-v0",
@@ -104,11 +207,15 @@ if __name__ == "__main__":
         use_ego_color=False,
     )
 
+    """ CURRICULUM SETUP """
     env = MultiCarRacingParallelWrapper(env=env, n_agents=n_agents)
-    # curriculum = DomainRandomization(env)
-    # curriculum, task_queue, update_queue = make_multiprocessing_curriculum(
-    #     curriculum,
-    # )
+    curriculum = DomainRandomization(env.task_space)
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+
+    # TODO: clarify how to setup continuous PPO
+    # """ LEARNER SETUP """
+    # agent = Agent(envs=envs).to(device)
+    # optimizer = optim.Adam(agent.parameters(), lr=0.001, eps=1e-5)
 
     done = {i: False for i in range(n_agents)}
     total_reward = {i: 0 for i in range(n_agents)}
