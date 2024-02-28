@@ -136,6 +136,7 @@ class PrioritizedLevelReplay(Curriculum):
             action_space=action_space,
         )
         self._rollouts.to(device)
+        # TODO: Fix this feature
         self.num_updates = 0  # Used to ensure proper usage
         self.num_samples = 0  # Used to ensure proper usage
 
@@ -213,13 +214,14 @@ class PrioritizedLevelReplay(Curriculum):
         else:
             return [self._task_sampler.sample() for _ in range(k)]
 
-    def update_on_step(self, obs, rew, term, trunc, info) -> None:
+    def update_on_step(self, obs, rew, term, trunc, info, env_id=None) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
-        raise NotImplementedError(
-            "PrioritizedLevelReplay does not support the step updates. Use on_demand from the learner process."
-        )
+        # raise NotImplementedError(
+        #     "PrioritizedLevelReplay does not support the step updates. Use on_demand from the learner process."
+        # )
+        pass
 
     def update_on_step_batch(
         self, step_results: List[Tuple[int, int, int, int]]
@@ -227,9 +229,10 @@ class PrioritizedLevelReplay(Curriculum):
         """
         Update the curriculum with a batch of step results from the environment.
         """
-        raise NotImplementedError(
-            "PrioritizedLevelReplay does not support the step updates. Use on_demand from the learner process."
-        )
+        # raise NotImplementedError(
+        #     "PrioritizedLevelReplay does not support the step updates. Use on_demand from the learner process."
+        # )
+        pass
 
     def update_on_episode(self, episode_return: float, trajectory: List = None) -> None:
         """
@@ -239,13 +242,14 @@ class PrioritizedLevelReplay(Curriculum):
             "PrioritizedLevelReplay does not support the episode updates. Use on_demand from the learner process."
         )
 
-    def update_task_progress(self, task: Any, success_prob: float) -> None:
+    def update_task_progress(self, task: Any, success_prob: float, env_id=None) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
         """
-        if not self._supress_usage_warnings and self.num_updates == 0 and self.num_samples > self._num_processes * 2:
-            raise UsageError("PLR has not been updated yet. Please call update_curriculum() in your learner process.")
+        # if not self._supress_usage_warnings and self.num_updates == 0 and self.num_samples > self._num_processes * 2:
+        #     raise UsageError("PLR has not been updated yet. Please call update_curriculum() in your learner process.")
+        pass
 
     def _enumerate_tasks(self, space):
         assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"

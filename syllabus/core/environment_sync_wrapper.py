@@ -1,4 +1,4 @@
-from multiprocessing import SimpleQueue
+from multiprocessing import SimpleQueue, Lock
 from typing import Any, Callable, Dict
 
 import gymnasium as gym
@@ -6,8 +6,10 @@ import numpy as np
 import ray
 # from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
-from syllabus.core import Curriculum, TaskEnv, TaskWrapper  # , PettingZooTaskWrapper
+from syllabus.core import Curriculum, TaskEnv, TaskWrapper, MultiProcessingCurriculumWrapper  # , PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
+from multiprocessing.shared_memory import SharedMemory
+from copy import copy
 
 
 class MultiProcessingSyncWrapper(gym.Wrapper):
@@ -16,10 +18,12 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     on parallel processes created using multiprocessing.Process. Meant to be used
     with a QueueLearningProgressCurriculum running on the main process.
     """
+    instance_id = 0
+    shared_mem = SharedMemory(size=1024, create=True)
+
     def __init__(self,
                  env,
-                 task_queue: SimpleQueue,
-                 update_queue: SimpleQueue,
+                 components: MultiProcessingCurriculumWrapper.Components,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  buffer_size: int = 1,
                  task_space: TaskSpace = None,
@@ -27,8 +31,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
-        self.task_queue = task_queue
-        self.update_queue = update_queue
+        self._latest_task = None
+        self.task_queue = components.task_queue
+        self.update_queue = components.update_queue
         self.task_space = task_space
         self.update_on_step = update_on_step
         self.global_task_completion = global_task_completion
@@ -36,6 +41,10 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.step_updates = []
         self.warned_once = False
         self._first_episode = True
+        components.instance_lock.acquire()
+        self.instance_id = copy(MultiProcessingSyncWrapper.shared_mem.buf[0])
+        MultiProcessingSyncWrapper.shared_mem.buf[0] += 1
+        components.instance_lock.release()
 
         # Request initial task
         for _ in range(buffer_size):
@@ -52,6 +61,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
         message = self.task_queue.get()     # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
+        self._latest_task = next_task
 
         # Add any new tasks
         if "added_tasks" in message:
@@ -74,23 +84,28 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self.step_updates.append({
                 "update_type": "step",
                 "metrics": (obs, rew, term, trunc, info),
+                "env_id": self.instance_id,
                 "request_sample": False
             })
             # Task progress
             self.step_updates.append({
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+                "env_id": self.instance_id,
                 "request_sample": term or trunc
             })
             # Send batched updates
-            if len(self.step_updates) >= 1000 or term or trunc:
-                self.update_queue.put(self.step_updates)
+            if len(self.step_updates) >= 100 or term or trunc:
+                # Group updates into arrays
+                updates = self._aggregate_step_updates()
+                self.update_queue.put(updates)
                 self.step_updates = []
         elif term or trunc:
             # Task progress
             update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+                "env_id": self.instance_id,
                 "request_sample": True,
             }
             self.update_queue.put(update)
@@ -104,11 +119,42 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         }
         self.update_queue.put(update)
 
+    def get_task(self):
+        # Allow user to reject task
+        if hasattr(self.env, "task"):
+            return self.env.task
+        return self._latest_task
+
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
         if env_attr is not None:
             return env_attr
 
+    def _aggregate_step_updates(self):
+        updates = []
+        rews = []
+        obs = []
+        terms = []
+        truncs = []
+        infos = []
+        for step_update in self.step_updates:
+            if step_update["update_type"] == "step":
+                ob, rew, term, trunc, info = step_update["metrics"]
+                obs.append(ob)
+                rews.append(rew)
+                terms.append(term)
+                truncs.append(trunc)
+                infos.append(info)
+            else:
+                updates.append(step_update)
+        step_batch = {
+            "update_type": "step_batch",
+            "metrics": ([np.array(obs), np.array(rews), np.array(terms), np.array(truncs), np.array(infos)],),
+            "env_id": self.instance_id,
+            "request_sample": False
+        }
+        updates.append(step_batch)
+        return updates
 
 # TODO: Fix this and refactor
 # class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
@@ -204,7 +250,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 #             "metrics": task
 #         }
 #         self.update_queue.put(update)
-    
+
 #     def __getattr__(self, attr):
 #         env_attr = getattr(self.env, attr, None)
 #         if env_attr:

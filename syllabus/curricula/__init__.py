@@ -4,6 +4,7 @@ from .domain_randomization import DomainRandomization
 from .learning_progress import LearningProgressCurriculum
 from .noop import NoopCurriculum
 from .plr.plr_wrapper import PrioritizedLevelReplay
+from .plr.async_plr_wrapper import AsyncPrioritizedLevelReplay
 from .plr.task_sampler import TaskSampler
 from .sequential import SequentialCurriculum
 from .simple_box import SimpleBoxCurriculum

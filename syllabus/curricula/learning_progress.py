@@ -28,7 +28,7 @@ class LearningProgressCurriculum(Curriculum):
         self._p_fast = np.zeros(self.num_tasks)
         self._p_slow = np.zeros(self.num_tasks)
 
-    def update_task_progress(self, task: int, progress: float):
+    def update_task_progress(self, task: int, progress: float, env_id=None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
@@ -43,6 +43,7 @@ class LearningProgressCurriculum(Curriculum):
         """
         Compute the learning progress metric for the given task.
         """
+        print(task)
         slow = self._reweight(self._p_slow[task]) if reweight else self._p_slow[task]
         fast = self._reweight(self._p_fast[task]) if reweight else self._p_fast[task]
         return abs(fast - slow)

@@ -51,7 +51,7 @@ class Curriculum:
         # TODO
         raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
 
-    def update_task_progress(self, task: typing.Any, progress: Tuple[float, bool]) -> None:
+    def update_task_progress(self, task: typing.Any, progress: Tuple[float, bool], env_id: int = None) -> None:
         """Update the curriculum with a task and its progress.
 
         :param task: Task for which progress is being updated.
@@ -59,7 +59,7 @@ class Curriculum:
         """
         self.completed_tasks += 1
 
-    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict) -> None:
+    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
@@ -71,7 +71,7 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int, int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
         This method can be overridden to provide a more efficient implementation. It is used
@@ -113,18 +113,19 @@ class Curriculum:
 
         update_type = update_data["update_type"]
         args = update_data["metrics"]
+        env_id = update_data["env_id"] if "env_id" in update_data else None
 
         if update_type == "step":
-            self.update_on_step(*args)
+            self.update_on_step(*args, env_id=env_id)
         elif update_type == "step_batch":
-            self.update_on_step_batch(*args)
+            self.update_on_step_batch(*args, env_id=env_id)
         elif update_type == "episode":
             self.update_on_episode(*args)
         elif update_type == "on_demand":
             # Directly pass metrics without expanding
             self.update_on_demand(args)
         elif update_type == "task_progress":
-            self.update_task_progress(*args)
+            self.update_task_progress(*args, env_id=env_id)
         elif update_type == "add_task":
             self.add_task(args)
         elif update_type == "noop":

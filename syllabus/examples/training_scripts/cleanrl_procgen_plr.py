@@ -124,20 +124,18 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_queue, update_queue, curriculum=False, start_level=0, num_levels=1):
+def make_env(env_id, seed, curriculum_components=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         env = ProcgenTaskWrapper(env, env_id, seed=seed)
-        if curriculum:
-            if task_queue is not None and update_queue is not None:
-                env = MultiProcessingSyncWrapper(
-                    env,
-                    task_queue,
-                    update_queue,
-                    update_on_step=False,
-                    task_space=env.task_space,
-                )
+        if curriculum_components is not None:
+            env = MultiProcessingSyncWrapper(
+                env,
+                curriculum_components,
+                update_on_step=False,
+                task_space=env.task_space,
+            )
         return env
     return thunk
 
@@ -233,10 +231,10 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
-            dir="/fs/nexus-scratch/rsulli/"
+            # dir="/fs/nexus-scratch/rsulli/"
         )
         wandb.run.log_code("./syllabus/examples")
-    writer = SummaryWriter(f"/fs/nexus-scratch/rsulli/runs/{run_name}")
+    writer = SummaryWriter(f"./runs/{run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -277,7 +275,7 @@ if __name__ == "__main__":
             curriculum = LearningProgressCurriculum(sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+        curriculum = make_multiprocessing_curriculum(curriculum)
         del sample_env
 
     # env setup
@@ -287,9 +285,7 @@ if __name__ == "__main__":
             make_env(
                 args.env_id,
                 args.seed + i,
-                task_queue,
-                update_queue,
-                curriculum=args.curriculum,
+                curriculum_components=curriculum.get_components() if args.curriculum else None,
                 num_levels=1 if args.curriculum else 0
             )
             for i in range(args.num_envs)
@@ -299,7 +295,7 @@ if __name__ == "__main__":
 
     test_eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=0)
+            make_env(args.env_id, args.seed + i, num_levels=0)
             for i in range(args.num_eval_episodes)
         ]
     )
@@ -307,7 +303,7 @@ if __name__ == "__main__":
 
     train_eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=200)
+            make_env(args.env_id, args.seed + i, num_levels=200)
             for i in range(args.num_eval_episodes)
         ]
     )

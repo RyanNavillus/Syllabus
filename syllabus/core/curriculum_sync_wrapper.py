@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import ray
 import time
-from torch.multiprocessing import SimpleQueue
+from torch.multiprocessing import SimpleQueue, Lock
 
 from syllabus.core import Curriculum, decorate_all_functions
 
@@ -59,6 +59,12 @@ class CurriculumWrapper:
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper.
     """
+    class Components:
+        def __init__(self, task_queue, update_queue):
+            self.task_queue = task_queue
+            self.update_queue = update_queue
+            self.instance_lock = Lock()
+
     def __init__(self,
                  curriculum: Curriculum,
                  task_queue: SimpleQueue,
@@ -73,6 +79,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.num_assigned_tasks = 0
         # TODO: Check if task_space is enumerable
         self.sequential_start = sequential_start
+        self._components = MultiProcessingCurriculumWrapper.Components(task_queue, update_queue)
 
     def start(self):
         """
@@ -143,6 +150,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         super().add_task(task)
         self.added_tasks.append(task)
 
+    def get_components(self):
+        return self._components
+
 
 def remote_call(func):
     """
@@ -169,9 +179,10 @@ def make_multiprocessing_curriculum(curriculum, **kwargs):
     """
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
+
     mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
     mp_curriculum.start()
-    return mp_curriculum, task_queue, update_queue
+    return mp_curriculum
 
 
 @ray.remote
