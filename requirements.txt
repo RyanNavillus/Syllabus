@@ -1,5 +1,7 @@
 pettingzoo==1.23.0 # upgraded from 1.9 to solve BaseParallelWrapper import (typo)
-supersuit==3.5.0
+# upgraded from 3.5.0 to 3.7.2 (as pettingZoo < 1.23 is a dependency, 
+# the typo error is also present here)
+supersuit==3.7.2 
 gym==0.24.1
 numpy==1.23.3
 wandb>=0.15.3
