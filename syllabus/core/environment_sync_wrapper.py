@@ -8,7 +8,7 @@ import ray
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from syllabus.core import Curriculum, TaskEnv, TaskWrapper, MultiProcessingCurriculumWrapper  # , PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
-from multiprocessing.shared_memory import SharedMemory
+from multiprocessing.shared_memory import SharedMemory, ShareableList
 from copy import copy
 
 
@@ -19,7 +19,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     with a QueueLearningProgressCurriculum running on the main process.
     """
     instance_id = 0
-    shared_mem = SharedMemory(size=1024, create=True)
+    shared_mem = ShareableList([0])
 
     def __init__(self,
                  env,
@@ -42,8 +42,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.warned_once = False
         self._first_episode = True
         components.instance_lock.acquire()
-        self.instance_id = copy(MultiProcessingSyncWrapper.shared_mem.buf[0])
-        MultiProcessingSyncWrapper.shared_mem.buf[0] += 1
+        self.instance_id = copy(MultiProcessingSyncWrapper.shared_mem[0])
+        MultiProcessingSyncWrapper.shared_mem[0] += 1
         components.instance_lock.release()
 
         # Request initial task

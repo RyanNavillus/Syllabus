@@ -69,16 +69,19 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                  curriculum: Curriculum,
                  task_queue: SimpleQueue,
                  update_queue: SimpleQueue,
-                 sequential_start: bool = True):
+                 sequential_start: bool = True,
+                 seed_tasks: int = 0):
         super().__init__(curriculum)
         self.task_queue = task_queue
         self.update_queue = update_queue
+        self.sequential_start = sequential_start
+        self.seed_tasks = seed_tasks
+
         self.update_thread = None
         self.should_update = False
         self.added_tasks = []
         self.num_assigned_tasks = 0
-        # TODO: Check if task_space is enumerable
-        self.sequential_start = sequential_start
+
         self._components = MultiProcessingCurriculumWrapper.Components(task_queue, update_queue)
 
     def start(self):
@@ -88,6 +91,19 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
         self.update_thread.start()
+
+        # Testing: Seed curriculum with 1 task per env
+        if self.seed_tasks > 0:
+            new_tasks = self.curriculum.sample(k=self.seed_tasks)
+            for i, task in enumerate(new_tasks):
+                message = {
+                    "next_task": self.task_space.encode(task),
+                    "added_tasks": self.added_tasks,
+                    "sample_id": self.num_assigned_tasks + i,
+                }
+                self.task_queue.put(message)
+                self.added_tasks = []
+            self.num_assigned_tasks += self.seed_tasks
 
     def stop(self):
         """
@@ -103,7 +119,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         while self.should_update:
             # Update curriculum with environment results:
             requested_tasks = 0
-            while self.update_queue is not None and not self.update_queue.empty():
+            while not self.update_queue.empty():
                 batch_updates = self.update_queue.get()
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
@@ -113,31 +129,30 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                     if "request_sample" in update and update["request_sample"]:
                         requested_tasks += 1
                     # Decode task and task progress
-                    if update["update_type"] == "task_progress":
-                        update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
+                    # if update["update_type"] == "task_progress":
+                    #     update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
                 self.batch_update(batch_updates)
 
             # Sample new tasks
             if requested_tasks > 0:
                 # TODO: Move this to curriculum, not sync wrapper
                 # Sequentially sample task_space before using curriculum method
-                if (self.sequential_start and
-                        self.task_space.num_tasks is not None and
-                        self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
-                    # Sample unseen tasks sequentially before using curriculum method
-                    new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
-                else:
-                    new_tasks = self.curriculum.sample(k=requested_tasks)
+                # if (self.sequential_start and
+                #         self.task_space.num_tasks is not None and
+                #         self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
+                #     # Sample unseen tasks sequentially before using curriculum method
+                #     new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
+                # else:
+                new_tasks = self.curriculum.sample(k=requested_tasks)
                 for i, task in enumerate(new_tasks):
                     message = {
                         "next_task": self.task_space.encode(task),
-                        "added_tasks": self.added_tasks,
+                        # "added_tasks": self.added_tasks,
                         "sample_id": self.num_assigned_tasks + i,
                     }
                     self.task_queue.put(message)
-                    self.added_tasks = []
+                    # self.added_tasks = []
                 self.num_assigned_tasks += requested_tasks
-            time.sleep(0.01)
 
     def __del__(self):
         self.stop()

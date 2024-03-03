@@ -30,7 +30,6 @@ if __name__ == "__main__":
 
         # Test single process speed
         print("RUNNING: Python single process test (2 envs)...")
-        print(args)
         test_curriculum = curriculum(*args, **kwargs)
         native_speed = test_single_process(env_fn, curriculum=test_curriculum, num_envs=2, num_episodes=N_EPISODES)
         print(f"PASSED: single process test (2 envs) passed: {native_speed:.2f}s")

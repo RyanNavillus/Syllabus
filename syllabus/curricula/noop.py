@@ -20,20 +20,20 @@ class NoopCurriculum(Curriculum):
         """
         return [self.default_task for _ in range(k)]
 
-    def update_task_progress(self, task, success_prob) -> None:
+    def update_task_progress(self, task, success_prob, env_id: int = None) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
         """
         pass
 
-    def update_on_step(self, obs, rew, term, trunc, info) -> None:
+    def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         pass
 
-    def update_on_step_batch(self, step_results) -> None:
+    def update_on_step_batch(self, step_results, env_id: int = None) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """

@@ -69,6 +69,7 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10)
             ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum))
         else:
             ep_rews.append(run_episode(env))
+    env.close()
 
 
 def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True):
@@ -76,6 +77,7 @@ def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
+    env.close()
 
 
 @ray.remote
@@ -84,6 +86,7 @@ def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, u
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
+    env.close()
 
 
 def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
@@ -114,10 +117,14 @@ def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None
         actor.start()
     for actor in actors:
         actor.join()
+        actor.terminate()
 
     end = time.time()
     native_speed = end - start
-    time.sleep(3.0)
+
+    # Stop curriculum to prevent it from slowing down the next test
+    if curriculum:
+        curriculum.stop()
     return native_speed
 
 
