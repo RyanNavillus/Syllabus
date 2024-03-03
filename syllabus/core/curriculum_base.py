@@ -121,12 +121,16 @@ class Curriculum:
         elif update_type == "step_batch":
             self.update_on_step_batch(*args, env_id=env_id)
         elif update_type == "episode":
-            self.update_on_episode(*args)
+            self.update_on_episode(*args, env_id=env_id)
         elif update_type == "on_demand":
             # Directly pass metrics without expanding
             self.update_on_demand(args)
         elif update_type == "task_progress":
             self.update_task_progress(*args, env_id=env_id)
+        elif update_type == "task_progress_batch":
+            tasks, progresses = args
+            for task, progress in zip(tasks, progresses):
+                self.update_task_progress(task, progress, env_id=env_id)
         elif update_type == "add_task":
             self.add_task(args)
         elif update_type == "noop":

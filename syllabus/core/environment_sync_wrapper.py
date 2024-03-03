@@ -20,9 +20,11 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  env,
                  components: MultiProcessingCurriculumWrapper.Components,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
+                 batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
+        # TODO: reimplement global task progress metrics
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
@@ -31,12 +33,21 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.update_queue = components.update_queue
         self.task_space = task_space
         self.update_on_step = update_on_step
+        self.batch_size = batch_size
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
-        self.step_updates = []
-        self.warned_once = False
-        self._first_episode = True
+        self._batch_step = 0
         self.instance_id = components.get_id()
+
+        # Create batch buffers for step updates
+        if self.update_on_step:
+            self._obs = [None] * self.batch_size
+            self._rews = np.zeros(self.batch_size, dtype=np.float32)
+            self._terms = np.zeros(self.batch_size, dtype=bool)
+            self._truncs = np.zeros(self.batch_size, dtype=bool)
+            self._infos = [None] * self.batch_size
+            self._tasks = [None] * self.batch_size
+            self._task_progresses = [None] * self.batch_size
 
         # Request initial task
         assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."
@@ -65,34 +76,38 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
-        if "task_completion" in info:
-            if self.global_task_completion is not None:
-                self.task_progress = self.global_task_completion(self.curriculum, obs, rew, term, trunc, info)
-            else:
-                self.task_progress = info["task_completion"]
+        self.task_progress = info.get("task_completion", 0.0)
 
         # Update curriculum with step info
         if self.update_on_step:
             # Environment outputs
-            self.step_updates.append({
-                "update_type": "step",
-                "metrics": (obs, rew, term, trunc, info),
-                "env_id": self.instance_id,
-                "request_sample": False
-            })
-            # Task progress
-            self.step_updates.append({
-                "update_type": "task_progress",
-                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "env_id": self.instance_id,
-                "request_sample": term or trunc
-            })
+            # self.step_updates.append({
+            #     "update_type": "step",
+            #     "metrics": (obs, rew, term, trunc, info),
+            #     "env_id": self.instance_id,
+            #     "request_sample": False
+            # })
+            self._obs[self._batch_step] = obs
+            self._rews[self._batch_step] = rew
+            self._terms[self._batch_step] = term
+            self._truncs[self._batch_step] = trunc
+            self._infos[self._batch_step] = info
+            self._tasks[self._batch_step] = self.task_space.encode(self.env.task)
+            self._task_progresses[self._batch_step] = self.task_progress
+
+            # # Task progress
+            # self.step_updates.append({
+            #     "update_type": "task_progress",
+            #     "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+            #     "env_id": self.instance_id,
+            #     "request_sample": term or trunc
+            # })
             # Send batched updates
-            if len(self.step_updates) >= 100 or term or trunc:
+            if self._batch_step >= self.batch_size or term or trunc:
                 # Group updates into arrays
-                updates = self._aggregate_step_updates()
+                updates = self._package_step_updates(request_sample=term or trunc)
                 self.update_queue.put(updates)
-                self.step_updates = []
+                self._batch_step = 0
         elif term or trunc:
             # Task progress
             update = {
@@ -123,31 +138,20 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         if env_attr is not None:
             return env_attr
 
-    def _aggregate_step_updates(self):
-        updates = []
-        rews = []
-        obs = []
-        terms = []
-        truncs = []
-        infos = []
-        for step_update in self.step_updates:
-            if step_update["update_type"] == "step":
-                ob, rew, term, trunc, info = step_update["metrics"]
-                obs.append(ob)
-                rews.append(rew)
-                terms.append(term)
-                truncs.append(trunc)
-                infos.append(info)
-            else:
-                updates.append(step_update)
+    def _package_step_updates(self, request_sample=False):
         step_batch = {
             "update_type": "step_batch",
-            "metrics": ([np.array(obs), np.array(rews), np.array(terms), np.array(truncs), np.array(infos)],),
+            "metrics": ([self._obs, self._rews, self._terms, self._truncs, self._infos],),
+            "env_id": self.instance_id,
+            "request_sample": request_sample
+        }
+        task_batch = {
+            "update_type": "task_progress_batch",
+            "metrics": (self._tasks, self._task_progresses,),
             "env_id": self.instance_id,
             "request_sample": False
         }
-        updates.append(step_batch)
-        return updates
+        return [step_batch, task_batch]
 
 # TODO: Fix this and refactor
 # class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):

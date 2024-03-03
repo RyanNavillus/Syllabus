@@ -194,7 +194,7 @@ class PrioritizedLevelReplay(Curriculum):
         task_space: TaskSpace,
         observation_space: gym.Space,
         *curriculum_args,
-        task_sampler_kwargs_dict: dict = {},
+        task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
         device: str = "cpu",
         num_steps: int = 256,
@@ -207,6 +207,9 @@ class PrioritizedLevelReplay(Curriculum):
         **curriculum_kwargs,
     ):
         # Preprocess curriculum intialization args
+        if task_sampler_kwargs_dict is None:
+            task_sampler_kwargs_dict = {}
+
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
         if not isinstance(task_space.gym_space, Discrete) and not isinstance(task_space.gym_space, MultiDiscrete):
             raise ValueError(

@@ -49,7 +49,7 @@ class CurriculumWrapper:
     def update(self, metrics):
         self.curriculum.update(metrics)
 
-    def batch_update(self, metrics):
+    def update_batch(self, metrics):
         self.curriculum.update_batch(metrics)
 
     def add_task(self, task):
@@ -104,6 +104,11 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
         self.should_update = False
+        components = self.get_components()
+        components._env_count.shm.close()
+        components._env_count.shm.unlink()
+        components.task_queue.close()
+        components.update_queue.close()
 
     def _update_queues(self):
         """
@@ -115,41 +120,27 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             requested_tasks = 0
             while not self.update_queue.empty():
                 batch_updates = self.update_queue.get()
+
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
 
+                # Count number of requested tasks
                 for update in batch_updates:
-                    # Count updates with "request_sample" set to True
                     if "request_sample" in update and update["request_sample"]:
                         requested_tasks += 1
-                    # Decode task and task progress
-                    # if update["update_type"] == "task_progress":
-                    #     update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
-                self.batch_update(batch_updates)
+
+                self.update_batch(batch_updates)
 
             # Sample new tasks
             if requested_tasks > 0:
-                # TODO: Move this to curriculum, not sync wrapper
-                # Sequentially sample task_space before using curriculum method
-                # if (self.sequential_start and
-                #         self.task_space.num_tasks is not None and
-                #         self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
-                #     # Sample unseen tasks sequentially before using curriculum method
-                #     new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
-                # else:
                 new_tasks = self.curriculum.sample(k=requested_tasks)
                 for i, task in enumerate(new_tasks):
                     message = {
                         "next_task": self.task_space.encode(task),
-                        # "added_tasks": self.added_tasks,
                         "sample_id": self.num_assigned_tasks + i,
                     }
                     self.task_queue.put(message)
-                    # self.added_tasks = []
                 self.num_assigned_tasks += requested_tasks
-
-    def __del__(self):
-        self.stop()
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
