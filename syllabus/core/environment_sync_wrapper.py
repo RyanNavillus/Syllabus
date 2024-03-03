@@ -1,15 +1,12 @@
-from multiprocessing import SimpleQueue, Lock
 from typing import Any, Callable, Dict
 
 import gymnasium as gym
 import numpy as np
 import ray
-# from pettingzoo.utils.wrappers.base_parallel import BaseParallelWraper
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
-from syllabus.core import Curriculum, TaskEnv, TaskWrapper, MultiProcessingCurriculumWrapper  # , PettingZooTaskWrapper
+
+from syllabus.core import Curriculum, MultiProcessingCurriculumWrapper, TaskEnv, TaskWrapper
 from syllabus.task_space import TaskSpace
-from multiprocessing.shared_memory import SharedMemory, ShareableList
-from copy import copy
 
 
 class MultiProcessingSyncWrapper(gym.Wrapper):
@@ -18,14 +15,12 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     on parallel processes created using multiprocessing.Process. Meant to be used
     with a QueueLearningProgressCurriculum running on the main process.
     """
-    instance_id = 0
-    shared_mem = ShareableList([0])
 
     def __init__(self,
                  env,
                  components: MultiProcessingCurriculumWrapper.Components,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 buffer_size: int = 1,
+                 buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
@@ -41,12 +36,10 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.step_updates = []
         self.warned_once = False
         self._first_episode = True
-        components.instance_lock.acquire()
-        self.instance_id = copy(MultiProcessingSyncWrapper.shared_mem[0])
-        MultiProcessingSyncWrapper.shared_mem[0] += 1
-        components.instance_lock.release()
+        self.instance_id = components.get_id()
 
         # Request initial task
+        assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."
         for _ in range(buffer_size):
             update = {
                 "update_type": "noop",

@@ -4,6 +4,7 @@ from typing import Any, Callable, List, Tuple, Union
 
 import numpy as np
 from gymnasium.spaces import Dict
+
 from syllabus.task_space import TaskSpace
 
 
@@ -82,7 +83,7 @@ class Curriculum:
         for step_result in step_results:
             self.update_on_step(*step_result)
 
-    def update_on_episode(self, episode_return: float, trajectory: List = None) -> None:
+    def update_on_episode(self, episode_return: float, episode_task, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return

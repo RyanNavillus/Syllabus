@@ -2,7 +2,7 @@
 import ray
 
 from nle.env.tasks import NetHackScore
-from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay, SimpleBoxCurriculum
+from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, CentralizedPrioritizedLevelReplay, SimpleBoxCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_nethack_env, create_cartpole_env
 
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     cartpole_env = create_cartpole_env()
     curricula = [
         (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {"random_start_tasks": 10}),
-        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS, "random_start_tasks": 10}),
+        (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS, "random_start_tasks": 10}),
     ]
     for curriculum, env_fn, args, kwargs in curricula:
         print("")

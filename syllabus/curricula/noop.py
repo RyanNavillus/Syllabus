@@ -8,6 +8,7 @@ class NoopCurriculum(Curriculum):
     Used to to test API without a curriculum.
     """
     REQUIRES_STEP_UPDATES = True
+    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, default_task, *curriculum_args, **curriculum_kwargs):
@@ -39,7 +40,7 @@ class NoopCurriculum(Curriculum):
         """
         pass
 
-    def update_on_episode(self, episode_return) -> None:
+    def update_on_episode(self, episode_return, episode_task, env_id: int = None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """

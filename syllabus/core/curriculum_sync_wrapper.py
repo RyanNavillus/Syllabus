@@ -1,10 +1,10 @@
 import threading
 from functools import wraps
+from multiprocessing.shared_memory import ShareableList
 from typing import List, Tuple
 
 import ray
-import time
-from torch.multiprocessing import SimpleQueue, Lock
+from torch.multiprocessing import Lock, SimpleQueue
 
 from syllabus.core import Curriculum, decorate_all_functions
 
@@ -63,19 +63,26 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         def __init__(self, task_queue, update_queue):
             self.task_queue = task_queue
             self.update_queue = update_queue
-            self.instance_lock = Lock()
+            self._instance_lock = Lock()
+            self._env_count = ShareableList([0])
 
-    def __init__(self,
-                 curriculum: Curriculum,
-                 task_queue: SimpleQueue,
-                 update_queue: SimpleQueue,
-                 sequential_start: bool = True,
-                 seed_tasks: int = 0):
+        def get_id(self):
+            with self._instance_lock:
+                instance_id = self._env_count[0]
+                self._env_count[0] += 1
+            return instance_id
+
+    def __init__(
+        self,
+        curriculum: Curriculum,
+        task_queue: SimpleQueue,
+        update_queue: SimpleQueue,
+        sequential_start: bool = True
+    ):
         super().__init__(curriculum)
         self.task_queue = task_queue
         self.update_queue = update_queue
         self.sequential_start = sequential_start
-        self.seed_tasks = seed_tasks
 
         self.update_thread = None
         self.should_update = False
@@ -91,19 +98,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
         self.update_thread.start()
-
-        # Testing: Seed curriculum with 1 task per env
-        if self.seed_tasks > 0:
-            new_tasks = self.curriculum.sample(k=self.seed_tasks)
-            for i, task in enumerate(new_tasks):
-                message = {
-                    "next_task": self.task_space.encode(task),
-                    "added_tasks": self.added_tasks,
-                    "sample_id": self.num_assigned_tasks + i,
-                }
-                self.task_queue.put(message)
-                self.added_tasks = []
-            self.num_assigned_tasks += self.seed_tasks
 
     def stop(self):
         """

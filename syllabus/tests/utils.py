@@ -3,7 +3,9 @@ import warnings
 from multiprocessing import Process
 
 import gymnasium as gym
+import numpy as np
 import ray
+import torch
 
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
@@ -40,7 +42,7 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
     return avg_return, episode_returns
 
 
-def run_episode(env, new_task=None, curriculum=None):
+def run_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
     if new_task:
         obs = env.reset(new_task=new_task)
@@ -52,31 +54,32 @@ def run_episode(env, new_task=None, curriculum=None):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(obs, rew, term, trunc, info)
+            curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
+            curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
-    if curriculum and "task_completion" in info:
-        curriculum.update_task_progress(env.task, info["task_completion"])
+    if curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+        curriculum.update_on_episode(ep_rew, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
 
 
-def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10):
+def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10, env_id=0):
     """Run multiple episodes of the environment."""
     env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         if curriculum:
             task = curriculum.sample()[0]
-            ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum))
+            ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum, env_id=env_id))
         else:
             ep_rews.append(run_episode(env))
     env.close()
 
 
-def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=1, env_id=0):
+    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
-        ep_rews.append(run_episode(env))
+        ep_rews.append(run_episode(env, env_id=env_id))
     env.close()
 
 
@@ -98,21 +101,22 @@ def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num
     return native_speed
 
 
-def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
+def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True, buffer_size=1):
     start = time.time()
 
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
+        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
 
     # Run episodes
     actors = []
-    for _ in range(num_envs):
-        actors.append(Process(target=target, args=args))
+    for i in range(num_envs):
+        nargs = args + (i,)
+        actors.append(Process(target=target, args=nargs))
     for actor in actors:
         actor.start()
     for actor in actors:
@@ -144,6 +148,10 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
     end = time.time()
     ray_speed = end - start
     return ray_speed
+
+
+def get_test_values(x):
+    return torch.Tensor(np.array([0] * len(x)))
 
 
 # Sync Test Environment

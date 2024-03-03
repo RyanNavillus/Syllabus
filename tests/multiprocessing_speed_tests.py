@@ -1,11 +1,11 @@
 """ Test curriculum synchronization across multiple processes. """
 import ray
-
 from nle.env.tasks import NetHackScore
-from syllabus.curricula import NoopCurriculum
-from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 
-from syllabus.tests import test_native_multiprocess, test_ray_multiprocess, create_nethack_env, create_cartpole_env
+from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
+from syllabus.curricula import NoopCurriculum
+from syllabus.tests import create_cartpole_env, create_nethack_env, test_native_multiprocess, test_ray_multiprocess
+
 
 N_ENVS = 128
 N_EPISODES = 64
@@ -27,8 +27,8 @@ if __name__ == "__main__":
     print(f"PASSED: Python multiprocess test: {native_speed:.2f}s")
 
     # Test Queue multiprocess speed with Syllabus
-    curriculum = NoopCurriculum(default_task, sample_env.task_space, random_start_tasks=0)
-    curriculum = make_multiprocessing_curriculum(curriculum, seed_tasks=128)
+    curriculum = NoopCurriculum(default_task, sample_env.task_space)
+    curriculum = make_multiprocessing_curriculum(curriculum)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = test_native_multiprocess(
         env_fn, env_args=env_args, env_kwargs=env_kwargs, curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     print(f"PASSED: Ray multiprocess test: {ray_speed:.2f}s")
 
     # Test Ray multiprocess speed with Syllabus
-    curriculum = NoopCurriculum(default_task, sample_env.task_space, random_start_tasks=0)
+    curriculum = NoopCurriculum(default_task, sample_env.task_space)
     curriculum = make_ray_curriculum(curriculum)
     print("\nRUNNING: Ray multiprocess test with Syllabus...")
     ray_syllabus_speed = test_ray_multiprocess(
@@ -56,8 +56,8 @@ if __name__ == "__main__":
     print("")
 
     # Test Queue multiprocess speed with Syllabus (no step updates)
-    curriculum = NoopCurriculum(default_task, sample_env.task_space, random_start_tasks=0)
-    curriculum = make_multiprocessing_curriculum(curriculum, seed_tasks=128)
+    curriculum = NoopCurriculum(default_task, sample_env.task_space)
+    curriculum = make_multiprocessing_curriculum(curriculum)
     print("\nRUNNING: Python multiprocess test with Syllabus (no step updates) ...")
     native_syllabus_speed_nostep = test_native_multiprocess(
         env_fn, env_args=env_args, env_kwargs=env_kwargs, curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES, update_on_step=False

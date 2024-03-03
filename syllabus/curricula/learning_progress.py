@@ -7,6 +7,7 @@ from typing import List
 import numpy as np
 from gymnasium.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
+
 from syllabus.core import Curriculum
 from syllabus.task_space import TaskSpace
 
@@ -18,6 +19,7 @@ class LearningProgressCurriculum(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
     REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, *args, ema_alpha=0.1, **kwargs):
@@ -28,7 +30,7 @@ class LearningProgressCurriculum(Curriculum):
         self._p_fast = np.zeros(self.num_tasks)
         self._p_slow = np.zeros(self.num_tasks)
 
-    def update_task_progress(self, task: int, progress: float, env_id=None):
+    def update_task_progress(self, task: int, progress: float, env_id: int = None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
