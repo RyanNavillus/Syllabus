@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     # Test Queue multiprocess speed with Syllabus
     curriculum = NoopCurriculum(default_task, sample_env.task_space, random_start_tasks=0)
-    curriculum = make_multiprocessing_curriculum(curriculum)
+    curriculum = make_multiprocessing_curriculum(curriculum, seed_tasks=128)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = test_native_multiprocess(
         env_fn, env_args=env_args, env_kwargs=env_kwargs, curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # Test Queue multiprocess speed with Syllabus (no step updates)
     curriculum = NoopCurriculum(default_task, sample_env.task_space, random_start_tasks=0)
-    curriculum = make_multiprocessing_curriculum(curriculum)
+    curriculum = make_multiprocessing_curriculum(curriculum, seed_tasks=128)
     print("\nRUNNING: Python multiprocess test with Syllabus (no step updates) ...")
     native_syllabus_speed_nostep = test_native_multiprocess(
         env_fn, env_args=env_args, env_kwargs=env_kwargs, curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES, update_on_step=False
