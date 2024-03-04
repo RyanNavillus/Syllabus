@@ -88,9 +88,9 @@ class RolloutStorage(object):
             self._fill[step:end_step, env_index] = 1
         except IndexError as e:
             if any(self._fill[:][env_index] == 0):
-                raise UsageError(f"Step {step} is out of range for env index {env_index}. Your value for PLR's num_processes may be too high.") from e
+                raise UsageError(f"Step {step} + {steps} = {end_step} is out of range for env index {env_index}. Your value for PLR's num_processes may be too high.") from e
             else:
-                raise UsageError(f"Step {step} is out of range for env index {env_index}. Your value for PLR's num_processes may be too low.") from e
+                raise UsageError(f"Step {step} + {steps} = {end_step}  is out of range for env index {env_index}. Your value for PLR's num_processes may be too low.") from e
 
         if mask is not None:
             self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
@@ -120,8 +120,8 @@ class RolloutStorage(object):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(self.num_steps):
-            values = self._get_value(self.obs[step])
-            self.value_preds.copy_(values)
+            values = self._get_value(self.obs[step])[:, None]
+            self.value_preds[step].copy_(values)
 
     def after_update(self):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer

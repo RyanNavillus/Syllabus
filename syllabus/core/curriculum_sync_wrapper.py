@@ -79,27 +79,23 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         def put_task(self, task):
             self.task_queue.put(task)
             if self._debug:
-                task_count = self.added_task()
-                print("tasks:", task_count)
+                self.added_task()
 
         def get_task(self):
             task = self.task_queue.get()
             if self._debug:
-                task_count = self.removed_task()
-                print("tasks:", task_count)
+                self.removed_task()
             return task
 
         def put_update(self, update):
             self.update_queue.put(update)
             if self._debug:
-                update_count = self.added_update()
-                print("updates:", update_count)
+                self.added_update()
 
         def get_update(self):
             update = self.update_queue.get()
             if self._debug:
-                update_count = self.removed_update()
-                print("updates:", update_count)
+                self.removed_update()
             return update
 
         def added_task(self):
@@ -212,7 +208,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 self.num_assigned_tasks += requested_tasks
                 time.sleep(0)
             else:
-                time.sleep(0.001)
+                time.sleep(0.01)
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)

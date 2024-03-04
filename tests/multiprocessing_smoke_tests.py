@@ -28,7 +28,7 @@ if __name__ == "__main__":
         (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
         # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
         (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
-        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {"get_value": get_test_values, "device": "cpu", "num_processes": N_ENVS}),
+        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {"get_value": get_test_values, "device": "cpu", "num_processes": N_ENVS, "num_steps": 512}),
         (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
     ]
     for curriculum, env_fn, args, kwargs in curricula:
