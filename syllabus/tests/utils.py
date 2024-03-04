@@ -68,7 +68,7 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
     ep_rews = []
     for _ in range(num_episodes):
         if curriculum:
-            task = curriculum.sample()[0]
+            task = env.task_space.decode(curriculum.sample()[0])
             ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum, env_id=env_id))
         else:
             ep_rews.append(run_episode(env))

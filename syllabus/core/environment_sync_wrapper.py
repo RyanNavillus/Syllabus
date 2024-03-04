@@ -20,7 +20,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  env,
                  components: MultiProcessingCurriculumWrapper.Components,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 batch_size: int = 100,
+                 batch_size: int = 1000,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
@@ -77,7 +77,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
         self.task_progress = info.get("task_completion", 0.0)
-
         # Update curriculum with step info
         if self.update_on_step:
             # Environment outputs
@@ -92,9 +91,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self._terms[self._batch_step] = term
             self._truncs[self._batch_step] = trunc
             self._infos[self._batch_step] = info
-            self._tasks[self._batch_step] = self.task_space.encode(self.env.task)
+            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
             self._task_progresses[self._batch_step] = self.task_progress
-
+            self._batch_step += 1
             # # Task progress
             # self.step_updates.append({
             #     "update_type": "task_progress",
@@ -141,13 +140,13 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     def _package_step_updates(self, request_sample=False):
         step_batch = {
             "update_type": "step_batch",
-            "metrics": ([self._obs, self._rews, self._terms, self._truncs, self._infos],),
+            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
             "env_id": self.instance_id,
             "request_sample": request_sample
         }
         task_batch = {
             "update_type": "task_progress_batch",
-            "metrics": (self._tasks, self._task_progresses,),
+            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
             "env_id": self.instance_id,
             "request_sample": False
         }

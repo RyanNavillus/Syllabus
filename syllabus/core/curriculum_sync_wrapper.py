@@ -120,7 +120,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             requested_tasks = 0
             while not self.update_queue.empty():
                 batch_updates = self.update_queue.get()
-
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
 
@@ -136,7 +135,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 new_tasks = self.curriculum.sample(k=requested_tasks)
                 for i, task in enumerate(new_tasks):
                     message = {
-                        "next_task": self.task_space.encode(task),
+                        "next_task": task,
                         "sample_id": self.num_assigned_tasks + i,
                     }
                     self.task_queue.put(message)

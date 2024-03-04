@@ -80,8 +80,9 @@ class Curriculum:
 
         :param step_results: List of step results
         """
-        for step_result in step_results:
-            self.update_on_step(*step_result)
+        obs, rews, terms, truncs, infos = tuple(step_results)
+        for i in range(len(obs)):
+            self.update_on_step(obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
     def update_on_episode(self, episode_return: float, episode_task, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.

@@ -45,7 +45,6 @@ class LearningProgressCurriculum(Curriculum):
         """
         Compute the learning progress metric for the given task.
         """
-        print(task)
         slow = self._reweight(self._p_slow[task]) if reweight else self._p_slow[task]
         fast = self._reweight(self._p_fast[task]) if reweight else self._p_fast[task]
         return abs(fast - slow)
