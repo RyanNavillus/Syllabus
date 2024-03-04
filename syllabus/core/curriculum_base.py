@@ -5,6 +5,7 @@ from typing import Any, Callable, List, Tuple, Union
 import numpy as np
 from gymnasium.spaces import Dict
 from syllabus.task_space import TaskSpace
+import random
 
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
@@ -12,7 +13,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, task_names: Callable = None, use_startup_behavior: bool = False, sampled_list: List[List[Tuple[str, int, int]]] = None) -> None:
+    def __init__(self, task_space: TaskSpace, task_names: Callable = None, use_startup_behavior: bool = False, sampled_strategy: str = None) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -27,12 +28,10 @@ class Curriculum:
         self.n_updates = 0
         self.use_startup_behavior = use_startup_behavior
         self.current_task_index = 0
-        self.sampled_list = sampled_list
-
+        self.sampled_strategy = sampled_strategy
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
-        
 
     @property
     def num_tasks(self) -> int:
@@ -97,7 +96,6 @@ class Curriculum:
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
 
-
         :param metrics: Arbitrary dictionary of information. Can be used to provide gradient/error based
                         updates from the training process.
         :raises NotImplementedError:
@@ -152,30 +150,25 @@ class Curriculum:
         """
         raise NotImplementedError
 
-    def _should_use_startup_sampling(self, flag: str) -> bool:
-        if flag == "finish":
-            return False
-        return True
+    def _should_use_startup_sampling(self) -> bool:
+        return self.use_startup_behavior 
     
     def _startup_sample(self, k: int) -> List:
-        if self.use_startup_behavior:
-            sampled_tasks_per_env = [[] for _ in range(k)]
-            for env_index in range(k):  
-                for behavior, episode, tasks in self.sampled_list[env_index]:
-                    if behavior == "fix":
-                        for _ in range(episode):
-                            end_index = min(self.current_task_index + tasks, len(self.tasks))
-                            sampled_tasks_per_env[env_index].extend(self.tasks[self.current_task_index:end_index])
-                            self.current_task_index = end_index
+        sampled_tasks = []
+        if self.sampled_strategy == "fix":
+            end_index = min(self.current_task_index + k, len(self.tasks))
+            sampled_tasks.extend(self.tasks[self.current_task_index:end_index])
+            self.current_task_index = end_index
 
-                    elif behavior == "random":
-                        for _ in range(episode):
-                            indices = np.random.choice(len(self.tasks), size=tasks, replace=False if tasks <= len(self.tasks) else True)
-                            sampled_tasks_per_env[env_index].extend([self.tasks[idx] for idx in indices])
+        if self.sampled_strategy == "random":
+            num_tasks = len(self.tasks)
+            if k > num_tasks:
+                raise ValueError("k cannot be larger than the total number of tasks")
+            indices = random.sample(range(num_tasks), k)  
+            sampled_tasks.extend([self.tasks[idx] for idx in indices])
 
-            self._should_use_startup_sampling("finish")
-            return sampled_tasks_per_env
-        return []
+        self.use_startup_behavior = False
+        return sampled_tasks
         
     def sample(self, k: int = 1) -> Union[List, Any]:
         """Sample k tasks from the curriculum.
@@ -186,7 +179,7 @@ class Curriculum:
         assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
-            return self._startup_sample()
+            return self._startup_sample(k)
         else:
             task_dist = self._sample_distribution()
 
