@@ -101,7 +101,7 @@ def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num
     return native_speed
 
 
-def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True, buffer_size=1):
+def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True, buffer_size=2):
     start = time.time()
 
     # Choose multiprocessing and curriculum methods
@@ -121,7 +121,6 @@ def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None
         actor.start()
     for actor in actors:
         actor.join()
-        actor.terminate()
 
     end = time.time()
     native_speed = end - start

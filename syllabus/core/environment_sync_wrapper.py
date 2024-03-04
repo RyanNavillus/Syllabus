@@ -28,6 +28,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
+        self.components = components
         self._latest_task = None
         self.task_queue = components.task_queue
         self.update_queue = components.update_queue
@@ -58,12 +59,14 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "request_sample": True,
             }
             self.update_queue.put(update)
+            # self.components.added_update()
 
     def reset(self, *args, **kwargs):
         self.step_updates = []
         self.task_progress = 0.0
 
         message = self.task_queue.get()     # Blocks until a task is available
+        # self.components.removed_task()
         next_task = self.task_space.decode(message["next_task"])
         self._latest_task = next_task
 
@@ -79,13 +82,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.task_progress = info.get("task_completion", 0.0)
         # Update curriculum with step info
         if self.update_on_step:
-            # Environment outputs
-            # self.step_updates.append({
-            #     "update_type": "step",
-            #     "metrics": (obs, rew, term, trunc, info),
-            #     "env_id": self.instance_id,
-            #     "request_sample": False
-            # })
             self._obs[self._batch_step] = obs
             self._rews[self._batch_step] = rew
             self._terms[self._batch_step] = term
@@ -94,18 +90,12 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
             self._task_progresses[self._batch_step] = self.task_progress
             self._batch_step += 1
-            # # Task progress
-            # self.step_updates.append({
-            #     "update_type": "task_progress",
-            #     "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-            #     "env_id": self.instance_id,
-            #     "request_sample": term or trunc
-            # })
+
             # Send batched updates
             if self._batch_step >= self.batch_size or term or trunc:
-                # Group updates into arrays
                 updates = self._package_step_updates(request_sample=term or trunc)
                 self.update_queue.put(updates)
+                # self.components.added_update()
                 self._batch_step = 0
         elif term or trunc:
             # Task progress
@@ -116,8 +106,24 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "request_sample": True,
             }
             self.update_queue.put(update)
+            # self.components.added_update()
 
         return obs, rew, term, trunc, info
+
+    def _package_step_updates(self, request_sample=False):
+        step_batch = {
+            "update_type": "step_batch",
+            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+            "env_id": self.instance_id,
+            "request_sample": request_sample
+        }
+        task_batch = {
+            "update_type": "task_progress_batch",
+            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
+            "env_id": self.instance_id,
+            "request_sample": False
+        }
+        return [step_batch, task_batch]
 
     def add_task(self, task):
         update = {
@@ -137,20 +143,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         if env_attr is not None:
             return env_attr
 
-    def _package_step_updates(self, request_sample=False):
-        step_batch = {
-            "update_type": "step_batch",
-            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
-            "env_id": self.instance_id,
-            "request_sample": request_sample
-        }
-        task_batch = {
-            "update_type": "task_progress_batch",
-            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
-            "env_id": self.instance_id,
-            "request_sample": False
-        }
-        return [step_batch, task_batch]
 
 # TODO: Fix this and refactor
 # class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):

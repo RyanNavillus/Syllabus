@@ -1,4 +1,5 @@
 import threading
+import time
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
 from typing import List, Tuple
@@ -26,7 +27,7 @@ class CurriculumWrapper:
 
     @property
     def tasks(self):
-        return self.task_space.tasks   
+        return self.task_space.tasks
 
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
@@ -65,12 +66,48 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             self.update_queue = update_queue
             self._instance_lock = Lock()
             self._env_count = ShareableList([0])
+            self._task_count = ShareableList([0])
+            self._update_count = ShareableList([0])
 
         def get_id(self):
             with self._instance_lock:
                 instance_id = self._env_count[0]
                 self._env_count[0] += 1
             return instance_id
+
+        def added_task(self):
+            with self._instance_lock:
+                self._task_count[0] += 1
+                task_count = self._task_count[0]
+            return task_count
+
+        def removed_task(self):
+            with self._instance_lock:
+                self._task_count[0] -= 1
+                task_count = self._task_count[0]
+            return task_count
+
+        def get_task_count(self):
+            with self._instance_lock:
+                task_count = self._task_count[0]
+            return task_count
+
+        def get_update_count(self):
+            with self._instance_lock:
+                update_count = self._update_count[0]
+            return update_count
+
+        def added_update(self):
+            with self._instance_lock:
+                self._update_count[0] += 1
+                update_count = self._update_count[0]
+            return update_count
+
+        def removed_update(self):
+            with self._instance_lock:
+                self._update_count[0] -= 1
+                update_count = self._update_count[0]
+            return update_count
 
     def __init__(
         self,
@@ -107,6 +144,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         components = self.get_components()
         components._env_count.shm.close()
         components._env_count.shm.unlink()
+        components._update_count.shm.close()
+        components._update_count.shm.unlink()
+        components._task_count.shm.close()
+        components._task_count.shm.unlink()
         components.task_queue.close()
         components.update_queue.close()
 
@@ -115,11 +156,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         Continuously process completed tasks and sample new tasks.
         """
         # TODO: Refactor long method? Write tests first
+        # Update curriculum with environment results:
         while self.should_update:
-            # Update curriculum with environment results:
             requested_tasks = 0
             while not self.update_queue.empty():
                 batch_updates = self.update_queue.get()
+                # self.get_components().removed_update()
+
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
 
@@ -138,8 +181,11 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                         "next_task": task,
                         "sample_id": self.num_assigned_tasks + i,
                     }
+
                     self.task_queue.put(message)
+                    # self.get_components().added_task()
                 self.num_assigned_tasks += requested_tasks
+            time.sleep(0)
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
