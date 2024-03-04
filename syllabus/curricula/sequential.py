@@ -5,6 +5,7 @@ from syllabus.core import Curriculum
 
 class SequentialCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, task_list: List[Any], *curriculum_args, num_repeats: List[int] = None, repeat_list=True, **curriculum_kwargs):

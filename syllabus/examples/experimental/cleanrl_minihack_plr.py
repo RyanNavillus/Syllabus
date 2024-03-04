@@ -16,7 +16,7 @@ import torch.optim as optim
 from gym.envs.registration import register
 from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import PrioritizedLevelReplay
+from syllabus.curricula import CentralizedPrioritizedLevelReplay
 from syllabus.examples import MinihackTaskWrapper
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     sample_env = gym.make(args.env_id)
     sample_env = MinihackTaskWrapper(sample_env)
 
-    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(PrioritizedLevelReplay,
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(CentralizedPrioritizedLevelReplay,
                                                                            sample_env.task_space,
                                                                            {"strategy": "one_step_td_error",
                                                                             "rho": 0.01,

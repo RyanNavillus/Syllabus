@@ -2,6 +2,7 @@ import typing
 from typing import Any, List, Union
 
 from gymnasium.spaces import Box
+
 from syllabus.core import Curriculum
 
 
@@ -10,6 +11,7 @@ class SimpleBoxCurriculum(Curriculum):
     Base class and API for defining curricula to interface with Gym environments.
     """
     REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self,
@@ -31,7 +33,7 @@ class SimpleBoxCurriculum(Curriculum):
         self.consecutive_successes = 0
         self.max_reached = False
 
-    def update_task_progress(self, task: typing.Any, success_prob: float) -> None:
+    def update_task_progress(self, task: typing.Any, success_prob: float, env_id: int = None) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.

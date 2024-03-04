@@ -2,8 +2,12 @@ import time
 import warnings
 from multiprocessing import Process
 
+import gym as openai_gym
 import gymnasium as gym
+import numpy as np
 import ray
+import torch
+from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from pettingzoo.utils.env import ParallelEnv
 
 from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper
@@ -80,7 +84,7 @@ def evaluate_random_policy_pettingzoo(make_env, num_episodes=100, seeds=None):
     return avg_return, episode_returns
 
 
-def run_pettingzoo_episode(env, new_task=None, curriculum=None):
+def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
     if new_task:
         obs = env.reset(new_task=new_task)
@@ -92,7 +96,7 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None):
         action = {agent: env.action_space(agent).sample() for agent in env.agents}
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(obs, sum(rew.values()), all(term.values()), all(trunc.values()), info)
+            curriculum.update_on_step(obs, sum(rew.values()), all(term.values()), all(trunc.values()), info, env_id=env_id)
         ep_rew += sum(rew.values())
     if curriculum and len(info.values()) > 0 and "task_completion" in list(info.values())[0]:
         task_progress = max([i["task_completion"] for i in info.values()])
@@ -100,7 +104,7 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None):
     return ep_rew
 
 
-def run_gymnasium_episode(env, new_task=None, curriculum=None):
+def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
     if new_task:
         obs = env.reset(new_task=new_task)
@@ -112,38 +116,41 @@ def run_gymnasium_episode(env, new_task=None, curriculum=None):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(obs, rew, term, trunc, info)
+            curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
+            curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
-    if curriculum and "task_completion" in info:
-        curriculum.update_task_progress(env.task, info["task_completion"])
+    if curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+        curriculum.update_on_episode(ep_rew, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
 
 
-def run_episode(env, new_task=None, curriculum=None):
+def run_episode(env, new_task=None, curriculum=None, env_id=0):
     if isinstance(env, ParallelEnv):
-        return run_pettingzoo_episode(env, new_task, curriculum)
+        return run_pettingzoo_episode(env, new_task, curriculum, env_id=env_id)
     else:
-        return run_gymnasium_episode(env, new_task, curriculum)
+        return run_gymnasium_episode(env, new_task, curriculum, env_id=env_id)
 
 
-def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10):
+def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10, env_id=0):
     """Run multiple episodes of the environment."""
     env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         if curriculum:
-            task = curriculum.sample()[0]
-            rews = run_episode(env, new_task=task, curriculum=curriculum)
+            task = env.task_space.decode(curriculum.sample()[0])
+            rews = run_episode(env, new_task=task, curriculum=curriculum, env_id=env_id)
         else:
             rews = run_episode(env)
         ep_rews.append(rews)
+    env.close()
 
 
-def run_episodes_queue(env_fn, env_args, env_kwargs, task_queue, update_queue, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(task_queue, update_queue, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
+    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
-        ep_rews.append(run_episode(env))
+        ep_rews.append(run_episode(env, env_id=env_id))
+    env.close()
 
 
 @ray.remote
@@ -152,6 +159,7 @@ def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, u
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
+    env.close()
 
 
 def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
@@ -163,21 +171,22 @@ def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num
     return native_speed
 
 
-def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
+def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True, buffer_size=2):
     start = time.time()
 
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.task_queue, curriculum.update_queue, True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES)
+        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
 
     # Run episodes
     actors = []
-    for _ in range(num_envs):
-        actors.append(Process(target=target, args=args))
+    for i in range(num_envs):
+        nargs = args + (i,)
+        actors.append(Process(target=target, args=nargs))
     for actor in actors:
         actor.start()
     for actor in actors:
@@ -185,7 +194,10 @@ def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None
 
     end = time.time()
     native_speed = end - start
-    time.sleep(3.0)
+
+    # Stop curriculum to prevent it from slowing down the next test
+    if curriculum:
+        curriculum.stop()
     return native_speed
 
 
@@ -207,8 +219,12 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
     return ray_speed
 
 
-# Sync Test Environments
-def create_synctest_gymnasium_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def get_test_values(x):
+    return torch.Tensor(np.array([0] * len(x)))
+
+
+# Sync Test Environment
+def create_gymnasium_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
@@ -245,6 +261,29 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
+
+    if type == "queue":
+        env = MultiProcessingSyncWrapper(
+            env, *args, task_space=env.task_space, **kwargs
+        )
+    elif type == "ray":
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Procgen Tests
+def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        import procgen
+
+        from syllabus.examples.task_wrappers.procgen_task_wrapper import \
+            ProcgenTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import procgen.")
+
+    env = openai_gym.make("procgen-bigfish-v0", *env_args, **env_kwargs)
+    env = GymV21CompatibilityV0(env=env)
+    env = ProcgenTaskWrapper(env, "bigfish")
 
     if type == "queue":
         env = MultiProcessingSyncWrapper(
