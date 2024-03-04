@@ -68,12 +68,39 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             self._env_count = ShareableList([0])
             self._task_count = ShareableList([0])
             self._update_count = ShareableList([0])
+            self._debug = True
 
         def get_id(self):
             with self._instance_lock:
                 instance_id = self._env_count[0]
                 self._env_count[0] += 1
             return instance_id
+
+        def put_task(self, task):
+            self.task_queue.put(task)
+            if self._debug:
+                task_count = self.added_task()
+                print("tasks:", task_count)
+
+        def get_task(self):
+            task = self.task_queue.get()
+            if self._debug:
+                task_count = self.removed_task()
+                print("tasks:", task_count)
+            return task
+
+        def put_update(self, update):
+            self.update_queue.put(update)
+            if self._debug:
+                update_count = self.added_update()
+                print("updates:", update_count)
+
+        def get_update(self):
+            update = self.update_queue.get()
+            if self._debug:
+                update_count = self.removed_update()
+                print("updates:", update_count)
+            return update
 
         def added_task(self):
             with self._instance_lock:
@@ -160,8 +187,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         while self.should_update:
             requested_tasks = 0
             while not self.update_queue.empty():
-                batch_updates = self.update_queue.get()
-                # self.get_components().removed_update()
+                batch_updates = self.get_components().get_update()  # Blocks until update is available
 
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
@@ -182,14 +208,16 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                         "sample_id": self.num_assigned_tasks + i,
                     }
 
-                    self.task_queue.put(message)
-                    # self.get_components().added_task()
+                    self.get_components().put_task(message)
                 self.num_assigned_tasks += requested_tasks
-            time.sleep(0)
+                time.sleep(0)
+            else:
+                time.sleep(0.001)
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        writer.add_scalar("curriculum/requested_tasks", self.num_assigned_tasks, step)
+        writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
+        writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
     def add_task(self, task):
         super().add_task(task)

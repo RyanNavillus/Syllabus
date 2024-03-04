@@ -2,10 +2,12 @@ import time
 import warnings
 from multiprocessing import Process
 
+import gym as openai_gym
 import gymnasium as gym
 import numpy as np
 import ray
 import torch
+from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
 from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
@@ -75,7 +77,7 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
     env.close()
 
 
-def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=1, env_id=0):
+def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
     env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
@@ -187,6 +189,29 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
     env = NetHackScore(*env_args, **env_kwargs)
     env = NethackTaskWrapper(env)
+
+    if type == "queue":
+        env = MultiProcessingSyncWrapper(
+            env, *args, task_space=env.task_space, **kwargs
+        )
+    elif type == "ray":
+        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Procgen Tests
+def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        import procgen
+
+        from syllabus.examples.task_wrappers.procgen_task_wrapper import \
+            ProcgenTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import procgen.")
+
+    env = openai_gym.make("procgen-bigfish-v0", *env_args, **env_kwargs)
+    env = GymV21CompatibilityV0(env=env)
+    env = ProcgenTaskWrapper(env, "bigfish")
 
     if type == "queue":
         env = MultiProcessingSyncWrapper(

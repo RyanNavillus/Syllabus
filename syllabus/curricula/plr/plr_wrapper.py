@@ -29,7 +29,6 @@ class RolloutStorage(object):
         self._get_value = get_value
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        # self.obs = torch.zeros(self.buffer_steps + 1, num_processes, *observation_space.shape)
         self.obs = [[[0] for _ in range(self.num_processes)]] * self.buffer_steps
         self._fill = torch.zeros(self.buffer_steps, num_processes, 1)
         self.env_steps = [0] * num_processes
@@ -52,7 +51,6 @@ class RolloutStorage(object):
     def to(self, device):
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
-        # self.obs = self.obs.to(device)
         self._fill = self._fill.to(device)
         if self._requires_value_buffers:
             self.rewards = self.rewards.to(device)
@@ -77,9 +75,6 @@ class RolloutStorage(object):
         self.step = (self.step + 1) % self.num_steps
 
     def insert_at_index(self, env_index, mask=None, action_log_dist=None, obs=None, reward=None, task=None, steps=1):
-        # if self._requires_value_buffers:
-        #     assert (value_preds is not None and rewards is not None), "Selected strategy requires value_preds and rewards"
-
         if env_index >= self.num_processes:
             warnings.warn(f"Env index {env_index} is greater than the number of processes {self.num_processes}. Using index {env_index % self.num_processes} instead.")
             env_index = env_index % self.num_processes
@@ -102,7 +97,6 @@ class RolloutStorage(object):
         if obs is not None:
             for s in range(step, end_step):
                 self.obs[s][env_index] = obs[s - step]
-
         if reward is not None:
             self.rewards[step:end_step, env_index].copy_(torch.as_tensor(reward[:, None]))
         if action_log_dist is not None:
@@ -114,7 +108,7 @@ class RolloutStorage(object):
                 assert isinstance(task, int), f"Provided task must be an integer, got {task} with type {type(task)} instead."
             self.tasks[step:end_step, env_index].copy_(torch.as_tensor(task))
         else:
-            self.env_steps[env_index] += 1
+            self.env_steps[env_index] += steps
             # Hack for now, we call insert_at_index twice
             while all(self._fill[self.step] == 1):
                 self.step = (self.step + 1) % self.buffer_steps
@@ -133,7 +127,6 @@ class RolloutStorage(object):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
         self.tasks[0: self.num_steps].copy_(self.tasks[self.num_steps: self.buffer_steps])
         self.masks[0: self.num_steps].copy_(self.masks[self.num_steps: self.buffer_steps])
-        # self.obs[0: self.num_steps].copy_(self.obs[self.num_steps: self.buffer_steps])
         self.obs[0: self.num_steps][:] = self.obs[self.num_steps: self.buffer_steps][:]
 
         if self._requires_value_buffers:
@@ -153,7 +146,6 @@ class RolloutStorage(object):
     def compute_returns(self, gamma, gae_lambda):
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
         self._get_values()
-        # self.value_preds[-1] = next_value
         gae = 0
         for step in reversed(range(self.rewards.size(0), self.num_steps)):
             delta = (
@@ -225,7 +217,6 @@ class PrioritizedLevelReplay(Curriculum):
         self._gamma = gamma
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
-        # self._get_value = get_value
         self._get_action_log_dist = get_action_log_dist
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 

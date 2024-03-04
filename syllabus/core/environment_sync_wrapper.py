@@ -20,7 +20,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  env,
                  components: MultiProcessingCurriculumWrapper.Components,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 batch_size: int = 1000,
+                 batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
@@ -58,15 +58,13 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "metrics": None,
                 "request_sample": True,
             }
-            self.update_queue.put(update)
-            # self.components.added_update()
+            self.components.put_update(update)
 
     def reset(self, *args, **kwargs):
         self.step_updates = []
         self.task_progress = 0.0
 
-        message = self.task_queue.get()     # Blocks until a task is available
-        # self.components.removed_task()
+        message = self.components.get_task()    # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
         self._latest_task = next_task
 
@@ -94,8 +92,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             # Send batched updates
             if self._batch_step >= self.batch_size or term or trunc:
                 updates = self._package_step_updates(request_sample=term or trunc)
-                self.update_queue.put(updates)
-                # self.components.added_update()
+                self.components.put_update(updates)
                 self._batch_step = 0
         elif term or trunc:
             # Task progress
@@ -105,8 +102,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "env_id": self.instance_id,
                 "request_sample": True,
             }
-            self.update_queue.put(update)
-            # self.components.added_update()
+            self.components.put_update(update)
 
         return obs, rew, term, trunc, info
 
