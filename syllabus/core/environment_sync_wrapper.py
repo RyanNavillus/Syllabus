@@ -6,7 +6,7 @@ import ray
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
 
-from syllabus.core import Curriculum, MultiProcessingComponents
+from syllabus.core import Curriculum, MultiProcessingComponents, MultiProcessingComponents
 from syllabus.core.task_interface import PettingZooTaskWrapper, TaskEnv, TaskWrapper
 from syllabus.task_space import TaskSpace
 

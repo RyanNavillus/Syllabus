@@ -7,6 +7,7 @@ from .curriculum_base import Curriculum
 from .curriculum_sync_wrapper import (CurriculumWrapper,
                                       MultiProcessingComponents,
                                       MultiProcessingCurriculumWrapper,
+                                      MultiProcessingComponents,
                                       RayCurriculumWrapper,
                                       make_multiprocessing_curriculum,
                                       make_ray_curriculum)

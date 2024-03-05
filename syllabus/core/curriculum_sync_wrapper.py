@@ -68,76 +68,76 @@ class MultiProcessingComponents:
         self._debug = False
         self._verbose = False
 
-        def get_id(self):
-            with self._instance_lock:
-                instance_id = self._env_count[0]
-                self._env_count[0] += 1
-            return instance_id
+    def get_id(self):
+        with self._instance_lock:
+            instance_id = self._env_count[0]
+            self._env_count[0] += 1
+        return instance_id
 
-        def put_task(self, task):
-            self.task_queue.put(task)
-            if self._debug:
-                task_count = self.added_task()
-                if self._verbose:
-                    print(f"Task added to queue. Task count: {task_count}")
+    def put_task(self, task):
+        self.task_queue.put(task)
+        if self._debug:
+            task_count = self.added_task()
+            if self._verbose:
+                print(f"Task added to queue. Task count: {task_count}")
 
-        def get_task(self):
-            task = self.task_queue.get()
-            if self._debug:
-                task_count = self.removed_task()
-                if self._verbose:
-                    print(f"Task removed from queue. Task count: {task_count}")
-            return task
+    def get_task(self):
+        task = self.task_queue.get()
+        if self._debug:
+            task_count = self.removed_task()
+            if self._verbose:
+                print(f"Task removed from queue. Task count: {task_count}")
+        return task
 
-        def put_update(self, update):
-            self.update_queue.put(update)
-            if self._debug:
-                update_count = self.added_update()
-                if self._verbose:
-                    print(f"Update added to queue. Update count: {update_count}")
+    def put_update(self, update):
+        self.update_queue.put(update)
+        if self._debug:
+            update_count = self.added_update()
+            if self._verbose:
+                print(f"Update added to queue. Update count: {update_count}")
 
-        def get_update(self):
-            update = self.update_queue.get()
-            if self._debug:
-                update_count = self.removed_update()
-                if self._verbose:
-                    print(f"Update removed from queue. Update count: {update_count}")
+    def get_update(self):
+        update = self.update_queue.get()
+        if self._debug:
+            update_count = self.removed_update()
+            if self._verbose:
+                print(f"Update removed from queue. Update count: {update_count}")
 
-            return update
+        return update
 
-        def added_task(self):
-            with self._instance_lock:
-                self._task_count[0] += 1
-                task_count = self._task_count[0]
-            return task_count
+    def added_task(self):
+        with self._instance_lock:
+            self._task_count[0] += 1
+            task_count = self._task_count[0]
+        return task_count
 
-        def removed_task(self):
-            with self._instance_lock:
-                self._task_count[0] -= 1
-                task_count = self._task_count[0]
-            return task_count
+    def removed_task(self):
+        with self._instance_lock:
+            self._task_count[0] -= 1
+            task_count = self._task_count[0]
+        return task_count
 
-        def get_task_count(self):
-            with self._instance_lock:
-                task_count = self._task_count[0]
-            return task_count
+    def get_task_count(self):
+        with self._instance_lock:
+            task_count = self._task_count[0]
+        return task_count
 
-        def get_update_count(self):
-            with self._instance_lock:
-                update_count = self._update_count[0]
-            return update_count
+    def get_update_count(self):
+        with self._instance_lock:
+            update_count = self._update_count[0]
+        return update_count
 
-        def added_update(self):
-            with self._instance_lock:
-                self._update_count[0] += 1
-                update_count = self._update_count[0]
-            return update_count
+    def added_update(self):
+        with self._instance_lock:
+            self._update_count[0] += 1
+            update_count = self._update_count[0]
+        return update_count
 
-        def removed_update(self):
-            with self._instance_lock:
-                self._update_count[0] -= 1
-                update_count = self._update_count[0]
-            return update_count
+    def removed_update(self):
+        with self._instance_lock:
+            self._update_count[0] -= 1
+            update_count = self._update_count[0]
+        return update_count
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
