@@ -86,7 +86,7 @@ def evaluate_random_policy_pettingzoo(make_env, num_episodes=100, seeds=None):
 
 def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
-    if new_task:
+    if new_task is not None:
         obs = env.reset(new_task=new_task)
     else:
         obs = env.reset()
@@ -97,16 +97,17 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
             curriculum.update_on_step(obs, sum(rew.values()), all(term.values()), all(trunc.values()), info, env_id=env_id)
+            task_completion = max([i["task_completion"] for i in info.values()]) if len(env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
+            curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
         ep_rew += sum(rew.values())
-    if curriculum and len(info.values()) > 0 and "task_completion" in list(info.values())[0]:
-        task_progress = max([i["task_completion"] for i in info.values()])
-        curriculum.update_task_progress(env.task, task_progress)
+    if curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+        curriculum.update_on_episode(ep_rew, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
 
 
 def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
-    if new_task:
+    if new_task is not None:
         obs = env.reset(new_task=new_task)
     else:
         obs = env.reset()

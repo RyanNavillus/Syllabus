@@ -4,20 +4,22 @@ from nle.env.tasks import NetHackScore
 
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.curricula import NoopCurriculum
-from syllabus.tests import create_cartpole_env, create_nethack_env, create_procgen_env, test_native_multiprocess, test_ray_multiprocess
+from syllabus.tests import create_cartpole_env, create_nethack_env, create_procgen_env, create_pistonball_env, test_native_multiprocess, test_ray_multiprocess
 
 
-N_ENVS = 128
-N_EPISODES = 64
+N_ENVS = 4
+N_EPISODES = 4
 
 if __name__ == "__main__":
-    ray.init()
+    # ray.init()
     env_fn = create_nethack_env
     default_task = NetHackScore
     # env_fn = create_cartpole_env
     # default_task = (-0.1, 0.1)
     # env_fn = create_procgen_env
     # default_task = 0
+    env_fn = create_pistonball_env
+    default_task = 0
     env_args = ()
     env_kwargs = {}
     sample_env = env_fn(env_args=env_args, env_kwargs=env_kwargs)

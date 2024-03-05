@@ -37,11 +37,14 @@ class PettingZooSyncTestEnv(PettingZooTaskEnv):
         super().__init__()
         self.num_steps = num_steps
         self.possible_agents = ["agent1", "agent2"]
-        self.action_spaces = {agent: gym.spaces.Discrete(2) for agent in self.possible_agents}
+        self._action_spaces = {agent: gym.spaces.Discrete(2) for agent in self.possible_agents}
         self.observation_spaces = {agent: gym.spaces.Tuple((gym.spaces.Discrete(self.num_steps), gym.spaces.Discrete(2)))
                                   for agent in self.possible_agents}
         self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes + 1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
         self.task = "error_task"
+
+    def action_space(self, agent):
+        return self._action_spaces[agent]
 
     def reset(self, new_task=None):
         self.agents = copy(self.possible_agents)

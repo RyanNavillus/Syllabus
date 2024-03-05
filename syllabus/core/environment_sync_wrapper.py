@@ -6,7 +6,7 @@ import ray
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
 
-from syllabus.core import Curriculum, MultiProcessingCurriculumWrapper
+from syllabus.core import Curriculum, MultiProcessingComponents
 from syllabus.core.task_interface import PettingZooTaskWrapper, TaskEnv, TaskWrapper
 from syllabus.task_space import TaskSpace
 
@@ -20,7 +20,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def __init__(self,
                  env,
-                 components: MultiProcessingCurriculumWrapper.Components,
+                 components: MultiProcessingComponents,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
@@ -63,7 +63,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self.components.put_update(update)
 
     def reset(self, *args, **kwargs):
-        self.step_updates = []
         self.task_progress = 0.0
 
         message = self.components.get_task()    # Blocks until a task is available
@@ -80,6 +79,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
         self.task_progress = info.get("task_completion", 0.0)
+
         # Update curriculum with step info
         if self.update_on_step:
             self._obs[self._batch_step] = obs
@@ -151,7 +151,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
     def __init__(self,
                  env,
-                 components: MultiProcessingCurriculumWrapper.Components,
+                 components: MultiProcessingComponents,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
@@ -194,10 +194,12 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
             self.components.put_update(update)
 
     def reset(self, *args, **kwargs):
-        self.step_updates = []
         self.task_progress = 0.0
-        message = self.task_queue.get()     # Blocks until a task is available
+
+        message = self.components.get_task()    # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
+        self._latest_task = next_task
+
         # Add any new tasks
         if "added_tasks" in message:
             added_tasks = message["added_tasks"]
@@ -215,31 +217,59 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         # Update curriculum with step info
         if self.update_on_step:
             # Environment outputs
+            self._obs[self._batch_step] = obs
+            self._rews[self._batch_step] = sum(rews.values())
+            self._terms[self._batch_step] = all(terms.values())
+            self._truncs[self._batch_step] = all(truncs.values())
+            self._infos[self._batch_step] = infos
+            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+            self._task_progresses[self._batch_step] = self.task_progress
+            self._batch_step += 1
             # TODO: Create a better system for aggregating step results in different ways. Maybe custom aggregation functions
-            self.step_updates.append({
-                "update_type": "step",
-                "metrics": (obs, sum(rews.values()), all(terms.values()), all(truncs.values()), list(infos.values())[0]),
-                "request_sample": False
-            })
+            # self.step_updates.append({
+            #     "update_type": "step",
+            #     "metrics": (obs, sum(rews.values()), all(terms.values()), all(truncs.values()), list(infos.values())[0]),
+            #     "env_id": self.instance_id,
+            #     "request_sample": False
+            # })
             # Task progress
-            self.step_updates.append({
-                "update_type": "task_progress",
-                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "request_sample": is_finished
-            })
+            # self.step_updates.append({
+            #     "update_type": "task_progress",
+            #     "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+            #     "env_id": self.instance_id,
+            #     "request_sample": is_finished
+            # })
             # Send batched updates
-            if len(self.step_updates) >= 1000 or is_finished:
-                self.update_queue.put(self.step_updates)
-                self.step_updates = []
+            if self._batch_step >= self.batch_size or is_finished:
+                updates = self._package_step_updates(request_sample=is_finished)
+                self.components.put_update(updates)
+                self._batch_step = 0
         elif is_finished:
             # Task progress
             update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
+                "env_id": self.instance_id,
                 "request_sample": True,
             }
-            self.update_queue.put(update)
+            self.components.put_update(update)
+
         return obs, rews, terms, truncs, infos
+
+    def _package_step_updates(self, request_sample=False):
+        step_batch = {
+            "update_type": "step_batch",
+            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+            "env_id": self.instance_id,
+            "request_sample": request_sample
+        }
+        task_batch = {
+            "update_type": "task_progress_batch",
+            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
+            "env_id": self.instance_id,
+            "request_sample": False
+        }
+        return [step_batch, task_batch]
 
     def add_task(self, task):
         update = {
@@ -253,103 +283,6 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         if hasattr(self.env, "task"):
             return self.env.task
         return self._latest_task
-
-    def __getattr__(self, attr):
-        env_attr = getattr(self.env, attr, None)
-        if env_attr is not None:
-            return env_attr
-
-
-# TODO: Fix this and refactor
-# class PettingZooMultiProcessingSyncWrapper(BaseParallelWraper):
-#     """
-#     This wrapper is used to set the task on reset for a Gym environments running
-#     on parallel processes created using multiprocessing.Process. Meant to be used
-#     with a QueueLearningProgressCurriculum running on the main process.
-#     """
-#     def __init__(self,
-#                  env,
-#                  task_queue: SimpleQueue,
-#                  update_queue: SimpleQueue,
-#                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-#                  default_task=None,
-#                  task_space: TaskSpace = None,
-#                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-#         super().__init__(env)
-#         self.env = env
-#         self.task_queue = task_queue
-#         self.update_queue = update_queue
-#         self.task_space = task_space
-#         self.update_on_step = update_on_step
-#         self.global_task_completion = global_task_completion
-#         self.task_completion = 0.0
-#         self.warned_once = False
-#         self.step_results = []
-#         if task_space.contains(default_task):
-#             self.default_task = default_task
-
-#         # Request initial task
-#         update = {
-#             "update_type": "noop",
-#             "metrics": None,
-#             "request_sample": True
-#         }
-#         self.update_queue.put(update)
-
-    def reset(self, *args, **kwargs):
-        self.step_updates = []
-        self.task_progress = 0.0
-        message = self.task_queue.get()     # Blocks until a task is available
-        next_task = self.task_space.decode(message["next_task"])
-        # Add any new tasks
-        if "added_tasks" in message:
-            added_tasks = message["added_tasks"]
-            for add_task in added_tasks:
-                self.env.add_task(add_task)
-        return self.env.reset(*args, new_task=next_task, **kwargs)
-
-    def step(self, action):
-        obs, rews, terms, truncs, infos = self.env.step(action)
-
-        if "task_completion" in list(infos.values())[0]:
-            self.task_progress = max([info["task_completion"] for info in infos.values()])
-
-        is_finished = (len(self.env.agents) == 0) or all(terms.values())
-        # Update curriculum with step info
-        if self.update_on_step:
-            # Environment outputs
-            # TODO: Create a better system for aggregating step results in different ways. Maybe custom aggregation functions
-            self.step_updates.append({
-                "update_type": "step",
-                "metrics": (obs, sum(rews.values()), all(terms.values()), all(truncs.values()), list(infos.values())[0]),
-                "request_sample": False
-            })
-            # Task progress
-            self.step_updates.append({
-                "update_type": "task_progress",
-                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "request_sample": is_finished
-            })
-            # Send batched updates
-            if len(self.step_updates) >= 1000 or is_finished:
-                self.update_queue.put(self.step_updates)
-                self.step_updates = []
-        elif is_finished:
-            # Task progress
-            update = {
-                "update_type": "task_progress",
-                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "request_sample": True,
-            }
-            self.update_queue.put(update)
-        return obs, rews, terms, truncs, infos
-
-    def add_task(self, task):
-        update = {
-            "update_type": "add_task",
-            "metrics": task
-        }
-        self.update_queue.put(update)
 
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)

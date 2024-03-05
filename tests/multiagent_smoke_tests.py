@@ -36,7 +36,7 @@ if __name__ == "__main__":
         print(f"PASSED: Single process test (2 envs) passed: {native_speed:.2f}s")
 
         # Test multiprocess process speed without Syllabus
-        print("RUNNING: Python native multiprocess test (2 envs)...")
+        print("\nRUNNING: Python native multiprocess test (2 envs)...")
         test_curriculum = curriculum(*args, **kwargs)
         native_speed = test_native_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python native multiprocess test (2 envs) passed: {native_speed:.2f}s")

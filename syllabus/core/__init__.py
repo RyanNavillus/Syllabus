@@ -5,6 +5,7 @@ from .task_interface import TaskWrapper, SubclassTaskWrapper, ReinitTaskWrapper,
 from .utils import decorate_all_functions, UsageError, enumerate_axes
 from .curriculum_base import Curriculum
 from .curriculum_sync_wrapper import (CurriculumWrapper,
+                                      MultiProcessingComponents,
                                       MultiProcessingCurriculumWrapper,
                                       RayCurriculumWrapper,
                                       make_multiprocessing_curriculum,

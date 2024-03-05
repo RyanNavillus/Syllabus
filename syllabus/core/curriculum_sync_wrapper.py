@@ -57,80 +57,82 @@ class CurriculumWrapper:
         self.curriculum.add_task(task)
 
 
+class MultiProcessingComponents:
+    def __init__(self, task_queue, update_queue):
+        self.task_queue = task_queue
+        self.update_queue = update_queue
+        self._instance_lock = Lock()
+        self._env_count = ShareableList([0])
+        self._task_count = ShareableList([0])
+        self._update_count = ShareableList([0])
+        self._debug = True
+
+    def get_id(self):
+        with self._instance_lock:
+            instance_id = self._env_count[0]
+            self._env_count[0] += 1
+        return instance_id
+
+    def put_task(self, task):
+        self.task_queue.put(task)
+        if self._debug:
+            print("tasks:", self.added_task())
+
+    def get_task(self):
+        task = self.task_queue.get()
+        if self._debug:
+            print("tasks:", self.removed_task())
+        return task
+
+    def put_update(self, update):
+        self.update_queue.put(update)
+        if self._debug:
+            print("updates:", self.added_update())
+
+    def get_update(self):
+        update = self.update_queue.get()
+        if self._debug:
+            print("updates:", self.removed_update())
+        return update
+
+    def added_task(self):
+        with self._instance_lock:
+            self._task_count[0] += 1
+            task_count = self._task_count[0]
+        return task_count
+
+    def removed_task(self):
+        with self._instance_lock:
+            self._task_count[0] -= 1
+            task_count = self._task_count[0]
+        return task_count
+
+    def get_task_count(self):
+        with self._instance_lock:
+            task_count = self._task_count[0]
+        return task_count
+
+    def get_update_count(self):
+        with self._instance_lock:
+            update_count = self._update_count[0]
+        return update_count
+
+    def added_update(self):
+        with self._instance_lock:
+            self._update_count[0] += 1
+            update_count = self._update_count[0]
+        return update_count
+
+    def removed_update(self):
+        with self._instance_lock:
+            self._update_count[0] -= 1
+            update_count = self._update_count[0]
+        return update_count
+
+
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper.
     """
-    class Components:
-        def __init__(self, task_queue, update_queue):
-            self.task_queue = task_queue
-            self.update_queue = update_queue
-            self._instance_lock = Lock()
-            self._env_count = ShareableList([0])
-            self._task_count = ShareableList([0])
-            self._update_count = ShareableList([0])
-            self._debug = True
-
-        def get_id(self):
-            with self._instance_lock:
-                instance_id = self._env_count[0]
-                self._env_count[0] += 1
-            return instance_id
-
-        def put_task(self, task):
-            self.task_queue.put(task)
-            if self._debug:
-                self.added_task()
-
-        def get_task(self):
-            task = self.task_queue.get()
-            if self._debug:
-                self.removed_task()
-            return task
-
-        def put_update(self, update):
-            self.update_queue.put(update)
-            if self._debug:
-                self.added_update()
-
-        def get_update(self):
-            update = self.update_queue.get()
-            if self._debug:
-                self.removed_update()
-            return update
-
-        def added_task(self):
-            with self._instance_lock:
-                self._task_count[0] += 1
-                task_count = self._task_count[0]
-            return task_count
-
-        def removed_task(self):
-            with self._instance_lock:
-                self._task_count[0] -= 1
-                task_count = self._task_count[0]
-            return task_count
-
-        def get_task_count(self):
-            with self._instance_lock:
-                task_count = self._task_count[0]
-            return task_count
-
-        def get_update_count(self):
-            with self._instance_lock:
-                update_count = self._update_count[0]
-            return update_count
-
-        def added_update(self):
-            with self._instance_lock:
-                self._update_count[0] += 1
-                update_count = self._update_count[0]
-            return update_count
-
-        def removed_update(self):
-            with self._instance_lock:
-                self._update_count[0] -= 1
-                update_count = self._update_count[0]
-            return update_count
 
     def __init__(
         self,
@@ -149,7 +151,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.added_tasks = []
         self.num_assigned_tasks = 0
 
-        self._components = MultiProcessingCurriculumWrapper.Components(task_queue, update_queue)
+        self._components = MultiProcessingComponents(task_queue, update_queue)
 
     def start(self):
         """
