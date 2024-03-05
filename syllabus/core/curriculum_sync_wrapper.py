@@ -57,18 +57,16 @@ class CurriculumWrapper:
         self.curriculum.add_task(task)
 
 
-class MultiProcessingCurriculumWrapper(CurriculumWrapper):
-    """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper.
-    """
-    class Components:
-        def __init__(self, task_queue, update_queue):
-            self.task_queue = task_queue
-            self.update_queue = update_queue
-            self._instance_lock = Lock()
-            self._env_count = ShareableList([0])
-            self._task_count = ShareableList([0])
-            self._update_count = ShareableList([0])
-            self._debug = True
+class MultiProcessingComponents:
+    def __init__(self, task_queue, update_queue):
+        self.task_queue = task_queue
+        self.update_queue = update_queue
+        self._instance_lock = Lock()
+        self._env_count = ShareableList([0])
+        self._task_count = ShareableList([0])
+        self._update_count = ShareableList([0])
+        self._debug = False
+        self._verbose = False
 
         def get_id(self):
             with self._instance_lock:
@@ -76,26 +74,35 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 self._env_count[0] += 1
             return instance_id
 
-        def put_task(self, task):
-            self.task_queue.put(task)
-            if self._debug:
-                self.added_task()
+    def put_task(self, task):
+        self.task_queue.put(task)
+        if self._debug:
+            task_count = self.added_task()
+            if self._verbose:
+                print(f"Task added to queue. Task count: {task_count}")
 
         def get_task(self):
             task = self.task_queue.get()
             if self._debug:
-                self.removed_task()
+                task_count = self.removed_task()
+                if self._verbose:
+                    print(f"Task removed from queue. Task count: {task_count}")
             return task
 
         def put_update(self, update):
             self.update_queue.put(update)
             if self._debug:
-                self.added_update()
+                update_count = self.added_update()
+                if self._verbose:
+                    print(f"Update added to queue. Update count: {update_count}")
 
         def get_update(self):
             update = self.update_queue.get()
             if self._debug:
-                self.removed_update()
+                update_count = self.removed_update()
+                if self._verbose:
+                    print(f"Update removed from queue. Update count: {update_count}")
+
             return update
 
         def added_task(self):
@@ -212,8 +219,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
-        writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
+        if self.get_components().debug:
+            writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
+            writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
     def add_task(self, task):
         super().add_task(task)

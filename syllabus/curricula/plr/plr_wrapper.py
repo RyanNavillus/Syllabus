@@ -231,6 +231,9 @@ class PrioritizedLevelReplay(Curriculum):
         )
         self._rollouts.to(device)
 
+    def set_value_fn(self, value_fn):
+        self._rollouts._get_value = value_fn
+
     def _sample_distribution(self) -> List[float]:
         """
         Returns a sample distribution over the task space.
