@@ -180,8 +180,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         components._update_count.shm.unlink()
         components._task_count.shm.close()
         components._task_count.shm.unlink()
-        components.task_queue.close()
-        components.update_queue.close()
+        # components.task_queue.close()
+        # components.update_queue.close()
 
     def _update_queues(self):
         """
