@@ -1,7 +1,10 @@
 import unittest
+
 import numpy as np
-from syllabus.tests import create_cartpole_env
+
 from syllabus.curricula import AnnealingBoxCurriculum
+from syllabus.tests import create_cartpole_env
+
 
 class TestAnnealingBoxCurriculum(unittest.TestCase):
 
@@ -32,7 +35,6 @@ class TestAnnealingBoxCurriculum(unittest.TestCase):
         for i in range(11):
             sampled_values = curriculum.sample(k=1)[0]
             curriculum.update_on_step()  # Simulate the update on step
-            # print(f"Step {i + 1}: Actual values: {sampled_values}, Expected values: {expected_values[i]}")
             np.testing.assert_almost_equal(sampled_values, expected_values[i], decimal=3)
 
     def test_negative_start_end_values(self):
@@ -61,7 +63,6 @@ class TestAnnealingBoxCurriculum(unittest.TestCase):
         for i in range(11):
             sampled_values = curriculum.sample(k=1)[0]
             curriculum.update_on_step()
-            # print(f"Step {i + 1}: Actual values: {sampled_values}, Expected values: {expected_values[i]}")
             np.testing.assert_almost_equal(sampled_values, expected_values[i], decimal=3)
 
     def test_reverse_annealing(self):
@@ -90,8 +91,8 @@ class TestAnnealingBoxCurriculum(unittest.TestCase):
         for i in range(11):
             sampled_values = curriculum.sample(k=1)[0]
             curriculum.update_on_step()
-            # print(f"Step {i + 1}: Actual values: {sampled_values}, Expected values: {expected_values[i]}")
             np.testing.assert_almost_equal(sampled_values, expected_values[i], decimal=3)
+
 
 if __name__ == '__main__':
     unittest.main()

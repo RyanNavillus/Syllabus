@@ -29,11 +29,16 @@ if __name__ == "__main__":
         (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
         # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
         (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
-        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {"get_value": get_test_values, "device": "cpu", "num_processes": N_ENVS, "num_steps": 2048}),
+        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
+            "get_value": get_test_values,
+            "device": "cpu",
+            "num_processes": N_ENVS,
+            "num_steps": 2048
+        }),
         (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
         (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
-            'start_values': [0.2, 0.5],
-            'end_values': [0.8, 0.9],
+            'start_values': [-0.02, 0.02],
+            'end_values': [-0.3, 0.3],
             'total_steps': [10]
         }),
     ]
