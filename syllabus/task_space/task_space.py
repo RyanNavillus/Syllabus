@@ -98,6 +98,8 @@ class TaskSpace():
     @property
     def tasks(self) -> List[Any]:
         # TODO: Can I just use _tasks?
+        if isinstance(self.gym_space, MultiDiscrete):
+            return list(range(len(self._task_list)))
         return self._task_list
 
     def get_tasks(self, gym_space: Space = None, sample_interval: float = None) -> List[tuple]:
@@ -172,7 +174,7 @@ class TaskSpace():
     def sample(self):
         # TODO: Gross
         if isinstance(self.gym_space, MultiDiscrete):
-            return self._task_list[np.random.choice(np.arange(len(self._task_list)))]
+            return np.random.choice(np.arange(len(self._task_list)))
         else:
             return self.decode(self.gym_space.sample())
 
