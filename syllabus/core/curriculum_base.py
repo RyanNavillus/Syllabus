@@ -13,7 +13,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, task_names: Callable = None, use_startup_behavior: bool = False, sampled_strategy: str = None) -> None:
+    def __init__(self, task_space: TaskSpace, task_names: Callable = None, warmup_strategy: str = None, warmup_samples: int = 0) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -26,9 +26,9 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
-        self.use_startup_behavior = use_startup_behavior
-        self.current_task_index = 0
-        self.sampled_strategy = sampled_strategy
+        self.sampled_tasks = 0
+        self.warmup_strategy = warmup_strategy
+        self.warmup_tasks = warmup_samples
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
@@ -151,23 +151,22 @@ class Curriculum:
         raise NotImplementedError
 
     def _should_use_startup_sampling(self) -> bool:
-        return self.use_startup_behavior 
+        return self.warmup_strategy != "none" and self.sampled_tasks < self.warmup_tasks
     
     def _startup_sample(self, k: int) -> List:
         sampled_tasks = []
-        if self.sampled_strategy == "fix":
-            end_index = min(self.current_task_index + k, len(self.tasks))
-            sampled_tasks.extend(self.tasks[self.current_task_index:end_index])
-            self.current_task_index = end_index
+        if self.warmup_strategy == "fix":
+            end_index = min(self.sampled_tasks + k, self.num_tasks)
+            sampled_tasks = self.tasks[self.sampled_tasks:end_index]
+            self.sampled_tasks = end_index
 
-        if self.sampled_strategy == "random":
-            num_tasks = len(self.tasks)
+        if self.warmup_strategy == "random":
+            num_tasks = self.num_tasks
             if k > num_tasks:
                 raise ValueError("k cannot be larger than the total number of tasks")
             indices = random.sample(range(num_tasks), k)  
-            sampled_tasks.extend([self.tasks[idx] for idx in indices])
+            sampled_tasks = [self.tasks[idx] for idx in indices]
 
-        self.use_startup_behavior = False
         return sampled_tasks
         
     def sample(self, k: int = 1) -> Union[List, Any]:
@@ -179,7 +178,11 @@ class Curriculum:
         assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
-            return self._startup_sample(k)
+            tasks = self._startup_sample(k)
+            self.sampled_tasks += len(tasks)
+            if len(tasks) < k:
+                tasks += self.sample(k=k-len(tasks))
+            return tasks
         else:
             task_dist = self._sample_distribution()
 
