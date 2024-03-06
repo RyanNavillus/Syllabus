@@ -23,7 +23,7 @@ if __name__ == "__main__":
         expected_reward = 100 * num_envs * N_EPISODES
         assert stats["total_reward"] == expected_reward, f"Curriculum total reward is {stats['total_reward']}, expected {expected_reward}"
         for task, count in stats["task_counts"].items():
-            if task == "error task":
+            if task == 0:
                 assert count == 0, "Received completed error tasks, expected 0"
             else:
                 assert count == num_envs, f"Curriculum task '{task}' count is {count}, expected {num_envs}"
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     # Test Queue multiprocess speed with Syllabus
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
-    test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
+    test_curriculum = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = test_native_multiprocess(
         create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES

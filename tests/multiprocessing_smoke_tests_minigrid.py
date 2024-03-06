@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import ray
 
-from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
+from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, CentralizedPrioritizedLevelReplay
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import test_single_process, test_native_multiprocess, test_ray_multiprocess, create_minigrid_env
 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         NoopCurriculum("MiniGrid-DoorKey-5x5-v0", sample_env.task_space, random_start_tasks=10),
         DomainRandomization(sample_env.task_space, random_start_tasks=10),
         LearningProgressCurriculum(sample_env.task_space, random_start_tasks=10),
-        PrioritizedLevelReplay(sample_env.task_space, random_start_tasks=10, device="cpu", suppress_usage_warnings=True)
+        CentralizedPrioritizedLevelReplay(sample_env.task_space, random_start_tasks=10, device="cpu", suppress_usage_warnings=True)
     ]
     for curriculum in curricula:
         print("")

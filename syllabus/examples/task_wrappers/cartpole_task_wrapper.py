@@ -1,5 +1,5 @@
-import numpy as np
 from gymnasium.spaces import Box
+
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
 
@@ -12,17 +12,11 @@ class CartPoleTaskWrapper(TaskWrapper):
         self.total_reward = 0
 
     def reset(self, *args, **kwargs):
-        self.env.reset()
         self.total_reward = 0
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")
-            self.change_task(new_task)
-        return np.array(self.env.state, dtype=np.float32), {}
-
-    def change_task(self, new_task):
-        low, high = new_task
-        self.env.state = self.env.np_random.uniform(low=low, high=high, size=(4,))
-        self.task = new_task
+            self.task = new_task
+        return self.env.reset(options={"low": self.task[0], "high": self.task[1]})
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         # Return percent of optimal reward
