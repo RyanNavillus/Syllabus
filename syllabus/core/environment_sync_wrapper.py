@@ -5,7 +5,7 @@ import numpy as np
 import ray
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 
-from syllabus.core import Curriculum, MultiProcessingCurriculumWrapper, TaskEnv, TaskWrapper
+from syllabus.core import Curriculum, MultiProcessingCurriculumWrapper, MultiProcessingComponents, TaskEnv, TaskWrapper
 from syllabus.task_space import TaskSpace
 
 
@@ -18,7 +18,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def __init__(self,
                  env,
-                 components: MultiProcessingCurriculumWrapper.Components,
+                 components: MultiProcessingComponents,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
