@@ -46,7 +46,7 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
 
 def run_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
-    if new_task:
+    if new_task is not None:
         obs = env.reset(new_task=new_task)
     else:
         obs = env.reset()
