@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple
 import cv2
 import gymnasium as gym
 import numpy as np
-import render_utils
+# import render_utils
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from nle import nethack
 from nle.env import base
