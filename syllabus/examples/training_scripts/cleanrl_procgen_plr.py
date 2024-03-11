@@ -21,7 +21,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import DomainRandomization, LearningProgressCurriculum, PrioritizedLevelReplay
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize
@@ -46,6 +46,8 @@ def parse_args():
                         help="the entity (team) of wandb's project")
     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="weather to capture videos of the agent performances (check out `videos` folder)")
+    parser.add_argument("--logging-dir", type=str, default=".",
+                        help="the base directory for logging and wandb storage.")
 
     # Algorithm specific arguments
     parser.add_argument("--env-id", type=str, default="starpilot",
@@ -124,20 +126,19 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_queue, update_queue, curriculum=False, start_level=0, num_levels=1):
+def make_env(env_id, seed, curriculum_components=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         env = ProcgenTaskWrapper(env, env_id, seed=seed)
-        if curriculum:
-            if task_queue is not None and update_queue is not None:
-                env = MultiProcessingSyncWrapper(
-                    env,
-                    task_queue,
-                    update_queue,
-                    update_on_step=False,
-                    task_space=env.task_space,
-                )
+        if curriculum_components is not None:
+            env = MultiProcessingSyncWrapper(
+                env,
+                curriculum_components,
+                update_on_step=True,
+                task_space=env.task_space,
+                buffer_size=4,
+            )
         return env
     return thunk
 
@@ -219,6 +220,14 @@ def fast_level_replay_evaluate(
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
+def make_value_fn():
+    def get_value(obs):
+        obs = np.array(obs)
+        with torch.no_grad():
+            return agent.get_value(torch.Tensor(obs).to(device))
+    return get_value
+
+
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -233,10 +242,11 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
-            dir="/fs/nexus-scratch/rsulli/"
+            dir=args.logging_dir
         )
-        wandb.run.log_code("./syllabus/examples")
-    writer = SummaryWriter(f"/fs/nexus-scratch/rsulli/runs/{run_name}")
+        wandb.run.log_code(os.path.join(args.logging_dir, "/syllabus/examples"))
+
+    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -252,7 +262,7 @@ if __name__ == "__main__":
     print("Device:", device)
 
     # Curriculum setup
-    task_queue = update_queue = None
+    task_queue = update_queue = lock = None
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
@@ -263,11 +273,13 @@ if __name__ == "__main__":
             print("Using prioritized level replay.")
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
+                sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                get_value=make_value_fn(),
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -277,7 +289,7 @@ if __name__ == "__main__":
             curriculum = LearningProgressCurriculum(sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+        curriculum = make_multiprocessing_curriculum(curriculum)
         del sample_env
 
     # env setup
@@ -287,9 +299,7 @@ if __name__ == "__main__":
             make_env(
                 args.env_id,
                 args.seed + i,
-                task_queue,
-                update_queue,
-                curriculum=args.curriculum,
+                curriculum_components=curriculum.get_components() if args.curriculum else None,
                 num_levels=1 if args.curriculum else 0
             )
             for i in range(args.num_envs)
@@ -299,7 +309,7 @@ if __name__ == "__main__":
 
     test_eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=0)
+            make_env(args.env_id, args.seed + i, num_levels=0)
             for i in range(args.num_eval_episodes)
         ]
     )
@@ -307,7 +317,7 @@ if __name__ == "__main__":
 
     train_eval_envs = gym.vector.AsyncVectorEnv(
         [
-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=200)
+            make_env(args.env_id, args.seed + i, num_levels=200)
             for i in range(args.num_eval_episodes)
         ]
     )
@@ -373,27 +383,8 @@ if __name__ == "__main__":
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
+                    curriculum.log_metrics(writer, global_step)
                     break
-
-            # Syllabus curriculum update
-            if args.curriculum and args.curriculum_method == "plr":
-                with torch.no_grad():
-                    next_value = agent.get_value(next_obs)
-                tasks = envs.get_attr("task")
-
-                update = {
-                    "update_type": "on_demand",
-                    "metrics": {
-                        "value": value,
-                        "next_value": next_value,
-                        "rew": reward,
-                        "dones": done,
-                        "tasks": tasks,
-                    },
-                }
-                curriculum.update(update)
-            #if args.curriculum:
-            #    curriculum.log_metrics(writer, global_step)
 
         # bootstrap value if not done
         with torch.no_grad():

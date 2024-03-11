@@ -7,6 +7,7 @@ from typing import List
 import numpy as np
 from gymnasium.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
+
 from syllabus.core import Curriculum
 from syllabus.task_space import TaskSpace
 
@@ -18,33 +19,29 @@ class LearningProgressCurriculum(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
     REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, task_space: TaskSpace, **kwargs):
-        super().__init__(task_space, **kwargs)
-        # Save task list to file to coordinate between multiple processes
-        self._p_slow = defaultdict(float)    # Map from task to slow EMA process
-        self._p_fast = defaultdict(float)    # Map from task to fast EMA process
-        self.task_space = task_space
-        if isinstance(self.task_space.gym_space, Discrete) or isinstance(self.task_space.gym_space, MultiDiscrete):
-            for task in self.tasks:
-                self._p_fast[task] = 0.0
-                self._p_slow[task] = 0.0
+    def __init__(self, *args, ema_alpha=0.1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ema_alpha = ema_alpha
 
-    def update_task_progress(self, task: int, progress: float):
+        assert isinstance(self.task_space.gym_space, (Discrete, MultiDiscrete))
+        self._p_fast = np.zeros(self.num_tasks)
+        self._p_slow = np.zeros(self.num_tasks)
+
+    def update_task_progress(self, task: int, progress: float, env_id: int = None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
-        if task is None:
+        if task is None or progress == 0.0:
             return
         super().update_task_progress(task, progress)
 
-        k_slow = 2.0 / (55 + 1.0)
-        k_fast = 2.0 / (30 + 1.0)
-        self._p_slow[task] = (progress * k_slow) + (self._p_slow[task] * (1.0 - k_slow))
-        self._p_fast[task] = (progress * k_fast) + (self._p_fast[task] * (1.0 - k_fast))
+        self._p_fast[task] = (progress * self.ema_alpha) + (self._p_fast[task] * (1.0 - self.ema_alpha))
+        self._p_slow[task] = (self._p_fast[task] * self.ema_alpha) + (self._p_slow[task] * (1.0 - self.ema_alpha))
 
-    def _lp_metric(self, task: int, reweight: bool = True) -> float:
+    def _learning_progress(self, task: int, reweight: bool = True) -> float:
         """
         Compute the learning progress metric for the given task.
         """
@@ -52,46 +49,40 @@ class LearningProgressCurriculum(Curriculum):
         fast = self._reweight(self._p_fast[task]) if reweight else self._p_fast[task]
         return abs(fast - slow)
 
-    def _reweight(self, p: float, p_theta: float = 0.1) -> float:
+    def _reweight(self, p: np.ndarray, p_theta: float = 0.1) -> float:
         """
         Reweight the given success rate using the reweighting function from the paper.
         """
-        numerator = float(p) * (1.0 - p_theta)
-        denominator = float(p) + (p_theta * (1.0 - (2.0 * float(p))))
+        numerator = p * (1.0 - p_theta)
+        denominator = p + p_theta * (1.0 - 2.0 * p)
         return numerator / denominator
 
-    def _sigmoid(self, X: List[float], center: float = 0.0, curve: float = 1.0) -> List[float]:
-        def sig(x, x_0=center, curve=curve):
-            return 1.0 / (1.0 + math.e**(curve * (x_0 - x)))
-        return [sig(x) for x in X]
-
-    def _softmax(self, X: List[float]) -> List[float]:
-        exp_sum = sum([x * math.e**x for x in X])
-        return [(x * math.e**x / exp_sum) for x in X]
+    def _sigmoid(self, x: np.ndarray):
+        return 1 / (1 + np.exp(-x))
 
     def _sample_distribution(self) -> List[float]:
         if self.num_tasks == 0:
             return []
 
-        task_lps = []
-        for task in self.tasks:
-            task_lps.append(self._lp_metric(task))
+        task_dist = np.ones(self.num_tasks) / self.num_tasks
 
-        # Standardize
-        task_lps_mean = sum(task_lps) / len(task_lps)
-        task_lps_sqr = [task_lp**2 for task_lp in task_lps]
-        task_lps_std = math.sqrt(sum(task_lps_sqr))
+        task_lps = self._learning_progress(np.asarray(self.tasks))
+        posidxs = [i for i, lp in enumerate(task_lps) if lp > 0]
+        zeroout = len(posidxs) > 0
 
-        # If tasks all have the same lp, return uniform distribution
-        if task_lps_std == 0:
-            return [1 / self.num_tasks for _ in self.tasks]
-        task_lps_standard = [(task_lp - task_lps_mean) / task_lps_std for task_lp in task_lps]
+        subprobs = task_lps[posidxs] if zeroout else task_lps
+        std = np.std(subprobs)
+        subprobs = (subprobs - np.mean(subprobs)) / (std if std else 1)  # z-score
+        subprobs = self._sigmoid(subprobs)  # sigmoid
+        subprobs = subprobs / np.sum(subprobs)  # normalize
+        if zeroout:
+            # If some tasks have nonzero progress, zero out the rest
+            task_dist = np.zeros(len(task_lps))
+            task_dist[posidxs] = subprobs
+        else:
+            # If all tasks have 0 progress, return uniform distribution
+            task_dist = subprobs
 
-        # Sigmoid
-        task_lps_sigmoid = self._sigmoid(task_lps_standard, center=1.28, curve=3.0)
-
-        # Softmax - convert weights to sampling probabilities
-        task_dist = self._softmax(task_lps_sigmoid)
         return task_dist
 
     def on_step(self, obs, rew, term, trunc, info) -> None:
@@ -132,7 +123,7 @@ if __name__ == "__main__":
         for task in tasks:
             curriculum.update_task_progress(task, histories[task][0][i])
         if i > 10:
-            distribution, _ = curriculum._sample_distribution()
+            distribution = curriculum._sample_distribution()
             print("[", end="")
             for j, prob in enumerate(distribution):
                 print(f"{prob:.3f}", end="")
@@ -151,8 +142,8 @@ if __name__ == "__main__":
     estimates = []
     for estimate, true_prob in zip(histories[0][0], histories[0][1]):
         curriculum.update_task_progress(tasks[0], estimate)
-        lp_raw.append(curriculum._lp_metric(tasks[0], reweight=False))
-        lp_reweight.append(curriculum._lp_metric(tasks[0]))
+        lp_raw.append(curriculum._learning_progress(tasks[0], reweight=False))
+        lp_reweight.append(curriculum._learning_progress(tasks[0]))
         p_fast.append(curriculum._p_fast[0])
         p_slow.append(curriculum._p_slow[0])
         true_probs.append(true_prob)
@@ -195,10 +186,10 @@ if __name__ == "__main__":
         for i in range(len(histories[0][0])):
             for task in tasks:
                 curriculum.update_task_progress(task, histories[task][0][i])
-        distribution, task_lps_standardized = curriculum._sample_distribution()
-        x_axis = np.linspace(-3, 3, num=len(task_lps_standardized))
-        sigmoid_axis = curriculum._sigmoid(x_axis, center=1.28, curve=3.0)
-        plt.plot(x_axis, norm.pdf(x_axis, 0, 1), color="blue", label="Normal distr")
+        distribution = curriculum._sample_distribution()
+        x_axis = np.linspace(-3, 3, num=len(distribution))
+        sigmoid_axis = curriculum._sigmoid(x_axis)
+        plt.plot(x_axis, norm.pdf(x_axis, 0, 1), color="blue", label="Normal distribution")
         plt.plot(x_axis, sigmoid_axis, color="orange", label="Sampling weight")
         plt.xlabel('Z-scored distributed learning progress')
         plt.legend()

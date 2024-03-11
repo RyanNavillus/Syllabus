@@ -2,13 +2,14 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>Creating a Task Wrapper for Your Environment - Syllabus 0.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -134,7 +135,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -160,24 +161,45 @@
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Curriculum</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../curricula/curriculum.html">Curriculum</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../curricula/implemented_curricula.html">Implemented Curriculum Learning Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../curricula/implemented_curricula.html">Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../background/curriculum_learning.html">Curriculum Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/ued.html">Unsupervised Environment Design</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Full Modules:</span></p>
+<ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">syllabus.core package</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.curricula package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">syllabus.curricula.plr package</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.core.html">syllabus.core package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of syllabus.core package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
 </ul>
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">syllabus.examples package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of syllabus.examples package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">syllabus.examples.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">syllabus.task_space package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a></li>
 </ul>
 </li>
 </ul>
@@ -210,7 +232,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -219,25 +241,6 @@
           <section id="creating-a-task-wrapper-for-your-environment">
 <h1>Creating a Task Wrapper for Your Environment<a class="headerlink" href="#creating-a-task-wrapper-for-your-environment" title="Permalink to this heading">#</a></h1>
 <p>If you are able to edit your environment</p>
-<p>A task wrapper defines allows an existing environment to change its task when <cite>reset()</cite> is called. It can be used to map tasks from the task space to actual environment
-configurations, or to add entirely new tasks to an environment.
-To write a custom task wrapper for an environment, simply subclass the <cite>TaskWrapper</cite> for gym environments or <cite>PettingZooTaskWrapper</cite> for pettingzoo environments.</p>
-<section id="required-methods">
-<h2>Required Methods<a class="headerlink" href="#required-methods" title="Permalink to this heading">#</a></h2>
-<ul class="simple">
-<li><dl class="simple">
-<dt><code class="xref py py-mod docutils literal notranslate"><span class="pre">change_task(task)</span></code> - Updates the environment configuration to play the provided task on the next episode.</dt><dd><p>This gets called before the wrapper’s environment is reset.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p>If changing the task only requires you to edit properties of the environment, you can do so in the <cite>change_task()</cite> method.
-This is called before the internal environment’s <cite>reset()</cite> function when you pass a <cite>new_task</cite> to the wrapped environment’s <cite>reset()</cite>.
-If you need to perform more complex operations, you can also override the <cite>reset()</cite> method or other environment methods.</p>
-</section>
-<section id="optional-features">
-<h2>Optional features<a class="headerlink" href="#optional-features" title="Permalink to this heading">#</a></h2>
-</section>
 </section>
 
         </article>
@@ -265,28 +268,8 @@ If you need to perform more complex operations, you can also override the <cite>
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Creating a Task Wrapper for Your Environment</a><ul>
-<li><a class="reference internal" href="#required-methods">Required Methods</a></li>
-<li><a class="reference internal" href="#optional-features">Optional features</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

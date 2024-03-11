@@ -28,9 +28,6 @@ class TaskSpace():
             self._decode_map = {i: task for i, task in enumerate(tasks)}
             encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
             decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
-        elif isinstance(space, Box):
-            encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
-            decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
         elif isinstance(space, Tuple):
             for i, task in enumerate(tasks):
                 assert self.count_tasks(space.spaces[i]) == len(task), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
@@ -76,6 +73,9 @@ class TaskSpace():
             return tuple(itertools.product(*[self._enumerate_axes(x) for x in list_or_size]))
         else:
             raise NotImplementedError(f"{type(list_or_size)}")
+
+    def seed(self, seed):
+        self.gym_space.seed(seed)
 
     @property
     def tasks(self) -> List[Any]:
@@ -152,8 +152,17 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
-        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box)
         return self.decode(self.gym_space.sample())
 
     def list_tasks(self):
         return list(self._tasks)
+
+    def box_contains(self, x) -> bool:
+        """Return boolean specifying if x is a valid member of this space."""
+        if not isinstance(x, np.ndarray):
+            try:
+                x = np.asarray(x, dtype=self.gym_space.dtype)
+            except (ValueError, TypeError):
+                return False
+
+        return not bool(x.shape == self.gym_space.shape and np.any((x < self.gym_space.low) | (x > self.gym_space.high)))

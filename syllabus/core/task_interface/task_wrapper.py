@@ -9,7 +9,7 @@ class TaskWrapper(gym.Wrapper):
         super().__init__(*args, **kwargs)
         self.task_completion = 0.0
         self.task_space = None
-        self.task = None
+        self.task = None    # TODO: Would making this a property protect from accidental overriding?
 
     def reset(self, *args, **kwargs):
         if "new_task" in kwargs:

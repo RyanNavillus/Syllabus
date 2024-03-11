@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import PrioritizedLevelReplay
+from syllabus.curricula import CentralizedPrioritizedLevelReplay
 from syllabus.examples.models import MinigridAgent
 from syllabus.examples.task_wrappers import MinigridTaskWrapper
 from torch.utils.tensorboard import SummaryWriter

@@ -1,0 +1,2 @@
+quickstart.rst:2: (Quickstart)  Quickstart
+quickstart.rst:28: (backend)  Syllabus creates a separate multiprocessing channel from your environments, so make sure to choose the same backend (either native or ray).
