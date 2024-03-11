@@ -221,7 +221,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components().debug:
+        if self.get_components()._debug:
             writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
             writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
