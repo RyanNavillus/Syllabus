@@ -19,6 +19,7 @@ setup(
         'numpy>=1.26.0',
         'ray[rllib]>=2.8.1',
         'torch>=2.0.1',
+        'pytest>=8.1.1'
     ],
     extras_require=extras,
     python_requires=">=3.8, <=3.11",
