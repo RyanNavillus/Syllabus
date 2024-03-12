@@ -17,13 +17,13 @@ def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES):
     expected_reward = 100 * num_envs * num_episodes
     assert stats["total_reward"] == expected_reward, f"Curriculum total reward is {stats['total_reward']}, expected {expected_reward}"
     for task, count in stats["task_counts"].items():
-        if task == "error task":
+        if task == 0:
             assert count == 0, "Received completed error tasks, expected 0"
         else:
             assert count == num_envs, f"Curriculum task '{task}' count is {count}, expected {num_envs}"
     expected_dones = num_envs * num_episodes
     assert stats["total_dones"] == expected_dones, f"Curriculum total dones is {stats['total_dones']}, expected {expected_dones}"
-
+ 
 def generate_environment(num_episodes=N_EPISODES):
     return create_synctest_env(env_args=(num_episodes,))
 
@@ -51,7 +51,7 @@ def test_queue_multiprocess_speed():
     # Test Queue multiprocess speed with Syllabus
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
-    test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
+    test_curriculum = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = helper_native_multiprocess(
         create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
