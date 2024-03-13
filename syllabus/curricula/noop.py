@@ -54,9 +54,3 @@ class NoopCurriculum(Curriculum):
 
     def add_task(self, task: tuple) -> None:
         pass
-
-    def update(self, update_data):
-        """
-        Update the curriculum with the specified update type.
-        """
-        pass

@@ -69,6 +69,16 @@ if __name__ == "__main__":
     assert task_space.decode(1) == (0, 1), f"Expected (0, 1), got {task_space.decode(1)}"
     assert task_space.decode(200) == (1, 0), f"Expected (1, 0), got {task_space.decode(200)}"
     assert task_space.decode(200000) is None, f"Expected None, got {task_space.decode(200000)}"
+
+    task_space = TaskSpace(gym.spaces.MultiDiscrete([4, 4, 4]), [["1g", "2g", "3g", "4g"], ["1a", "2a", "3a", "4a"], ["1o", "2o", "3o", "4o"]])
+    assert task_space.encode(("1g", "1a", "1o")) == 0, f"Expected 0, got {task_space.encode(('1g', '1a', '1o'))}"
+    assert task_space.encode(("1g", "1a", "2o")) == 1, f"Expected 1, got {task_space.encode(('1g', '1a', '2o'))}"
+    assert task_space.encode(("1g", "2a", "1o")) == 4, f"Expected 4, got {task_space.encode(('1g', '2a', '1o'))}"
+
+    assert task_space.decode(0) == ("1g", "1a", "1o"), f"Expected (1g, 1a, 1o), got {task_space.decode(0)}"
+    assert task_space.decode(1) == ("1g", "1a", "2o"), f"Expected (1g, 1a, 2o), got {task_space.decode(1)}"
+    assert task_space.decode(4) == ("1g", "2a", "1o"), f"Expected (1g, 2a, 1o), got {task_space.decode(4)}"
+
     print("MultiDiscrete tests passed!")
 
     # Test syntactic sugar

@@ -175,13 +175,15 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
         # Create batch buffers for step updates
         if self.update_on_step:
-            self._obs = [None] * self.batch_size
-            self._rews = np.zeros(self.batch_size, dtype=np.float32)
-            self._terms = np.zeros(self.batch_size, dtype=bool)
-            self._truncs = np.zeros(self.batch_size, dtype=bool)
-            self._infos = [None] * self.batch_size
-            self._tasks = [None] * self.batch_size
-            self._task_progresses = [None] * self.batch_size
+            num_agents = len(self.env.possible_agents)
+            self.agent_map = {agent: i for i, agent in enumerate(self.env.possible_agents)}
+            self._obs = [[None for _ in range(num_agents)]] * self.batch_size
+            self._rews = np.zeros((self.batch_size, num_agents), dtype=np.float32)
+            self._terms = np.zeros((self.batch_size, num_agents), dtype=bool)
+            self._truncs = np.zeros((self.batch_size, num_agents), dtype=bool)
+            self._infos = [[None for _ in range(num_agents)]] * self.batch_size
+            self._tasks = np.zeros((self.batch_size,) + self.task_space.task_shape, dtype=np.float32)
+            self._task_progresses = np.zeros((self.batch_size, num_agents), dtype=np.float32)
 
         # Request initial task
         assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."
@@ -216,29 +218,17 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         is_finished = (len(self.env.agents) == 0) or all(terms.values())
         # Update curriculum with step info
         if self.update_on_step:
+            agent_indices = [self.agent_map[agent] for agent in rews.keys()]
             # Environment outputs
             self._obs[self._batch_step] = obs
-            self._rews[self._batch_step] = sum(rews.values())
-            self._terms[self._batch_step] = all(terms.values())
-            self._truncs[self._batch_step] = all(truncs.values())
+            self._rews[self._batch_step][agent_indices] = list(rews.values())
+            self._terms[self._batch_step][agent_indices] = list(terms.values())
+            self._truncs[self._batch_step][agent_indices] = list(truncs.values())
             self._infos[self._batch_step] = infos
             self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
             self._task_progresses[self._batch_step] = self.task_progress
             self._batch_step += 1
-            # TODO: Create a better system for aggregating step results in different ways. Maybe custom aggregation functions
-            # self.step_updates.append({
-            #     "update_type": "step",
-            #     "metrics": (obs, sum(rews.values()), all(terms.values()), all(truncs.values()), list(infos.values())[0]),
-            #     "env_id": self.instance_id,
-            #     "request_sample": False
-            # })
-            # Task progress
-            # self.step_updates.append({
-            #     "update_type": "task_progress",
-            #     "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-            #     "env_id": self.instance_id,
-            #     "request_sample": is_finished
-            # })
+
             # Send batched updates
             if self._batch_step >= self.batch_size or is_finished:
                 updates = self._package_step_updates(request_sample=is_finished)

@@ -10,7 +10,7 @@ import torch
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from pettingzoo.utils.env import ParallelEnv
 
-from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper
+from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper, PettingZooReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
 from syllabus.tests import SyncTestEnv, PettingZooSyncTestEnv
@@ -95,12 +95,12 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
     while env.agents:
         action = {agent: env.action_space(agent).sample() for agent in env.agents}
         obs, rew, term, trunc, info = env.step(action)
-        if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(obs, sum(rew.values()), all(term.values()), all(trunc.values()), info, env_id=env_id)
+        if curriculum and curriculum.unwrapped.__class__.REQUIRES_STEP_UPDATES:
+            curriculum.update_on_step(obs, list(rew.values()), list(term.values()), list(trunc.values()), info, env_id=env_id)
             task_completion = max([i["task_completion"] for i in info.values()]) if len(env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
             curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
         ep_rew += sum(rew.values())
-    if curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+    if curriculum and curriculum.unwrapped.__class__.REQUIRES_EPISODE_UPDATES:
         curriculum.update_on_episode(ep_rew, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
 
@@ -165,8 +165,10 @@ def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, u
 
 def test_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
     start = time.time()
-    for _ in range(num_envs):
-        run_episodes(env_fn, env_args, env_kwargs, curriculum=curriculum, num_episodes=num_episodes)
+    for num_eps in range(num_episodes):
+        # Interleave episodes for each environment
+        for env_idx in range(num_envs):
+            run_episodes(env_fn, env_args, env_kwargs, curriculum=curriculum, num_episodes=1, env_id=env_idx)
     end = time.time()
     native_speed = end - start
     return native_speed
@@ -178,7 +180,7 @@ def test_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES, buffer_size)
+        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.unwrapped.__class__.REQUIRES_STEP_UPDATES, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
@@ -221,7 +223,7 @@ def test_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, n
 
 
 def get_test_values(x):
-    return torch.Tensor(np.array([0] * len(x)))
+    return torch.zeros((len(x), 1))
 
 
 # Sync Test Environment
@@ -318,15 +320,44 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 # Pistonball Tests
 def create_pistonball_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
-    from pettingzoo.butterfly import pistonball_v6  # noqa: F401
+    try:
+        from pettingzoo.butterfly import pistonball_v6  # noqa: F401
+        from syllabus.examples.task_wrappers import PistonballTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import pistonball from pettingzoo.")
 
-    from syllabus.examples.task_wrappers import PistonballTaskWrapper
     env = pistonball_v6.parallel_env()
 
     def create_env(task):
         return pistonball_v6.parallel_env(n_pistons=task)
 
     env = PistonballTaskWrapper(env)
+    if type == "queue":
+        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Simple Tag Tests
+def create_simpletag_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        from pettingzoo.mpe import simple_tag_v3  # noqa: F401
+        # from syllabus.examples.task_wrappers import SimpleTagTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import simple tag from pettingzoo.")
+
+    def create_env(task):
+        good, adversary, obstacle = task
+        return simple_tag_v3.parallel_env(num_good=good, num_adversaries=adversary, num_obstacles=obstacle, continuous_actions=False)
+
+    task_space = TaskSpace(gym.spaces.MultiDiscrete([1, 1, 1]), [[4], [4], [4]])
+    env = simple_tag_v3.parallel_env()
+    env = PettingZooReinitTaskWrapper(env, create_env, task_space)
+
+    # Set largest posiible task
+    env.reset(new_task=(4, 4, 4))
+
     if type == "queue":
         env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":

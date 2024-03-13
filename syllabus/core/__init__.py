@@ -1,5 +1,5 @@
 # Environment Code
-from .task_interface import TaskWrapper, SubclassTaskWrapper, ReinitTaskWrapper, TaskEnv, PettingZooTaskWrapper, PettingZooTaskEnv
+from .task_interface import TaskWrapper, SubclassTaskWrapper, ReinitTaskWrapper, PettingZooReinitTaskWrapper, TaskEnv, PettingZooTaskWrapper, PettingZooTaskEnv
 
 # Curriculum Code
 from .utils import decorate_all_functions, UsageError, enumerate_axes
@@ -14,3 +14,4 @@ from .curriculum_sync_wrapper import (CurriculumWrapper,
 
 from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper, PettingZooMultiProcessingSyncWrapper, PettingZooRaySyncWrapper
 from .multivariate_curriculum_wrapper import MultitaskWrapper
+from .multiagent_curriculum_wrappers import MultiagentSharedCurriculumWrapper, MultiagentIndependentCurriculumWrapper

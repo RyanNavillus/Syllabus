@@ -15,8 +15,11 @@ class CurriculumWrapper:
     """
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
-        self.task_space = curriculum.task_space
-        self.unwrapped = curriculum
+        if hasattr(curriculum, "unwrapped") and curriculum.unwrapped is not None:
+            self.unwrapped = curriculum.unwrapped
+        else:
+            self.unwrapped = curriculum
+        self.task_space = self.unwrapped.task_space
 
     @property
     def num_tasks(self):
@@ -221,7 +224,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components().debug:
+        if self.get_components()._debug:
             writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
             writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 

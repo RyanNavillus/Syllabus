@@ -120,7 +120,7 @@ class RolloutStorage(object):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(self.num_steps):
-            values = self._get_value(self.obs[step])[:, None]
+            values = self._get_value(self.obs[step])
             self.value_preds[step].copy_(values)
 
     def after_update(self):

@@ -14,12 +14,14 @@ class TaskWrapper(gym.Wrapper):
         self.task = None    # TODO: Would making this a property protect from accidental overriding?
 
     def reset(self, *args, **kwargs):
-        if "new_task" in kwargs:
-            new_task = kwargs.pop("new_task")
+        new_task = kwargs.pop("new_task", None)
+        if new_task is not None:
             self.change_task(new_task)
             # TODO: Handle failure case for change task
             self.task = new_task
-        return self.observation(super().reset(*args, **kwargs))
+
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task):
         """
@@ -101,8 +103,8 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
         return self.current_task
 
     def reset(self, *args, **kwargs):
-        if "new_task" in kwargs:
-            new_task = kwargs.pop("new_task")
+        new_task = kwargs.pop("new_task", None)
+        if new_task is not None:
             self.change_task(new_task)
             self.task = new_task
         return self.observation(self.env.reset(*args, **kwargs))

@@ -32,6 +32,7 @@ class TaskSpace():
         self._task_set = set(tasks) if tasks is not None else None
         self._task_list = tasks
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
+        self.task_shape = np.array(self.encode(self.sample())).shape
 
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):
@@ -174,7 +175,7 @@ class TaskSpace():
     def sample(self):
         # TODO: Gross
         if isinstance(self.gym_space, MultiDiscrete):
-            return np.random.choice(np.arange(len(self._task_list)))
+            return self._task_list[np.random.choice(list(range(len(self._task_list))))]
         else:
             return self.decode(self.gym_space.sample())
 
