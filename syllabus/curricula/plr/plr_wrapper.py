@@ -161,6 +161,38 @@ def null(x):
     return None
 
 
+class PLREvaluator:
+    def __init__(self, get_action_and_value_fn, eval_envs):
+        self.get_action_and_value_fn = get_action_and_value_fn  # Callable function for policy
+        self.eval_envs = eval_envs  # Vector environment with task wrapper
+
+    def evaluate(self, task_list):
+        values = np.zeros(len(task_list))
+        for i, task in enumerate(task_list):
+            obs = self.eval_envs.reset(next_task=task)
+            done = False
+            while not done:
+                action, value = self.get_action_and_value_fn(obs)
+                obs, rews, terms, truncs, infos = self.eval_envs.step(action)
+                values[i] = value
+                if terms:
+                    done = True
+        return values
+
+    def sample_task(self):
+        return np.random.choice(self.eval_envs.task_space.n)
+
+
+def make_action_fn(agent):
+    def action_fn(obs):
+        return agent.predict(obs)
+    return action_fn
+
+# Assume we have agent and eval_envs
+# action_fn = make_action_fn(agent)
+# evaluator = PLREvaluator(action_fn, eval_envs)
+
+
 class PrioritizedLevelReplay(Curriculum):
     """ Prioritized Level Replay (PLR) Curriculum.
 
@@ -196,6 +228,8 @@ class PrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings=False,
         get_value=null,
         get_action_log_dist=null,
+        use_robust_plr: bool = False,  # Robust PLR
+        evaluator: PLREvaluator = None,  # evaluator
         **curriculum_kwargs,
     ):
         # Preprocess curriculum intialization args
@@ -218,6 +252,8 @@ class PrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self._get_action_log_dist = get_action_log_dist
+        self._use_robust_plr = use_robust_plr  # Store the option for Robust PLR
+        self._evaluator = evaluator  # Store the PLREvaluator object
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 
         self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
@@ -244,7 +280,10 @@ class PrioritizedLevelReplay(Curriculum):
         if self._should_use_startup_sampling():
             return self._startup_sample()
         else:
-            return [self._task_sampler.sample() for _ in range(k)]
+            if self._use_robust_plr:  # Check if Robust PLR is enabled
+                return [self._evaluator.sample_task() for _ in range(k)]  # Use evaluator to sample tasks
+            else:
+                return [self._task_sampler.sample() for _ in range(k)]  # Use task sampler
 
     def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
