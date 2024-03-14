@@ -194,6 +194,7 @@ def fast_level_replay_evaluate(
     policy,
     num_episodes,
     device,
+    evaluator=None,
     num_levels=0
 ):
     policy.eval()
@@ -204,7 +205,10 @@ def fast_level_replay_evaluate(
 
     while -1 in eval_episode_rewards:
         with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+            if evaluator:
+                eval_action, _, _, _ = evaluator.get_action_and_value_fn(eval_obs)
+            else:
+                eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
 
         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
         for i, info in enumerate(infos):
@@ -214,10 +218,14 @@ def fast_level_replay_evaluate(
     # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
-    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
-    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
     policy.train()
-    return mean_returns, stddev_returns, normalized_mean_returns
+
+    if evaluator:
+        return mean_returns, stddev_returns
+    else:
+        env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+        normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+        return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def make_value_fn():
