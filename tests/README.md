@@ -1,5 +1,5 @@
 # Testing with Pytest
-Pytest is very powerfull to test our codes.
+We use pytest, a standard testing library for Python. You can learn more about it here https://docs.pytest.org/en/8.0.x/
 ## Running All Tests
 Navigate to the root directory of your Python package in your terminal and execute the following command:
 
