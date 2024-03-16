@@ -8,7 +8,7 @@ from syllabus.tests import test_single_process as helper_single_process
 from syllabus.tests import test_native_multiprocess as helper_native_multiprocess
 from syllabus.tests import test_ray_multiprocess as helper_ray_multiprocess 
 
-# SETUP Global Variables
+# Setup global variables
 N_ENVS = 128
 N_EPISODES = 300
 
