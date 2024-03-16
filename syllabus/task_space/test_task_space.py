@@ -1,5 +1,5 @@
 import gymnasium as gym
-from syllabus.task_space import TaskSpace
+from task_space import TaskSpace
 
 if __name__ == "__main__":
     task_space = TaskSpace(gym.spaces.Discrete(3), ["a", "b", "c"])
@@ -38,6 +38,11 @@ if __name__ == "__main__":
     assert task_space.decode([0.1, 0.1]) == [0.1, 0.1], f"Expected [0.1, 0.1], got {task_space.decode([0.1, 0.1])}"
     assert task_space.decode([-0.1, 1.0]) == None, f"Expected None, got {task_space.decode([1.2, 1.0])}"
     print("Box tests passed!")
+
+    task_space = TaskSpace(gym.spaces.Tuple((gym.spaces.MultiDiscrete([3,2]),gym.spaces.Discrete(3))), ((("a", "b", "c"),(1,0)),("X","Y","Z")))
+    assert task_space.encode((('a', 1),'Y')) == [0, 1], f"Expected 0, got {task_space.encode((('a', 1),'Y'))}"
+    assert task_space.decode([0,1]) == [('a', 1), 'Y'], f"Expected 0, got {task_space.decode([0,1])}"
+    print("Tuple tests passed!")
 
     # Test syntactic sugar
     task_space = TaskSpace(3)

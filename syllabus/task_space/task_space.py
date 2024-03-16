@@ -35,16 +35,16 @@ class TaskSpace():
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):
             assert space.n == len(tasks), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
-            self._encode_map = {task: i for i, task in enumerate(tasks)}
-            self._decode_map = {i: task for i, task in enumerate(tasks)}
-            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
-            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
+            encode_map = {task: i for i, task in enumerate(tasks)}
+            decode_map = {i: task for i, task in enumerate(tasks)}
+            encoder = lambda task: encode_map[task] if task in encode_map else None
+            decoder = lambda task: decode_map[task] if task in decode_map else None
         elif isinstance(space, Box):
             encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
             decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
         elif isinstance(space, Tuple):
-            for i, task in enumerate(tasks):
-                assert self.count_tasks(space.spaces[i]) == len(task), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
+           
+            assert len(space.spaces) == len(tasks), f"Number of task ({len(space.spaces)})must match options in Tuple ({len(tasks)})"
             results = [list(self._make_task_encoder(s, t)) for (s, t) in zip(space.spaces, tasks)]
             encoders = [r[0] for r in results]
             decoders = [r[1] for r in results]
@@ -55,11 +55,11 @@ class TaskSpace():
             assert len(space.nvec) == len(tasks), f"Number of steps in a tasks ({len(space.nvec)}) must match number of discrete options ({len(tasks)})"
             
             combinations = [p for p in itertools.product(*tasks)]
-            self._encode_map = {task: i for i, task in enumerate(combinations)}
-            self._decode_map = {i: task for i, task in enumerate(combinations)}
+            encode_map = {task: i for i, task in enumerate(combinations)}
+            decode_map = {i: task for i, task in enumerate(combinations)}
     
-            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
-            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
+            encoder = lambda task: encode_map[task] if task in encode_map else None
+            decoder = lambda task: decode_map[task] if task in decode_map else None
 
         else:
             encoder = lambda task: task
