@@ -5,7 +5,7 @@ Navigate to the root directory of your Python package in your terminal and execu
 
 ```pytest```
 
-This command will discover all test files (usually named with test_*.py or *_test.py conventions) and subdirectories within your package and execute all the tests it finds.
+This command will discover all test files (usually named with test_*.py or *_test.py) within Syllabus and execute any test it finds. Most general tests are in the `tests` directory while unit tests are in separate files next to the files they test.
 
 ## Running Specific Tests
 
