@@ -84,14 +84,15 @@ class Curriculum:
         for i in range(len(obs)):
             self.update_on_step(obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
-    def update_on_episode(self, episode_return: float, episode_task, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return
         :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
         :raises NotImplementedError:
         """
-        raise NotImplementedError("Not yet implemented.")
+        # TODO: Add update_on_episode option similar to update-on_step
+        pass
 
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.

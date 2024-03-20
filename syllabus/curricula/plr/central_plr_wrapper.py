@@ -239,7 +239,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         # )
         pass
 
-    def update_on_episode(self, episode_return: float, episode_task, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return: float, episode_length: float, episode_task, env_id: int = None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """

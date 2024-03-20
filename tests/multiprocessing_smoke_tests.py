@@ -10,7 +10,9 @@ from syllabus.curricula import (CentralizedPrioritizedLevelReplay,
                                 PrioritizedLevelReplay,
                                 SimpleBoxCurriculum,
                                 AnnealingBoxCurriculum,
-                                SequentialCurriculum)
+                                SequentialCurriculum,
+                                SequentialMetaCurriculum)
+from syllabus.task_space import TaskSpace
 from syllabus.tests import (create_cartpole_env,
                             create_nethack_env,
                             get_test_values,
@@ -43,6 +45,8 @@ if __name__ == "__main__":
             'total_steps': [10]
         }),
         (SequentialCurriculum, create_nethack_env, (nethack_env.task_space.list_tasks(), nethack_env.task_space,), {}),
+        (SequentialMetaCurriculum, create_nethack_env, ([NetHackScore, TaskSpace(3, nethack_env.task_space.list_tasks()[1:4])], ["steps>=500", "episodes>5"], nethack_env.task_space,), {}),
+
     ]
     for curriculum, env_fn, args, kwargs in curricula:
         print("")
