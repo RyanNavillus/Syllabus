@@ -9,7 +9,8 @@ from syllabus.curricula import (CentralizedPrioritizedLevelReplay,
                                 NoopCurriculum,
                                 PrioritizedLevelReplay,
                                 SimpleBoxCurriculum,
-                                AnnealingBoxCurriculum)
+                                AnnealingBoxCurriculum,
+                                SequentialCurriculum)
 from syllabus.tests import (create_cartpole_env,
                             create_nethack_env,
                             get_test_values,
@@ -41,6 +42,7 @@ if __name__ == "__main__":
             'end_values': [-0.3, 0.3],
             'total_steps': [10]
         }),
+        (SequentialCurriculum, create_nethack_env, (nethack_env.task_space.list_tasks(), nethack_env.task_space,), {}),
     ]
     for curriculum, env_fn, args, kwargs in curricula:
         print("")
