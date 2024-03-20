@@ -109,10 +109,10 @@ class SequentialMetaCurriculum(Curriculum):
 
         # Parse composite conditions
         if '|' in condition:
-            conditions = re.split(re.escape('|'), '\n', condition)
+            conditions = re.split(re.escape('|') + '\n', condition)
             return lambda: any(self._parse_condition_string(cond)() for cond in conditions)
         elif '&' in condition:
-            conditions = re.split(re.escape('&'), '\n', condition)
+            conditions = re.split(re.escape('&') + '\n', condition)
             return lambda: all(self._parse_condition_string(cond)() for cond in conditions)
 
         clauses = re.split('(<=|>=|=|<|>)', condition)
