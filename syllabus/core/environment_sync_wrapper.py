@@ -104,19 +104,19 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 self._batch_step = 0
         elif term or trunc:
             # Task progress
-            update = {
+            task_update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
                 "env_id": self.instance_id,
-                "request_sample": True,
+                "request_sample": False,
             }
-            update = {
+            episode_update = {
                 "update_type": "episode",
                 "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task)),
                 "env_id": self.instance_id,
-                "request_sample": False
+                "request_sample": True
             }
-            self.components.put_update(update)
+            self.components.put_update([task_update, episode_update])
 
         return obs, rew, term, trunc, info
 

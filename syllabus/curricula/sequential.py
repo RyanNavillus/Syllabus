@@ -1,4 +1,5 @@
 import re
+import warnings
 from typing import Any, Callable, List, Union
 
 from syllabus.core import Curriculum
@@ -63,6 +64,11 @@ class SequentialMetaCurriculum(Curriculum):
 
     def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
+        assert len(curriculum_list) > 0, "Must provide at least one curriculum"
+        assert len(stopping_conditions) == len(curriculum_list) - 1, "Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training"
+        if len(curriculum_list) == 1:
+            warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
+
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
         self._curriculum_index = 0
@@ -109,10 +115,10 @@ class SequentialMetaCurriculum(Curriculum):
 
         # Parse composite conditions
         if '|' in condition:
-            conditions = re.split(re.escape('|') + '\n', condition)
+            conditions = re.split(re.escape('|'), condition)
             return lambda: any(self._parse_condition_string(cond)() for cond in conditions)
         elif '&' in condition:
-            conditions = re.split(re.escape('&') + '\n', condition)
+            conditions = re.split(re.escape('&'), condition)
             return lambda: all(self._parse_condition_string(cond)() for cond in conditions)
 
         clauses = re.split('(<=|>=|=|<|>)', condition)
@@ -157,7 +163,7 @@ class SequentialMetaCurriculum(Curriculum):
         return self.total_episodes
 
     def _get_episode_return(self):
-        return sum(self.episode_return) / len(self.episode_return)
+        return sum(self.episode_returns) / len(self.episode_returns) if len(self.episode_returns) > 0 else 0
 
     def _sample_distribution(self) -> List[float]:
         """
@@ -170,7 +176,7 @@ class SequentialMetaCurriculum(Curriculum):
         Choose the next k tasks from the list.
         """
         # Check if we should move on to the next phase of the curriculum
-        if self.stopping_conditions[self._curriculum_index]():
+        if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
             self._curriculum_index += 1
             self.n_episodes = 0
             self.n_steps = 0
