@@ -2,10 +2,18 @@ import itertools
 from typing import Any, List, Union
 
 import numpy as np
-from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space, Tuple
+from gymnasium.spaces import (
+    Box,
+    Dict,
+    Discrete,
+    MultiBinary,
+    MultiDiscrete,
+    Space,
+    Tuple,
+)
 
 
-class TaskSpace():
+class TaskSpace:
     def __init__(self, gym_space: Union[Space, int], tasks=None):
         if isinstance(gym_space, int):
             # Syntactic sugar for discrete space
@@ -23,25 +31,60 @@ class TaskSpace():
 
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):
-            assert space.n == len(tasks), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
+            assert space.n == len(
+                tasks
+            ), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
             self._encode_map = {task: i for i, task in enumerate(tasks)}
             self._decode_map = {i: task for i, task in enumerate(tasks)}
-            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
-            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
+
+            def encoder(task):
+                return self._encode_map[task] if task in self._encode_map else None
+
+            def decoder(task):
+                return self._decode_map[task] if task in self._decode_map else None
+
         elif isinstance(space, Box):
-            encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
-            decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
+
+            def encoder(task):
+                return (
+                    task
+                    if space.contains(np.asarray(task, dtype=space.dtype))
+                    else None
+                )
+
+            def decoder(task):
+                return (
+                    task
+                    if space.contains(np.asarray(task, dtype=space.dtype))
+                    else None
+                )
+
         elif isinstance(space, Tuple):
             for i, task in enumerate(tasks):
-                assert self.count_tasks(space.spaces[i]) == len(task), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
-            results = [list(self._make_task_encoder(s, t)) for (s, t) in zip(space.spaces, tasks)]
+                assert self.count_tasks(space.spaces[i]) == len(
+                    task
+                ), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
+            results = [
+                list(self._make_task_encoder(s, t))
+                for (s, t) in zip(space.spaces, tasks)
+            ]
             encoders = [r[0] for r in results]
             decoders = [r[1] for r in results]
-            encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
-            decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+
+            def encoder(task):
+                return [e(t) for e, t in zip(encoders, task)]
+
+            def decoder(task):
+                return [d(t) for d, t in zip(decoders, task)]
+
         else:
-            encoder = lambda task: task
-            decoder = lambda task: task
+
+            def encoder(task):
+                return task
+
+            def decoder(task):
+                return task
+
         return encoder, decoder
 
     def decode(self, encoding):
@@ -59,7 +102,9 @@ class TaskSpace():
             # TODO: Increment task space size
             self.gym_space = self.increase_space()
             # TODO: Optimize adding tasks
-            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._tasks)
+            self._encoder, self._decoder = self._make_task_encoder(
+                self.gym_space, self._tasks
+            )
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
@@ -73,7 +118,9 @@ class TaskSpace():
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
             return tuple(range(list_or_size))
         elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
-            return tuple(itertools.product(*[self._enumerate_axes(x) for x in list_or_size]))
+            return tuple(
+                itertools.product(*[self._enumerate_axes(x) for x in list_or_size])
+            )
         else:
             raise NotImplementedError(f"{type(list_or_size)}")
 
@@ -82,7 +129,9 @@ class TaskSpace():
         # TODO: Can I just use _tasks?
         return self._tasks
 
-    def get_tasks(self, gym_space: Space = None, sample_interval: float = None) -> List[tuple]:
+    def get_tasks(
+        self, gym_space: Space = None, sample_interval: float = None
+    ) -> List[tuple]:
         """
         Return the full list of discrete tasks in the task_space.
         Return a sample of the tasks for continuous spaces if sample_interval is specified.
@@ -96,9 +145,15 @@ class TaskSpace():
         elif isinstance(gym_space, Box):
             raise NotImplementedError
         elif isinstance(gym_space, Tuple):
-            return list(itertools.product([self.get_tasks(task_space=s) for s in gym_space.spaces]))
+            return list(
+                itertools.product(
+                    [self.get_tasks(task_space=s) for s in gym_space.spaces]
+                )
+            )
         elif isinstance(gym_space, Dict):
-            return itertools.product([self.get_tasks(task_space=s) for s in gym_space.spaces.values()])
+            return itertools.product(
+                [self.get_tasks(task_space=s) for s in gym_space.spaces.values()]
+            )
         elif isinstance(gym_space, MultiBinary):
             return list(self._enumerate_axes(gym_space.nvec))
         elif isinstance(gym_space, MultiDiscrete):
@@ -130,7 +185,9 @@ class TaskSpace():
         elif isinstance(gym_space, Tuple):
             return sum([self.count_tasks(gym_space=s) for s in gym_space.spaces])
         elif isinstance(gym_space, Dict):
-            return sum([self.count_tasks(gym_space=s) for s in gym_space.spaces.values()])
+            return sum(
+                [self.count_tasks(gym_space=s) for s in gym_space.spaces.values()]
+            )
         elif isinstance(gym_space, MultiBinary):
             return TaskSpace._sum_axes(gym_space.nvec)
         elif isinstance(gym_space, MultiDiscrete):
@@ -148,7 +205,9 @@ class TaskSpace():
 
     def increase_space(self, amount: Union[int, float] = 1):
         if isinstance(self.gym_space, Discrete):
-            assert isinstance(amount, int), f"Discrete task space can only be increased by integer amount. Got {amount} instead."
+            assert isinstance(
+                amount, int
+            ), f"Discrete task space can only be increased by integer amount. Got {amount} instead."
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
