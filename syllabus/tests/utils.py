@@ -66,6 +66,40 @@ def run_episode(env, new_task=None, curriculum=None, env_id=0):
     return ep_rew
 
 
+def run_set_length(env, curriculum=None, episodes=None, steps=None, env_id=0, env_outputs=None):
+    """Run environment for a set number of episodes or steps."""
+    assert episodes is not None or steps is not None, "Must specify either episodes or steps."
+    assert episodes is None or steps is None, "Cannot specify both episodes and steps."
+    total_episodes = episodes if episodes is not None else 2**16 - 1
+    total_steps = steps if steps is not None else 2**16 - 1
+    n_steps = 0
+    n_episodes = 0
+
+    # Resume stepping from the last observation.
+    if env_outputs is None:
+        obs = env.reset(new_task=curriculum.sample()[0] if curriculum else None)
+
+    while n_episodes < total_episodes and n_steps < total_steps:
+        term = trunc = False
+        ep_rew = 0
+        ep_len = 0
+        while not (term or trunc) and n_steps < total_steps:
+            action = env.action_space.sample()
+            obs, rew, term, trunc, info = env.step(action)
+            if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
+                curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
+                curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
+            ep_rew += rew
+            ep_len += 1
+            n_steps += 1
+        if (term or trunc) and curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+            curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), env_id=env_id)
+        n_episodes += 1
+        obs = env.reset(new_task=curriculum.sample()[0] if curriculum else None)
+
+    return (obs, rew, term, trunc, info)
+
+
 def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10, env_id=0):
     """Run multiple episodes of the environment."""
     env = env_fn(env_args=env_args, env_kwargs=env_kwargs)

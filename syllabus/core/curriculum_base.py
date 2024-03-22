@@ -177,11 +177,11 @@ class Curriculum:
             return self._startup_sample()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
-        tasks = self.tasks
-        n_tasks = len(tasks)
+        # tasks = self.tasks
+        n_tasks = self.num_tasks
         task_dist = self._sample_distribution()
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
-        return [tasks[i] for i in task_idx]
+        return task_idx
 
     def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.

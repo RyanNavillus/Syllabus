@@ -165,6 +165,10 @@ class SequentialMetaCurriculum(Curriculum):
     def _get_episode_return(self):
         return sum(self.episode_returns) / len(self.episode_returns) if len(self.episode_returns) > 0 else 0
 
+    @property
+    def current_curriculum(self):
+        return self.curriculum_list[self._curriculum_index]
+
     def _sample_distribution(self) -> List[float]:
         """
         Return None to indicate that tasks are not drawn from a distribution.
@@ -175,14 +179,13 @@ class SequentialMetaCurriculum(Curriculum):
         """
         Choose the next k tasks from the list.
         """
-        # Check if we should move on to the next phase of the curriculum
-        if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
-            self._curriculum_index += 1
-            self.n_episodes = 0
-            self.n_steps = 0
-            self.episode_returns = []
+        curriculum = self.current_curriculum
+        tasks = curriculum.sample(k)
 
-        return self.curriculum_list[self._curriculum_index].sample(k)
+        # Recode tasks into environment task space
+        decoded_tasks = [curriculum.task_space.decode(task) for task in tasks]
+        recoded_tasks = [self.task_space.encode(task) for task in decoded_tasks]
+        return recoded_tasks
 
     def update_on_episode(self, episode_return, episode_len, episode_task, env_id: int = None):
         self.n_episodes += 1
@@ -190,3 +193,9 @@ class SequentialMetaCurriculum(Curriculum):
         self.n_steps += episode_len
         self.total_steps += episode_len
         self.episode_returns.append(episode_return)
+        # Check if we should move on to the next phase of the curriculum
+        if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
+            self._curriculum_index += 1
+            self.n_episodes = 0
+            self.n_steps = 0
+            self.episode_returns = []
