@@ -12,7 +12,11 @@ from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
 from torch.distributions.normal import Normal
 from tqdm.auto import tqdm
 
-from syllabus.core import TaskWrapper, make_multiprocessing_curriculum
+from syllabus.core import (
+    PettingZooMultiProcessingSyncWrapper,
+    TaskWrapper,
+    make_multiprocessing_curriculum,
+)
 from syllabus.curricula import DomainRandomization
 from syllabus.task_space import TaskSpace
 
@@ -217,6 +221,7 @@ if __name__ == "__main__":
     env = MultiCarRacingParallelWrapper(env=env, n_agents=n_agents)
     curriculum = DomainRandomization(env.task_space)
     curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+    env = PettingZooMultiProcessingSyncWrapper(env, task_queue, update_queue)
 
     """ LEARNER SETUP """
     agent = Agent().to(device)
@@ -270,26 +275,6 @@ if __name__ == "__main__":
 
                 # compute episodic return
                 total_episodic_return += rb_rewards[step].cpu().numpy()
-
-                # Update curriculum
-                # TODO: adapt to DR
-                if global_cycles % num_steps == 0:
-                    update = {
-                        "update_type": "on_demand",
-                        "metrics": {
-                            "action_log_dist": logprobs,
-                            "value": values,
-                            "next_value": (
-                                agent.get_value(next_obs)
-                                if step == num_steps - 1
-                                else None
-                            ),
-                            "rew": rb_rewards[step],
-                            "masks": torch.Tensor(1 - np.array(list(dones.values()))),
-                            "tasks": [env.unwrapped.task],
-                        },
-                    }
-                    curriculum.update_curriculum(update)
 
                 # if we reach the end of the episode
                 if any([dones[a] for a in dones]):

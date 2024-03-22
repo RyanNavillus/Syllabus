@@ -39,3 +39,4 @@ CMD ["/bin/bash"]
 # docker run -it --rm -p 4000:4000 syllabus-image
 # docker run -it --rm -p 4000:4000 -v ${PWD}:/usr/src/mylib syllabus-image
 # xvfb-run -s "-screen 0 1400x900x24" python -u multi_car_racing.py
+# xvfb-run -s "-screen 0 1400x900x24" python -u multi_car_racing_v2.py
