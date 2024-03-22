@@ -9,13 +9,15 @@ from syllabus.curricula import (CentralizedPrioritizedLevelReplay,
                                 NoopCurriculum,
                                 PrioritizedLevelReplay,
                                 SimpleBoxCurriculum,
-                                AnnealingBoxCurriculum)
+                                AnnealingBoxCurriculum,
+                                SequentialCurriculum)
+from syllabus.task_space import TaskSpace
 from syllabus.tests import (create_cartpole_env,
                             create_nethack_env,
                             get_test_values,
-                            test_native_multiprocess,
-                            test_ray_multiprocess,
-                            test_single_process)
+                            run_native_multiprocess,
+                            run_ray_multiprocess,
+                            run_single_process)
 
 N_ENVS = 2
 N_EPISODES = 2
@@ -41,6 +43,8 @@ if __name__ == "__main__":
             'end_values': [-0.3, 0.3],
             'total_steps': [10]
         }),
+        (SequentialCurriculum, create_nethack_env, ([NetHackScore, TaskSpace(3, nethack_env.task_space.list_tasks()[1:4])], ["steps>=500"], nethack_env.task_space,), {}),
+
     ]
     for curriculum, env_fn, args, kwargs in curricula:
         print("")
@@ -55,19 +59,19 @@ if __name__ == "__main__":
         if "num_processes" in single_kwargs:
             single_kwargs["num_processes"] = 1
         test_curriculum = curriculum(*args, **single_kwargs)
-        native_speed = test_single_process(env_fn, curriculum=test_curriculum, num_envs=1, num_episodes=N_EPISODES)
+        native_speed = run_single_process(env_fn, curriculum=test_curriculum, num_envs=1, num_episodes=N_EPISODES)
         print(f"PASSED: single process test (1 env) passed: {native_speed:.2f}s")
 
         # Test Queue multiprocess speed with Syllabus
         test_curriculum = curriculum(*args, **kwargs)
         test_curriculum = make_multiprocessing_curriculum(test_curriculum)
         print("\nRUNNING: Python multiprocess test with Syllabus...")
-        native_syllabus_speed = test_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+        native_syllabus_speed = run_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
         # Test Ray multiprocess speed with Syllabus
         test_curriculum = curriculum(*args, **kwargs)
         test_curriculum = make_ray_curriculum(test_curriculum)
         print("\nRUNNING: Ray multiprocess test with Syllabus...")
-        ray_syllabus_speed = test_ray_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
+        ray_syllabus_speed = run_ray_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")
