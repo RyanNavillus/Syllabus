@@ -121,6 +121,12 @@ class RolloutStorage(object):
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(self.num_steps):
             values = self._get_value(self.obs[step])
+            if len(values.shape) == 3:
+                warnings.warn(f"Value function returned a 3D tensor of shape {values.shape}. Attempting to squeeze last dimension.")
+                values = torch.squeeze(values, -1)
+            if len(values.shape) == 1:
+                warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
+                values = torch.unsqueeze(values, -1)
             self.value_preds[step].copy_(values)
 
     def after_update(self):

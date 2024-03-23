@@ -42,6 +42,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self._batch_step = 0
         self.instance_id = components.get_id()
 
+        self.episode_length = 0
+        self.episode_return = 0
+
         # Create batch buffers for step updates
         if self.update_on_step:
             self._obs = [None] * self.batch_size
@@ -64,6 +67,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def reset(self, *args, **kwargs):
         self.task_progress = 0.0
+        self.episode_length = 0
+        self.episode_return = 0
 
         message = self.components.get_task()    # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
@@ -78,6 +83,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
+        self.episode_length += 1
+        self.episode_return += rew
         self.task_progress = info.get("task_completion", 0.0)
 
         # Update curriculum with step info
@@ -98,13 +105,19 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 self._batch_step = 0
         elif term or trunc:
             # Task progress
-            update = {
+            task_update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
                 "env_id": self.instance_id,
-                "request_sample": True,
+                "request_sample": False,
             }
-            self.components.put_update(update)
+            episode_update = {
+                "update_type": "episode",
+                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task)),
+                "env_id": self.instance_id,
+                "request_sample": True
+            }
+            self.components.put_update([task_update, episode_update])
 
         return obs, rew, term, trunc, info
 

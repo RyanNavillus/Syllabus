@@ -197,8 +197,15 @@ def fast_level_replay_evaluate(
     num_levels=0
 ):
     policy.eval()
-    possible_seeds = np.arange(0, num_levels + 1)
-    eval_obs, _ = eval_envs.reset(seed=list(np.random.choice(possible_seeds, size=num_episodes)))
+
+    # Choose evaluation seeds
+    if num_levels == 0:
+        seeds = np.random.randint(0, 2**16-1, size=num_episodes)
+    else:
+        seeds = np.random.choice(np.arange(0, num_levels), size=num_episodes)
+
+    seed_envs = [(seed, env) for seed, env in zip(seeds, range(num_episodes))]
+    eval_obs, _ = eval_envs.reset(seed=seed_envs)
 
     eval_episode_rewards = [-1] * num_episodes
 
@@ -262,7 +269,7 @@ if __name__ == "__main__":
     print("Device:", device)
 
     # Curriculum setup
-    task_queue = update_queue = lock = None
+    curriculum = None
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
