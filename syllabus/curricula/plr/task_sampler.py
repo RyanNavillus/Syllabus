@@ -3,6 +3,8 @@
 import gymnasium as gym
 import numpy as np
 import torch
+from typing import List
+
 
 
 class TaskSampler:
@@ -10,6 +12,7 @@ class TaskSampler:
 
     Args:
         tasks (list): List of tasks to sample from
+        eval_envs (List[gym.Env]): List of evaluation environments
         action_space (gym.spaces.Space): Action space of the environment
         num_actors (int): Number of actors/processes
         strategy (str): Strategy for sampling tasks. One of "value_l1", "gae", "policy_entropy", "least_confidence", "min_margin", "one_step_td_error".
@@ -27,6 +30,7 @@ class TaskSampler:
     def __init__(
         self,
         tasks: list,
+        eval_envs: List[gym.Env],
         action_space: gym.spaces.Space = None,
         num_actors: int = 1,
         strategy: str = "value_l1",
@@ -37,9 +41,12 @@ class TaskSampler:
         rho: float = 1.0,
         nu: float = 0.5,
         alpha: float = 1.0,
+        gamma: float = 0.999,
+        gae_lambda: float = 0.95,
         staleness_coef: float = 0.1,
         staleness_transform: str = "power",
         staleness_temperature: float = 1.0,
+        robust_plr: bool = False,
     ):
         self.action_space = action_space
         self.tasks = tasks
@@ -52,10 +59,14 @@ class TaskSampler:
         self.eps = eps
         self.rho = rho
         self.nu = nu
+        self.gamma = gamma
+        self.gae_lambda = gae_lambda
         self.alpha = float(alpha)
         self.staleness_coef = staleness_coef
         self.staleness_transform = staleness_transform
         self.staleness_temperature = staleness_temperature
+        self.robust_plr = robust_plr
+        self.eval_envs = eval_envs
 
         self.unseen_task_weights = np.array([1.0] * self.num_tasks)
         self.task_scores = np.array([0.0] * self.num_tasks, dtype=float)
@@ -252,6 +263,50 @@ class TaskSampler:
 
         return task
 
+    def compute_returns(self, gamma, gae_lambda, rewards, value_preds, masks):
+        assert self.requires_value_buffers, "Selected strategy does not use compute_rewards."
+        gae = 0
+        returns = torch.zeros_like(rewards)
+        for step in reversed(range(rewards.size(0))):
+            delta = (
+                    rewards[step]
+                    + gamma * value_preds[step + 1] * masks[step + 1]
+                    - value_preds[step]
+            )
+            gae = delta + gamma * gae_lambda * masks[step + 1] * gae
+            returns[step] = gae + value_preds[step]
+        return returns
+
+    def evaluate_task(self, task, env, get_action_and_value_fn, gamma, gae_lambda):
+
+        if env is None:
+            raise ValueError("Environment object is None. Please ensure it is properly initialized.")
+        obs = env.reset(next_task=task)
+        done = False
+        episode_data = {
+            'tasks': [],
+            'masks': [],
+            'rewards': [],
+            'returns': [],
+            'value_preds': [],
+            'policy_logits': []
+        }
+
+        while not done:
+            action, value = get_action_and_value_fn(obs)
+            obs, rew, done, info = env.step(action)
+
+            episode_data['tasks'].append(task)
+            episode_data['masks'].append(not done)
+            episode_data['rewards'].append(rew)
+            episode_data['value_preds'].append(value)
+            episode_data['policy_logits'].append(info['policy_logits'])
+
+        episode_data['returns'] = self.compute_returns(gamma, gae_lambda, episode_data['rewards'],
+                                                       episode_data['value_preds'])
+
+        return episode_data
+
     def _sample_unseen_level(self):
         sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
@@ -261,12 +316,40 @@ class TaskSampler:
 
         return task
 
+    def _evaluate_unseen_level(self):
+        task_idx = \
+        np.random.choice(range(self.num_tasks), 1, p=self.unseen_task_weights / self.unseen_task_weights.sum())[0]
+        task = self.tasks[task_idx]
+        episode_data = self.evaluate_task(task, self.eval_envs, self.get_action_and_value_fn, self.gamma, self.gae_lambda)
+        self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
+        return task
+
+    def get_action_and_value_fn(agent_model, device):
+        def action_value_fn(obs):
+            # Convert observation to tensor if necessary
+            obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(device)
+
+            # Forward pass through the agent's model to get action logits and state value
+            with torch.no_grad():
+                action_logits, state_value = agent_model(obs_tensor)
+
+            # Convert action logits to probabilities
+            action_probs = torch.softmax(action_logits, dim=-1)
+
+            # Sample action from the action probabilities
+            action = torch.multinomial(action_probs, num_samples=1).squeeze().item()
+
+            # Return the sampled action and the state value
+            return action, state_value.item()
+
+        return action_value_fn
+
     def sample(self, strategy=None):
         if not strategy:
             strategy = self.strategy
 
         if strategy == "random":
-            task_idx = np.random.choice(range((self.num_tasks)))
+            task_idx = np.random.choice(range(self.num_tasks))
             task = self.tasks[task_idx]
             return task
 
@@ -285,16 +368,54 @@ class TaskSampler:
                 if np.random.rand() > self.nu or not proportion_seen < 1.0:
                     return self._sample_replay_level()
 
-            # Otherwise, sample a new level
-            return self._sample_unseen_level()
+            # Otherwise, evaluate a new level
+            return self._evaluate_unseen_level()
 
         elif self.replay_schedule == "proportionate":
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
                 return self._sample_replay_level()
             else:
-                return self._sample_unseen_level()
+                return self._evaluate_unseen_level()
         else:
-            raise NotImplementedError(f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
+            raise NotImplementedError(
+                f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
+
+    def update_with_episode_data(self, episode_data, score_function):
+        tasks = episode_data['tasks']
+        done = ~(episode_data['masks'] > 0)
+        total_steps, num_actors = episode_data['tasks'].shape[:2]
+
+        for actor_index in range(num_actors):
+            done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
+            start_t = 0
+
+            for t in done_steps:
+                if not start_t < total_steps:
+                    break
+
+                if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
+                    continue
+
+                task_idx_t = tasks[start_t, actor_index].item()
+
+                score_function_kwargs = {}
+                score_function_kwargs["returns"] = episode_data['returns'][start_t:t, actor_index]
+                score_function_kwargs["value_preds"] = episode_data['value_preds'][start_t:t, actor_index]
+                score = score_function(**score_function_kwargs)
+                num_steps = len(episode_data['tasks'][start_t:t, actor_index])
+                self.update_task_score(actor_index, task_idx_t, score, num_steps)
+
+                start_t = t.item()
+            if start_t < total_steps:
+                task_idx_t = tasks[start_t, actor_index].item()
+
+                score_function_kwargs = {}
+                score_function_kwargs["returns"] = episode_data['returns'][start_t:, actor_index]
+                score_function_kwargs["value_preds"] = episode_data['value_preds'][start_t:, actor_index]
+                score = score_function(**score_function_kwargs)
+                self._last_score = score
+                num_steps = len(episode_data['tasks'][start_t:, actor_index])
+                self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)
