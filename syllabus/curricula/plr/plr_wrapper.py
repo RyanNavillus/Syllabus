@@ -160,6 +160,15 @@ class RolloutStorage(object):
 def null(x):
     return None
 
+class RobustPLR:
+    def __init__(self, task_sampler, eval_envs):
+        self.task_sampler = task_sampler
+        self.eval_envs = eval_envs
+
+    def sample(self):
+        # Sample a task from the task sampler
+        return self.task_sampler.sample()
+
 
 class PrioritizedLevelReplay(Curriculum):
     """ Prioritized Level Replay (PLR) Curriculum.
@@ -187,7 +196,7 @@ class PrioritizedLevelReplay(Curriculum):
         observation_space: gym.Space,
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
-        action_space: gym.Space = None,
+        action_space: gym.Space,
         device: str = "cpu",
         num_steps: int = 256,
         num_processes: int = 64,
@@ -196,8 +205,13 @@ class PrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings=False,
         get_value=null,
         get_action_log_dist=null,
+        eval_envs=None,
+        robust_plr: bool = False,  # Option to use RobustPLR
         **curriculum_kwargs,
     ):
+        # Initialize task sampler first
+        self._task_sampler = None
+
         # Preprocess curriculum intialization args
         if task_sampler_kwargs_dict is None:
             task_sampler_kwargs_dict = {}
@@ -220,11 +234,18 @@ class PrioritizedLevelReplay(Curriculum):
         self._get_action_log_dist = get_action_log_dist
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        if robust_plr:
+            if eval_envs is not None:
+                self._task_sampler = RobustPLR(self._task_sampler, eval_envs)
+            else:
+                self._task_sampler = RobustPLR(self._task_sampler, None)
+        else:
+            self._task_sampler = TaskSampler(self.tasks, eval_envs=eval_envs, action_space=action_space, **task_sampler_kwargs_dict)
+
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
-            self._task_sampler.requires_value_buffers,
+            False,
             observation_space,
             action_space=action_space,
             get_value=get_value if get_value is not None else null,
