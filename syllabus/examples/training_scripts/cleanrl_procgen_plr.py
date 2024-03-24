@@ -269,7 +269,7 @@ if __name__ == "__main__":
     print("Device:", device)
 
     # Curriculum setup
-    task_queue = update_queue = lock = None
+    curriculum = None
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
@@ -400,7 +400,8 @@ if __name__ == "__main__":
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
-                    curriculum.log_metrics(writer, global_step)
+                    if curriculum is not None:
+                        curriculum.log_metrics(writer, global_step)
                     break
 
         # bootstrap value if not done
