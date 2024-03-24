@@ -176,6 +176,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
         self.should_update = False
+        self.update_thread.join()
         components = self.get_components()
         components._env_count.shm.close()
         components._env_count.shm.unlink()
