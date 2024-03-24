@@ -210,6 +210,8 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
     def reset(self, *args, **kwargs):
         self.task_progress = 0.0
+        self.episode_length = 0
+        self.episode_returns = {agent: 0 for agent in self.env.possible_agents}
 
         message = self.components.get_task()    # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
@@ -224,6 +226,9 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
     def step(self, action):
         obs, rews, terms, truncs, infos = self.env.step(action)
+        self.episode_length += 1
+        for agent in rews.keys():
+            self.episode_returns[agent] += rews[agent]
 
         if "task_completion" in list(infos.values())[0]:
             self.task_progress = max([info["task_completion"] for info in infos.values()])
@@ -249,13 +254,19 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
                 self._batch_step = 0
         elif is_finished:
             # Task progress
-            update = {
+            task_update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
                 "env_id": self.instance_id,
                 "request_sample": True,
             }
-            self.components.put_update(update)
+            episode_update = {
+                "update_type": "episode",
+                "metrics": (self.episode_returns, self.episode_length, self.task_space.encode(self.env.task)),
+                "env_id": self.instance_id,
+                "request_sample": True
+            }
+            self.components.put_update([task_update, episode_update])
 
         return obs, rews, terms, truncs, infos
 
