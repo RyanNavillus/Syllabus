@@ -40,6 +40,9 @@ class SequentialCurriculum(Curriculum):
                 parsed_list.append(item)
             elif isinstance(item, TaskSpace):
                 parsed_list.append(DomainRandomization(item))
+            elif isinstance(item, list):
+                task_space = TaskSpace(len(item), item)
+                parsed_list.append(DomainRandomization(task_space))
             elif self.task_space.contains(item):
                 parsed_list.append(NoopCurriculum(item, self.task_space))
             else:
@@ -78,8 +81,12 @@ class SequentialCurriculum(Curriculum):
 
             if metric == "steps":
                 metric_fn = self._get_steps
+            elif metric == "total_steps":
+                metric_fn = self._get_total_steps
             elif metric == "episodes":
                 metric_fn = self._get_episodes
+            elif metric == "total_episodes":
+                metric_fn = self._get_total_episodes
             elif metric == "episode_return":
                 metric_fn = self._get_episode_return
             else:
@@ -149,3 +156,10 @@ class SequentialCurriculum(Curriculum):
             self.n_episodes = 0
             self.n_steps = 0
             self.episode_returns = []
+
+    def log_metrics(self, writer, step=None, log_full_dist=False):
+        # super().log_metrics(writer, step, log_full_dist)
+        writer.add_scalar("curriculum/current_stage", self._curriculum_index, step)
+        writer.add_scalar("curriculum/steps", self.n_steps, step)
+        writer.add_scalar("curriculum/episodes", self.n_episodes, step)
+        writer.add_scalar("curriculum/episode_returns", self._get_episode_return(), step)
