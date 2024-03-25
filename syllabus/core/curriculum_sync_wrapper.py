@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import ray
 from torch.multiprocessing import Lock, SimpleQueue
+from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import Curriculum, decorate_all_functions
 
@@ -225,9 +226,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components()._debug:
-            writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
-            writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
+        if isinstance(writer, SummaryWriter):
+            if self.get_components()._debug:
+                writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
+                writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
     def add_task(self, task):
         super().add_task(task)

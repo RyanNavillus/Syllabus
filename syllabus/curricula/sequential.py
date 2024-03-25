@@ -1,9 +1,12 @@
 import re
 import warnings
+from collections import deque
 from typing import Any, Callable, List, Union
 
+from torch.utils.tensorboard import SummaryWriter
+
 from syllabus.core import Curriculum
-from syllabus.curricula import NoopCurriculum, DomainRandomization
+from syllabus.curricula import DomainRandomization, NoopCurriculum
 from syllabus.task_space import TaskSpace
 
 
@@ -12,9 +15,10 @@ class SequentialCurriculum(Curriculum):
     REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
+        assert len(stopping_conditions) <= len(curriculum_list), "Stopping conditions must be less than the number of curricula."
         assert len(stopping_conditions) == len(curriculum_list) - 1, "Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training"
         if len(curriculum_list) == 1:
             warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
@@ -28,7 +32,7 @@ class SequentialCurriculum(Curriculum):
         self.total_steps = 0
         self.n_episodes = 0
         self.total_episodes = 0
-        self.episode_returns = []
+        self.episode_returns = deque(maxlen=return_buffer_size)
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
         """ Parse the curriculum list to ensure that all items are curricula. 
@@ -155,11 +159,24 @@ class SequentialCurriculum(Curriculum):
             self._curriculum_index += 1
             self.n_episodes = 0
             self.n_steps = 0
-            self.episode_returns = []
+            self.episode_returns = deque(maxlen=100)
 
     def log_metrics(self, writer, step=None, log_full_dist=False):
-        # super().log_metrics(writer, step, log_full_dist)
-        writer.add_scalar("curriculum/current_stage", self._curriculum_index, step)
-        writer.add_scalar("curriculum/steps", self.n_steps, step)
-        writer.add_scalar("curriculum/episodes", self.n_episodes, step)
-        writer.add_scalar("curriculum/episode_returns", self._get_episode_return(), step)
+        if isinstance(writer, SummaryWriter):
+            writer.add_scalar("curriculum/current_stage", self._curriculum_index, step)
+            writer.add_scalar("curriculum/steps", self.n_steps, step)
+            writer.add_scalar("curriculum/episodes", self.n_episodes, step)
+            writer.add_scalar("curriculum/episode_returns", self._get_episode_return(), step)
+        else:
+            try:
+                import wandb
+                wandb.log({"curriculum/current_stage": self._curriculum_index}, step=step, commit=False)
+                wandb.log({"curriculum/steps": self.n_steps}, step=step, commit=False)
+                wandb.log({"curriculum/episodes": self.n_episodes}, step=step, commit=False)
+                wandb.log({"curriculum/episode_returns": self._get_episode_return()}, step=step, commit=True)
+                wandb.log({"global_step": self._get_episode_return()}, step=step, commit=True)
+
+            except ImportError:
+                warnings.warn("Failed to import wandb, skipping logging.")
+            except wandb.errors.Error as e:
+                warnings.warn(f"Failed to log curriculum stats to wandb. Received error: {e.message}")
