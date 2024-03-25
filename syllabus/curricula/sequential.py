@@ -28,6 +28,8 @@ class SequentialCurriculum(Curriculum):
         self.total_steps = 0
         self.n_episodes = 0
         self.total_episodes = 0
+        self.n_tasks = 0
+        self.total_tasks = 0
         self.episode_returns = []
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
@@ -87,6 +89,10 @@ class SequentialCurriculum(Curriculum):
                 metric_fn = self._get_episodes
             elif metric == "total_episodes":
                 metric_fn = self._get_total_episodes
+            elif metric == "tasks":
+                metric_fn = self._get_tasks
+            elif metric == "total_tasks":
+                metric_fn = self._get_total_tasks
             elif metric == "episode_return":
                 metric_fn = self._get_episode_return
             else:
@@ -119,6 +125,12 @@ class SequentialCurriculum(Curriculum):
     def _get_total_episodes(self):
         return self.total_episodes
 
+    def _get_tasks(self):
+        return self.n_tasks
+
+    def _get_total_tasks(self):
+        return self.total_tasks
+
     def _get_episode_return(self):
         return sum(self.episode_returns) / len(self.episode_returns) if len(self.episode_returns) > 0 else 0
 
@@ -142,6 +154,12 @@ class SequentialCurriculum(Curriculum):
         # Recode tasks into environment task space
         decoded_tasks = [curriculum.task_space.decode(task) for task in tasks]
         recoded_tasks = [self.task_space.encode(task) for task in decoded_tasks]
+
+        self.n_tasks += k
+        self.total_tasks += k
+
+        # Check if we should move on to the next phase of the curriculum
+        self.check_stopping_conditions()
         return recoded_tasks
 
     def update_on_episode(self, episode_return, episode_len, episode_task, env_id: int = None):
@@ -150,12 +168,14 @@ class SequentialCurriculum(Curriculum):
         self.n_steps += episode_len
         self.total_steps += episode_len
         self.episode_returns.append(episode_return)
-        # Check if we should move on to the next phase of the curriculum
+
+    def check_stopping_conditions(self):
         if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
             self._curriculum_index += 1
             self.n_episodes = 0
             self.n_steps = 0
             self.episode_returns = []
+            self.n_tasks = 0
 
     def log_metrics(self, writer, step=None, log_full_dist=False):
         # super().log_metrics(writer, step, log_full_dist)

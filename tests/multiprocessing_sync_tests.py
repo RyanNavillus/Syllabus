@@ -44,7 +44,7 @@ if __name__ == "__main__":
     test_curriculum = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
     native_syllabus_speed = run_native_multiprocess(
-        create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+        create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES, buffer_size=1
     )
     evaluate_curriculum(test_curriculum.curriculum)
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
