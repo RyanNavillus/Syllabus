@@ -176,6 +176,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
+        # Process final few updates
+        start = time.time()
+        end = time.time()
+        while end - start < 3 and not self.update_queue.empty():
+            time.sleep(0.5)
+            end = time.time()
+
         self.should_update = False
         self.update_thread.join()
         components = self.get_components()

@@ -100,10 +100,12 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
             # Send batched updates
             if self._batch_step >= self.batch_size or term or trunc:
-                updates = self._package_step_updates(request_sample=term or trunc)
+                updates = self._package_step_updates()
                 self.components.put_update(updates)
                 self._batch_step = 0
-        elif term or trunc:
+
+        # Episode update
+        if term or trunc:
             # Task progress
             task_update = {
                 "update_type": "task_progress",
@@ -121,12 +123,12 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
         return obs, rew, term, trunc, info
 
-    def _package_step_updates(self, request_sample=False):
+    def _package_step_updates(self):
         step_batch = {
             "update_type": "step_batch",
             "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
             "env_id": self.instance_id,
-            "request_sample": request_sample
+            "request_sample": False
         }
         task_batch = {
             "update_type": "task_progress_batch",
