@@ -369,7 +369,8 @@ class TaskSampler:
                     return self._sample_replay_level()
 
             # Otherwise, evaluate a new level
-            return self._evaluate_unseen_level()
+            self.update_with_episode_data(self._evaluate_unseen_level())
+            return self.sample(strategy=strategy)
 
         elif self.replay_schedule == "proportionate":
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
