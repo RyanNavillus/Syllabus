@@ -12,7 +12,6 @@ import yaml
 from griddly import GymWrapper as GriddlyGymWrapper
 from griddly import gd
 from griddly.util.action_space import MultiAgentActionSpace
-from griddly.util.action_space import MultiAgentActionSpace
 
 try:
     import PIL.Image
