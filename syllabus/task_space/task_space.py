@@ -70,6 +70,12 @@ class TaskSpace():
             decoder = lambda task: decode_map[task] if task in decode_map else None
 
         elif isinstance(space, Dict):
+
+            # Function flatten() takes a nested dictionary as input and flattens it to have each key in
+            # root's level. Keys whos values are dictionaries store the length of keys. 
+            # This function will help create a mapping dictionary that can store the encoder that will use the 
+            # space and tasks value based on keys.
+
             def flatten(d,out):
                 for (key,value) in d.items() :
                     if ( isinstance(value, dict) or isinstance(value, Dict))  :
@@ -79,11 +85,52 @@ class TaskSpace():
                         out[key] = value
                 return out
 
+            # Flatten spaces and tasks
+
+            # Example :  
+
+            # SPACE : gym.spaces.Dict(  
+                        # {
+                        #     "ext_controller": gym.spaces.MultiDiscrete([5, 2, 2]),
+                        #     "inner_state": gym.spaces.Dict(
+                        #         {
+                        #             "charge": gym.spaces.Discrete(10),
+                        #             "system_checks": gym.spaces.Tuple((gym.spaces.MultiDiscrete([3,2]),gym.spaces.Discrete(3))),
+                        #             "job_status": gym.spaces.Dict(
+                        #                 {
+                        #                     "task": gym.spaces.Discrete(5),
+                        #                     "progress": gym.spaces.Box(low=0, high=1, shape=(2,0)),
+                        #                 }
+                        #             ),
+                        #         }
+                        #     ),
+                        # }
+                        # )
             space = flatten(space.spaces ,{})
+
+            # TASK :  {
+                    #     "ext_controller": [("a", "b", "c"),(1,0),("X","Y")],
+                    #     "inner_state": {
+                    #             "charge": [0,1,2,3,4,5,6,7,8,9],
+                    #             "system_checks": ((("a", "b", "c"),(1,0)),("X","Y","Z")),
+                    #             "job_status": {
+                    #                     "task": ["A","B", "C", "D", "E"],
+                    #                     "progress": [(0, 0), (0, 1), (1, 0), (1, 1)],
+                    #                 }
+                            
+                    #         }
+                    # }
+
             t = flatten(tasks,   {})
+
+
+            # The following is the map that will store the encoders based on key, if the key stores a nested
+            # dictionary it will only store the length of the dict
 
             map = {k : list(self._make_task_encoder(space[k],t[k])) if not isinstance(t[k],int) else t[k] for k in space.keys()}
             
+            # The following function takes the task as input and returns a dict with same keys but encoded values
+
             def encode(task,out):
                 for (k,v) in task.items() :
                     if ( isinstance(v, dict) or isinstance(v, Dict))  :
@@ -93,6 +140,8 @@ class TaskSpace():
                         out[k] = map[k][0](v)
                 return out
 
+            # The following function takes the encoded task as input and returns a dict with same keys and original values
+            
             def decode(task,out):
                 for (k,v) in task.items() :
                     if ( isinstance(v, dict) or isinstance(v, Dict))  :
@@ -102,6 +151,9 @@ class TaskSpace():
                         out[k] = map[k][1](v)
                 return out
             
+
+
+            # The following is a brute test incode to test the encode and decode functions
 
             a = {
             'ext_controller' : ("b", 1, "X"),
@@ -115,13 +167,21 @@ class TaskSpace():
                 }}}
 
             print(encode(a,{}))
+            # It will print the following
+            # {'ext_controller': 4, 'inner_state': {'charge': 1, 'system_checks': [1, 1], 'job_status': {'progress': None, 'task': 2}}}
 
             b = {'ext_controller': 4, 'inner_state': {'charge': 1, 'system_checks': [1, 1], 'job_status': {'progress': None, 'task': 2}}}
             print(decode(b, {}))
+            # It will print the following
+            # {'ext_controller': ('b', 1, 'X'), 'inner_state': {'charge': 1, 'system_checks': [None, None], 'job_status': {'progress': None, 'task': None}}}
+
+            # As you see only a few values in the nested dict is returned as the correct value. It does hold the structure of the input correctly but values are wrong. 
 
 
-            encoder = lambda task: encode(task,{})
-            decoder = lambda task: decode(tas, {})
+            # Finally, I call the encode decode functions inside encoder and decoder and it completely FAILS. Gives [None, None] as output. 
+            # Even though we checked the same input right before. 
+            encoder = lambda task: self.encode(task,{})
+            decoder = lambda task: decode(task, {})
 
 
         else:
