@@ -44,6 +44,109 @@ if __name__ == "__main__":
     assert task_space.decode([0,1]) == [('a', 1), 'Y'], f"Expected 0, got {task_space.decode([0,1])}"
     print("Tuple tests passed!")
 
+    di = gym.spaces.Dict(  
+    {
+        "ext_controller": gym.spaces.MultiDiscrete([5, 2, 2]),
+        "inner_state": gym.spaces.Dict(
+            {
+                "charge": gym.spaces.Discrete(10),
+                "system_checks": gym.spaces.Tuple((gym.spaces.MultiDiscrete([3,2]),gym.spaces.Discrete(3))),
+                "job_status": gym.spaces.Dict(
+                    {
+                        "task": gym.spaces.Discrete(5),
+                        "progress": gym.spaces.Box(low=0, high=1, shape=(2,0)),
+                    }
+                ),
+            }
+        ),
+    }
+    )
+    
+    example =  {
+        "ext_controller": [("a", "b", "c"),(1,0),("X","Y")],
+        "inner_state": {
+                "charge": [0,1,2,3,4,5,6,7,8,9],
+                "system_checks": ((("a", "b", "c"),(1,0)),("X","Y","Z")),
+                "job_status": {
+                        "task": ["A","B", "C", "D", "E"],
+                        "progress": [(0, 0), (0, 1), (1, 0), (1, 1)],
+                    }
+            
+            }
+    }
+    taskspace = TaskSpace(di, example)
+
+
+    a = {
+            'ext_controller' : ["b", 1, "X"],
+            'inner_state' : {
+                'charge' : 1,
+                'system_checks' : (["a", 0], "Y"),
+                'job_status' : {
+                    'progress' : [1.0, 0.1],
+                    'task' : "C",
+
+                }
+
+            }
+       }
+
+    
+    assert task_space.encode({
+            'ext_controller' : ["b", 1, "X"],
+            'inner_state' : {
+                'charge' : 1,
+                'system_checks' : (["a", 0], "Y"),
+                'job_status' : {
+                    'progress' : [1.0, 0.1],
+                    'task' : "C",
+
+                }
+
+            }
+       }) == [0, 1], f"Expected 0, got {task_space.encode(a)}"
+
+    # OrderedDict(
+    #     [
+    #         (
+    #             'ext_controller', array([2, 0, 1])), 
+    #             ('inner_state', OrderedDict(
+    #                 [
+    #                     ('charge', 14), 
+    #                     ('job_status', OrderedDict(
+    #                         [
+    #                             ('progress', array(15.613569, dtype=float32)), 
+    #                             ('task', 4)
+    #                             ]
+    #                             )
+    #                             ), 
+    #     ('system_checks', (array([0, 0]), 2))
+    #     ]
+    #     )
+    #     )
+    #     ]
+    #     )
+
+       
+    #             'ext_controller', array([2, 0, 1])), 
+    #             ('inner_state', OrderedDict(
+    #                 [
+    #                     ('charge', 14), 
+    #                     ('job_status', OrderedDict(
+    #                         [
+    #                             ('progress', array(15.613569, dtype=float32)), 
+    #                             ('task', 4)
+    #                             ]
+    #                             )
+    #                             ), 
+    #     ('system_checks', (array([0, 0]), 2))
+    #     ]
+    #     )
+    #     )
+    #     ]
+    #     )
+
+
     # Test syntactic sugar
     task_space = TaskSpace(3)
     assert task_space.encode(0) == 0, f"Expected 0, got {task_space.encode(0)}"

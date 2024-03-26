@@ -14,6 +14,10 @@ class TaskSpace():
         if isinstance(gym_space, tuple):
             # Syntactic sugar for discrete space
             gym_space = MultiDiscrete(gym_space)
+
+        if isinstance(gym_space, dict):
+            # Syntactic sugar for Dict
+            gym_space = Dict(gym_space)
             
 
 
@@ -28,6 +32,10 @@ class TaskSpace():
         if isinstance(gym_space, MultiDiscrete):
             if tasks is None:
                 tasks = [[] for _ in range(len(gym_space.nvec))]
+
+        if isinstance(gym_space, Dict):
+            if tasks is None:
+                tasks = [[] for _ in range(len(gym_space.spaces))]
 
         self._tasks = set(tasks) if tasks is not None else None
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
@@ -60,6 +68,61 @@ class TaskSpace():
     
             encoder = lambda task: encode_map[task] if task in encode_map else None
             decoder = lambda task: decode_map[task] if task in decode_map else None
+
+        elif isinstance(space, Dict):
+            def flatten(d,out):
+                for (key,value) in d.items() :
+                    if ( isinstance(value, dict) or isinstance(value, Dict))  :
+                        out.update({key : len(value)})
+                        out.update(flatten(value, {}))
+                    else:
+                        out[key] = value
+                return out
+
+            space = flatten(space.spaces ,{})
+            t = flatten(tasks,   {})
+
+            map = {k : list(self._make_task_encoder(space[k],t[k])) if not isinstance(t[k],int) else t[k] for k in space.keys()}
+            
+            def encode(task,out):
+                for (k,v) in task.items() :
+                    if ( isinstance(v, dict) or isinstance(v, Dict))  :
+                        out[k] = encode(v,{})
+                        
+                    else :
+                        out[k] = map[k][0](v)
+                return out
+
+            def decode(task,out):
+                for (k,v) in task.items() :
+                    if ( isinstance(v, dict) or isinstance(v, Dict))  :
+                        out[k] = encode(v,{})
+                        
+                    else :
+                        out[k] = map[k][1](v)
+                return out
+            
+
+            a = {
+            'ext_controller' : ("b", 1, "X"),
+            'inner_state' : {
+                'charge' : 1,
+                'system_checks' : (("a", 0), "Y"),
+                'job_status' : {
+                    'progress' : [1.0, 0.1],
+                    'task' : "C",
+
+                }}}
+
+            print(encode(a,{}))
+
+            b = {'ext_controller': 4, 'inner_state': {'charge': 1, 'system_checks': [1, 1], 'job_status': {'progress': None, 'task': 2}}}
+            print(decode(b, {}))
+
+
+            encoder = lambda task: encode(task,{})
+            decoder = lambda task: decode(tas, {})
+
 
         else:
             encoder = lambda task: task
@@ -174,7 +237,7 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
-        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box)
+        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) 
         return self.decode(self.gym_space.sample())
 
     def list_tasks(self):
