@@ -14,6 +14,16 @@ if __name__ == "__main__":
     assert task_space.decode(3) == None, f"Expected None, got {task_space.decode(3)}"
     print("Discrete tests passed!")
 
+    task_space = TaskSpace(gym.spaces.MultiDiscrete([3,2]), [("a", "b", "c"),(1,0)])
+    # [('a', '1'), ('a', '0'), ('b', '1'), ('b', '0'), ('c', '1'), ('c', '0')]
+    assert task_space.encode(('a', 1)) == 0, f"Expected 0, got {task_space.encode(('a', 1))}"
+    assert task_space.encode(('b', 0)) == 3, f"Expected 3, got {task_space.encode(('b', 0))}"
+    assert task_space.encode(('c', 1)) == 4, f"Expected 4, got {task_space.encode(('c', 1))}"
+
+    assert task_space.decode(3) == ('b', 0), f"Expected ('b', 0), got {task_space.decode(3)}"
+    assert task_space.decode(5) == ('c', 0), f"Expected ('c', 0), got {task_space.decode(5)}"
+    print("MultiDiscrete tests passed!")
+
     task_space = TaskSpace(gym.spaces.Box(low=0, high=1, shape=(2,)), [(0, 0), (0, 1), (1, 0), (1, 1)])
     assert task_space.encode([0.0, 0.0]) == [0.0, 0.0], f"Expected [0.0, 0.0], got {task_space.encode([0.0, 0.0])}"
     assert task_space.encode([0.0, 0.1]) == [0.0, 0.1], f"Expected [0.0, 0.1], got {task_space.encode([0.0, 0.1])}"

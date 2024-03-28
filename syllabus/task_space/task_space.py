@@ -11,12 +11,23 @@ class TaskSpace():
             # Syntactic sugar for discrete space
             gym_space = Discrete(gym_space)
 
+        if isinstance(gym_space, tuple):
+            # Syntactic sugar for discrete space
+            gym_space = MultiDiscrete(gym_space)
+            
+
+
         self.gym_space = gym_space
 
         # Autogenerate task names for discrete spaces
         if isinstance(gym_space, Discrete):
             if tasks is None:
                 tasks = range(gym_space.n)
+
+          # Autogenerate task names for multidiscrete spaces
+        if isinstance(gym_space, MultiDiscrete):
+            if tasks is None:
+                tasks = [[] for _ in range(len(gym_space.nvec))]
 
         self._tasks = set(tasks) if tasks is not None else None
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
@@ -36,6 +47,17 @@ class TaskSpace():
             decoders = [r[1] for r in results]
             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+
+        elif isinstance(space, MultiDiscrete):
+            assert len(space.nvec) == len(tasks), f"Number of steps in a tasks ({len(space.nvec)}) must match number of discrete options ({len(tasks)})"
+            
+            combinations = [p for p in itertools.product(*tasks)]
+            self._encode_map = {task: i for i, task in enumerate(combinations)}
+            self._decode_map = {i: task for i, task in enumerate(combinations)}
+    
+            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
+            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
+
         else:
             encoder = lambda task: task
             decoder = lambda task: task
