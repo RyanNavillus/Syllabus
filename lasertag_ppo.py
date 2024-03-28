@@ -87,11 +87,13 @@ class LasertagParallelWrapper(TaskWrapper):
 
 
 class SelfPlay(Curriculum):
-    def __init__(self, agent):
-        self.agent = deepcopy(agent)
+    def __init__(self, agent, device: str, store_agents_on_cpu: bool = False):
+        self.store_agents_on_cpu = store_agents_on_cpu
+        self.storage_device = "cpu" if self.store_agents_on_cpu else device
+        self.agent = deepcopy(agent).to(self.storage_device)
 
     def update_agent(self, agent):
-        self.agent = deepcopy(agent)
+        self.agent = deepcopy(agent).to(self.storage_device)
 
     def get_opponent(self):
         # Always return the most recent agent
