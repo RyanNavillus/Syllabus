@@ -35,7 +35,7 @@ class LasertagParallelWrapper(TaskWrapper):
         self.task_space = TaskSpace(spaces.MultiDiscrete(np.array([[2], [5]])))
         self.possible_agents = np.arange(self.n_agents)
 
-    def _np_array_to_pz_dict(self, array: np.ndarray):
+    def _np_array_to_pz_dict(self, array: np.ndarray) -> dict[str : np.ndarray]:
         """
         Returns a dictionary containing individual observations for each agent.
         Assumes that the batch dimension represents individual agents.
@@ -45,13 +45,13 @@ class LasertagParallelWrapper(TaskWrapper):
             out[str(idx)] = i
         return out
 
-    def _singleton_to_pz_dict(self, value: bool):
+    def _singleton_to_pz_dict(self, value: bool) -> dict[str:bool]:
         """
         Broadcasts the `done` and `trunc` flags to dictionaries keyed by agent id.
         """
         return {str(idx): value for idx in range(self.n_agents)}
 
-    def reset(self):
+    def reset(self) -> tuple[dict[AgentID, ObsType], dict[AgentID, dict]]:
         """
         Resets the environment and returns a dictionary of observations
         keyed by agent ID.
@@ -61,11 +61,18 @@ class LasertagParallelWrapper(TaskWrapper):
 
         return pz_obs
 
-    def step(self, action):
+    def step(self, action: dict[AgentID, ActionType], device: str) -> tuple[
+        dict[AgentID, ObsType],
+        dict[AgentID, float],
+        dict[AgentID, bool],
+        dict[AgentID, bool],
+        dict[AgentID, dict],
+    ]:
         """
         Takes inputs in the PettingZoo (PZ) Parallel API format, performs a step and
         returns outputs in PZ format.
         """
+        action = batchify(action, device)
         obs, rew, done, info = self.env.step(action)
         obs = obs["image"]
         trunc = 0  # there is no `truncated` flag in this environment
@@ -144,7 +151,12 @@ def batchify(x, device):
     return x
 
 
-def unbatchify(x, env):
+def unbatchify(x, possible_agents: np.ndarray):
+    """Converts np array to PZ style arguments."""
+    x = x.cpu().numpy()
+    x = {a: x[i] for i, a in enumerate(possible_agents)}
+
+    return x
     """Converts np array to PZ style arguments."""
     x = x.cpu().numpy()
     x = {a: x[i] for i, a in enumerate(env.possible_agents)}
@@ -192,6 +204,7 @@ if __name__ == "__main__":
     losses, episode_rewards = [], []
 
     """ TRAINING LOGIC """
+
     # train for n number of episodes
     for episode in tqdm(range(total_episodes)):
         # collect an episode
@@ -211,6 +224,7 @@ if __name__ == "__main__":
                 actions, logprobs, _, values = agent.get_action_and_value(
                     agent_obs, flatten_start_dim=0
                 )
+
                 opponent = curriculum.get_opponent()
                 opponent_action, *_ = opponent.get_action_and_value(
                     opponent_obs, flatten_start_dim=0
@@ -218,15 +232,16 @@ if __name__ == "__main__":
                 # execute the environment and log data
                 joint_actions = torch.tensor((actions, opponent_action))
                 next_obs, rewards, terms, truncs, infos = env.step(
-                    unbatchify(joint_actions, env)
+                    unbatchify(joint_actions, env.possible_agents), device
                 )
-                episode_rewards.append(max(list(rewards.values())))
+                # next_obs, rewards, terms, truncs, infos = env.step(joint_actions)
+                episode_rewards.append(rewards)
 
                 # add to episode storage
-                rb_obs[step] = joint_obs
+                rb_obs[step] = batchify_obs(next_obs, device)
                 rb_rewards[step] = batchify(rewards, device)
                 rb_terms[step] = batchify(terms, device)
-                rb_actions[step] = actions
+                rb_actions[step] = joint_actions
                 rb_logprobs[step] = logprobs
                 rb_values[step] = values.flatten()
 
