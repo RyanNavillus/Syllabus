@@ -15,6 +15,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        'pytest>=8.1.1',
+        'pytest-benchmark>=3.4.1',
         'gymnasium>=0.28.0',
         'numpy>=1.24.0',
         'ray[rllib]>=2.8.1',
