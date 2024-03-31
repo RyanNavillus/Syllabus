@@ -1,31 +1,22 @@
 """ Test curriculum synchronization across multiple processes. """
-import ray
-from nle.env.tasks import NetHackScore
 import pytest
+from nle.env.tasks import NetHackScore
 
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
-from syllabus.curricula import (CentralizedPrioritizedLevelReplay,
+from syllabus.curricula import (AnnealingBoxCurriculum,
+                                CentralizedPrioritizedLevelReplay,
                                 DomainRandomization,
-                                LearningProgressCurriculum,
-                                NoopCurriculum,
-                                PrioritizedLevelReplay,
-                                SimpleBoxCurriculum,
-                                AnnealingBoxCurriculum,
-                                SequentialCurriculum)
-from syllabus.task_space import TaskSpace
-from syllabus.tests import (create_cartpole_env,
-                            create_nethack_env,
-                            get_test_values,
-                            run_native_multiprocess,
-                            run_ray_multiprocess,
-                            run_single_process)
-import pytest
+                                LearningProgressCurriculum, NoopCurriculum,
+                                PrioritizedLevelReplay, SequentialCurriculum,
+                                SimpleBoxCurriculum)
+from syllabus.tests import (create_cartpole_env, create_nethack_env,
+                            get_test_values, run_native_multiprocess,
+                            run_ray_multiprocess, run_single_process)
 
 N_ENVS = 2
 N_EPISODES = 2
 
 
-ray.init()
 nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
 
@@ -50,6 +41,7 @@ curricula = [
 
 test_names = [curriculum_args[0].__name__ for curriculum_args in curricula] 
 
+
 @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
 def test_multiprocessing_sync_single_process(curriculum, env_fn, args, kwargs):
     # Test single process speed
@@ -71,8 +63,9 @@ def test_multiprocessing_sync_queue_multi_process(curriculum, env_fn, args, kwar
     native_syllabus_speed = run_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
+
 @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
-def test_multiprocessing_sync_ray_multi_process(curriculum, env_fn, args, kwargs):
+def test_multiprocessing_sync_ray_multi_process(curriculum, env_fn, args, kwargs, ray_session):
     # Test Ray multiprocess speed with Syllabus
     test_curriculum = curriculum(*args, **kwargs)
     test_curriculum = make_ray_curriculum(test_curriculum)

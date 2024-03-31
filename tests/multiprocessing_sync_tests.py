@@ -1,6 +1,4 @@
 """ Test curriculum synchronization across multiple processes. """
-import ray
-
 from syllabus.tests import SyncTestCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 
@@ -9,6 +7,7 @@ from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_
 # Setup global variables
 N_ENVS = 128
 N_EPISODES = 300
+
 
 def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES):
     stats = curriculum.get_stats()
@@ -21,7 +20,8 @@ def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES):
             assert count == num_envs, f"Curriculum task '{task}' count is {count}, expected {num_envs}"
     expected_dones = num_envs * num_episodes
     assert stats["total_dones"] == expected_dones, f"Curriculum total dones is {stats['total_dones']}, expected {expected_dones}"
- 
+
+
 def generate_environment(num_episodes=N_EPISODES):
     return create_synctest_env(env_args=(num_episodes,))
 
@@ -37,6 +37,7 @@ def test_single_process_speed():
     evaluate_curriculum(test_curriculum, num_envs=N_ENVS)
     print(f"PASSED: single process test passed: {native_speed:.2f}s")
 
+
 def test_queue_multiprocess_speed():
     # Test Queue multiprocess speed with Syllabus
     sample_env = generate_environment()
@@ -49,9 +50,9 @@ def test_queue_multiprocess_speed():
     evaluate_curriculum(test_curriculum.curriculum)
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
-def test_ray_multiprocess_speed():
+
+def test_ray_multiprocess_speed(ray_session):
     # Test Ray multiprocess speed with Syllabus
-    ray.init()
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
     test_curriculum = make_ray_curriculum(test_curriculum)
@@ -68,8 +69,7 @@ if __name__ == "__main__":
     print("Testing curriculum synchronization")
     print("*" * 80)
     print("")
-    
+
     test_single_process_speed()
     test_queue_multiprocess_speed()
     test_ray_multiprocess_speed()
-    
