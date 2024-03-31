@@ -33,6 +33,22 @@ class Curriculum:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
 
     @property
+    def requires_step_updates(self) -> bool:
+        """Returns whether the curriculum requires step updates from the environment.
+
+        :return: True if the curriculum requires step updates, False otherwise
+        """
+        return self.__class__.REQUIRES_STEP_UPDATES
+
+    @property
+    def requires_episode_updates(self) -> bool:
+        """Returns whether the curriculum requires episode updates from the environment.
+
+        :return: True if the curriculum requires episode updates, False otherwise
+        """
+        return self.__class__.REQUIRES_EPISODE_UPDATES
+
+    @property
     def num_tasks(self) -> int:
         """Counts the number of tasks in the task space.
 

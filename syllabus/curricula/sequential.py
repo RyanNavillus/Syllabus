@@ -15,7 +15,7 @@ class SequentialCurriculum(Curriculum):
     def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
-        assert len(stopping_conditions) == len(curriculum_list) - 1, "Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training"
+        assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
             warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
 
@@ -138,6 +138,10 @@ class SequentialCurriculum(Curriculum):
     def current_curriculum(self):
         return self.curriculum_list[self._curriculum_index]
 
+    @property
+    def requires_step_updates(self):
+        return any(map(lambda c: c.requires_step_updates, self.curriculum_list))
+
     def _sample_distribution(self) -> List[float]:
         """
         Return None to indicate that tasks are not drawn from a distribution.
@@ -162,12 +166,30 @@ class SequentialCurriculum(Curriculum):
         self.check_stopping_conditions()
         return recoded_tasks
 
-    def update_on_episode(self, episode_return, episode_len, episode_task, env_id: int = None):
+    def update_on_episode(self, episode_return, episode_len, episode_task, env_id=None):
         self.n_episodes += 1
         self.total_episodes += 1
         self.n_steps += episode_len
         self.total_steps += episode_len
         self.episode_returns.append(episode_return)
+
+        # Update current curriculum
+        if self.current_curriculum.requires_episode_updates:
+            self.current_curriculum.update_on_episode(episode_return, episode_len, episode_task, env_id)
+
+    def update_on_step(self, obs, rew, term, trunc, info, env_id=None):
+        if self.current_curriculum.requires_step_updates:
+            self.current_curriculum.update_on_step(obs, rew, term, trunc, info, env_id)
+
+    def update_on_step_batch(self, step_results, env_id=None):
+        if self.current_curriculum.requires_step_updates:
+            self.current_curriculum.update_on_step_batch(step_results, env_id)
+
+    def update_on_demand(self, metrics):
+        self.current_curriculum.update_on_demand(metrics)
+
+    def update_task_progress(self, task, progress, env_id=None):
+        self.current_curriculum.update_task_progress(task, progress, env_id)
 
     def check_stopping_conditions(self):
         if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
