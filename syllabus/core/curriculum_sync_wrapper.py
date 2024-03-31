@@ -172,6 +172,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
+        # Process final few updates
+        start = time.time()
+        end = time.time()
+        while end - start < 3 and not self.update_queue.empty():
+            time.sleep(0.5)
+            end = time.time()
+
         self.should_update = False
         components = self.get_components()
         components._env_count.shm.close()
@@ -221,7 +228,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components().debug:
+        if self.get_components()._debug:
             writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
             writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
