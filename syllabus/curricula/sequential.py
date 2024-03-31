@@ -172,6 +172,7 @@ class SequentialCurriculum(Curriculum):
         self.n_steps += episode_len
         self.total_steps += episode_len
         self.episode_returns.append(episode_return)
+        self.check_stopping_conditions()
 
     def check_stopping_conditions(self):
         if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():

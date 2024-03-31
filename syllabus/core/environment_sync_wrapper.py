@@ -251,16 +251,17 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
             # Send batched updates
             if self._batch_step >= self.batch_size or is_finished:
-                updates = self._package_step_updates(request_sample=is_finished)
+                updates = self._package_step_updates()
                 self.components.put_update(updates)
                 self._batch_step = 0
-        elif is_finished:
+
+        if is_finished:
             # Task progress
             task_update = {
                 "update_type": "task_progress",
                 "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
                 "env_id": self.instance_id,
-                "request_sample": True,
+                "request_sample": False,
             }
             episode_update = {
                 "update_type": "episode",
@@ -272,12 +273,12 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
         return obs, rews, terms, truncs, infos
 
-    def _package_step_updates(self, request_sample=False):
+    def _package_step_updates(self):
         step_batch = {
             "update_type": "step_batch",
             "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
             "env_id": self.instance_id,
-            "request_sample": request_sample
+            "request_sample": False
         }
         task_batch = {
             "update_type": "task_progress_batch",
