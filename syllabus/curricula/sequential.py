@@ -140,11 +140,7 @@ class SequentialCurriculum(Curriculum):
 
     @property
     def requires_step_updates(self):
-        return self.current_curriculum.requires_step_updates
-
-    @property
-    def requires_episode_updates(self):
-        return self.current_curriculum.requires_episode_updates
+        return any(map(lambda c: c.requires_step_updates, self.curriculum_list))
 
     def _sample_distribution(self) -> List[float]:
         """
