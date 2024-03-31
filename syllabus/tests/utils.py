@@ -182,8 +182,9 @@ def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, nu
     ray.get(remotes)
     end = time.time()
     ray_speed = end - start
+    if curriculum:
+        ray.kill(curriculum.curriculum)
     return ray_speed
-
 
 def get_test_values(x):
     return torch.unsqueeze(torch.Tensor(np.array([0] * len(x))), -1)
