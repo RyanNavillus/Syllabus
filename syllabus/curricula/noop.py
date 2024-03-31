@@ -19,6 +19,8 @@ class NoopCurriculum(Curriculum):
         """
         Sample k tasks from the curriculum.
         """
+        print("NoopCurriculum")
+        self.sampled_tasks += k
         return [self.default_task for _ in range(k)]
 
     def update_task_progress(self, task, success_prob, env_id: int = None) -> None:

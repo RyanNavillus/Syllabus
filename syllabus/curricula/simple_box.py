@@ -60,4 +60,10 @@ class SimpleBoxCurriculum(Curriculum):
         """
         Sample k tasks from the curriculum.
         """
-        return [self.max_range for _ in range(k)]
+        if self._should_use_startup_sampling():
+            return self._startup_sample(k)
+        else:
+            print("SimpleBoxCurriculum")
+            self.sampled_tasks += k
+            return [self.max_range for _ in range(k)]
+        
