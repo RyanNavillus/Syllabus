@@ -1,0 +1,391 @@
+diff --git a/lasertag_fsp.ipynb b/lasertag_fsp.ipynb
+index 7a15830..372ca07 100644
+--- a/lasertag_fsp.ipynb
++++ b/lasertag_fsp.ipynb
+@@ -52,16 +52,6 @@
+    "metadata": {},
+    "outputs": [],
+    "source": [
+-    "def batchify_obs(obs, device):\n",
+-    "    \"\"\"Converts PZ style observations to batch of torch arrays.\"\"\"\n",
+-    "    # convert to list of np arrays\n",
+-    "    obs = np.stack([obs[a] for a in obs], axis=0)\n",
+-    "    # convert to torch\n",
+-    "    obs = torch.tensor(obs).to(device)\n",
+-    "\n",
+-    "    return obs\n",
+-    "\n",
+-    "\n",
+     "def batchify(x, device):\n",
+     "    \"\"\"Converts PZ style returns to batch of torch arrays.\"\"\"\n",
+     "    # convert to list of np arrays\n",
+@@ -72,7 +62,7 @@
+     "    return x\n",
+     "\n",
+     "\n",
+-    "def unbatchify(x, possible_agents:np.ndarray):\n",
++    "def unbatchify(x, possible_agents: np.ndarray):\n",
+     "    \"\"\"Converts np array to PZ style arguments.\"\"\"\n",
+     "    x = x.cpu().numpy()\n",
+     "    x = {a: x[i] for i, a in enumerate(possible_agents)}\n",
+diff --git a/lasertag_pfsp.ipynb b/lasertag_pfsp.ipynb
+index e951b85..c3063c6 100644
+--- a/lasertag_pfsp.ipynb
++++ b/lasertag_pfsp.ipynb
+@@ -11,7 +11,7 @@
+      "text": [
+       "c:\\Users\\ryanp\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\tqdm\\auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html\n",
+       "  from .autonotebook import tqdm as notebook_tqdm\n",
+-      "2024-03-29 11:44:03,203\tINFO util.py:154 -- Missing packages: ['ipywidgets']. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.\n"
++      "2024-03-30 12:02:54,268\tINFO util.py:154 -- Missing packages: ['ipywidgets']. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.\n"
+      ]
+     }
+    ],
+@@ -64,16 +64,6 @@
+    "metadata": {},
+    "outputs": [],
+    "source": [
+-    "def batchify_obs(obs, device):\n",
+-    "    \"\"\"Converts PZ style observations to batch of torch arrays.\"\"\"\n",
+-    "    # convert to list of np arrays\n",
+-    "    obs = np.stack([obs[a] for a in obs], axis=0)\n",
+-    "    # convert to torch\n",
+-    "    obs = torch.tensor(obs).to(device)\n",
+-    "\n",
+-    "    return obs\n",
+-    "\n",
+-    "\n",
+     "def batchify(x, device):\n",
+     "    \"\"\"Converts PZ style returns to batch of torch arrays.\"\"\"\n",
+     "    # convert to list of np arrays\n",
+@@ -113,7 +103,7 @@
+     "        self.task = None\n",
+     "        self.episode_return = 0\n",
+     "        self.task_space = TaskSpace(spaces.MultiDiscrete(np.array([[2], [5]])))\n",
+-    "        self.possible_agents = np.arange(self.n_agents)\n",
++    "        self.possible_agents = [f\"agent_{i}\" for i in range(self.n_agents)]\n",
+     "\n",
+     "    def _np_array_to_pz_dict(self, array: np.ndarray) -> dict[str : np.ndarray]:\n",
+     "        \"\"\"\n",
+@@ -121,15 +111,15 @@
+     "        Assumes that the batch dimension represents individual agents.\n",
+     "        \"\"\"\n",
+     "        out = {}\n",
+-    "        for idx, i in enumerate(array):\n",
+-    "            out[str(idx)] = i\n",
++    "        for idx, value in enumerate(array):\n",
++    "            out[self.possible_agents[idx]] = value\n",
+     "        return out\n",
+     "\n",
+     "    def _singleton_to_pz_dict(self, value: bool) -> dict[str:bool]:\n",
+     "        \"\"\"\n",
+     "        Broadcasts the `done` and `trunc` flags to dictionaries keyed by agent id.\n",
+     "        \"\"\"\n",
+-    "        return {str(idx): value for idx in range(self.n_agents)}\n",
++    "        return {str(agent_index): value for agent_index in range(self.n_agents)}\n",
+     "\n",
+     "    def reset(self) -> tuple[dict[AgentID, ObsType], dict[AgentID, dict]]:\n",
+     "        \"\"\"\n",
+@@ -155,12 +145,12 @@
+     "        action = batchify(action, device)\n",
+     "        obs, rew, done, info = self.env.step(action)\n",
+     "        obs = obs[\"image\"]\n",
+-    "        trunc = 0  # there is no `truncated` flag in this environment\n",
++    "        trunc = False  # there is no `truncated` flag in this environment\n",
+     "        self.task_completion = self._task_completion(obs, rew, done, trunc, info)\n",
+     "        # convert outputs back to PZ format\n",
+-    "        obs, rew = tuple(map(self._np_array_to_pz_dict, [obs, rew]))\n",
+-    "        done, trunc, info = tuple(\n",
+-    "            map(self._singleton_to_pz_dict, [done, trunc, self.task_completion])\n",
++    "        obs, rew = map(self._np_array_to_pz_dict, [obs, rew])\n",
++    "        done, trunc, info = map(\n",
++    "            self._singleton_to_pz_dict, [done, trunc, self.task_completion]\n",
+     "        )\n",
+     "\n",
+     "        return self.observation(obs), rew, done, trunc, info"
+@@ -542,6 +532,199 @@
+     "print(\"\\n-------------------------------------------\\n\")"
+    ]
+   },
++  {
++   "cell_type": "code",
++   "execution_count": 15,
++   "metadata": {},
++   "outputs": [
++    {
++     "name": "stderr",
++     "output_type": "stream",
++     "text": [
++      "  0%|          | 0/10 [00:00<?, ?it/s]"
++     ]
++    },
++    {
++     "name": "stderr",
++     "output_type": "stream",
++     "text": [
++      "100%|██████████| 10/10 [00:05<00:00,  1.67it/s]"
++     ]
++    },
++    {
++     "name": "stdout",
++     "output_type": "stream",
++     "text": [
++      "Training episode 9\n",
++      "Episodic Return: 0.0\n",
++      "Episode Length: 200\n",
++      "\n",
++      "Value Loss: 0.21714280545711517\n",
++      "Policy Loss: 0.6637527942657471\n",
++      "Old Approx KL: -0.0024569183588027954\n",
++      "Approx KL: 4.914402961730957e-05\n",
++      "Clip Fraction: 0.0\n",
++      "Explained Variance: -0.0001049041748046875\n",
++      "\n",
++      "-------------------------------------------\n",
++      "\n"
++     ]
++    },
++    {
++     "name": "stderr",
++     "output_type": "stream",
++     "text": [
++      "\n"
++     ]
++    }
++   ],
++   "source": [
++    "\"\"\" TRAINING LOGIC \"\"\"\n",
++    "\n",
++    "# train for n number of episodes\n",
++    "for episode in tqdm(range(total_episodes)):\n",
++    "    # collect an episode\n",
++    "    with torch.no_grad():\n",
++    "        # collect observations and convert to batch of torch tensors\n",
++    "        next_obs = env.reset()  # removed seed=None and info\n",
++    "        # reset the episodic return\n",
++    "        total_episodic_return = 0\n",
++    "\n",
++    "        # each episode has num_steps\n",
++    "        for step in range(0, max_cycles):\n",
++    "            # rollover the observation\n",
++    "            joint_obs = batchify(next_obs, device)\n",
++    "            agent_obs, opponent_obs = joint_obs\n",
++    "\n",
++    "            # get action from the agent and the opponent\n",
++    "            actions, logprobs, _, values = agent.get_action_and_value(\n",
++    "                agent_obs, flatten_start_dim=0\n",
++    "            )\n",
++    "\n",
++    "            opponent, opponent_id = curriculum.get_opponent(device)\n",
++    "            opponent_action, *_ = opponent.get_action_and_value(\n",
++    "                opponent_obs, flatten_start_dim=0\n",
++    "            )\n",
++    "            # execute the environment and log data\n",
++    "            joint_actions = torch.tensor((actions, opponent_action))\n",
++    "            next_obs, rewards, terms, truncs, infos = env.step(\n",
++    "                unbatchify(joint_actions, env.possible_agents), device\n",
++    "            )\n",
++    "            episode_rewards.append(rewards)\n",
++    "\n",
++    "            if rewards[\"agent_1\"] != 0:\n",
++    "                curriculum.update_winrate(opponent_id, rewards[\"agent_1\"])\n",
++    "\n",
++    "            # add to episode storage\n",
++    "            rb_obs[step] = batchify(next_obs, device)\n",
++    "            rb_rewards[step] = batchify(rewards, device)\n",
++    "            rb_terms[step] = batchify(terms, device)\n",
++    "            rb_actions[step] = joint_actions\n",
++    "            rb_logprobs[step] = logprobs\n",
++    "            rb_values[step] = values.flatten()\n",
++    "\n",
++    "            # compute episodic return\n",
++    "            total_episodic_return += rb_rewards[step].cpu().numpy()\n",
++    "\n",
++    "            # if we reach termination or truncation, end\n",
++    "            if any([terms[a] for a in terms]) or any([truncs[a] for a in truncs]):\n",
++    "                end_step = step\n",
++    "                break\n",
++    "\n",
++    "    # bootstrap value if not done\n",
++    "    with torch.no_grad():\n",
++    "        rb_advantages = torch.zeros_like(rb_rewards).to(device)\n",
++    "        for t in reversed(range(end_step)):\n",
++    "            delta = (\n",
++    "                rb_rewards[t]\n",
++    "                + gamma * rb_values[t + 1] * rb_terms[t + 1]\n",
++    "                - rb_values[t]\n",
++    "            )\n",
++    "            rb_advantages[t] = delta + gamma * gamma * rb_advantages[t + 1]\n",
++    "        rb_returns = rb_advantages + rb_values\n",
++    "    # convert our episodes to batch of individual transitions\n",
++    "    b_obs = torch.flatten(rb_obs[:end_step], start_dim=0, end_dim=1)\n",
++    "    b_logprobs = torch.flatten(rb_logprobs[:end_step], start_dim=0, end_dim=1)\n",
++    "    b_actions = torch.flatten(rb_actions[:end_step], start_dim=0, end_dim=1)\n",
++    "    b_returns = torch.flatten(rb_returns[:end_step], start_dim=0, end_dim=1)\n",
++    "    b_values = torch.flatten(rb_values[:end_step], start_dim=0, end_dim=1)\n",
++    "    b_advantages = torch.flatten(rb_advantages[:end_step], start_dim=0, end_dim=1)\n",
++    "\n",
++    "    # Optimizing the policy and value network\n",
++    "    b_index = np.arange(len(b_obs))\n",
++    "    clip_fracs = []\n",
++    "    for repeat in range(3):\n",
++    "        # shuffle the indices we use to access the data\n",
++    "        np.random.shuffle(b_index)\n",
++    "        for start in range(0, len(b_obs), batch_size):\n",
++    "            # select the indices we want to train on\n",
++    "            end = start + batch_size\n",
++    "            batch_index = b_index[start:end]\n",
++    "\n",
++    "            _, newlogprob, entropy, value = agent.get_action_and_value(\n",
++    "                b_obs[batch_index], b_actions.long()[batch_index]\n",
++    "            )\n",
++    "            logratio = newlogprob - b_logprobs[batch_index]\n",
++    "            ratio = logratio.exp()\n",
++    "\n",
++    "            with torch.no_grad():\n",
++    "                # calculate approx_kl http://joschu.net/blog/kl-approx.html\n",
++    "                old_approx_kl = (-logratio).mean()\n",
++    "                approx_kl = ((ratio - 1) - logratio).mean()\n",
++    "                clip_fracs += [((ratio - 1.0).abs() > clip_coef).float().mean().item()]\n",
++    "\n",
++    "            # normalize advantages\n",
++    "            advantages = b_advantages[batch_index]\n",
++    "            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)\n",
++    "\n",
++    "            # Policy loss\n",
++    "            pg_loss1 = -b_advantages[batch_index] * ratio\n",
++    "            pg_loss2 = -b_advantages[batch_index] * torch.clamp(\n",
++    "                ratio, 1 - clip_coef, 1 + clip_coef\n",
++    "            )\n",
++    "            pg_loss = torch.max(pg_loss1, pg_loss2).mean()\n",
++    "\n",
++    "            # Value loss\n",
++    "            value = value.flatten()\n",
++    "            v_loss_unclipped = (value - b_returns[batch_index]) ** 2\n",
++    "            v_clipped = b_values[batch_index] + torch.clamp(\n",
++    "                value - b_values[batch_index],\n",
++    "                -clip_coef,\n",
++    "                clip_coef,\n",
++    "            )\n",
++    "            v_loss_clipped = (v_clipped - b_returns[batch_index]) ** 2\n",
++    "            v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)\n",
++    "            v_loss = 0.5 * v_loss_max.mean()\n",
++    "\n",
++    "            entropy_loss = entropy.mean()\n",
++    "            loss = pg_loss - ent_coef * entropy_loss + v_loss * vf_coef\n",
++    "            losses.append(loss)\n",
++    "\n",
++    "            optimizer.zero_grad()\n",
++    "            loss.backward()\n",
++    "            optimizer.step()\n",
++    "\n",
++    "    y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()\n",
++    "    var_y = np.var(y_true)\n",
++    "    explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y\n",
++    "\n",
++    "    # update opponent\n",
++    "    if episode % fsp_update_frequency == 0 and episode !=0:\n",
++    "        curriculum.update_agent(agent)\n",
++    "\n",
++    "print(f\"Training episode {episode}\")\n",
++    "print(f\"Episodic Return: {np.mean(total_episodic_return)}\")\n",
++    "print(f\"Episode Length: {end_step}\")\n",
++    "print(\"\")\n",
++    "print(f\"Value Loss: {v_loss.item()}\")\n",
++    "print(f\"Policy Loss: {pg_loss.item()}\")\n",
++    "print(f\"Old Approx KL: {old_approx_kl.item()}\")\n",
++    "print(f\"Approx KL: {approx_kl.item()}\")\n",
++    "print(f\"Clip Fraction: {np.mean(clip_fracs)}\")\n",
++    "print(f\"Explained Variance: {explained_var.item()}\")\n",
++    "print(\"\\n-------------------------------------------\\n\")"
++   ]
++  },
+   {
+    "cell_type": "code",
+    "execution_count": 8,
+diff --git a/lasertag_ppo.py b/lasertag_ppo.py
+index 853a1ce..692b317 100644
+--- a/lasertag_ppo.py
++++ b/lasertag_ppo.py
+@@ -133,16 +133,6 @@ class Agent(nn.Module):
+         return action, probs.log_prob(action), probs.entropy(), self.critic(hidden)
+ 
+ 
+-def batchify_obs(obs, device):
+-    """Converts PZ style observations to batch of torch arrays."""
+-    # convert to list of np arrays
+-    obs = np.stack([obs[a] for a in obs], axis=0)
+-    # convert to torch
+-    obs = torch.tensor(obs).to(device)
+-
+-    return obs
+-
+-
+ def batchify(x, device):
+     """Converts PZ style returns to batch of torch arrays."""
+     # convert to list of np arrays
+@@ -159,11 +149,6 @@ def unbatchify(x, possible_agents: np.ndarray):
+     x = {a: x[i] for i, a in enumerate(possible_agents)}
+ 
+     return x
+-    """Converts np array to PZ style arguments."""
+-    x = x.cpu().numpy()
+-    x = {a: x[i] for i, a in enumerate(env.possible_agents)}
+-
+-    return x
+ 
+ 
+ if __name__ == "__main__":
+@@ -219,7 +204,7 @@ if __name__ == "__main__":
+             # each episode has num_steps
+             for step in range(0, max_cycles):
+                 # rollover the observation
+-                joint_obs = batchify_obs(next_obs, device)
++                joint_obs = batchify(next_obs, device)
+                 agent_obs, opponent_obs = joint_obs
+ 
+                 # get action from the agent and the opponent
+@@ -240,7 +225,7 @@ if __name__ == "__main__":
+                 episode_rewards.append(rewards)
+ 
+                 # add to episode storage
+-                rb_obs[step] = batchify_obs(next_obs, device)
++                rb_obs[step] = batchify(next_obs, device)
+                 rb_rewards[step] = batchify(rewards, device)
+                 rb_terms[step] = batchify(terms, device)
+                 rb_actions[step] = joint_actions
+diff --git a/lasertag_self_play.ipynb b/lasertag_self_play.ipynb
+index ed85b83..0b16393 100644
+--- a/lasertag_self_play.ipynb
++++ b/lasertag_self_play.ipynb
+@@ -62,16 +62,6 @@
+    "metadata": {},
+    "outputs": [],
+    "source": [
+-    "def batchify_obs(obs, device):\n",
+-    "    \"\"\"Converts PZ style observations to batch of torch arrays.\"\"\"\n",
+-    "    # convert to list of np arrays\n",
+-    "    obs = np.stack([obs[a] for a in obs], axis=0)\n",
+-    "    # convert to torch\n",
+-    "    obs = torch.tensor(obs).to(device)\n",
+-    "\n",
+-    "    return obs\n",
+-    "\n",
+-    "\n",
+     "def batchify(x, device):\n",
+     "    \"\"\"Converts PZ style returns to batch of torch arrays.\"\"\"\n",
+     "    # convert to list of np arrays\n",
+@@ -186,9 +176,10 @@
+     "    def update_agent(self, agent):\n",
+     "        self.agent = deepcopy(agent).to(self.storage_device)\n",
+     "\n",
+-    "    def get_opponent(self):\n",
+-    "        # Always return the most recent agent\n",
+-    "        return self.agent\n",
++    "    def get_opponent(self, agent_id):\n",
++    "        assert (\n",
++    "            agent_id == 0\n",
++    "        ), f\"Self play only tracks the current agent. Expected agent id 0, got {agent_id}\"\n",
+     "\n",
+     "    def sample(self, k=1):\n",
+     "        return 0"

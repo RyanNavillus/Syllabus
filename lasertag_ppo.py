@@ -133,16 +133,6 @@ class Agent(nn.Module):
         return action, probs.log_prob(action), probs.entropy(), self.critic(hidden)
 
 
-def batchify_obs(obs, device):
-    """Converts PZ style observations to batch of torch arrays."""
-    # convert to list of np arrays
-    obs = np.stack([obs[a] for a in obs], axis=0)
-    # convert to torch
-    obs = torch.tensor(obs).to(device)
-
-    return obs
-
-
 def batchify(x, device):
     """Converts PZ style returns to batch of torch arrays."""
     # convert to list of np arrays
@@ -157,11 +147,6 @@ def unbatchify(x, possible_agents: np.ndarray):
     """Converts np array to PZ style arguments."""
     x = x.cpu().numpy()
     x = {a: x[i] for i, a in enumerate(possible_agents)}
-
-    return x
-    """Converts np array to PZ style arguments."""
-    x = x.cpu().numpy()
-    x = {a: x[i] for i, a in enumerate(env.possible_agents)}
 
     return x
 
@@ -219,7 +204,7 @@ if __name__ == "__main__":
             # each episode has num_steps
             for step in range(0, max_cycles):
                 # rollover the observation
-                joint_obs = batchify_obs(next_obs, device)
+                joint_obs = batchify(next_obs, device)
                 agent_obs, opponent_obs = joint_obs
 
                 # get action from the agent and the opponent
@@ -240,7 +225,7 @@ if __name__ == "__main__":
                 episode_rewards.append(rewards)
 
                 # add to episode storage
-                rb_obs[step] = batchify_obs(next_obs, device)
+                rb_obs[step] = batchify(next_obs, device)
                 rb_rewards[step] = batchify(rewards, device)
                 rb_terms[step] = batchify(terms, device)
                 rb_actions[step] = joint_actions
