@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import time
 from copy import deepcopy
 from typing import TypeVar
@@ -10,15 +11,17 @@ import plotly.express as px
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import wandb
 from gymnasium import spaces
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
 
-import wandb
-from lasertag import LasertagCorridor2
-from syllabus.core import Curriculum, TaskWrapper
-from syllabus.task_space import TaskSpace
+sys.path.append("../")
+
+from lasertag import LasertagAdversarial  # noqa: E402
+from syllabus.core import Curriculum, TaskWrapper  # noqa: E402
+from syllabus.task_space import TaskSpace  # noqa: E402
 
 ObsType = TypeVar("ObsType")
 ActionType = TypeVar("ActionType")
@@ -92,6 +95,13 @@ class LasertagParallelWrapper(TaskWrapper):
         self.episode_return = 0
         self.task_space = TaskSpace(spaces.MultiDiscrete(np.array([[2], [5]])))
         self.possible_agents = [f"agent_{i}" for i in range(self.n_agents)]
+
+    def __getattr__(self, name):
+        """
+        Delegate attribute lookup to the wrapped environment if the attribute
+        is not found in the LasertagParallelWrapper instance.
+        """
+        return getattr(self.env, name)
 
     def _np_array_to_pz_dict(self, array: np.ndarray) -> dict[str : np.ndarray]:
         """
@@ -218,10 +228,13 @@ if __name__ == "__main__":
 
     """ALGO PARAMS"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    ent_coef = 0.1
-    vf_coef = 0.1
-    clip_coef = 0.1
-    gamma = 0.99
+    ent_coef = 0.0
+    vf_coef = 0.5
+    clip_coef = 0.2
+    learning_rate = 1e-4
+    epsilon = 1e-5
+    gamma = 0.995
+    # TODO: what is lambda_gae ? set it to 0.95
     batch_size = 32
     stack_size = 3
     frame_size = (5, 5)
@@ -232,10 +245,10 @@ if __name__ == "__main__":
 
     """ LEARNER SETUP """
     agent = Agent(num_actions=num_actions).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=0.001, eps=1e-5)
+    optimizer = optim.Adam(agent.parameters(), lr=learning_rate, eps=epsilon)
 
     """ ENV SETUP """
-    env = LasertagCorridor2(record_video=False)  # 2 agents by default
+    env = LasertagAdversarial(record_video=False)  # 2 agents by default
     env = LasertagParallelWrapper(env=env, n_agents=n_agents)
     curriculum = SelfPlay(agent=agent, device=device, store_agents_on_cpu=True)
     observation_size = env.observation_space["image"].shape[1:]
@@ -260,7 +273,7 @@ if __name__ == "__main__":
         # collect an episode
         with torch.no_grad():
             # collect observations and convert to batch of torch tensors
-            next_obs = env.reset()  # removed seed=None and info
+            next_obs = env.reset_random()  # removed seed=None and info
             # reset the episodic return
             total_episodic_return = 0
             n_steps = 0
@@ -268,7 +281,7 @@ if __name__ == "__main__":
             # each episode has num_steps
             for step in range(0, max_cycles):
                 # rollover the observation
-                joint_obs = batchify(next_obs, device)
+                joint_obs = batchify(next_obs, device).squeeze()
                 agent_obs, opponent_obs = joint_obs
 
                 # get action from the agent and the opponent
@@ -325,7 +338,7 @@ if __name__ == "__main__":
         # Optimizing the policy and value network
         b_index = np.arange(len(b_obs))
         clip_fracs = []
-        for repeat in range(3):
+        for repeat in range(3):  # TODO: change mini-batches per epoch to 5 ?
             # shuffle the indices we use to access the data
             np.random.shuffle(b_index)
             for start in range(0, len(b_obs), batch_size):
@@ -389,9 +402,14 @@ if __name__ == "__main__":
 
         agent_c_rew += rewards["agent_0"]
         opp_c_rew += rewards["agent_1"]
+        grid_size = env.level[3]["grid_size_selected"]
+        walls_percentage = env.level[3]["clutter_rate_selected"]
+
         writer.add_scalar("charts/agent_reward", agent_c_rew, episode)
         writer.add_scalar("charts/opponent_reward", opp_c_rew, episode)
         writer.add_scalar("charts/steps_per_ep", end_step, episode)
+        writer.add_scalar("charts/grid_size", grid_size, episode)
+        writer.add_scalar("charts/walls_percentage", walls_percentage, episode)
         writer.add_scalar("losses/value_loss", v_loss.item(), episode)
         writer.add_scalar("losses/policy_loss", pg_loss.item(), episode)
         writer.add_scalar("losses/entropy", entropy_loss.item(), episode)
