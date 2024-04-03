@@ -6,8 +6,6 @@ from copy import deepcopy
 from typing import TypeVar
 
 import numpy as np
-import pandas as pd
-import plotly.express as px
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -234,7 +232,8 @@ if __name__ == "__main__":
     learning_rate = 1e-4
     epsilon = 1e-5
     gamma = 0.995
-    # TODO: what is lambda_gae ? set it to 0.95
+    gae_lambda = 0.95
+    epochs = 5
     batch_size = 32
     stack_size = 3
     frame_size = (5, 5)
@@ -316,16 +315,27 @@ if __name__ == "__main__":
                     end_step = step
                     break
 
-        # bootstrap value if not done
         with torch.no_grad():
+            next_value = agent.get_value(
+                torch.tensor(next_obs["agent_0"]), flatten_start_dim=0
+            )
             rb_advantages = torch.zeros_like(rb_rewards).to(device)
+            last_gae_lam = 0
             for t in reversed(range(end_step)):
+                if t == end_step - 1:
+                    next_non_terminal = 1.0 - rb_terms[t + 1]
+                    next_values = next_value
+                else:
+                    next_non_terminal = 1.0 - rb_terms[t + 1]
+                    next_values = rb_values[t + 1]
                 delta = (
                     rb_rewards[t]
-                    + gamma * rb_values[t + 1] * rb_terms[t + 1]
+                    + gamma * next_values * next_non_terminal
                     - rb_values[t]
                 )
-                rb_advantages[t] = delta + gamma * gamma * rb_advantages[t + 1]
+                rb_advantages[t] = last_gae_lam = (
+                    delta + gamma * gae_lambda * next_non_terminal * last_gae_lam
+                )
             rb_returns = rb_advantages + rb_values
         # convert our episodes to batch of individual transitions
         b_obs = torch.flatten(rb_obs[:end_step], start_dim=0, end_dim=1)
@@ -338,7 +348,7 @@ if __name__ == "__main__":
         # Optimizing the policy and value network
         b_index = np.arange(len(b_obs))
         clip_fracs = []
-        for repeat in range(3):  # TODO: change mini-batches per epoch to 5 ?
+        for repeat in range(epochs):
             # shuffle the indices we use to access the data
             np.random.shuffle(b_index)
             for start in range(0, len(b_obs), batch_size):
@@ -361,9 +371,9 @@ if __name__ == "__main__":
                     ]
 
                 # normalize advantages
-                advantages = b_advantages[batch_index]
-                advantages = (advantages - advantages.mean()) / (
-                    advantages.std() + 1e-8
+                rb_advantages = b_advantages[batch_index]
+                rb_advantages = (rb_advantages - rb_advantages.mean()) / (
+                    rb_advantages.std() + 1e-8
                 )
 
                 # Policy loss
@@ -415,9 +425,4 @@ if __name__ == "__main__":
         writer.add_scalar("losses/entropy", entropy_loss.item(), episode)
         writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), episode)
         writer.add_scalar("losses/approx_kl", approx_kl.item(), episode)
-
-    rewards = pd.DataFrame(
-        list(map(lambda x: batchify(x, device).numpy(), episode_rewards))
-    )
-    fig = px.line(rewards.cumsum(), title="Cumulative rewards per step")
-    fig.show()
+    writer.close()
