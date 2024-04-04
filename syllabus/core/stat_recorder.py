@@ -22,7 +22,7 @@ class StatRecorder:
         self.task_space = task_space
 
         assert isinstance(self.task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
-        assert isinstance(self.task_space.gym_space, Discrete), f"assume that task_space should be of type Discrete"
+        assert isinstance(self.task_space.gym_space, Discrete), f"Only Discrete task spaces are supported. Got {type(task_space.gym_space)}"
 
         self.tasks = self.task_space.get_tasks()
         self.num_tasks = self.task_space.num_tasks
