@@ -1,3 +1,4 @@
+*.pkl
 agents_buffer
 wandb
 # Byte-compiled / optimized / DLL files
