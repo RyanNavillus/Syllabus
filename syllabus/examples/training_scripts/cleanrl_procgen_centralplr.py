@@ -21,7 +21,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import DomainRandomization, LearningProgressCurriculum, CentralizedPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize
@@ -46,8 +46,6 @@ def parse_args():
                         help="the entity (team) of wandb's project")
     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="weather to capture videos of the agent performances (check out `videos` folder)")
-    parser.add_argument("--logging-dir", type=str, default=".",
-                        help="the base directory for logging and wandb storage.")
 
     # Algorithm specific arguments
     parser.add_argument("--env-id", type=str, default="starpilot",
@@ -137,7 +135,6 @@ def make_env(env_id, seed, curriculum_components=None, start_level=0, num_levels
                 curriculum_components,
                 update_on_step=False,
                 task_space=env.task_space,
-                buffer_size=4,
             )
         return env
     return thunk
@@ -197,15 +194,8 @@ def fast_level_replay_evaluate(
     num_levels=0
 ):
     policy.eval()
-
-    # Choose evaluation seeds
-    if num_levels == 0:
-        seeds = np.random.randint(0, 2 ** 16 - 1, size=num_episodes)
-    else:
-        seeds = np.random.choice(np.arange(0, num_levels), size=num_episodes)
-
-    seed_envs = [(int(seed), env) for seed, env in zip(seeds, range(num_episodes))]
-    eval_obs, _ = eval_envs.reset(seed=seed_envs)
+    possible_seeds = np.arange(0, num_levels + 1)
+    eval_obs, _ = eval_envs.reset(seed=list(np.random.choice(possible_seeds, size=num_episodes)))
 
     eval_episode_rewards = [-1] * num_episodes
 
@@ -227,14 +217,6 @@ def fast_level_replay_evaluate(
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
-def make_value_fn():
-    def get_value(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            return agent.get_value(torch.Tensor(obs).to(device))
-    return get_value
-
-
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -249,11 +231,10 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
-            dir=args.logging_dir
+            # dir="/fs/nexus-scratch/rsulli/"
         )
-        wandb.run.log_code(os.path.join(args.logging_dir, "/syllabus/examples"))
-
-    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+        wandb.run.log_code("./syllabus/examples")
+    writer = SummaryWriter(f"./runs/{run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -269,7 +250,7 @@ if __name__ == "__main__":
     print("Device:", device)
 
     # Curriculum setup
-    curriculum = None
+    task_queue = update_queue = None
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
@@ -278,15 +259,13 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            curriculum = PrioritizedLevelReplay(
+            curriculum = CentralizedPrioritizedLevelReplay(
                 sample_env.task_space,
-                sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
-                get_value=make_value_fn(),
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -294,16 +273,6 @@ if __name__ == "__main__":
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             curriculum = LearningProgressCurriculum(sample_env.task_space)
-        elif args.curriculum_method == "sq":
-            print("Using sequential curriculum.")
-            curricula = []
-            stopping = []
-            for i in range(199):
-                curricula.append(i + 1)
-                stopping.append("steps>=50000")
-                curricula.append(list(range(i + 1)))
-                stopping.append("steps>=50000")
-            curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
@@ -400,9 +369,27 @@ if __name__ == "__main__":
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
-                    if curriculum is not None:
-                        curriculum.log_metrics(writer, global_step)
                     break
+
+            # Syllabus curriculum update
+            if args.curriculum and args.curriculum_method == "plr":
+                with torch.no_grad():
+                    next_value = agent.get_value(next_obs)
+                tasks = envs.get_attr("task")
+
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": value,
+                        "next_value": next_value,
+                        "rew": reward,
+                        "dones": done,
+                        "tasks": tasks,
+                    },
+                }
+                curriculum.update(update)
+            #if args.curriculum:
+            #    curriculum.log_metrics(writer, global_step)
 
         # bootstrap value if not done
         with torch.no_grad():

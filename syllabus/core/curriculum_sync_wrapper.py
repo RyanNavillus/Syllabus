@@ -1,10 +1,11 @@
 import threading
+import time
 from functools import wraps
+from multiprocessing.shared_memory import ShareableList
 from typing import List, Tuple
 
 import ray
-import time
-from torch.multiprocessing import SimpleQueue
+from torch.multiprocessing import Lock, SimpleQueue
 
 from syllabus.core import Curriculum, decorate_all_functions
 
@@ -26,7 +27,7 @@ class CurriculumWrapper:
 
     @property
     def tasks(self):
-        return self.task_space.tasks   
+        return self.task_space.tasks
 
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
@@ -49,30 +50,115 @@ class CurriculumWrapper:
     def update(self, metrics):
         self.curriculum.update(metrics)
 
-    def batch_update(self, metrics):
+    def update_batch(self, metrics):
         self.curriculum.update_batch(metrics)
 
     def add_task(self, task):
         self.curriculum.add_task(task)
 
 
+class MultiProcessingComponents:
+    def __init__(self, task_queue, update_queue):
+        self.task_queue = task_queue
+        self.update_queue = update_queue
+        self._instance_lock = Lock()
+        self._env_count = ShareableList([0])
+        self._task_count = ShareableList([0])
+        self._update_count = ShareableList([0])
+        self._debug = False
+        self._verbose = False
+
+    def get_id(self):
+        with self._instance_lock:
+            instance_id = self._env_count[0]
+            self._env_count[0] += 1
+        return instance_id
+
+    def put_task(self, task):
+        self.task_queue.put(task)
+        if self._debug:
+            task_count = self.added_task()
+            if self._verbose:
+                print(f"Task added to queue. Task count: {task_count}")
+
+    def get_task(self):
+        task = self.task_queue.get()
+        if self._debug:
+            task_count = self.removed_task()
+            if self._verbose:
+                print(f"Task removed from queue. Task count: {task_count}")
+        return task
+
+    def put_update(self, update):
+        self.update_queue.put(update)
+        if self._debug:
+            update_count = self.added_update()
+            if self._verbose:
+                print(f"Update added to queue. Update count: {update_count}")
+
+    def get_update(self):
+        update = self.update_queue.get()
+        if self._debug:
+            update_count = self.removed_update()
+            if self._verbose:
+                print(f"Update removed from queue. Update count: {update_count}")
+
+        return update
+
+    def added_task(self):
+        with self._instance_lock:
+            self._task_count[0] += 1
+            task_count = self._task_count[0]
+        return task_count
+
+    def removed_task(self):
+        with self._instance_lock:
+            self._task_count[0] -= 1
+            task_count = self._task_count[0]
+        return task_count
+
+    def get_task_count(self):
+        with self._instance_lock:
+            task_count = self._task_count[0]
+        return task_count
+
+    def get_update_count(self):
+        with self._instance_lock:
+            update_count = self._update_count[0]
+        return update_count
+
+    def added_update(self):
+        with self._instance_lock:
+            self._update_count[0] += 1
+            update_count = self._update_count[0]
+        return update_count
+
+    def removed_update(self):
+        with self._instance_lock:
+            self._update_count[0] -= 1
+            update_count = self._update_count[0]
+        return update_count
+
+
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
-    """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper.
-    """
-    def __init__(self,
-                 curriculum: Curriculum,
-                 task_queue: SimpleQueue,
-                 update_queue: SimpleQueue,
-                 sequential_start: bool = True):
+    def __init__(
+        self,
+        curriculum: Curriculum,
+        task_queue: SimpleQueue,
+        update_queue: SimpleQueue,
+        sequential_start: bool = True
+    ):
         super().__init__(curriculum)
         self.task_queue = task_queue
         self.update_queue = update_queue
+        self.sequential_start = sequential_start
+
         self.update_thread = None
         self.should_update = False
         self.added_tasks = []
         self.num_assigned_tasks = 0
-        # TODO: Check if task_space is enumerable
-        self.sequential_start = sequential_start
+
+        self._components = MultiProcessingComponents(task_queue, update_queue)
 
     def start(self):
         """
@@ -86,62 +172,72 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
+        # Process final few updates
+        start = time.time()
+        end = time.time()
+        while end - start < 3 and not self.update_queue.empty():
+            time.sleep(0.5)
+            end = time.time()
+
         self.should_update = False
+        components = self.get_components()
+        components._env_count.shm.close()
+        components._env_count.shm.unlink()
+        components._update_count.shm.close()
+        components._update_count.shm.unlink()
+        components._task_count.shm.close()
+        components._task_count.shm.unlink()
+        # components.task_queue.close()
+        # components.update_queue.close()
 
     def _update_queues(self):
         """
         Continuously process completed tasks and sample new tasks.
         """
         # TODO: Refactor long method? Write tests first
+        # Update curriculum with environment results:
         while self.should_update:
-            # Update curriculum with environment results:
             requested_tasks = 0
-            while self.update_queue is not None and not self.update_queue.empty():
-                batch_updates = self.update_queue.get()
+            while not self.update_queue.empty():
+                batch_updates = self.get_components().get_update()  # Blocks until update is available
+
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
 
+                # Count number of requested tasks
                 for update in batch_updates:
-                    # Count updates with "request_sample" set to True
                     if "request_sample" in update and update["request_sample"]:
                         requested_tasks += 1
-                    # Decode task and task progress
-                    if update["update_type"] == "task_progress":
-                        update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
-                self.batch_update(batch_updates)
+
+                self.update_batch(batch_updates)
 
             # Sample new tasks
             if requested_tasks > 0:
-                # TODO: Move this to curriculum, not sync wrapper
-                # Sequentially sample task_space before using curriculum method
-                if (self.sequential_start and
-                        self.task_space.num_tasks is not None and
-                        self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
-                    # Sample unseen tasks sequentially before using curriculum method
-                    new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
-                else:
-                    new_tasks = self.curriculum.sample(k=requested_tasks)
+                new_tasks = self.curriculum.sample(k=requested_tasks)
                 for i, task in enumerate(new_tasks):
                     message = {
-                        "next_task": self.task_space.encode(task),
-                        "added_tasks": self.added_tasks,
+                        "next_task": task,
                         "sample_id": self.num_assigned_tasks + i,
                     }
-                    self.task_queue.put(message)
-                    self.added_tasks = []
-                self.num_assigned_tasks += requested_tasks
-            time.sleep(0.01)
 
-    def __del__(self):
-        self.stop()
+                    self.get_components().put_task(message)
+                self.num_assigned_tasks += requested_tasks
+                time.sleep(0)
+            else:
+                time.sleep(0.01)
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        writer.add_scalar("curriculum/requested_tasks", self.num_assigned_tasks, step)
+        if self.get_components()._debug:
+            writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
+            writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
     def add_task(self, task):
         super().add_task(task)
         self.added_tasks.append(task)
+
+    def get_components(self):
+        return self._components
 
 
 def remote_call(func):
@@ -169,9 +265,10 @@ def make_multiprocessing_curriculum(curriculum, **kwargs):
     """
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
+
     mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
     mp_curriculum.start()
-    return mp_curriculum, task_queue, update_queue
+    return mp_curriculum
 
 
 @ray.remote

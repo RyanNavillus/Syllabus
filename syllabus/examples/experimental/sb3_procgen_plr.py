@@ -9,7 +9,7 @@ from stable_baselines3.common.vec_env import (DummyVecEnv, VecMonitor,
                                               VecNormalize)
 from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import PrioritizedLevelReplay
+from syllabus.curricula import CentralizedPrioritizedLevelReplay
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from wandb.integration.sb3 import WandbCallback
 
@@ -79,7 +79,7 @@ run = wandb.init(
 
 sample_env = gym.make("procgen-bigfish-v0")
 sample_env = ProcgenTaskWrapper(sample_env)
-curriculum = PrioritizedLevelReplay(sample_env.task_space, num_processes=64, num_steps=256)
+curriculum = CentralizedPrioritizedLevelReplay(sample_env.task_space, num_processes=64, num_steps=256)
 curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
 venv = DummyVecEnv(
     [

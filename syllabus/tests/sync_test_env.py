@@ -1,3 +1,4 @@
+import warnings
 import gymnasium as gym
 from syllabus.core import TaskEnv
 from syllabus.task_space import TaskSpace
@@ -14,10 +15,12 @@ class SyncTestEnv(TaskEnv):
 
     def reset(self, new_task=None):
         if new_task == "error task":
-            print(ValueError("Received error task. This likely means that too many tasks are being requested."))
+            warnings.warn("Received error task. This likely means that too many tasks are being requested.")
+        if new_task is None:
+            warnings.warn("No task provided. Resetting to error task.")
         self.task = new_task
         self._turn = 0
-        return 0.5, 1, False, {"content": "reset", "task": self.task}
+        return (self._turn, None), {"content": "reset", "task": self.task}
 
     def step(self, action):
         self._turn += 1

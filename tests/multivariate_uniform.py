@@ -6,7 +6,7 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            MultitaskWrapper,
                            make_multiprocessing_curriculum,
                            make_ray_curriculum)
-from syllabus.tests import test_native_multiprocess, test_ray_multiprocess
+from syllabus.tests import run_native_multiprocess, run_ray_multiprocess
 from syllabus.curricula import DomainRandomization
 
 N_ENVS = 1
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     curriculum = MultitaskWrapper(curriculum, num_components=16)
     curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum, N_ENVS)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
-    native_syllabus_speed = test_native_multiprocess(curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+    native_syllabus_speed = run_native_multiprocess(curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
     # Test Ray multiprocess speed with Syllabus
@@ -63,5 +63,5 @@ if __name__ == "__main__":
     curriculum = MultitaskWrapper(curriculum, num_components=16)
     curriculum = make_ray_curriculum(curriculum)
     print("\nRUNNING: Ray multiprocess test with Syllabus...")
-    ray_syllabus_speed = test_ray_multiprocess(curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+    ray_syllabus_speed = run_ray_multiprocess(curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
     print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")

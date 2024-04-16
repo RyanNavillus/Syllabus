@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 extras = dict()
-extras['test'] = ['cmake', 'ninja', 'nle>=0.9.0', 'matplotlib>=3.7.1', 'scipy==1.10.0', 'tensorboard>=2.13.0']
+extras['test'] = ['cmake', 'ninja', 'nle>=0.9.0', 'matplotlib>=3.7.1', 'scipy==1.10.0', 'tensorboard>=2.13.0', 'shimmy']
 extras['docs'] = ['sphinx-tabs', 'sphinxcontrib-spelling', 'furo']
 extras['all'] = extras['test'] + extras['docs']
 
@@ -15,8 +15,10 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        'pytest>=8.1.1',
+        'pytest-benchmark>=3.4.1',
         'gymnasium>=0.28.0',
-        'numpy>=1.26.0',
+        'numpy>=1.24.0',
         'ray[rllib]>=2.8.1',
         'torch>=2.0.1',
     ],
