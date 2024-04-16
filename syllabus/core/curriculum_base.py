@@ -181,7 +181,7 @@ class Curriculum:
         """
         raise NotImplementedError
 
-    def _should_use_startup_sampling(self) -> bool:
+    def _should_use_startup_sampling(self) -> bool:  
         return self.warmup_strategy != "none" and self.sampled_tasks < self.warmup_tasks
     
     def _startup_sample(self, k: int) -> List:
