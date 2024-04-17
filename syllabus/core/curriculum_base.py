@@ -251,7 +251,6 @@ class Curriculum:
         n_tasks = len(tasks)
         task_idx = np.random.choice(range(n_tasks), size=k, p=task_dist)
         self.sampled_tasks += k
-        print("Normal")
         return [tasks[i] for i in task_idx]
 
     def log_metrics(self, writer, step=None, log_full_dist=False):
