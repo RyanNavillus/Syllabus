@@ -51,6 +51,7 @@ class CurriculumWrapper:
 
     def log_metrics(self, writer, step=None):
         self.curriculum.log_metrics(writer, step=step)
+        self.curriculum.stat_recorder.log_metrics(writer, step=step)
 
     def update_on_step_batch(self, step_results):
         self.curriculum.update_on_step_batch(step_results)
