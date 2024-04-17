@@ -287,34 +287,37 @@ class TaskSampler:
         return returns
 
     def evaluate_task(self, task, env, get_action_and_value_fn, gamma, gae_lambda):
-
         if env is None:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
+
         obs = env.reset(next_task=task)
         done = False
-        episode_data = {
-            'tasks': [],
-            'masks': [],
-            'rewards': [],
-            'returns': [],
-            'value_preds': [],
-            'policy_logits': []
-        }
+        rewards = []
+        masks = []
+        values = []
 
         while not done:
             action, value = get_action_and_value_fn(obs)
-            obs, rew, done, info = env.step(action)
+            obs, rew, term, trunc, info = env.step(action)
 
-            episode_data['tasks'].append(task)
-            episode_data['masks'].append(not done)
-            episode_data['rewards'].append(rew)
-            episode_data['value_preds'].append(value)
-            episode_data['policy_logits'].append(info['policy_logits'])
+            rewards.append(rew)
+            masks.append(not (term or trunc))
+            values.append(value)
 
-        episode_data['returns'] = self.compute_returns(gamma, gae_lambda, episode_data['rewards'],
-                                                       episode_data['value_preds'])
+            # Check if the episode is done
+            if term or trunc:
+                done = True
 
-        return episode_data
+        # Compute returns after the episode is complete
+        returns = self.compute_returns(gamma, gae_lambda, rewards, values, masks)
+
+        return {
+            "tasks": task,
+            "masks": masks,
+            "rewards": rewards,
+            "value_preds": values,
+            "returns": returns
+        }
 
     def _sample_unseen_level(self):
         sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
@@ -332,26 +335,6 @@ class TaskSampler:
         episode_data = self.evaluate_task(task, self.eval_envs, self.get_action_and_value_fn, self.gamma, self.gae_lambda)
         self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
         return task
-
-    def get_action_and_value_fn(agent_model, device):
-        def action_value_fn(obs):
-            # Convert observation to tensor if necessary
-            obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(device)
-
-            # Forward pass through the agent's model to get action logits and state value
-            with torch.no_grad():
-                action_logits, state_value = agent_model(obs_tensor)
-
-            # Convert action logits to probabilities
-            action_probs = torch.softmax(action_logits, dim=-1)
-
-            # Sample action from the action probabilities
-            action = torch.multinomial(action_probs, num_samples=1).squeeze().item()
-
-            # Return the sampled action and the state value
-            return action, state_value.item()
-
-        return action_value_fn
 
     def sample(self, strategy=None):
         if not strategy:
@@ -391,7 +374,8 @@ class TaskSampler:
                 return self._sample_replay_level()
             else:
                 if self.robust_plr:
-                    return self._evaluate_unseen_level()
+                    self.update_with_episode_data(self._evaluate_unseen_level())
+                    return self.sample(strategy=strategy)
                 else:
                     return self._sample_unseen_level()
 
