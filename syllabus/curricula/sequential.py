@@ -19,7 +19,7 @@ class SequentialCurriculum(Curriculum):
         if len(curriculum_list) == 1:
             warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
 
-        self.curriculum_list = self._parse_curriculum_list(curriculum_list, warmup_strategy=self.warmup_strategy, warmup_samples=self.warmup_tasks)
+        self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
         self._curriculum_index = 0
 
@@ -32,7 +32,7 @@ class SequentialCurriculum(Curriculum):
         self.total_tasks = 0
         self.episode_returns = []
 
-    def _parse_curriculum_list(self, curriculum_list: List[Curriculum], warmup_strategy: str, warmup_samples: int) -> List[Curriculum]:
+    def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
         """ Parse the curriculum list to ensure that all items are curricula. 
         Adds Curriculum objects directly. Wraps task space items in NoopCurriculum objects.
         """
@@ -40,9 +40,11 @@ class SequentialCurriculum(Curriculum):
         for item in curriculum_list:
             if isinstance(item, Curriculum):
                 parsed_list.append(item)
-            elif isinstance(item, TaskSpace) or isinstance(item, list):
-                curriculum_obj = DomainRandomization(item, warmup_strategy=warmup_strategy, warmup_samples=warmup_samples) if isinstance(item, TaskSpace) else DomainRandomization(TaskSpace(len(item), item), warmup_strategy=warmup_strategy, warmup_samples=warmup_samples)
-                parsed_list.append(curriculum_obj)
+            elif isinstance(item, TaskSpace):
+                parsed_list.append(DomainRandomization(item))
+            elif isinstance(item, list):
+                task_space = TaskSpace(len(item), item)
+                parsed_list.append(DomainRandomization(task_space))
             elif self.task_space.contains(item):
                 parsed_list.append(NoopCurriculum(item, self.task_space))
             else:

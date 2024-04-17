@@ -216,10 +216,8 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         self.num_samples += 1
         if self._should_use_startup_sampling():
             return self._startup_sample(k)
-        else:
-            print("PrioritizedLevelReplay")
-            self.sampled_tasks += k
-            return [self._task_sampler.sample() for _ in range(k)]
+        
+        return [self._task_sampler.sample() for _ in range(k)]
 
     def _enumerate_tasks(self, space):
         assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"

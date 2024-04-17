@@ -62,6 +62,7 @@ curricula_2 = [
         }),
         # (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
 ]
+
 test_names_2 = [curriculum_args[0].__name__ for curriculum_args in curricula_2]
 @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula_2, ids=test_names_2)
 def test_multiprocessing_sync_single_process_fix(curriculum, env_fn, args, kwargs):
