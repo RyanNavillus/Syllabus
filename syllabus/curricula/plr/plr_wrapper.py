@@ -312,10 +312,10 @@ class PrioritizedLevelReplay(Curriculum):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        super().log_metrics(writer, step)
+        # super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
         writer.add_scalar("curriculum/score", metrics["score"], step)
-        for task in list(self.task_space.tasks)[:10]:
-            writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
-            writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
+        # for task in list(self.task_space.tasks)[:10]:
+        #     writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
+        #     writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
