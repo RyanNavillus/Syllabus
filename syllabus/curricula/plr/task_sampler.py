@@ -26,6 +26,7 @@ class TaskSampler:
         staleness_transform (str): Transform to apply to task staleness. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
         staleness_temperature (float): Temperature for staleness transform. Increasing temperature makes the sampling distribution more uniform.
         eval_envs (List[gym.Env]): List of evaluation environments
+        action_value_fn (callable): A function that takes an observation as input and returns an action and value.
     """
     def __init__(
         self,
@@ -47,6 +48,7 @@ class TaskSampler:
         staleness_temperature: float = 1.0,
         robust_plr: bool = False,
         eval_envs: List[gym.Env] = None,
+        action_value_fn=None,
     ):
         self.action_space = action_space
         self.tasks = tasks
@@ -67,6 +69,7 @@ class TaskSampler:
         self.staleness_temperature = staleness_temperature
         self.robust_plr = robust_plr
         self.eval_envs = eval_envs
+        self.action_value_fn = action_value_fn
 
         self.unseen_task_weights = np.array([1.0] * self.num_tasks)
         self.task_scores = np.array([0.0] * self.num_tasks, dtype=float)
@@ -286,7 +289,7 @@ class TaskSampler:
             returns[step] = gae + value_preds[step]
         return returns
 
-    def evaluate_task(self, task, env, get_action_and_value_fn, gamma, gae_lambda):
+    def evaluate_task(self, task, env, action_value_fn, gamma, gae_lambda):
         if env is None:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
 
@@ -297,7 +300,7 @@ class TaskSampler:
         values = []
 
         while not done:
-            action, value = get_action_and_value_fn(obs)
+            action, value = action_value_fn(obs)
             obs, rew, term, trunc, info = env.step(action)
 
             rewards.append(rew)
@@ -332,7 +335,7 @@ class TaskSampler:
         task_idx = \
         np.random.choice(range(self.num_tasks), 1, p=self.unseen_task_weights / self.unseen_task_weights.sum())[0]
         task = self.tasks[task_idx]
-        episode_data = self.evaluate_task(task, self.eval_envs, self.get_action_and_value_fn, self.gamma, self.gae_lambda)
+        episode_data = self.evaluate_task(task, self.eval_envs, self.action_value_fn, self.gamma, self.gae_lambda)
         self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
         return task
 
@@ -374,8 +377,19 @@ class TaskSampler:
                 return self._sample_replay_level()
             else:
                 if self.robust_plr:
-                    self.update_with_episode_data(self._evaluate_unseen_level())
-                    return self.sample(strategy=strategy)
+                    while True:
+                        task = self._evaluate_unseen_level()
+                        episode_data = self.evaluate_task(task, self.eval_envs, self.action_value_fn, self.gamma,
+                                                          self.gae_lambda)
+                        self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
+
+                        # Check if we need to sample another unseen level
+                        num_unseen = (self.unseen_task_weights > 0).sum()
+                        proportion_seen = (self.num_tasks - num_unseen) / self.num_tasks
+                        if proportion_seen < self.rho or np.random.rand() >= proportion_seen:
+                            break
+
+                    return task
                 else:
                     return self._sample_unseen_level()
 
