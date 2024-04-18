@@ -166,26 +166,6 @@ class RolloutStorage(object):
 def null(x):
     return None
 
-def get_action_and_value_fn(agent_model, device):
-    def action_value_fn(obs):
-        # Convert observation to tensor if necessary
-        obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(device)
-
-        # Forward pass through the agent's model to get action logits and state value
-        with torch.no_grad():
-            action_logits, state_value = agent_model(obs_tensor)
-
-        # Convert action logits to probabilities
-        action_probs = torch.softmax(action_logits, dim=-1)
-
-        # Sample action from the action probabilities
-        action = torch.multinomial(action_probs, num_samples=1).squeeze().item()
-
-        # Return the sampled action and the state value
-        return action, state_value.item()
-
-    return action_value_fn
-
 
 class PrioritizedLevelReplay(Curriculum):
     """ Prioritized Level Replay (PLR) Curriculum.
@@ -203,6 +183,7 @@ class PrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
         robust_plr (bool): Option to use RobustPLR.
         eval_envs: Evaluation environments for RobustPLR.
+        action_value_fn (callable): A function that takes an observation as input and returns an action and value.
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
     REQUIRES_STEP_UPDATES = True
@@ -226,6 +207,7 @@ class PrioritizedLevelReplay(Curriculum):
         get_action_log_dist=null,
         robust_plr: bool = False,  # Option to use RobustPLR
         eval_envs=None,
+        action_value_fn = None,
         **curriculum_kwargs,
     ):
         # Preprocess curriculum intialization args
@@ -251,10 +233,10 @@ class PrioritizedLevelReplay(Curriculum):
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._robust_plr = robust_plr
         self._eval_envs = eval_envs
-        self._get_action_and_value_fn = get_action_and_value_fn
+        self.action_value_fn = action_value_fn
 
         if robust_plr:
-            self._task_sampler = TaskSampler(self.tasks, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, **task_sampler_kwargs_dict)
+            self._task_sampler = TaskSampler(self.tasks, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, **task_sampler_kwargs_dict)
         else:
             self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
 
@@ -281,12 +263,7 @@ class PrioritizedLevelReplay(Curriculum):
         if self._should_use_startup_sampling():
             return self._startup_sample()
         else:
-            if self._robust_plr:
-                if self._eval_envs is None:
-                    raise ValueError("When robust_plr is enabled, eval_envs must not be None.")
-                return [self._evaluate_task_and_update_score() for _ in range(k)]
-            else:
-                return [self._task_sampler.sample() for _ in range(k)]
+            return [self._task_sampler.sample() for _ in range(k)]
 
     def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
