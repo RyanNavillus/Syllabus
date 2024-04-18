@@ -320,10 +320,11 @@ if __name__ == "__main__":
     stack_size = 3
     frame_size = (5, 5)
     max_cycles = 201  # lasertag has 200 maximum steps by default
-    total_episodes = 500
+    total_episodes = 5000
     n_agents = 2
     num_actions = 5
-    fsp_update_frequency = 50
+    max_agents = 10
+    fsp_update_frequency = total_episodes / max_agents
 
     """ LEARNER SETUP """
     agent = Agent(num_actions=num_actions).to(device)
@@ -333,7 +334,7 @@ if __name__ == "__main__":
     env = LasertagAdversarial(record_video=False)  # 2 agents by default
     env = LasertagParallelWrapper(env=env, n_agents=n_agents)
     agent_curriculum = FictitiousSelfPlay(
-        agent=agent, storage_path="fsp_agents", max_agents=10
+        agent=agent, storage_path="fsp_agents", max_agents=max_agents
     )
     observation_size = env.observation_space["image"].shape[1:]
     env_curriculum = DomainRandomization(TaskSpace(spaces.Discrete(200)))
@@ -355,6 +356,7 @@ if __name__ == "__main__":
 
     agent_tasks, env_tasks = [], []
     agent_c_rew, opp_c_rew = 0, 0
+    n_ends, n_learner_wins = 0, 0
     info = {}
 
     """ TRAINING LOGIC """
@@ -393,6 +395,12 @@ if __name__ == "__main__":
                 next_obs, rewards, terms, truncs, info = env.step(
                     unbatchify(joint_actions, env.possible_agents), device, agent_task
                 )
+
+                opp_reward = rewards["agent_1"]
+                if opp_reward != 0:
+                    n_ends += 1
+                    if opp_reward == -1:
+                        n_learner_wins += 1
 
                 # add to episode storage
                 rb_obs[step] = batchify(next_obs, device)
@@ -521,12 +529,18 @@ if __name__ == "__main__":
         writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), episode)
         writer.add_scalar("losses/approx_kl", approx_kl.item(), episode)
 
+    learner_winrate = n_learner_wins / n_ends
+    wandb.run.summary["n_episodes"] = total_episodes
+    wandb.run.summary["learner_winrate"] = learner_winrate
+    writer.add_scalar("charts/learner_winrate", learner_winrate)
+
     fig = px.histogram(agent_tasks, height=400)
-    fig.update_layout(bargap=0.2)
+    fig.update_layout(bargap=0.2, showlegend=False)
     wandb.log({"charts/agent_tasks": wandb.Html(plotly.io.to_html(fig))})
 
     fig = px.histogram(env_tasks, height=400)
-    fig.update_layout(bargap=0.2)
+    fig.update_layout(bargap=0.2, showlegend=False)
+
     wandb.log({"charts/env_tasks": wandb.Html(plotly.io.to_html(fig))})
 
     writer.close()

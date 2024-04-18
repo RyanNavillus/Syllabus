@@ -302,7 +302,7 @@ class DualCurriculumWrapper:
         self.agent_task = self.agent_mp_curriculum.sample()
         return self.env_task, self.agent_task
 
-    def get_opponent(self, agent_task: AgentTask) -> Tuple[Agent, AgentTask]:
+    def get_opponent(self, agent_task: AgentTask) -> Agent:
         return self.agent_mp_curriculum.curriculum.get_opponent(agent_task)
 
     def update_agent(self, agent: Agent) -> Agent:
@@ -392,6 +392,7 @@ if __name__ == "__main__":
 
     agent_tasks, env_tasks = [], []
     agent_c_rew, opp_c_rew = 0, 0
+    n_ends, n_learner_wins = 0, 0
     info = {}
 
     """ TRAINING LOGIC """
@@ -431,8 +432,12 @@ if __name__ == "__main__":
                     unbatchify(joint_actions, env.possible_agents), device, agent_task
                 )
 
-                if rewards["agent_1"] != 0:
-                    curriculum.update_winrate(info["agent_id"], rewards["agent_1"])
+                opp_reward = rewards["agent_1"]
+                if opp_reward != 0:
+                    n_ends += 1
+                    curriculum.update_winrate(info["agent_id"], opp_reward)
+                    if opp_reward == -1:
+                        n_learner_wins += 1
 
                 # add to episode storage
                 rb_obs[step] = batchify(next_obs, device)
@@ -561,6 +566,11 @@ if __name__ == "__main__":
         writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), episode)
         writer.add_scalar("losses/approx_kl", approx_kl.item(), episode)
 
+    learner_winrate = n_learner_wins / n_ends
+    wandb.run.summary["n_episodes"] = total_episodes
+    wandb.run.summary["learner_winrate"] = learner_winrate
+    writer.add_scalar("charts/learner_winrate", learner_winrate)
+
     # agent tasks
     fig = px.histogram(agent_tasks, height=400)
     fig.update_layout(bargap=0.2)
@@ -593,6 +603,6 @@ if __name__ == "__main__":
 
     fig.update_yaxes(range=[0, 1], row=1, col=1)
     fig.update_layout(showlegend=False)
-    wandb.log({"charts/winrates": wandb.Html(plotly.io.to_html(fig))})
+    wandb.log({"charts/opponent_winrates": wandb.Html(plotly.io.to_html(fig))})
 
     writer.close()
