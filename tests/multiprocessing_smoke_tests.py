@@ -13,7 +13,7 @@ from syllabus.tests import (create_cartpole_env, create_nethack_env,
                             get_test_values, run_native_multiprocess,
                             run_ray_multiprocess, run_single_process)
 
-N_ENVS = 1
+N_ENVS = 2
 N_EPISODES = 20
 
 
@@ -42,25 +42,25 @@ curricula = [
 
 test_names = [curriculum_args[0].__name__ for curriculum_args in curricula]
 
-# @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
-# def test_multiprocessing_sync_single_process(curriculum, env_fn, args, kwargs):
-#     # Test single process speed
-#     print("RUNNING: Python single process test (1 env)...")
-#     single_kwargs = kwargs.copy()
-#     if "num_processes" in single_kwargs:
-#         single_kwargs["num_processes"] = 1
-#     test_curriculum = curriculum(*args, warmup_strategy="random", warmup_samples=10, **kwargs)
-#     native_speed = run_single_process(env_fn, curriculum=test_curriculum, num_envs=1, num_episodes=N_EPISODES)
-#     print(f"PASSED: single process test (1 env) passed: {native_speed:.2f}s")
+@pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
+def test_multiprocessing_sync_single_process(curriculum, env_fn, args, kwargs):
+    # Test single process speed
+    print("RUNNING: Python single process test (1 env)...")
+    single_kwargs = kwargs.copy()
+    if "num_processes" in single_kwargs:
+        single_kwargs["num_processes"] = 1
+    test_curriculum = curriculum(*args, warmup_strategy="random", warmup_samples=10, **kwargs)
+    native_speed = run_single_process(env_fn, curriculum=test_curriculum, num_envs=1, num_episodes=N_EPISODES)
+    print(f"PASSED: single process test (1 env) passed: {native_speed:.2f}s")
 
-# @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
-# def test_multiprocessing_sync_queue_multi_process(curriculum, env_fn, args, kwargs):
-#     # Test Queue multiprocess speed with Syllabus
-#     test_curriculum = curriculum(*args, warmup_strategy="fix", warmup_samples=10, **kwargs)
-#     test_curriculum = make_multiprocessing_curriculum(test_curriculum)
-#     print("\nRUNNING: Python multiprocess test with Syllabus...")
-#     native_syllabus_speed = run_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
-#     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
+@pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
+def test_multiprocessing_sync_queue_multi_process(curriculum, env_fn, args, kwargs):
+    # Test Queue multiprocess speed with Syllabus
+    test_curriculum = curriculum(*args, warmup_strategy="fix", warmup_samples=10, **kwargs)
+    test_curriculum = make_multiprocessing_curriculum(test_curriculum)
+    print("\nRUNNING: Python multiprocess test with Syllabus...")
+    native_syllabus_speed = run_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+    print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
 @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
 def test_multiprocessing_sync_ray_multi_process(curriculum, env_fn, args, kwargs, ray_session):

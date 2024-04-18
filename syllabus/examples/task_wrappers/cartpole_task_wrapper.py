@@ -1,8 +1,10 @@
+import warnings
+
 from gymnasium.spaces import Box
 
 from syllabus.core import TaskWrapper
 from syllabus.task_space import TaskSpace
-import warnings
+
 
 class CartPoleTaskWrapper(TaskWrapper):
     def __init__(self, env):
@@ -20,7 +22,6 @@ class CartPoleTaskWrapper(TaskWrapper):
                 new_task = sorted(new_task)
             self.task = new_task
         return self.env.reset(options={"low": self.task[0], "high": self.task[1]})
-
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         # Return percent of optimal reward

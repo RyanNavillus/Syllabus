@@ -154,7 +154,10 @@ class SequentialCurriculum(Curriculum):
         """
         curriculum = self.current_curriculum
         tasks = curriculum.sample(k)
-
+        
+        if self._should_use_startup_sampling():
+            self.startup_sampled_tasks += curriculum.startup_sampled_tasks
+        
         # Recode tasks into environment task space
         decoded_tasks = [curriculum.task_space.decode(task) for task in tasks]
         recoded_tasks = [self.task_space.encode(task) for task in decoded_tasks]

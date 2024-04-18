@@ -26,7 +26,7 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
-        self.sampled_tasks = 0
+        self.startup_sampled_tasks = 0
         self.warmup_strategy = warmup_strategy
         self.warmup_tasks = warmup_samples
         self.fix_curr_index = 0
@@ -180,7 +180,7 @@ class Curriculum:
         raise NotImplementedError
 
     def _should_use_startup_sampling(self) -> bool:  
-        return self.warmup_strategy != "none" and self.sampled_tasks < self.warmup_tasks
+        return self.warmup_strategy != "none" and self.startup_sampled_tasks < self.warmup_tasks
     
     def _startup_sample(self, k: int) -> List:
         sampled_tasks = []
@@ -225,7 +225,7 @@ class Curriculum:
                 indices = random.choices(range(self.num_tasks), k=k)
                 sampled_tasks = [self.tasks[idx] for idx in indices]
                 
-        self.sampled_tasks += k
+        self.startup_sampled_tasks += k
         return sampled_tasks
 
     def sample(self, k: int = 1) -> Union[List, Any]:
@@ -250,7 +250,6 @@ class Curriculum:
         tasks = self.tasks
         n_tasks = len(tasks)
         task_idx = np.random.choice(range(n_tasks), size=k, p=task_dist)
-        self.sampled_tasks += k
         return [tasks[i] for i in task_idx]
 
     def log_metrics(self, writer, step=None, log_full_dist=False):
