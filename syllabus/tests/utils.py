@@ -56,12 +56,12 @@ def run_episode(env, new_task=None, curriculum=None, env_id=0):
     while not (term or trunc):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
-        if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
+        if curriculum and curriculum.requires_step_updates:
             curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
             curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
         ep_len += 1
-    if curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+    if curriculum and curriculum.requires_episode_updates:
         curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
 
@@ -86,13 +86,13 @@ def run_set_length(env, curriculum=None, episodes=None, steps=None, env_id=0, en
         while not (term or trunc) and n_steps < total_steps:
             action = env.action_space.sample()
             obs, rew, term, trunc, info = env.step(action)
-            if curriculum and curriculum.__class__.REQUIRES_STEP_UPDATES:
+            if curriculum and curriculum.requires_step_updates:
                 curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
                 curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
             ep_rew += rew
             ep_len += 1
             n_steps += 1
-        if (term or trunc) and curriculum and curriculum.__class__.REQUIRES_EPISODE_UPDATES:
+        if (term or trunc) and curriculum and curriculum.requires_episode_updates:
             curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), env_id=env_id)
         n_episodes += 1
         obs = env.reset(new_task=curriculum.sample()[0] if curriculum else None)
@@ -144,7 +144,7 @@ def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None,
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.__class__.REQUIRES_STEP_UPDATES, buffer_size)
+        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
