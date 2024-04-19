@@ -1,35 +1,39 @@
+import os
+import json
 import warnings
 import numpy as np
 from syllabus.task_space import TaskSpace
 from typing import Callable
 from gymnasium.spaces import Discrete #, MultiDiscrete?
-import json
-import os
+from collections import deque, defaultdict
 
 class StatRecorder:
     """
     Individual stat tracking for each task.
     """
 
-    def __init__(self, task_space: TaskSpace, task_names: Callable = None, calc_past_N=None):
+    def __init__(self, task_space: TaskSpace, keep_last_N=10, calc_past_N=None):
         """Initialize the StatRecorder"""
 
         self.task_space = task_space
-        self.task_names = task_names
         self.calc_past_N = calc_past_N
 
         assert isinstance(self.task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         assert isinstance(self.task_space.gym_space, Discrete), f"Only Discrete task spaces are supported. Got {type(task_space.gym_space)}"
+        if calc_past_N and calc_past_N > keep_last_N:
+            warnings.warn("The number of data points requested to calculate statistics exceeds the number of data points kept in memory. Will only use data points available in memory to calculate statistics instead.")
 
         self.tasks = self.task_space.get_tasks()
         self.num_tasks = self.task_space.num_tasks
 
-        self.records = {task: [] for task in self.tasks}
-        self.stats = {task: {} for task in self.tasks}
+        self.episode_returns = {task: deque(maxlen=keep_last_N) for task in self.tasks}
+        self.episode_lengths = {task: deque(maxlen=keep_last_N) for task in self.tasks}
+        self.env_ids = {task: deque(maxlen=keep_last_N) for task in self.tasks}
+        self.stats = {task: defaultdict(float) for task in self.tasks}
 
     def record(self, episode_return: float, episode_length: int, episode_task, env_id=None):
         """
-        Records the length and return of an episode for a given task.
+        Record the length and return of an episode for a given task.
 
         :param episode_task: Identifier for the task
         :param episode_length: Length of the episode, i.e. the total number of steps taken during the episode
@@ -38,37 +42,25 @@ class StatRecorder:
 
         if episode_task in self.tasks:
             if self.calc_past_N:
-                self.records[episode_task].append({
-                    "r": episode_return,
-                    "l": episode_length,
-                    "env_id": env_id
-                })
-                self.records[episode_task] = self.records[episode_task][-self.calc_past_N:]
-                self.stats[episode_task]['mean_r'] = np.mean([record["r"] for record in self.records[episode_task]])
-                self.stats[episode_task]['var_r'] = np.var([record["r"] for record in self.records[episode_task]])
-                self.stats[episode_task]['mean_l'] = np.mean([record["l"] for record in self.records[episode_task]])
-                self.stats[episode_task]['var_l'] = np.var([record["l"] for record in self.records[episode_task]])
-                # only save mean/variance the past N episodes
+                self.episode_returns[episode_task].append(episode_return)
+                self.episode_lengths[episode_task].append(episode_length)
+                self.env_ids[episode_task].append(env_id)
+
+                self.stats[episode_task]['mean_r'] = np.mean(list(self.episode_returns[episode_task])[-self.calc_past_N:]) # I am not sure whether there is a more efficient way to slice to deque. I temperorily convert it to a list then slice it, which should cost O(n)
+                self.stats[episode_task]['var_r'] = np.var(list(self.episode_returns[episode_task])[-self.calc_past_N:])
+                self.stats[episode_task]['mean_l'] = np.mean(list(self.episode_lengths[episode_task])[-self.calc_past_N:])
+                self.stats[episode_task]['var_l'] = np.var(list(self.episode_lengths[episode_task])[-self.calc_past_N:])
             else:
                 # save the mean/variance of all the episodes
-                if 'mean_r' not in self.stats[episode_task].keys():
-                    # the first episode for a task
-                    self.stats[episode_task]['mean_r'] = episode_return
-                    self.stats[episode_task]['mean_r_squared'] = episode_return ** 2
-                    self.stats[episode_task]['var_r'] = 0
-                    self.stats[episode_task]['mean_l'] = episode_length
-                    self.stats[episode_task]['mean_l_squared'] = episode_length ** 2
-                    self.stats[episode_task]['var_l'] = 0
-                else:
-                    N_past = len(self.records[episode_task])
-                    
-                    self.stats[episode_task]['mean_r'] =round((self.stats[episode_task]['mean_r'] * N_past + episode_return) / (N_past + 1), 4)
-                    self.stats[episode_task]['mean_r_squared'] = round((self.stats[episode_task]['mean_r_squared'] * N_past + episode_return ** 2) / (N_past + 1), 4)
-                    self.stats[episode_task]['var_r'] = round(self.stats[episode_task]['mean_r_squared'] - self.stats[episode_task]['mean_r'] ** 2, 4)
-                    
-                    self.stats[episode_task]['mean_l'] = round((self.stats[episode_task]['mean_l'] * N_past + episode_length) / (N_past + 1), 4)
-                    self.stats[episode_task]['mean_l_squared'] = round((self.stats[episode_task]['mean_l_squared'] * N_past + episode_length ** 2) / (N_past + 1), 4)
-                    self.stats[episode_task]['var_l'] = round(self.stats[episode_task]['mean_l_squared'] - self.stats[episode_task]['mean_l'] ** 2, 4)
+                N_past = len(self.episode_returns[episode_task])
+                
+                self.stats[episode_task]['mean_r'] = (self.stats[episode_task]['mean_r'] * N_past + episode_return) / (N_past + 1)
+                self.stats[episode_task]['mean_r_squared'] = (self.stats[episode_task]['mean_r_squared'] * N_past + episode_return ** 2) / (N_past + 1)
+                self.stats[episode_task]['var_r'] = self.stats[episode_task]['mean_r_squared'] - self.stats[episode_task]['mean_r'] ** 2
+                
+                self.stats[episode_task]['mean_l'] = (self.stats[episode_task]['mean_l'] * N_past + episode_length) / (N_past + 1)
+                self.stats[episode_task]['mean_l_squared'] = (self.stats[episode_task]['mean_l_squared'] * N_past + episode_length ** 2) / (N_past + 1)
+                self.stats[episode_task]['var_l'] = self.stats[episode_task]['mean_l_squared'] - self.stats[episode_task]['mean_l'] ** 2
         else:
             raise ValueError("Unknown task")
     
@@ -83,37 +75,19 @@ class StatRecorder:
             if len(self.tasks) > 5 and not log_full_dist:
                 warnings.warn("Only logging stats for 5 tasks.")
                 tasks_to_log = self.tasks[:5]
-            if self.task_names:
-                for idx in tasks_to_log:
-                    if self.stats[idx]:
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_return_mean", self.stats[idx]['mean_r'], step)
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_return_var", self.stats[idx]['var_r'], step)
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_length_mean", self.stats[idx]['mean_l'], step)
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_length_var", self.stats[idx]['var_l'], step)
-                    else:
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_return_mean", 0, step)
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_return_var", 0, step)
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_length_mean", 0, step)
-                        writer.add_scalar(f"stats_per_task/task_{self.task_space.task_name(idx)}_episode_length_var", 0, step)
-            else:
-                for idx in tasks_to_log:
-                    if self.stats[idx]:
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_mean", self.stats[idx]['mean_r'], step)
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_var", self.stats[idx]['var_r'], step)
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_mean", self.stats[idx]['mean_l'], step)
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_var", self.stats[idx]['var_l'], step)
-                    else:
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_mean", 0, step)
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_var", 0, step)
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_mean", 0, step)
-                        writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_var", 0, step)
+            for idx in tasks_to_log:
+                if self.stats[idx]:
+                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_mean", self.stats[idx]['mean_r'], step)
+                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_var", self.stats[idx]['var_r'], step)
+                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_mean", self.stats[idx]['mean_l'], step)
+                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_var", self.stats[idx]['var_l'], step)
         except ImportError:
             warnings.warn("Wandb is not installed. Skipping logging.")
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
     
-    def output_results(self, output_path):
+    def save_statistics(self, output_path):
         """
         Write task-specific statistics to file.
         """
