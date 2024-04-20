@@ -127,12 +127,15 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-        if curriculum is not None:
+
+        if task_wrapper or curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
+
+        if curriculum is not None:
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
@@ -150,38 +153,38 @@ def wrap_vecenv(vecenv):
     return vecenv
 
 
-def slow_level_replay_evaluate(
-    env_name,
-    policy,
-    num_episodes,
-    device,
-    num_levels=0
-):
-    policy.eval()
+# def slow_level_replay_evaluate(
+#     env_name,
+#     policy,
+#     num_episodes,
+#     device,
+#     num_levels=0
+# ):
+#     policy.eval()
 
-    eval_envs = ProcgenEnv(
-        num_envs=1, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
-    )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = wrap_vecenv(eval_envs)
-    eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = []
+#     eval_envs = ProcgenEnv(
+#         num_envs=1, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+#     )
+#     eval_envs = VecExtractDictObs(eval_envs, "rgb")
+#     eval_envs = wrap_vecenv(eval_envs)
+#     eval_obs, _ = eval_envs.reset()
+#     eval_episode_rewards = []
 
-    while len(eval_episode_rewards) < num_episodes:
-        with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+#     while len(eval_episode_rewards) < num_episodes:
+#         with torch.no_grad():
+#             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
 
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys():
-                eval_episode_rewards.append(info['episode']['r'])
+#         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+#         for i, info in enumerate(infos):
+#             if 'episode' in info.keys():
+#                 eval_episode_rewards.append(info['episode']['r'])
 
-    mean_returns = np.mean(eval_episode_rewards)
-    stddev_returns = np.std(eval_episode_rewards)
-    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
-    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    policy.train()
-    return mean_returns, stddev_returns, normalized_mean_returns
+#     mean_returns = np.mean(eval_episode_rewards)
+#     stddev_returns = np.std(eval_episode_rewards)
+#     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+#     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+#     policy.train()
+#     return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def level_replay_evaluate(
@@ -227,6 +230,15 @@ def make_value_fn():
     return get_value
 
 
+def make_action_fn():
+    def get_action(obs):
+        obs = np.array(obs)
+        with torch.no_grad():
+            action, _, _, _ = agent.get_action_and_value(torch.Tensor(obs).to(device))
+            return action.to("cpu").numpy()
+    return get_action
+
+
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -260,6 +272,23 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     print("Device:", device)
 
+    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
+    sample_envs = wrap_vecenv(sample_envs)
+    single_action_space = sample_envs.single_action_space
+    single_observation_space = sample_envs.single_observation_space
+    sample_envs.close()
+
+    # Agent setup
+    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+    agent = ProcgenAgent(
+        single_observation_space.shape,
+        single_action_space.n,
+        arch="large",
+        base_kwargs={'recurrent': False, 'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+
     # Curriculum setup
     curriculum = None
     if args.curriculum:
@@ -285,7 +314,11 @@ if __name__ == "__main__":
             curriculum = DomainRandomization(sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            curriculum = LearningProgressCurriculum(sample_env.task_space)
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(64)]
+            )
+            eval_envs = wrap_vecenv(eval_envs)
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -315,16 +348,6 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
-
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        envs.single_observation_space.shape,
-        envs.single_action_space.n,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -479,15 +502,15 @@ if __name__ == "__main__":
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
-        slow_mean_eval_returns, slow_stddev_eval_returns, slow_normalized_mean_eval_returns = slow_level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
-        )
+        # slow_mean_eval_returns, slow_stddev_eval_returns, slow_normalized_mean_eval_returns = slow_level_replay_evaluate(
+        #     args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+        # )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
-        slow_mean_train_returns, slow_stddev_train_returns, slow_normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
-        )
+        # slow_mean_train_returns, slow_stddev_train_returns, slow_normalized_mean_train_returns = level_replay_evaluate(
+        #     args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+        # )
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -505,16 +528,16 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_mean_episode_return", slow_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_normalized_mean_eval_return", slow_normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_stddev_eval_return", slow_mean_eval_returns, global_step)
+        # writer.add_scalar("test_eval/slow_mean_episode_return", slow_mean_eval_returns, global_step)
+        # writer.add_scalar("test_eval/slow_normalized_mean_eval_return", slow_normalized_mean_eval_returns, global_step)
+        # writer.add_scalar("test_eval/slow_stddev_eval_return", slow_mean_eval_returns, global_step)
 
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
         writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_mean_episode_return", slow_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_normalized_mean_train_return", slow_normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_stddev_train_return", slow_mean_train_returns, global_step)
+        # writer.add_scalar("train_eval/slow_mean_episode_return", slow_mean_train_returns, global_step)
+        # writer.add_scalar("train_eval/slow_normalized_mean_train_return", slow_normalized_mean_train_returns, global_step)
+        # writer.add_scalar("train_eval/slow_stddev_train_return", slow_mean_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
