@@ -29,7 +29,7 @@ class Curriculum:
         self.startup_sampled_tasks = 0
         self.warmup_strategy = warmup_strategy
         self.warmup_tasks = warmup_samples
-        self.fix_curr_index = 0
+        self.warmup_current_index = 0
 
         if self.num_tasks is None:
             warnings.warn("Task space is continuous. Number of warmup tasks can't be compared to the task space size.")
@@ -37,6 +37,22 @@ class Curriculum:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
         elif warmup_samples > self.num_tasks:
             warnings.warn("Number of warmup tasks is larger than task space, some tasks will be replayed during warmup.")
+
+        if warmup_strategy == "sequential" and isinstance(self.task_space.gym_space, Box):
+            dims = self.task_space.gym_space.shape[0]
+            samples_per_dim = int(round(pow(k, 1 / dims)))
+
+            ranges = [
+                np.linspace(self.task_space.gym_space.low[i], self.task_space.gym_space.high[i], samples_per_dim) for i in range(dims)
+            ]
+
+            # Create a grid of samples across the dimensions
+            grid = np.meshgrid(*ranges, indexing='ij')
+            total_samples = samples_per_dim ** dims
+            grid_flattened = [g.flatten() for g in grid]
+            start_index = self.warmup_current_index % total_samples
+            indices = [(start_index + i) % total_samples for i in range(k)]
+
 
     @property
     def requires_step_updates(self) -> bool:
@@ -179,25 +195,15 @@ class Curriculum:
         """
         raise NotImplementedError
 
-    def _should_use_startup_sampling(self) -> bool:  
+    def _should_use_startup_sampling(self) -> bool:
         return self.warmup_strategy != "none" and self.startup_sampled_tasks < self.warmup_tasks
-    
+
     def _startup_sample(self, k: int) -> List:
         sampled_tasks = []
 
         if isinstance(self.task_space.gym_space, Box):
-            if self.warmup_strategy == "fix":
-                dims = self.task_space.gym_space.shape[0]  
-                samples_per_dim = int(round(pow(k, 1/dims)))  
+            if self.warmup_strategy == "sequential":
 
-                ranges = [np.linspace(self.task_space.gym_space.low[i], self.task_space.gym_space.high[i], samples_per_dim) for i in range(dims)]
-                
-                # Create a grid of samples across the dimensions
-                grid = np.meshgrid(*ranges, indexing='ij')
-                total_samples = samples_per_dim ** dims
-                grid_flattened = [g.flatten() for g in grid]
-                start_index = self.fix_curr_index % total_samples
-                indices = [(start_index + i) % total_samples for i in range(k)]
 
                 for index in indices:
                     task = []  # Create an empty list to hold the elements of each task
@@ -205,26 +211,26 @@ class Curriculum:
                         task.append(grid_flattened[dim][index])  # Append the appropriate value from the flattened grid
                     sampled_tasks.append(tuple(task))  # Convert the list to a tuple and append to sampled_tasks
 
-                self.fix_curr_index = (self.fix_curr_index + k) % total_samples
+                self.warmup_current_index = (self.warmup_current_index + k) % total_samples
 
             elif self.warmup_strategy == "random":
                 sampled_tasks = [self.task_space.gym_space.sample() for _ in range(k)]
-                
+
         else:
-            if self.warmup_strategy == "fix":
-                if self.fix_curr_index + k > self.num_tasks:
-                    sampled_tasks = self.tasks[self.fix_curr_index:self.num_tasks]
-                    self.fix_curr_index = self.fix_curr_index + k - self.num_tasks
-                    sampled_tasks.extend(self.tasks[0:(self.fix_curr_index)])
+            if self.warmup_strategy == "sequential":
+                if self.warmup_current_index + k > self.num_tasks:
+                    sampled_tasks = self.tasks[self.warmup_current_index:self.num_tasks]
+                    self.warmup_current_index = self.warmup_current_index + k - self.num_tasks
+                    sampled_tasks.extend(self.tasks[0:(self.warmup_current_index)])
                 else:
-                    sampled_tasks = self.tasks[self.fix_curr_index:self.fix_curr_index + k]
-                    self.fix_curr_index += k
+                    sampled_tasks = self.tasks[self.warmup_current_index:self.warmup_current_index + k]
+                    self.warmup_current_index += k
 
             elif self.warmup_strategy == "random":
                 # Allows sampling with replacement, making duplicates possible if k > num_tasks.
                 indices = random.choices(range(self.num_tasks), k=k)
                 sampled_tasks = [self.tasks[idx] for idx in indices]
-                
+
         self.startup_sampled_tasks += k
         return sampled_tasks
 
@@ -240,10 +246,10 @@ class Curriculum:
             tasks = self._startup_sample(k)
             # Check if the startup sampling has satisfied the request or if there's no progress (no tasks returned)
             if len(tasks) > 0 and len(tasks) < k:  # Check if we need to add more tasks
-                additional_tasks = self.sample(k=k-len(tasks))
-                tasks.extend(additional_tasks) 
+                additional_tasks = self.sample(k=k - len(tasks))
+                tasks.extend(additional_tasks)
             return tasks
-        
+
         task_dist = self._sample_distribution()
 
         # Normal sampling process
