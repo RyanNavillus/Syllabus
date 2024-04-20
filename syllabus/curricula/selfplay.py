@@ -62,9 +62,11 @@ class FictitiousSelfPlay(Curriculum):
         self.update_agent(agent)  # creates the initial opponent
 
     def update_agent(self, agent):
-        """Saves the current agent instance to a pickle file."""
+        """
+        Saves the current agent instance to a pickle file.
+        When the `max_agents` limit is met, older agent checkpoints are overwritten.
+        """
         if self.n_stored_agents < self.max_agents:
-            # TODO: define the expected behaviour when the limit is exceeded
             joblib.dump(
                 agent,
                 filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.n_stored_agents}.pkl",
@@ -95,7 +97,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
-        self.n_stored_agents = 0
+        self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
         self.update_agent(agent)  # creates the initial opponent
@@ -112,13 +114,11 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         Saves the current agent instance to a pickle file and update
         its priority.
         """
-        if self.n_stored_agents < self.max_agents:
-            # TODO: define the expected behaviour when the limit is exceeded
-            joblib.dump(
-                agent,
-                filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.n_stored_agents}.pkl",
-            )
-            self.n_stored_agents += 1
+        joblib.dump(
+            agent,
+            filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.current_agent_index % self.max_agents}.pkl",
+        )
+        self.current_agent_index += 1
 
     def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
         """
@@ -147,9 +147,9 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
     def sample(self, k=1):
         logits = [
             self.history[agent_id]["winrate"]
-            for agent_id in range(self.n_stored_agents)
+            for agent_id in range(self.current_agent_index)
         ]
         return np.random.choice(
-            np.arange(self.n_stored_agents),
+            np.arange(self.current_agent_index),
             p=softmax(logits),
         )

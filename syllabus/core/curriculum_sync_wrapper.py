@@ -1,17 +1,18 @@
 import threading
+import time
 from functools import wraps
 from typing import List, Tuple
 
 import ray
-import time
 from torch.multiprocessing import SimpleQueue
 
-from syllabus.core import Curriculum, decorate_all_functions
+from syllabus.core import Curriculum
+from syllabus.core.utils import decorate_all_functions
 
 
 class CurriculumWrapper:
-    """Wrapper class for adding multiprocessing synchronization to a curriculum.
-    """
+    """Wrapper class for adding multiprocessing synchronization to a curriculum."""
+
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
         self.task_space = curriculum.task_space
@@ -26,7 +27,7 @@ class CurriculumWrapper:
 
     @property
     def tasks(self):
-        return self.task_space.tasks   
+        return self.task_space.tasks
 
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
@@ -57,13 +58,15 @@ class CurriculumWrapper:
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
-    """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper.
-    """
-    def __init__(self,
-                 curriculum: Curriculum,
-                 task_queue: SimpleQueue,
-                 update_queue: SimpleQueue,
-                 sequential_start: bool = True):
+    """Wrapper which sends tasks and receives updates from environments wrapped in a corresponding MultiprocessingSyncWrapper."""
+
+    def __init__(
+        self,
+        curriculum: Curriculum,
+        task_queue: SimpleQueue,
+        update_queue: SimpleQueue,
+        sequential_start: bool = True,
+    ):
         super().__init__(curriculum)
         self.task_queue = task_queue
         self.update_queue = update_queue
@@ -78,7 +81,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Start the thread that reads the complete_queue and reads the task_queue.
         """
-        self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
+        self.update_thread = threading.Thread(
+            name="update", target=self._update_queues, daemon=True
+        )
         self.should_update = True
         self.update_thread.start()
 
@@ -106,18 +111,27 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                         requested_tasks += 1
                     # Decode task and task progress
                     if update["update_type"] == "task_progress":
-                        update["metrics"] = (self.task_space.decode(update["metrics"][0]), update["metrics"][1])
+                        update["metrics"] = (
+                            self.task_space.decode(update["metrics"][0]),
+                            update["metrics"][1],
+                        )
                 self.batch_update(batch_updates)
 
             # Sample new tasks
             if requested_tasks > 0:
                 # TODO: Move this to curriculum, not sync wrapper
                 # Sequentially sample task_space before using curriculum method
-                if (self.sequential_start and
-                        self.task_space.num_tasks is not None and
-                        self.num_assigned_tasks + requested_tasks < self.task_space.num_tasks):
+                if (
+                    self.sequential_start
+                    and self.task_space.num_tasks is not None
+                    and self.num_assigned_tasks + requested_tasks
+                    < self.task_space.num_tasks
+                ):
                     # Sample unseen tasks sequentially before using curriculum method
-                    new_tasks = self.task_space.list_tasks()[self.num_assigned_tasks:self.num_assigned_tasks + requested_tasks]
+                    new_tasks = self.task_space.list_tasks()[
+                        self.num_assigned_tasks : self.num_assigned_tasks
+                        + requested_tasks
+                    ]
                 else:
                     new_tasks = self.curriculum.sample(k=requested_tasks)
                 for i, task in enumerate(new_tasks):
@@ -149,6 +163,7 @@ def remote_call(func):
 
     Note that this causes functions to block, and should be only used for operations that do not require parallelization.
     """
+
     @wraps(func)
     def wrapper(self, *args, **kw):
         f_name = func.__name__
@@ -159,6 +174,7 @@ def remote_call(func):
         if child_func == parent_func:
             curriculum_func = getattr(self.curriculum, f_name)
             return ray.get(curriculum_func.remote(*args, **kw))
+
     return wrapper
 
 
@@ -168,7 +184,9 @@ def make_multiprocessing_curriculum(curriculum, **kwargs):
     """
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
+    mp_curriculum = MultiProcessingCurriculumWrapper(
+        curriculum, task_queue, update_queue, **kwargs
+    )
     mp_curriculum.start()
     return mp_curriculum, task_queue, update_queue
 
@@ -190,6 +208,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
     for convenience.
     # TODO: Implement the Curriculum methods explicitly
     """
+
     def __init__(self, curriculum, actor_name="curriculum") -> None:
         super().__init__(curriculum)
         self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
@@ -202,7 +221,9 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(
+        self, step_results: List[Tuple[int, int, int, int]]
+    ) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
     def add_task(self, task):
