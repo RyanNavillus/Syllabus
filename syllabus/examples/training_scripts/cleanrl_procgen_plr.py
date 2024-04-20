@@ -171,16 +171,16 @@ def full_level_replay_evaluate(
         eval_envs.seed(seed, i)
 
     eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = []
+    eval_episode_rewards = [-1] * num_episodes
 
-    while len(eval_episode_rewards) < num_episodes:
+    while -1 in eval_episode_rewards:
         with torch.no_grad():
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
 
         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
         for i, info in enumerate(infos):
-            if 'episode' in info.keys():
-                eval_episode_rewards.append(info['episode']['r'])
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
+                eval_episode_rewards[i] = info['episode']['r']
 
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
