@@ -2,16 +2,15 @@
 import pytest
 from nle.env.tasks import NetHackScore, NetHackScout, NetHackStaircase
 
-from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.curricula import (AnnealingBoxCurriculum,
                                 CentralizedPrioritizedLevelReplay,
                                 DomainRandomization,
-                                LearningProgressCurriculum, NoopCurriculum,
-                                PrioritizedLevelReplay, SequentialCurriculum,
+                                LearningProgressCurriculum,
+                                NoopCurriculum,
+                                PrioritizedLevelReplay,
+                                SequentialCurriculum,
                                 SimpleBoxCurriculum)
-from syllabus.tests import (create_cartpole_env, create_nethack_env,
-                            get_test_values, run_native_multiprocess,
-                            run_ray_multiprocess, run_single_process, run_episode)
+from syllabus.tests import create_cartpole_env, create_nethack_env, get_test_values, run_episode
 
 N_ENVS = 1
 N_EPISODES = 34
@@ -25,7 +24,9 @@ curricula = [
     (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
     # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
     (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {
-        "device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS
+        "device": "cpu",
+        "suppress_usage_warnings": True,
+        "num_processes": N_ENVS
     }),
     (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
         "get_value": get_test_values,
@@ -40,14 +41,29 @@ curricula = [
         'total_steps': [10]
     }),
     (SequentialCurriculum, create_nethack_env, ([
-        CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS, warmup_strategy = 'random', warmup_samples = 1),
-        PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048, warmup_strategy = 'fix', warmup_samples = 1),
+        CentralizedPrioritizedLevelReplay(
+            nethack_env.task_space,
+            device="cpu",
+            suppress_usage_warnings=True,
+            num_processes=N_ENVS
+        ),
+        PrioritizedLevelReplay(
+            nethack_env.task_space,
+            nethack_env.observation_space,
+            get_value=get_test_values,
+            device="cpu",
+            num_processes=N_ENVS,
+            num_steps=2048
+        ),
         NetHackScore,
         [NetHackScout, NetHackStaircase]
     ], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
 ]
 
+
 test_names = [curriculum_args[0].__name__ for curriculum_args in curricula]
+
+
 @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
 def test_multiprocessing_sync_single_process_fix(curriculum, env_fn, args, kwargs):
     # Test single process speed
@@ -71,7 +87,7 @@ def test_multiprocessing_sync_single_process_fix(curriculum, env_fn, args, kwarg
     env.close()
     print("PASSED: single process test on fix sampling (1 env) passed")
 
-test_names = [curriculum_args[0].__name__ for curriculum_args in curricula]
+
 @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
 def test_multiprocessing_sync_single_process_random(curriculum, env_fn, args, kwargs):
     # Test single process speed

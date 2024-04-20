@@ -1,15 +1,15 @@
-import typing
-from typing import Any, List, Union, Sequence, SupportsFloat, SupportsInt, Tuple
-import numpy as np
+from typing import Any, List, SupportsFloat, SupportsInt, Tuple, Union
 
+import numpy as np
 from gymnasium.spaces import Box
+
 from syllabus.core import Curriculum
+
 
 class AnnealingBoxCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = True
     REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
-
 
     def __init__(
         self,
@@ -50,10 +50,8 @@ class AnnealingBoxCurriculum(Curriculum):
         # Linear annealing from start_values to end_values
         if self._should_use_startup_sampling():
             return self._startup_sample(k)
-        
-        annealed_values = (
-                self.start_values + (self.end_values - self.start_values) *
-                np.minimum(self.current_step, self.total_steps) / self.total_steps
-        )
+
+        completed_ratio = np.minimum(self.current_step, self.total_steps) / self.total_steps
+        annealed_values = self.start_values + (self.end_values - self.start_values) * completed_ratio
 
         return [annealed_values.copy() for _ in range(k)]

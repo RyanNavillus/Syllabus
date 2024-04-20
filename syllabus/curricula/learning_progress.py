@@ -1,7 +1,6 @@
 import math
 import random
 import warnings
-from collections import defaultdict
 from typing import List
 
 import numpy as np
@@ -14,7 +13,7 @@ from syllabus.task_space import TaskSpace
 
 class LearningProgressCurriculum(Curriculum):
     """
-    Provides an interface for tracking success rates of discrete tasks and sampling tasks 
+    Provides an interface for tracking success rates of discrete tasks and sampling tasks
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
