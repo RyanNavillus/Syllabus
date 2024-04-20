@@ -150,20 +150,26 @@ def wrap_vecenv(vecenv):
     return vecenv
 
 
-def slow_level_replay_evaluate(
+def full_level_replay_evaluate(
     env_name,
     policy,
     num_episodes,
     device,
-    num_levels=0
+    num_levels=1    # Not used
 ):
     policy.eval()
 
     eval_envs = ProcgenEnv(
-        num_envs=1, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
     )
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
+
+    # Seed environments
+    seeds = [int.from_bytes(os.urandom(3), byteorder="little") for _ in range(num_episodes)]
+    for i, seed in enumerate(seeds):
+        eval_envs.seed(seed, i)
+
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
 
@@ -479,13 +485,13 @@ if __name__ == "__main__":
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
-        slow_mean_eval_returns, slow_stddev_eval_returns, slow_normalized_mean_eval_returns = slow_level_replay_evaluate(
+        full_mean_eval_returns, full_stddev_eval_returns, full_normalized_mean_eval_returns = full_level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
-        slow_mean_train_returns, slow_stddev_train_returns, slow_normalized_mean_train_returns = level_replay_evaluate(
+        full_mean_train_returns, full_stddev_train_returns, full_normalized_mean_train_returns = full_level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
@@ -504,17 +510,17 @@ if __name__ == "__main__":
 
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_mean_episode_return", slow_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_normalized_mean_eval_return", slow_normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_stddev_eval_return", slow_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_mean_episode_return", full_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_normalized_mean_eval_return", full_normalized_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_stddev_eval_return", full_stddev_eval_returns, global_step)
 
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_mean_episode_return", slow_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_normalized_mean_train_return", slow_normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_stddev_train_return", slow_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
+        writer.add_scalar("train_eval/full_mean_episode_return", full_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/full_normalized_mean_train_return", full_normalized_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/full_stddev_train_return", full_stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
