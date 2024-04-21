@@ -206,7 +206,7 @@ class PrioritizedLevelReplay(Curriculum):
         get_value=null,
         get_action_log_dist=null,
         robust_plr: bool = False,  # Option to use RobustPLR
-        eval_envs=None,
+        eval_envs: List[gym.Env] = None,
         action_value_fn = None,
         **curriculum_kwargs,
     ):
@@ -235,10 +235,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._eval_envs = eval_envs
         self.action_value_fn = action_value_fn
 
-        if robust_plr:
-            self._task_sampler = TaskSampler(self.tasks, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, **task_sampler_kwargs_dict)
-        else:
-            self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, **task_sampler_kwargs_dict)
 
         self._rollouts = RolloutStorage(
             self._num_steps,
