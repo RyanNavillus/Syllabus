@@ -217,7 +217,7 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
-        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) 
+        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) or isinstance(self.gym_space, Tuple)
         return self.decode(self.gym_space.sample())
 
     def list_tasks(self):
