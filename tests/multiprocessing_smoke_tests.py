@@ -1,5 +1,6 @@
 """ Test curriculum synchronization across multiple processes. """
 import pytest
+import gym
 from nle.env.tasks import NetHackScore, NetHackScout, NetHackStaircase
 
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
@@ -9,13 +10,12 @@ from syllabus.curricula import (AnnealingBoxCurriculum,
                                 LearningProgressCurriculum, NoopCurriculum,
                                 PrioritizedLevelReplay, SequentialCurriculum,
                                 SimpleBoxCurriculum)
-from syllabus.tests import (create_cartpole_env, create_nethack_env,
+from syllabus.tests import (create_cartpole_env, create_nethack_env, get_action_value,
                             get_test_values, run_native_multiprocess,
                             run_ray_multiprocess, run_single_process)
 
 N_ENVS = 2
 N_EPISODES = 2
-
 
 nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
@@ -29,7 +29,10 @@ curricula = [
            "get_value": get_test_values,
            "device": "cpu",
            "num_processes": N_ENVS,
-           "num_steps": 2048
+           "num_steps": 2048,
+           "robust_plr": True,
+           "eval_envs": gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)]),
+           "action_value_fn": get_action_value
         }),
         (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
         (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
