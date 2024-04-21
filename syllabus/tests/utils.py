@@ -189,6 +189,10 @@ def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, nu
 def get_test_values(x):
     return torch.unsqueeze(torch.Tensor(np.array([0] * len(x))), -1)
 
+def get_action_value(obs):
+    actions = np.zeros(len(obs))
+    values = np.zeros(len(obs))
+    return actions, values
 
 # Sync Test Environment
 def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
