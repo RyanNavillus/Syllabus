@@ -179,67 +179,6 @@ class TaskSampler:
     def requires_value_buffers(self):
         return self.strategy in ["gae", "value_l1", "one_step_td_error"]
 
-    def _update_with_rollouts(self, rollouts, score_function):
-        tasks = rollouts.tasks
-        if not self.requires_value_buffers:
-            policy_logits = rollouts.action_log_dist
-        done = ~(rollouts.masks > 0)
-        total_steps, num_actors = rollouts.tasks.shape[:2]
-
-        for actor_index in range(num_actors):
-            done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
-            start_t = 0
-
-            for t in done_steps:
-                if not start_t < total_steps:
-                    break
-
-                if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
-                    continue
-
-                # If there is only 1 step, we can't calculate the one-step td error
-                if self.strategy == "one_step_td_error" and t - start_t <= 1:
-                    continue
-
-                task_idx_t = tasks[start_t, actor_index].item()
-
-                # Store kwargs for score function
-                score_function_kwargs = {}
-                if self.requires_value_buffers:
-                    score_function_kwargs["returns"] = rollouts.returns[start_t:t, actor_index]
-                    score_function_kwargs["rewards"] = rollouts.rewards[start_t:t, actor_index]
-                    score_function_kwargs["value_preds"] = rollouts.value_preds[start_t:t, actor_index]
-                else:
-                    episode_logits = policy_logits[start_t:t, actor_index]
-                    score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
-                score = score_function(**score_function_kwargs)
-                num_steps = len(rollouts.tasks[start_t:t, actor_index])
-                # TODO: Check that task_idx_t is correct
-                self.update_task_score(actor_index, task_idx_t, score, num_steps)
-
-                start_t = t.item()
-            if start_t < total_steps:
-                # If there is only 1 step, we can't calculate the one-step td error
-                if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
-                    continue
-                # TODO: Check this too
-                task_idx_t = tasks[start_t, actor_index].item()
-
-                # Store kwargs for score function
-                score_function_kwargs = {}
-                if self.requires_value_buffers:
-                    score_function_kwargs["returns"] = rollouts.returns[start_t:, actor_index]
-                    score_function_kwargs["rewards"] = rollouts.rewards[start_t:, actor_index]
-                    score_function_kwargs["value_preds"] = rollouts.value_preds[start_t:, actor_index]
-                else:
-                    episode_logits = policy_logits[start_t:, actor_index]
-                    score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
-
-                score = score_function(**score_function_kwargs)
-                self._last_score = score
-                num_steps = len(rollouts.tasks[start_t:, actor_index])
-                self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
-
     def after_update(self):
         # Reset partial updates, since weights have changed, and thus logits are now stale
         for actor_index in range(self.partial_task_scores.shape[0]):
@@ -322,15 +261,6 @@ class TaskSampler:
             "returns": returns
         }
 
-    def _sample_unseen_level(self):
-        sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
-        task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
-        task = self.tasks[task_idx]
-
-        self._update_staleness(task_idx)
-
-        return task
-
     def _evaluate_unseen_level(self):
         task_idx = \
         np.random.choice(range(self.num_tasks), 1, p=self.unseen_task_weights / self.unseen_task_weights.sum())[0]
@@ -377,19 +307,8 @@ class TaskSampler:
                 return self._sample_replay_level()
             else:
                 if self.robust_plr:
-                    while True:
-                        task = self._evaluate_unseen_level()
-                        episode_data = self.evaluate_task(task, self.eval_envs, self.action_value_fn, self.gamma,
-                                                          self.gae_lambda)
-                        self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
-
-                        # Check if we need to sample another unseen level
-                        num_unseen = (self.unseen_task_weights > 0).sum()
-                        proportion_seen = (self.num_tasks - num_unseen) / self.num_tasks
-                        if proportion_seen < self.rho or np.random.rand() >= proportion_seen:
-                            break
-
-                    return task
+                    self.update_with_episode_data(self._evaluate_unseen_level())
+                    return self.sample(strategy=strategy)
                 else:
                     return self._sample_unseen_level()
 
@@ -398,9 +317,13 @@ class TaskSampler:
                 f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
 
     def update_with_episode_data(self, episode_data, score_function):
-        tasks = episode_data['tasks']
-        done = ~(episode_data['masks'] > 0)
-        total_steps, num_actors = episode_data['tasks'].shape[:2]
+        def compute_episode_variables(episode_data):
+            tasks = episode_data['tasks']
+            done = ~(episode_data['masks'] > 0)
+            total_steps, num_actors = episode_data['tasks'].shape[:2]
+            return tasks, done, total_steps, num_actors
+
+        tasks, done, total_steps, num_actors = compute_episode_variables(episode_data)
 
         for actor_index in range(num_actors):
             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
@@ -410,7 +333,7 @@ class TaskSampler:
                 if not start_t < total_steps:
                     break
 
-                if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
+                if t == 0:  # if t is 0, then this done step caused a full update of previous last cycle
                     continue
 
                 task_idx_t = tasks[start_t, actor_index].item()
@@ -433,6 +356,16 @@ class TaskSampler:
                 self._last_score = score
                 num_steps = len(episode_data['tasks'][start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
+
+    def rollouts_to_episode_data(self, rollouts):
+        episode_data = {
+            "tasks": rollouts.tasks,
+            "returns": rollouts.returns,
+            "value_preds": rollouts.value_preds,
+            "masks": rollouts.masks
+        }
+
+        return episode_data
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)
