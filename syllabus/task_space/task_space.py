@@ -7,19 +7,50 @@ from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Sp
 
 class TaskSpace():
     def __init__(self, gym_space: Union[Space, int], tasks=None):
-        if isinstance(gym_space, int):
-            # Syntactic sugar for discrete space
-            gym_space = Discrete(gym_space)
 
         self.gym_space = gym_space
 
-        # Autogenerate task names for discrete spaces
-        if isinstance(gym_space, Discrete):
-            if tasks is None:
-                tasks = range(gym_space.n)
+        if not isinstance(gym_space, Space):
+            gym_space = self._create_gym_space(gym_space)
+
+        # Autogenerate task names
+        if tasks is None:
+            tasks = self._generate_task_names(gym_space)
 
         self._tasks = set(tasks) if tasks is not None else None
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
+
+    def _create_gym_space(self, gym_space):
+        if isinstance(gym_space, int):
+            # Syntactic sugar for discrete space
+            gym_space = Discrete(gym_space)
+        elif isinstance(gym_space, tuple):
+            # Syntactic sugar for discrete space
+            gym_space = MultiDiscrete(gym_space)
+        elif isinstance(gym_space, list):
+            # Syntactic sugar for tuple space
+            spaces = []
+            for i, value in enumerate(gym_space):
+                spaces[i] = self._create_gym_space(value)
+            gym_space = Tuple(spaces)
+        elif isinstance(gym_space, dict):
+            # Syntactic sugar for dict space
+            spaces = {}
+            for key, value in gym_space.items():
+                spaces[key] = self._create_gym_space(value)
+            gym_space = Dict(spaces)
+        return gym_space
+
+    def _generate_task_names(self, gym_space):
+        if isinstance(gym_space, Discrete):
+            tasks = tuple(range(gym_space.n))
+        elif isinstance(gym_space, MultiDiscrete):
+            tasks = [tuple(range(dim)) for dim in gym_space.nvec]
+        elif isinstance(gym_space, Tuple):
+            tasks = [self._generate_task_names(value) for value in gym_space.spaces]
+        elif isinstance(gym_space, Dict):
+            tasks = {key: tuple(self._generate_task_names(value)) for key, value in gym_space.spaces.items()}
+        return tasks
 
     def _make_task_encoder(self, space, tasks):
         if isinstance(space, Discrete):
@@ -28,14 +59,46 @@ class TaskSpace():
             self._decode_map = {i: task for i, task in enumerate(tasks)}
             encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
             decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
+
+        elif isinstance(space, Box):
+            encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
+            decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
         elif isinstance(space, Tuple):
-            for i, task in enumerate(tasks):
-                assert self.count_tasks(space.spaces[i]) == len(task), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
+
+            assert len(space.spaces) == len(tasks), f"Number of task ({len(space.spaces)})must match options in Tuple ({len(tasks)})"
             results = [list(self._make_task_encoder(s, t)) for (s, t) in zip(space.spaces, tasks)]
             encoders = [r[0] for r in results]
             decoders = [r[1] for r in results]
             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+
+        elif isinstance(space, MultiDiscrete):
+            assert len(space.nvec) == len(tasks), f"Number of steps in a tasks ({len(space.nvec)}) must match number of discrete options ({len(tasks)})"
+
+            combinations = [p for p in itertools.product(*tasks)]
+            encode_map = {task: i for i, task in enumerate(combinations)}
+            decode_map = {i: task for i, task in enumerate(combinations)}
+
+            encoder = lambda task: encode_map[task] if task in encode_map else None
+            decoder = lambda task: decode_map[task] if task in decode_map else None
+
+        elif isinstance(space, Dict):
+
+            def helper(task, spaces, tasks, action="encode"):
+                # Iteratively encodes or decodes each space in the dictionary
+                output = {}
+                if (isinstance(spaces, dict) or isinstance(spaces, Dict)):
+                    for key, value in spaces.items():
+                        if (isinstance(value, dict) or isinstance(value, Dict)):
+                            temp = helper(task[key], value, tasks[key], action)
+                            output.update({key: temp})
+                        else:
+                            encoder, decoder = self._make_task_encoder(value, tasks[key])
+                            output[key] = encoder(task[key]) if action == "encode" else decoder(task[key])
+                return output
+
+            encoder = lambda task: helper(task, space.spaces, tasks, "encode")
+            decoder = lambda task: helper(task, space.spaces, tasks, "decode")
         else:
             encoder = lambda task: task
             decoder = lambda task: task
@@ -152,6 +215,7 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
+        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) 
         return self.decode(self.gym_space.sample())
 
     def list_tasks(self):
