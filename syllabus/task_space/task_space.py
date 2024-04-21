@@ -8,10 +8,10 @@ from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Sp
 class TaskSpace():
     def __init__(self, gym_space: Union[Space, int], tasks=None):
 
-        self.gym_space = gym_space
-
         if not isinstance(gym_space, Space):
             gym_space = self._create_gym_space(gym_space)
+
+        self.gym_space = gym_space
 
         # Autogenerate task names
         if tasks is None:
@@ -50,6 +50,8 @@ class TaskSpace():
             tasks = [self._generate_task_names(value) for value in gym_space.spaces]
         elif isinstance(gym_space, Dict):
             tasks = {key: tuple(self._generate_task_names(value)) for key, value in gym_space.spaces.items()}
+        else:
+            tasks = None
         return tasks
 
     def _make_task_encoder(self, space, tasks):
