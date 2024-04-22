@@ -29,6 +29,14 @@ class CurriculumWrapper:
     def tasks(self):
         return self.task_space.tasks
 
+    @property
+    def requires_step_updates(self):
+        return self.curriculum.requires_step_updates
+
+    @property
+    def requires_episode_updates(self):
+        return self.curriculum.requires_episode_updates
+
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
 
