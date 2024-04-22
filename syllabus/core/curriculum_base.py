@@ -41,6 +41,22 @@ class Curriculum:
             )
 
     @property
+    def requires_step_updates(self) -> bool:
+        """Returns whether the curriculum requires step updates from the environment.
+
+        :return: True if the curriculum requires step updates, False otherwise
+        """
+        return self.__class__.REQUIRES_STEP_UPDATES
+
+    @property
+    def requires_episode_updates(self) -> bool:
+        """Returns whether the curriculum requires episode updates from the environment.
+
+        :return: True if the curriculum requires episode updates, False otherwise
+        """
+        return self.__class__.REQUIRES_EPISODE_UPDATES
+
+    @property
     def num_tasks(self) -> int:
         """Counts the number of tasks in the task space.
 
@@ -63,7 +79,7 @@ class Curriculum:
         )
 
     def update_task_progress(
-        self, task: typing.Any, progress: Tuple[float, bool]
+        self, task: typing.Any, progress: Tuple[float, bool], env_id: int = None
     ) -> None:
         """Update the curriculum with a task and its progress.
 
@@ -73,7 +89,14 @@ class Curriculum:
         self.completed_tasks += 1
 
     def update_on_step(
-        self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict
+        self,
+        task: typing.Any,
+        obs: typing.Any,
+        rew: float,
+        term: bool,
+        trunc: bool,
+        info: dict,
+        env_id: int = None,
     ) -> None:
         """Update the curriculum with the current step results from the environment.
 
@@ -89,7 +112,9 @@ class Curriculum:
         )
 
     def update_on_step_batch(
-        self, step_results: List[typing.Tuple[int, int, int, int]]
+        self,
+        step_results: List[typing.Tuple[Any, Any, int, int, int, int]],
+        env_id: int = None,
     ) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
@@ -98,17 +123,27 @@ class Curriculum:
 
         :param step_results: List of step results
         """
-        for step_result in step_results:
-            self.update_on_step(*step_result)
+        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
+        for i in range(len(obs)):
+            self.update_on_step(
+                tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id
+            )
 
-    def update_on_episode(self, episode_return: float, trajectory: List = None) -> None:
+    def update_on_episode(
+        self,
+        episode_return: float,
+        episode_length: int,
+        episode_task: Any,
+        env_id: int = None,
+    ) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return
         :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
         :raises NotImplementedError:
         """
-        raise NotImplementedError("Not yet implemented.")
+        # TODO: Add update_on_episode option similar to update-on_step
+        pass
 
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
@@ -132,18 +167,23 @@ class Curriculum:
 
         update_type = update_data["update_type"]
         args = update_data["metrics"]
+        env_id = update_data["env_id"] if "env_id" in update_data else None
 
         if update_type == "step":
-            self.update_on_step(*args)
+            self.update_on_step(*args, env_id=env_id)
         elif update_type == "step_batch":
-            self.update_on_step_batch(*args)
+            self.update_on_step_batch(*args, env_id=env_id)
         elif update_type == "episode":
-            self.update_on_episode(*args)
+            self.update_on_episode(*args, env_id=env_id)
         elif update_type == "on_demand":
             # Directly pass metrics without expanding
             self.update_on_demand(args)
         elif update_type == "task_progress":
-            self.update_task_progress(*args)
+            self.update_task_progress(*args, env_id=env_id)
+        elif update_type == "task_progress_batch":
+            tasks, progresses = args
+            for task, progress in zip(tasks, progresses):
+                self.update_task_progress(task, progress, env_id=env_id)
         elif update_type == "add_task":
             self.add_task(args)
         elif update_type == "noop":
@@ -191,11 +231,11 @@ class Curriculum:
             return self._startup_sample()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
-        tasks = self.tasks
-        n_tasks = len(tasks)
+        # tasks = self.tasks
+        n_tasks = self.num_tasks
         task_dist = self._sample_distribution()
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
-        return [tasks[i] for i in task_idx]
+        return task_idx
 
     def get_opponent(self, agent_id: int):
         raise NotImplementedError

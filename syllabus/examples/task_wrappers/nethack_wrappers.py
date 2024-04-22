@@ -6,13 +6,13 @@ from typing import Any, Dict, List, Tuple
 import cv2
 import gymnasium as gym
 import numpy as np
-import render_utils
+# import render_utils
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from nle import nethack
 from nle.env import base
-from nle.env.tasks import (NetHackEat, NetHackGold, NetHackOracle,
-                           NetHackScore, NetHackScout, NetHackStaircase,
-                           NetHackStaircasePet, NetHackChallenge)
+from nle.env.tasks import (NetHackChallenge, NetHackEat, NetHackGold,
+                           NetHackOracle, NetHackScore, NetHackScout,
+                           NetHackStaircase, NetHackStaircasePet)
 from numba import njit
 from PIL import Image, ImageDraw, ImageFont
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
@@ -157,7 +157,7 @@ class NethackTaskWrapper(TaskWrapper):
         # observation['goal'] = self._encode_goal()
         return observation
 
-    def _task_completion(self, obs, rew, done, info):
+    def _task_completion(self, obs, rew, term, trunc, info):
         # TODO: Add real task completion metrics
         completion = 0.0
         if self.task == 0:
@@ -184,7 +184,7 @@ class NethackTaskWrapper(TaskWrapper):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
         # self.episode_return += rew
         self.done = term or trunc
-        # info["task_completion"] = self._task_completion(obs, rew, done, info)
+        info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
         return self.observation(obs), rew, term, trunc, info
 
 

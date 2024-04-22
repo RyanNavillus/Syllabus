@@ -5,8 +5,8 @@
 #SBATCH --requeue
 #SBATCH --gpus-per-task=1
 #SBATCH --cpus-per-gpu=8
-#SBATCH --time=24:0:0
-#SBATCH --ntasks=1
+#SBATCH --time=36:0:0
+#SBATCH --ntasks=36
 #SBATCH --output=slurm/logs/%x_%j.out
 #SBATCH --exclude=legacygpu01
 

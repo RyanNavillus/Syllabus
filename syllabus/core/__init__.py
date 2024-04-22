@@ -3,16 +3,20 @@
 from .curriculum_base import Curriculum
 from .curriculum_sync_wrapper import (
     CurriculumWrapper,
+    MultiProcessingComponents,
     MultiProcessingCurriculumWrapper,
     RayCurriculumWrapper,
     make_multiprocessing_curriculum,
     make_ray_curriculum,
 )
 from .dual_curriculum_wrapper import DualCurriculumWrapper
-from .environment_sync_wrapper import (
+from .environment_sync_wrapper import (  # , PettingZooMultiProcessingSyncWrapper
     MultiProcessingSyncWrapper,
-    PettingZooMultiProcessingSyncWrapper,
-    PettingZooRaySyncWrapper,
+    RaySyncWrapper,
+)
+from .dual_curriculum_wrapper import DualCurriculumWrapper
+from .environment_sync_wrapper import (  # , PettingZooMultiProcessingSyncWrapper
+    MultiProcessingSyncWrapper,
     RaySyncWrapper,
 )
 from .multivariate_curriculum_wrapper import MultitaskWrapper

@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -136,7 +136,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
-                update_on_step=curriculum.requires_step_updates,
+                update_on_step=False,
                 task_space=env.task_space,
             )
         return env
@@ -225,14 +225,6 @@ def level_replay_evaluate(
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
-def make_value_fn():
-    def get_value(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            return agent.get_value(torch.Tensor(obs).to(device))
-    return get_value
-
-
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -276,15 +268,13 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            curriculum = PrioritizedLevelReplay(
+            curriculum = CentralizedPrioritizedLevelReplay(
                 sample_env.task_space,
-                sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
-                get_value=make_value_fn(),
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -385,6 +375,24 @@ if __name__ == "__main__":
                     if curriculum is not None:
                         curriculum.log_metrics(writer, global_step)
                     break
+
+            # Syllabus curriculum update
+            if args.curriculum and args.curriculum_method == "plr":
+                with torch.no_grad():
+                    next_value = agent.get_value(next_obs)
+                tasks = envs.get_attr("task")
+
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": value,
+                        "next_value": next_value,
+                        "rew": reward,
+                        "dones": done,
+                        "tasks": tasks,
+                    },
+                }
+                curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
