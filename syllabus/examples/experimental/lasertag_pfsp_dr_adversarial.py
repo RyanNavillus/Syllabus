@@ -43,14 +43,16 @@ ObsType = TypeVar("ObsType")
 
 
 def parse_args():
+    exp_name = os.path.basename(__file__).rstrip(".py")
     parser = argparse.ArgumentParser()
     parser.add_argument("--track", type=bool, default=False)
-    parser.add_argument("--save-agent-checkpoints", type=bool, default=500)
-    parser.add_argument("--checkpoints-frequency", type=int, default=None)
+    parser.add_argument("--save-agent-checkpoints", type=bool, default=False)
+    parser.add_argument("--checkpoint-frequency", type=int, default=500)
+    parser.add_argument("--total-episodes", type=int, default=500)
     parser.add_argument(
         "--exp-name",
         type=str,
-        default=os.path.basename(__file__).rstrip(".py"),
+        default=exp_name,
         help="the name of this experiment",
     )
     parser.add_argument(
@@ -108,8 +110,8 @@ class LasertagParallelWrapper(TaskWrapper):
         self.n_agents = n_agents
         self.task = None
         self.episode_return = 0
-        # self.task_space = TaskSpace(spaces.MultiDiscrete(np.array([[2], [5]])))
         self.possible_agents = [f"agent_{i}" for i in range(self.n_agents)]
+        self.n_steps = 0
 
     def __getattr__(self, name):
         """
@@ -171,6 +173,7 @@ class LasertagParallelWrapper(TaskWrapper):
             self._singleton_to_pz_dict, [done, trunc, self.task_completion]
         )
         info["agent_id"] = agent_task
+        self.n_steps += 1
 
         return self.observation(obs), rew, done, trunc, info
 
@@ -221,12 +224,18 @@ if __name__ == "__main__":
         )
         wandb.run.log_code(os.path.join(args.logging_dir, "/syllabus/examples"))
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+    writer = SummaryWriter(os.path.join(args.logging_dir, f"/runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s"
         % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
     )
+
+    if (
+        not os.path.exists(f"{args.logging_dir}/{args.exp_name}_checkpoints")
+        and args.save_agent_checkpoints
+    ):
+        os.makedirs(f"{args.logging_dir}/{args.exp_name}_checkpoints", exist_ok=True)
 
     """ALGO PARAMS"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -245,7 +254,10 @@ if __name__ == "__main__":
     total_episodes = 500
     n_agents = 2
     num_actions = 5
+
     fsp_update_frequency = 50
+    max_agents = 10
+    n_env_stasks = 200
 
     """ LEARNER SETUP """
     agent = Agent(num_actions=num_actions).to(device)
@@ -255,15 +267,15 @@ if __name__ == "__main__":
     env = LasertagAdversarial(record_video=False)  # 2 agents by default
     env = LasertagParallelWrapper(env=env, n_agents=n_agents)
     agent_curriculum = PrioritizedFictitiousSelfPlay(
-        agent=agent, device=device, storage_path="pfsp_agents", max_agents=10
+        agent=agent, device=device, storage_path="pfsp_agents", max_agents=max_agents
     )
-    env_curriculum = DomainRandomization(TaskSpace(spaces.Discrete(200)))
+    env_curriculum = DomainRandomization(TaskSpace(spaces.Discrete(n_env_stasks)))
     curriculum = DualCurriculumWrapper(
         env=env,
         agent_curriculum=agent_curriculum,
         env_curriculum=env_curriculum,
     )
-    curriculum = make_multiprocessing_curriculum(curriculum)
+    mp_curriculum = make_multiprocessing_curriculum(curriculum)
 
     """ ALGO LOGIC: EPISODE STORAGE"""
     end_step = 0
@@ -282,19 +294,18 @@ if __name__ == "__main__":
 
     """ TRAINING LOGIC """
     # train for n number of episodes
-    for episode in tqdm(range(total_episodes)):
+    for episode in tqdm(range(args.total_episodes)):
         # collect an episode
         with torch.no_grad():
             # collect observations and convert to batch of torch tensors
-            env_task, agent_task = curriculum.sample()
+            env_task, agent_task = mp_curriculum.sample()
 
-            env_tasks.append(env_task[0])
+            env_tasks.append(env_task)
             agent_tasks.append(agent_task)
 
             next_obs = env.reset(env_task)
             # reset the episodic return
             total_episodic_return = 0
-            n_steps = 0
 
             # each episode has num_steps
             for step in range(0, max_cycles):
@@ -307,7 +318,9 @@ if __name__ == "__main__":
                     agent_obs, flatten_start_dim=0
                 )
 
-                opponent = curriculum.get_opponent(info.get("agent_id", 0)).to(device)
+                opponent = mp_curriculum.get_opponent(info.get("agent_id", 0)).to(
+                    device
+                )
                 opponent_action, *_ = opponent.get_action_and_value(
                     opponent_obs, flatten_start_dim=0
                 )
@@ -320,7 +333,7 @@ if __name__ == "__main__":
                 opp_reward = rewards["agent_1"]
                 if opp_reward != 0:
                     n_ends += 1
-                    curriculum.update_winrate(info["agent_id"], opp_reward)
+                    mp_curriculum.update_winrate(info["agent_id"], opp_reward)
                     if opp_reward == -1:
                         n_learner_wins += 1
 
@@ -334,7 +347,21 @@ if __name__ == "__main__":
 
                 # compute episodic return
                 total_episodic_return += rb_rewards[step].cpu().numpy()
-                n_steps += 1
+
+                # store learner checkpoints
+                if (
+                    env.n_steps % args.checkpoint_frequency == 0
+                    and args.save_agent_checkpoints
+                ):
+                    print(f"saving checkpoint --{env.n_steps}")
+                    joblib.dump(
+                        agent,
+                        filename=(
+                            f"{args.logging_dir}/{args.exp_name}_checkpoints/"
+                            f"{mp_curriculum.curriculum.env_curriculum.name}_"
+                            f"{mp_curriculum.curriculum.agent_curriculum.name}_{env.n_steps}.pkl"
+                        ),
+                    )
 
                 # if we reach termination or truncation, end
                 if any([terms[a] for a in terms]) or any([truncs[a] for a in truncs]):
@@ -434,15 +461,7 @@ if __name__ == "__main__":
 
         # update opponent
         if episode % fsp_update_frequency == 0 and episode != 0:
-            curriculum.update_agent(agent)
-
-        # store learner checkpoints
-        if args.save_agent_checkpoints:
-            if n_steps % args.checkpoint_frequency == 0:
-                joblib.dump(
-                    agent,
-                    f"{args.logging_dir}/agent_checkpoints/{curriculum.env_curriculum.name}_{curriculum.agent_curriculum.name}_{step}",
-                )
+            mp_curriculum.update_agent(agent)
 
         agent_c_rew += rewards["agent_0"]
         opp_c_rew += rewards["agent_1"]
@@ -478,8 +497,8 @@ if __name__ == "__main__":
     wandb.log({"charts/env_tasks": wandb.Html(plotly.io.to_html(fig))})
 
     # win rates and replays
-    agent_ids = np.arange(curriculum.n_stored_agents)
-    values = list(curriculum.history.values())
+    agent_ids = np.arange(max_agents)
+    values = list(mp_curriculum.curriculum.agent_curriculum.history.values())
     winrates = [i["winrate"] for i in values]
     n_games = [i["n_games"] for i in values]
 

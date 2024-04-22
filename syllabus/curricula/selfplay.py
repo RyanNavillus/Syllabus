@@ -56,7 +56,7 @@ class FictitiousSelfPlay(Curriculum):
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
-        self.n_stored_agents = 0
+        self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
         self.update_agent(agent)  # creates the initial opponent
@@ -66,12 +66,11 @@ class FictitiousSelfPlay(Curriculum):
         Saves the current agent instance to a pickle file.
         When the `max_agents` limit is met, older agent checkpoints are overwritten.
         """
-        if self.n_stored_agents < self.max_agents:
-            joblib.dump(
-                agent,
-                filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.n_stored_agents}.pkl",
-            )
-            self.n_stored_agents += 1
+        joblib.dump(
+            agent,
+            filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.current_agent_index % self.max_agents}.pkl",
+        )
+        self.current_agent_index += 1
 
     def get_opponent(self, agent_id: int) -> Agent:
         """Loads an agent from the buffer of saved agents."""
@@ -80,7 +79,7 @@ class FictitiousSelfPlay(Curriculum):
         ).to(self.device)
 
     def sample(self, k=1):
-        return np.random.randint(self.n_stored_agents)
+        return np.random.randint(self.current_agent_index)
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):

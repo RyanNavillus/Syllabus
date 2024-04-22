@@ -50,6 +50,9 @@ class CurriculumWrapper:
     def update_agent(self, agent):
         return self.curriculum.update_agent(agent)
 
+    def update_winrate(self, opponent_id: int, opponent_reward: int):
+        return self.curriculum.update_winrate(opponent_id, opponent_reward)
+
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
 

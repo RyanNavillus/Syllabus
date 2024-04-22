@@ -4,8 +4,12 @@ import gymnasium as gym
 import numpy as np
 import ray
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
+from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
 
-from syllabus.core import Curriculum, MultiProcessingComponents, TaskEnv, TaskWrapper
+from syllabus.core.curriculum_base import Curriculum
+from syllabus.core.curriculum_sync_wrapper import MultiProcessingComponents
+from syllabus.core.task_interface import TaskEnv, TaskWrapper
+from syllabus.core.task_interface.task_wrapper import PettingZooTaskWrapper
 from syllabus.task_space import TaskSpace
 
 

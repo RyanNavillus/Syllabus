@@ -26,26 +26,29 @@ class DualCurriculumWrapper(Curriculum):
         self.agent_curriculum = agent_curriculum
         self.env_curriculum = env_curriculum
         self.task_space = TaskSpace(
-            spaces.Tuple(
-                (
-                    env_curriculum.task_space,
-                    agent_curriculum.task_space,
-                )
+            spaces.Dict(
+                {
+                    "env_space": env_curriculum.task_space.gym_space,
+                    "agent_space": agent_curriculum.task_space.gym_space,
+                }
             )
         )
         super().__init__(task_space=self.task_space, *args, **kwargs)
 
     def sample(self, k=1) -> Tuple[EnvTask, AgentTask]:
         """Sets new tasks for the environment and agent curricula."""
-        self.env_task = self.env_curriculum.sample()
-        self.agent_task = self.agent_curriculum.sample()
-        return self.env_task, self.agent_task
+        env_task = self.env_curriculum.sample()
+        agent_task = self.agent_curriculum.sample()
+        return env_task, agent_task
 
     def get_opponent(self, agent_task: AgentTask) -> Agent:
         return self.agent_curriculum.get_opponent(agent_task)
 
     def update_agent(self, agent: Agent) -> Agent:
         return self.agent_curriculum.update_agent(agent)
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
+        return self.agent_curriculum.update_winrate(opponent_id, opponent_reward)
 
     def update_on_step(self, task, step, reward, term, trunc):
         self.env_curriculum.update_on_step(task, step, reward, term, trunc)

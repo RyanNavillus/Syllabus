@@ -243,6 +243,9 @@ class Curriculum:
     def update_agent(self, agent):
         raise NotImplementedError
 
+    def update_winrate(self, opponent_id: int, opponent_reward: int):
+        raise NotImplementedError
+
     def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.
 
