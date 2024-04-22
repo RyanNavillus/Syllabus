@@ -35,6 +35,12 @@ class CurriculumWrapper:
     def sample(self, k=1):
         return self.curriculum.sample(k=k)
 
+    def get_opponent(self, agent_id: int):
+        return self.curriculum.get_opponent(agent_id)
+
+    def update_agent(self, agent):
+        return self.curriculum.update_agent(agent)
+
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
 

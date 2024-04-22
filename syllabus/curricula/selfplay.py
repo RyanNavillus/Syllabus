@@ -30,7 +30,7 @@ class SelfPlay(Curriculum):
     def update_agent(self, agent: Agent) -> Agent:
         self.agent = deepcopy(agent).to(self.device)
 
-    def get_opponent(self, agent_id) -> Agent:
+    def get_opponent(self, agent_id: int) -> Agent:
         if agent_id is None:
             agent_id = 0
         assert (
@@ -73,7 +73,7 @@ class FictitiousSelfPlay(Curriculum):
             )
             self.n_stored_agents += 1
 
-    def get_opponent(self, agent_id) -> Agent:
+    def get_opponent(self, agent_id: int) -> Agent:
         """Loads an agent from the buffer of saved agents."""
         return joblib.load(
             f"{self.storage_path}/{self.name}_agent_checkpoint_{agent_id}.pkl"

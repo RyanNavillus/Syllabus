@@ -258,7 +258,6 @@ if __name__ == "__main__":
         agent=agent, device=device, storage_path="pfsp_agents", max_agents=10
     )
     env_curriculum = DomainRandomization(TaskSpace(spaces.Discrete(200)))
-    env_curriculum_name = f"{(env_curriculum).__class__}".split(".")[-1][0:-2]
     curriculum = DualCurriculumWrapper(
         env=env,
         agent_curriculum=agent_curriculum,
@@ -442,7 +441,7 @@ if __name__ == "__main__":
             if n_steps % args.checkpoint_frequency == 0:
                 joblib.dump(
                     agent,
-                    f"{args.logging_dir}/agent_checkpoints/{env_curriculum_name}_{curriculum.agent_curriculum.name}_{step}",
+                    f"{args.logging_dir}/agent_checkpoints/{curriculum.env_curriculum.name}_{curriculum.agent_curriculum.name}_{step}",
                 )
 
         agent_c_rew += rewards["agent_0"]

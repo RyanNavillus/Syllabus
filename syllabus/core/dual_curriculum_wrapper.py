@@ -1,6 +1,8 @@
 from typing import Tuple, TypeVar
 
-from syllabus.core.curriculum_base import Curriculum
+from gymnasium import spaces
+
+from syllabus.core.curriculum_base import Curriculum, TaskSpace
 from syllabus.core.task_interface import TaskWrapper
 
 AgentID = TypeVar("AgentID")
@@ -9,7 +11,7 @@ EnvTask = TypeVar("EnvTask")
 AgentTask = TypeVar("AgentTask")
 
 
-class DualCurriculumWrapper:
+class DualCurriculumWrapper(Curriculum):
     """Curriculum wrapper containing both an agent and environment-based curriculum."""
 
     def __init__(
@@ -20,17 +22,18 @@ class DualCurriculumWrapper:
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(*args, **kwargs)
         self.env = env
         self.agent_curriculum = agent_curriculum
         self.env_curriculum = env_curriculum
-        self.task_space = (env_curriculum.task_space, agent_curriculum.task_space)
-        # self.env_mp_curriculum, self.env_task_queue, self.env_update_queue = (
-        #     make_multiprocessing_curriculum(env_curriculum)
-        # )
-        # self.agent_mp_curriculum, self.agent_task_queue, self.agent_update_queue = (
-        #     make_multiprocessing_curriculum(agent_curriculum)
-        # )
+        self.task_space = TaskSpace(
+            spaces.Tuple(
+                (
+                    env_curriculum.task_space,
+                    agent_curriculum.task_space,
+                )
+            )
+        )
+        super().__init__(task_space=self.task_space, *args, **kwargs)
 
     def sample(self, k=1) -> Tuple[EnvTask, AgentTask]:
         """Sets new tasks for the environment and agent curricula."""
@@ -43,6 +46,10 @@ class DualCurriculumWrapper:
 
     def update_agent(self, agent: Agent) -> Agent:
         return self.agent_curriculum.update_agent(agent)
+
+    def update_on_step(self, task, step, reward, term, trunc):
+        self.env_curriculum.update_on_step(task, step, reward, term, trunc)
+        self.agent_curriculum.update_on_step(task, step, reward, term, trunc)
 
     def __getattr__(self, name):
         """Delegate attribute lookup to the curricula if not found."""
