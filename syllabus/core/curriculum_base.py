@@ -76,7 +76,7 @@ class Curriculum:
         """
         self.completed_tasks += 1
 
-    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
+    def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
@@ -88,7 +88,7 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int, int]], env_id: int = None) -> None:
+    def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
         This method can be overridden to provide a more efficient implementation. It is used
@@ -96,9 +96,9 @@ class Curriculum:
 
         :param step_results: List of step results
         """
-        obs, rews, terms, truncs, infos = tuple(step_results)
+        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
         for i in range(len(obs)):
-            self.update_on_step(obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
     def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.

@@ -136,7 +136,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
-                update_on_step=False,
+                update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
             )
         return env
