@@ -217,22 +217,27 @@ class TaskSampler:
     def compute_returns(self, gamma, gae_lambda, rewards, value_preds, masks):
         assert self.requires_value_buffers, "Selected strategy does not use compute_rewards."
         gae = 0
-        returns = torch.zeros_like(rewards)
-        for step in reversed(range(rewards.size(0))):
-            delta = (
-                    rewards[step]
-                    + gamma * value_preds[step + 1] * masks[step + 1]
-                    - value_preds[step]
-            )
-            gae = delta + gamma * gae_lambda * masks[step + 1] * gae
-            returns[step] = gae + value_preds[step]
+        value_preds_tensor = torch.tensor(value_preds, dtype=torch.float64)
+        returns = torch.zeros_like(value_preds_tensor, dtype=torch.float64)  # Initialize with the correct size
+        for step in reversed(range(len(rewards))):
+            if step + 1 < len(value_preds) and step + 1 < len(masks):
+                delta = (
+                        rewards[step]
+                        + gamma * value_preds_tensor[step + 1] * masks[step + 1]
+                        - value_preds_tensor[step]
+                )
+                gae = delta + gamma * gae_lambda * masks[step + 1] * gae
+            else:
+                delta = rewards[step] - value_preds_tensor[step]
+                gae = delta
+            returns[step] = gae + value_preds_tensor[step]
         return returns
 
     def evaluate_task(self, task, env, action_value_fn, gamma, gae_lambda):
         if env is None:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
 
-        obs = env.reset(next_task=task)
+        obs = env.reset(new_task=task)
         done = False
         rewards = []
         masks = []
@@ -240,6 +245,12 @@ class TaskSampler:
 
         while not done:
             action, value = action_value_fn(obs)
+
+            if isinstance(action, np.ndarray):
+                action = int(action[0])
+            else:
+                action = int(action)
+
             obs, rew, term, trunc, info = env.step(action)
 
             rewards.append(rew)
@@ -269,7 +280,7 @@ class TaskSampler:
         self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
         return task
 
-    def sample(self, strategy=None):
+    def sample(self, strategy=None, score_function=None):
         if not strategy:
             strategy = self.strategy
 
@@ -295,7 +306,7 @@ class TaskSampler:
 
             # Otherwise, evaluate a new level
             if self.robust_plr:
-                self.update_with_episode_data(self._evaluate_unseen_level())
+                self.update_with_episode_data(self._evaluate_unseen_level(), score_function)
                 return self.sample(strategy=strategy)
             else:
                 # Otherwise, sample a new level
@@ -307,7 +318,7 @@ class TaskSampler:
                 return self._sample_replay_level()
             else:
                 if self.robust_plr:
-                    self.update_with_episode_data(self._evaluate_unseen_level())
+                    return self.update_with_episode_data(self._evaluate_unseen_level(), score_function)
                     return self.sample(strategy=strategy)
                 else:
                     return self._sample_unseen_level()
@@ -317,13 +328,9 @@ class TaskSampler:
                 f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
 
     def update_with_episode_data(self, episode_data, score_function):
-        def compute_episode_variables(episode_data):
-            tasks = episode_data['tasks']
-            done = ~(episode_data['masks'] > 0)
-            total_steps, num_actors = episode_data['tasks'].shape[:2]
-            return tasks, done, total_steps, num_actors
-
-        tasks, done, total_steps, num_actors = compute_episode_variables(episode_data)
+        tasks = np.array(episode_data['tasks'])  # Convert to numpy array
+        done = ~(np.array(episode_data['masks']) > 0)
+        total_steps, num_actors = tasks.shape[:2] if tasks.ndim >= 2 else (0, 0)
 
         for actor_index in range(num_actors):
             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
@@ -333,7 +340,7 @@ class TaskSampler:
                 if not start_t < total_steps:
                     break
 
-                if t == 0:  # if t is 0, then this done step caused a full update of previous last cycle
+                if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
                     continue
 
                 task_idx_t = tasks[start_t, actor_index].item()
@@ -356,16 +363,6 @@ class TaskSampler:
                 self._last_score = score
                 num_steps = len(episode_data['tasks'][start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
-
-    def rollouts_to_episode_data(self, rollouts):
-        episode_data = {
-            "tasks": rollouts.tasks,
-            "returns": rollouts.returns,
-            "value_preds": rollouts.value_preds,
-            "masks": rollouts.masks
-        }
-
-        return episode_data
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)

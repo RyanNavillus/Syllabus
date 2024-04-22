@@ -31,7 +31,7 @@ curricula = [
            "num_processes": N_ENVS,
            "num_steps": 2048,
            "robust_plr": True,
-           "eval_envs": [gym.vector.AsyncVectorEnv([create_nethack_env for i in range(N_ENVS)])],
+           "eval_envs": create_nethack_env(),
            "action_value_fn": get_action_value
         }),
         (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
