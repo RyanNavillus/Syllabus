@@ -73,7 +73,7 @@ class TaskSampler:
                 'Must provide action space to PLR if using "policy_entropy", "least_confidence", or "min_margin" strategies'
             )
 
-    def update_with_rollouts(self, rollouts, actor_id):
+    def update_with_rollouts(self, rollouts, actor_id=None):
         if self.strategy == "random":
             return
 
@@ -93,7 +93,7 @@ class TaskSampler:
         else:
             raise ValueError(f"Unsupported strategy, {self.strategy}")
 
-        self._update_with_rollouts(rollouts, score_function, actor_id)
+        self._update_with_rollouts(rollouts, score_function, actor_index=actor_id)
 
     def update_task_score(self, actor_index, task_idx, score, num_steps):
         score = self._partial_update_task_score(actor_index, task_idx, score, num_steps, done=True)
