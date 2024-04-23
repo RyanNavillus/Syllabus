@@ -57,6 +57,7 @@ class TaskSampler:
         self.staleness_transform = staleness_transform
         self.staleness_temperature = staleness_temperature
 
+        self.task2index = {task: i for i, task in enumerate(self.tasks)}
         self.unseen_task_weights = np.array([1.0] * self.num_tasks)
         self.task_scores = np.array([0.0] * self.num_tasks, dtype=float)
         self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=float)
@@ -166,11 +167,11 @@ class TaskSampler:
         return self.strategy in ["gae", "value_l1", "one_step_td_error"]
 
     def _update_with_rollouts(self, rollouts, score_function, actor_index=None):
-        tasks = rollouts.tasks
+        tasks = rollouts.tasks[:rollouts.num_steps]
         if not self.requires_value_buffers:
-            policy_logits = rollouts.action_log_dist
-        done = ~(rollouts.masks > 0)
-        total_steps, num_actors = rollouts.tasks.shape[:2]
+            policy_logits = rollouts.action_log_dist[:rollouts.num_steps]
+        done = ~(rollouts.masks[:rollouts.num_steps] > 0)
+        total_steps, num_actors = rollouts.num_steps, rollouts.num_processes
 
         actors = [actor_index] if actor_index is not None else range(num_actors)
         for actor_index in actors:
@@ -188,7 +189,8 @@ class TaskSampler:
                 if self.strategy == "one_step_td_error" and t - start_t <= 1:
                     continue
 
-                task_idx_t = tasks[start_t, actor_index].item()
+                task_t = tasks[start_t, actor_index].item()
+                task_idx_t = self.task2index[task_t]
 
                 # Store kwargs for score function
                 score_function_kwargs = {}
@@ -209,8 +211,9 @@ class TaskSampler:
                 # If there is only 1 step, we can't calculate the one-step td error
                 if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
                     continue
-                # TODO: Check this too
-                task_idx_t = tasks[start_t, actor_index].item()
+
+                task_t = tasks[start_t, actor_index].item()
+                task_idx_t = self.task2index[task_t]
 
                 # Store kwargs for score function
                 score_function_kwargs = {}

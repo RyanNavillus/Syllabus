@@ -66,7 +66,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self.components.put_update(update)
 
     def reset(self, *args, **kwargs):
-        self.step_updates = []
         self.task_progress = 0.0
         self.episode_length = 0
         self.episode_return = 0
@@ -80,7 +79,19 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
                 self.env.add_task(add_task)
-        return self.env.reset(*args, new_task=next_task, **kwargs)
+        obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+
+        # Add reset obs
+        if self._batch_step > 0:
+            self._batch_step -= 1
+        self._obs[self._batch_step] = obs
+        self._infos[self._batch_step] = info
+        self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+        self._task_progresses[self._batch_step] = self.task_progress
+        self._batch_step += 1
+        self._send_if_full()
+
+        return obs, info
 
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
@@ -97,13 +108,11 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self._infos[self._batch_step] = info
             self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
             self._task_progresses[self._batch_step] = self.task_progress
-            self._batch_step += 1
 
-            # Send batched updates
-            if self._batch_step >= self.batch_size or term or trunc:
-                updates = self._package_step_updates()
-                self.components.put_update(updates)
-                self._batch_step = 0
+            # Do not send updates until after reset overrides obs and info
+            if not term and not trunc:
+                self._batch_step += 1
+                self._send_if_full()
 
         # Episode update
         if term or trunc:
@@ -123,6 +132,13 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self.components.put_update([task_update, episode_update])
 
         return obs, rew, term, trunc, info
+
+    def _send_if_full(self):
+        # Send batched updates
+        if self._batch_step >= self.batch_size:
+            updates = self._package_step_updates()
+            self.components.put_update(updates)
+            self._batch_step = 0
 
     def _package_step_updates(self):
         step_batch = {

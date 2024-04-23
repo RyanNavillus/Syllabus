@@ -29,7 +29,7 @@ class RolloutStorage(object):
         self._get_value = get_value
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.obs = [[[0] for _ in range(self.num_processes)]] * self.buffer_steps
+        self.obs = [[[0] for _ in range(self.num_processes)]] * (self.buffer_steps + 1)
         self.env_steps = [0] * num_processes
         self.ready_buffers = set()
 
@@ -45,6 +45,7 @@ class RolloutStorage(object):
             self.action_log_dist = torch.zeros(self.buffer_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
+        self._first_step = [True] * num_processes
 
     def to(self, device):
         self.masks = self.masks.to(device)
@@ -57,6 +58,11 @@ class RolloutStorage(object):
             self.action_log_dist = self.action_log_dist.to(device)
 
     def insert_at_index(self, env_index, mask=None, action_log_dist=None, obs=None, reward=None, task=None, steps=1):
+        if self._first_step[env_index]:
+            self._first_step[env_index] = False
+            self.obs[0][env_index] = obs
+            return
+
         step = self.env_steps[env_index]
         end_step = step + steps
 
@@ -65,7 +71,7 @@ class RolloutStorage(object):
 
         if obs is not None:
             for s in range(step, end_step):
-                self.obs[s][env_index] = obs[s - step]
+                self.obs[s + 1][env_index] = obs[s - step]
 
         if reward is not None:
             self.rewards[step:end_step, env_index].copy_(torch.as_tensor(reward[:, None]))
@@ -88,8 +94,11 @@ class RolloutStorage(object):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(0, self.num_steps, self.num_processes):
-            obs = self.obs[step: step + self.num_processes][env_index]
-            values = self._get_value(obs)
+            ob_list = []
+            for i in range(self.num_processes):
+                o = self.obs[step + i]
+                ob_list.append(o[env_index])
+            values = self._get_value(ob_list)
 
             # Reshape values if necessary
             if len(values.shape) == 3:
@@ -104,8 +113,9 @@ class RolloutStorage(object):
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
         self.tasks = self.tasks.roll(-self.num_steps, 0)
-        self.masks = self.masks.roll(-self.num_steps, 0)
-        self.obs[0:][env_index] = self.obs[self.num_steps: self.buffer_steps][env_index]
+        self.masks = self.masks.roll(-(self.num_steps - 1), 0)
+        for step in range(self.num_steps):
+            self.obs[step][env_index] = self.obs[self.num_steps + step - 1][env_index]
 
         if self._requires_value_buffers:
             self.returns = self.returns.roll(-self.num_steps, 0)
@@ -290,6 +300,6 @@ class PrioritizedLevelReplay(Curriculum):
         metrics = self._task_sampler.metrics()
         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
         writer.add_scalar("curriculum/score", metrics["score"], step)
-        # for task in list(self.task_space.tasks)[:10]:
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
+        for task in list(self.task_space.tasks)[:10]:
+            writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
+            writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
