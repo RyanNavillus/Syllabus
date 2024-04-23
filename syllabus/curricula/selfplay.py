@@ -21,8 +21,9 @@ class SelfPlay(Curriculum):
         storage_path=None,  # unused
         max_agents=None,  # unused
     ):
-        self.agent = deepcopy(agent).to(self.device)
+        self.name = "SP"
         self.device = device
+        self.agent = deepcopy(agent).to(self.device)
         self.task_space = TaskSpace(
             spaces.Discrete(1)
         )  # SelfPlay can only return agent_id = 0
@@ -33,9 +34,10 @@ class SelfPlay(Curriculum):
     def get_opponent(self, agent_id: int) -> Agent:
         if agent_id is None:
             agent_id = 0
-        assert (
-            agent_id == 0
-        ), f"Self play only tracks the current agent. Expected agent id 0, got {agent_id}"
+        assert agent_id == 0, (
+            f"Self play only tracks the current agent."
+            f"Expected agent id 0, got {agent_id}"
+        )
         return self.agent
 
     def sample(self, k=1):
@@ -60,6 +62,13 @@ class FictitiousSelfPlay(Curriculum):
         self.max_agents = max_agents
         self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
         self.update_agent(agent)  # creates the initial opponent
+        self.history = {
+            i: {
+                "winrate": 0,
+                "n_games": 0,
+            }
+            for i in range(self.max_agents)
+        }
 
     def update_agent(self, agent):
         """
@@ -68,9 +77,27 @@ class FictitiousSelfPlay(Curriculum):
         """
         joblib.dump(
             agent,
-            filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.current_agent_index % self.max_agents}.pkl",
+            filename=(
+                f"{self.storage_path}/{self.name}_agent_checkpoint_"
+                f"{self.current_agent_index % self.max_agents}.pkl"
+            ),
         )
         self.current_agent_index += 1
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
+        """
+        Uses an incremental mean to update the opponent's winrate i.e. priority.
+        This implies that sampling according to the winrates returns the most
+        challenging opponents.
+        """
+        opponent_reward = opponent_reward > 0  # converts the reward to 0 or 1
+        self.history[opponent_id]["n_games"] += 1
+        old_winrate = self.history[opponent_id]["winrate"]
+        n = self.history[opponent_id]["n_games"]
+
+        self.history[opponent_id]["winrate"] = (
+            old_winrate + (opponent_reward - old_winrate) / n
+        )
 
     def get_opponent(self, agent_id: int) -> Agent:
         """Loads an agent from the buffer of saved agents."""
@@ -115,7 +142,10 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         """
         joblib.dump(
             agent,
-            filename=f"{self.storage_path}/{self.name}_agent_checkpoint_{self.current_agent_index % self.max_agents}.pkl",
+            filename=(
+                f"{self.storage_path}/{self.name}_agent_checkpoint_"
+                f"{self.current_agent_index % self.max_agents}.pkl"
+            ),
         )
         self.current_agent_index += 1
 
