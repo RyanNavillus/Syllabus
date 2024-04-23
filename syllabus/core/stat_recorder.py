@@ -3,13 +3,12 @@ import json
 import warnings
 import numpy as np
 from syllabus.task_space import TaskSpace
-from typing import Callable
-from gymnasium.spaces import Discrete #, MultiDiscrete?
+from gymnasium.spaces import Discrete
 from collections import deque, defaultdict
 
 class StatRecorder:
     """
-    Individual stat tracking for each task.
+    Individual statistics tracking for each task.
     """
 
     def __init__(self, task_space: TaskSpace, calc_past_n=None):
@@ -37,9 +36,9 @@ class StatRecorder:
         """
         Record the length and return of an episode for a given task.
 
-        :param episode_task: Identifier for the task
         :param episode_length: Length of the episode, i.e. the total number of steps taken during the episode
         :param episodic_return: Total return for the episode
+        :param episode_task: Identifier for the task
         """
 
         if episode_task in self.tasks:
@@ -53,7 +52,6 @@ class StatRecorder:
                 self.stats[episode_task]['mean_l'] = np.mean(self.episode_lengths[episode_task])
                 self.stats[episode_task]['var_l'] = np.var(self.episode_lengths[episode_task])
             else:
-                # save the mean/variance of all the episodes
                 n_past = self.num_past_episodes[episode_task]
                 self.num_past_episodes[episode_task] += 1
                 
@@ -89,6 +87,18 @@ class StatRecorder:
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
+    
+    def normalize(self, reward, task):
+        """
+        Normalize reward by task.
+        """
+        task_stats = self.stats[task]
+        reward_mean = task_stats['mean_r']
+        reward_std = np.sqrt(task_stats['var_r'])
+        normalized_reward = deque(maxlen=reward.maxlen)
+        for r in reward:
+            normalized_reward.append((r - reward_mean) / max(0.01, reward_std))
+        return normalized_reward
     
     def save_statistics(self, output_path):
         """
