@@ -4,6 +4,7 @@ import sys
 import time
 from typing import TypeVar
 
+
 import joblib
 import numpy as np
 import plotly
@@ -49,6 +50,7 @@ def parse_args():
     parser.add_argument("--save-agent-checkpoints", type=bool, default=False)
     parser.add_argument("--checkpoint-frequency", type=int, default=500)
     parser.add_argument("--total-episodes", type=int, default=500)
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--exp-name",
         type=str,
@@ -237,6 +239,8 @@ if __name__ == "__main__":
     ):
         os.makedirs(f"{args.logging_dir}/{args.exp_name}_checkpoints", exist_ok=True)
 
+    np.random.seed(args.seed)
+
     """ALGO PARAMS"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ent_coef = 0.0
@@ -359,7 +363,8 @@ if __name__ == "__main__":
                         filename=(
                             f"{args.logging_dir}/{args.exp_name}_checkpoints/"
                             f"{mp_curriculum.curriculum.env_curriculum.name}_"
-                            f"{mp_curriculum.curriculum.agent_curriculum.name}_{env.n_steps}.pkl"
+                            f"{mp_curriculum.curriculum.agent_curriculum.name}_{env.n_steps}"
+                            f"_seed_{args.seed}.pkl"
                         ),
                     )
 
@@ -479,43 +484,48 @@ if __name__ == "__main__":
         writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), episode)
         writer.add_scalar("losses/approx_kl", approx_kl.item(), episode)
 
-    learner_winrate = n_learner_wins / n_ends
-    wandb.run.summary["n_episodes"] = total_episodes
-    wandb.run.summary["learner_winrate"] = learner_winrate
-    writer.add_scalar("charts/learner_winrate", learner_winrate)
+    if args.track:
+        learner_winrate = n_learner_wins / n_ends
+        wandb.run.summary["n_episodes"] = total_episodes
+        wandb.run.summary["learner_winrate"] = learner_winrate
+        writer.add_scalar("charts/learner_winrate", learner_winrate)
 
-    # agent tasks
-    fig = px.histogram(agent_tasks, height=400)
-    fig.update_layout(bargap=0.2)
-    fig.update_layout(showlegend=False)
-    wandb.log({"charts/agent_tasks": wandb.Html(plotly.io.to_html(fig))})
+        # agent tasks
+        fig = px.histogram(agent_tasks, height=400)
+        fig.update_layout(bargap=0.2)
+        fig.update_layout(showlegend=False)
+        wandb.log({"charts/agent_tasks": wandb.Html(plotly.io.to_html(fig))})
 
-    # env tasks
-    fig = px.histogram(env_tasks, height=400)
-    fig.update_layout(bargap=0.2)
-    fig.update_layout(showlegend=False)
-    wandb.log({"charts/env_tasks": wandb.Html(plotly.io.to_html(fig))})
+        # env tasks
+        fig = px.histogram(env_tasks, height=400)
+        fig.update_layout(bargap=0.2)
+        fig.update_layout(showlegend=False)
+        wandb.log({"charts/env_tasks": wandb.Html(plotly.io.to_html(fig))})
 
-    # win rates and replays
-    agent_ids = np.arange(max_agents)
-    values = list(mp_curriculum.curriculum.agent_curriculum.history.values())
-    winrates = [i["winrate"] for i in values]
-    n_games = [i["n_games"] for i in values]
+        # win rates and replays
+        agent_ids = np.arange(max_agents)
+        values = list(mp_curriculum.curriculum.agent_curriculum.history.values())
+        winrates = [i["winrate"] for i in values]
+        n_games = [i["n_games"] for i in values]
 
-    fig = make_subplots(rows=2, cols=1, subplot_titles=("Win Rate", "Number of Games"))
-    fig.add_trace(
-        go.Bar(x=agent_ids, y=winrates, name="Win Rate", marker_color="blue"),
-        row=1,
-        col=1,
-    )
-    fig.add_trace(
-        go.Bar(x=agent_ids, y=n_games, name="Number of Games", marker_color="orange"),
-        row=2,
-        col=1,
-    )
+        fig = make_subplots(
+            rows=2, cols=1, subplot_titles=("Win Rate", "Number of Games")
+        )
+        fig.add_trace(
+            go.Bar(x=agent_ids, y=winrates, name="Win Rate", marker_color="blue"),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Bar(
+                x=agent_ids, y=n_games, name="Number of Games", marker_color="orange"
+            ),
+            row=2,
+            col=1,
+        )
 
-    fig.update_yaxes(range=[0, 1], row=1, col=1)
-    fig.update_layout(showlegend=False)
-    wandb.log({"charts/opponent_winrates": wandb.Html(plotly.io.to_html(fig))})
+        fig.update_yaxes(range=[0, 1], row=1, col=1)
+        fig.update_layout(showlegend=False)
+        wandb.log({"charts/opponent_winrates": wandb.Html(plotly.io.to_html(fig))})
 
-    writer.close()
+        writer.close()
