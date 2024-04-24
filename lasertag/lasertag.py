@@ -131,7 +131,7 @@ class Lasertag(GriddlyGymWrapper):
 
     def step(self, actions):
         if torch.is_tensor(actions):
-            actions = actions.numpy()
+            actions = actions.cpu().numpy()
         assert len(actions) == self.n_agents
 
         if self.mask_actions:
