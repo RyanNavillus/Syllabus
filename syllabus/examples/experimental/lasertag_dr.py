@@ -245,7 +245,7 @@ if __name__ == "__main__":
             save_code=True,
             dir=args.logging_dir,
         )
-        wandb.run.log_code(os.path.join(args.logging_dir, "/syllabus/examples"))
+        wandb.run.log_code(os.path.join(args.logging_dir))
 
         hyperparameters = vars(args)
         html_table = "<table><tr><th>Parameter</th><th>Value</th></tr>"
