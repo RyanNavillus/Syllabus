@@ -120,6 +120,12 @@ class Curriculum:
         self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
         #raise NotImplementedError("Not yet implemented.")
 
+    def normalize(self, reward, task):
+        """
+        Normalize reward by task.
+        """
+        return self.stat_recorder.normalize(reward, task)
+
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
 
