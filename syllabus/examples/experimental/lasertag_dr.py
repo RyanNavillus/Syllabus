@@ -38,7 +38,7 @@ from syllabus.task_space import TaskSpace  # noqa: E402
 
 ActionType = TypeVar("ActionType")
 AgentID = TypeVar("AgentID")
-Agent = TypeVar("Agent")
+AgentType = TypeVar("AgentType")
 EnvTask = TypeVar("EnvTask")
 AgentTask = TypeVar("AgentTask")
 ObsType = TypeVar("ObsType")
@@ -261,10 +261,10 @@ if __name__ == "__main__":
     )
 
     if (
-        not os.path.exists(f"{args.logging_dir}/{args.exp_name}_checkpoints")
+        not os.path.exists(f"{args.logging_dir}/{exp_name}_checkpoints")
         and args.save_agent_checkpoints
     ):
-        os.makedirs(f"{args.logging_dir}/{args.exp_name}_checkpoints", exist_ok=True)
+        os.makedirs(f"{args.logging_dir}/{exp_name}_checkpoints", exist_ok=True)
 
     np.random.seed(args.seed)
 
@@ -393,7 +393,7 @@ if __name__ == "__main__":
                     joblib.dump(
                         agent,
                         filename=(
-                            f"{args.logging_dir}/{args.exp_name}_checkpoints/"
+                            f"{args.logging_dir}/{exp_name}_checkpoints/"
                             f"{mp_curriculum.curriculum.env_curriculum.name}_"
                             f"{mp_curriculum.curriculum.agent_curriculum.name}_{env.n_steps}"
                             f"_seed_{args.seed}.pkl"

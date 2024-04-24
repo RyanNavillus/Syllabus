@@ -10,13 +10,13 @@ from scipy.special import softmax
 from syllabus.core import Curriculum  # noqa: E402
 from syllabus.task_space import TaskSpace  # noqa: E402
 
-Agent = TypeVar("Agent")
+AgentType = TypeVar("AgentType")
 
 
 class SelfPlay(Curriculum):
     def __init__(
         self,
-        agent: Agent,
+        agent: AgentType,
         device: str,
         storage_path=None,  # unused
         max_agents=None,  # unused
@@ -28,10 +28,10 @@ class SelfPlay(Curriculum):
             spaces.Discrete(1)
         )  # SelfPlay can only return agent_id = 0
 
-    def update_agent(self, agent: Agent) -> Agent:
+    def update_agent(self, agent: AgentType) -> AgentType:
         self.agent = deepcopy(agent).to(self.device)
 
-    def get_opponent(self, agent_id: int) -> Agent:
+    def get_opponent(self, agent_id: int) -> AgentType:
         if agent_id is None:
             agent_id = 0
         assert agent_id == 0, (
@@ -47,7 +47,7 @@ class SelfPlay(Curriculum):
 class FictitiousSelfPlay(Curriculum):
     def __init__(
         self,
-        agent: Agent,
+        agent: AgentType,
         device: str,
         storage_path: str,
         max_agents: int,
@@ -99,7 +99,7 @@ class FictitiousSelfPlay(Curriculum):
             old_winrate + (opponent_reward - old_winrate) / n
         )
 
-    def get_opponent(self, agent_id: int) -> Agent:
+    def get_opponent(self, agent_id: int) -> AgentType:
         """Loads an agent from the buffer of saved agents."""
         return joblib.load(
             f"{self.storage_path}/{self.name}_agent_checkpoint_{agent_id}.pkl"
@@ -112,7 +112,7 @@ class FictitiousSelfPlay(Curriculum):
 class PrioritizedFictitiousSelfPlay(Curriculum):
     def __init__(
         self,
-        agent: Agent,
+        agent: AgentType,
         device: str,
         storage_path: str,
         max_agents: int,
@@ -164,7 +164,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             old_winrate + (opponent_reward - old_winrate) / n
         )
 
-    def get_opponent(self, agent_id: int) -> Agent:
+    def get_opponent(self, agent_id: int) -> AgentType:
         """
         Samples an agent id from the softmax distribution induced by winrates
         then loads the selected agent from the buffer of saved agents.

@@ -9,6 +9,7 @@ class LasertagFixed(Lasertag):
 
     def __init__(self, *args, n_agents, level, max_steps=200, **kwargs):
         self.level = level
+        self.max_steps = max_steps
         super().__init__(*args, n_agents=n_agents, max_steps=max_steps, **kwargs)
 
     def reset(self):
