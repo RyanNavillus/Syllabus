@@ -67,6 +67,9 @@ class CurriculumWrapper:
 
     def add_task(self, task):
         self.curriculum.add_task(task)
+    
+    def normalize(self, rewards, task):
+        return self.curriculum.normalize(rewards, task)
 
 
 class MultiProcessingComponents:
@@ -253,7 +256,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def get_components(self):
         return self._components
-
+    
+    def normalize(self, rewards, task):
+        return super().normalize(rewards, task)
 
 def remote_call(func):
     """

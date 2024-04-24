@@ -80,6 +80,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
                 self.env.add_task(add_task)
+        obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+        info["task"] = self.task_space.encode(self.get_task())
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
