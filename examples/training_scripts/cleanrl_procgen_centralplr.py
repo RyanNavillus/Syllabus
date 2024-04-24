@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -136,7 +136,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
-                update_on_step=curriculum.requires_step_updates,
+                update_on_step=False,
                 task_space=env.task_space,
             )
         return env
@@ -148,6 +148,46 @@ def wrap_vecenv(vecenv):
     vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
+
+
+def full_level_replay_evaluate(
+    env_name,
+    policy,
+    num_episodes,
+    device,
+    num_levels=1    # Not used
+):
+    policy.eval()
+
+    eval_envs = ProcgenEnv(
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
+    )
+    eval_envs = VecExtractDictObs(eval_envs, "rgb")
+    eval_envs = wrap_vecenv(eval_envs)
+
+    # Seed environments
+    seeds = [int.from_bytes(os.urandom(3), byteorder="little") for _ in range(num_episodes)]
+    for i, seed in enumerate(seeds):
+        eval_envs.seed(seed, i)
+
+    eval_obs, _ = eval_envs.reset()
+    eval_episode_rewards = [-1] * num_episodes
+
+    while -1 in eval_episode_rewards:
+        with torch.no_grad():
+            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+
+        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+        for i, info in enumerate(infos):
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
+                eval_episode_rewards[i] = info['episode']['r']
+
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    policy.train()
+    return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def level_replay_evaluate(
@@ -185,14 +225,6 @@ def level_replay_evaluate(
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
-def make_value_fn():
-    def get_value(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            return agent.get_value(torch.Tensor(obs).to(device))
-    return get_value
-
-
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -211,7 +243,7 @@ if __name__ == "__main__":
         )
         # wandb.run.log_code("./syllabus/examples")
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
+    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -236,15 +268,13 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            curriculum = PrioritizedLevelReplay(
+            curriculum = CentralizedPrioritizedLevelReplay(
                 sample_env.task_space,
-                sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
-                get_value=make_value_fn(),
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -256,11 +286,11 @@ if __name__ == "__main__":
             print("Using sequential curriculum.")
             curricula = []
             stopping = []
-            for i in range(0, 199, 10):
-                curricula.append(list(range(i, i+10)))
-                stopping.append("steps>=500000")
-                curricula.append(list(range(i + 10)))
-                stopping.append("steps>=500000")
+            for i in range(199):
+                curricula.append(i + 1)
+                stopping.append("steps>=50000")
+                curricula.append(list(range(i + 1)))
+                stopping.append("steps>=50000")
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
@@ -269,8 +299,7 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    envs = gym.vector.SyncVectorEnv(
-    #envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
                 args.env_id,
@@ -282,24 +311,6 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
-
-    test_eval_envs = gym.vector.SyncVectorEnv(
-    #test_eval_envs = gym.vector.AsyncVectorEnv(
-        [
-            make_env(args.env_id, args.seed + i, num_levels=0)
-            for i in range(args.num_eval_episodes)
-        ]
-    )
-    test_eval_envs = wrap_vecenv(test_eval_envs)
-
-    train_eval_envs = gym.vector.SyncVectorEnv(
-    #train_eval_envs = gym.vector.AsyncVectorEnv(
-        [
-            make_env(args.env_id, args.seed + i, num_levels=200)
-            for i in range(args.num_eval_episodes)
-        ]
-    )
-    train_eval_envs = wrap_vecenv(train_eval_envs)
 
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
@@ -363,13 +374,25 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
                         curriculum.log_metrics(writer, global_step)
-
-                        # track return for individual tasks
-                        idx = info.index(item)
-                        multiprocessing_sync_wrapper_envs = envs.venv.venv.envs # extract envs of class MultiProcessingSyncWrapper from envs of class VecNormalize, which has access to task id
-                        episode_task = multiprocessing_sync_wrapper_envs[idx]._latest_task
-                        curriculum.update_on_episode(item["episode"]["r"], item["episode"]["l"], episode_task, args.env_id)
                     break
+
+            # Syllabus curriculum update
+            if args.curriculum and args.curriculum_method == "plr":
+                with torch.no_grad():
+                    next_value = agent.get_value(next_obs)
+                tasks = envs.get_attr("task")
+
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": value,
+                        "next_value": next_value,
+                        "rew": reward,
+                        "dones": done,
+                        "tasks": tasks,
+                    },
+                }
+                curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -470,7 +493,13 @@ if __name__ == "__main__":
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
+        full_mean_eval_returns, full_stddev_eval_returns, full_normalized_mean_eval_returns = full_level_replay_evaluate(
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+        )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+        )
+        full_mean_train_returns, full_stddev_train_returns, full_normalized_mean_train_returns = full_level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
@@ -490,10 +519,16 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_mean_episode_return", full_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_normalized_mean_eval_return", full_normalized_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_stddev_eval_return", full_stddev_eval_returns, global_step)
 
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
+        writer.add_scalar("train_eval/full_mean_episode_return", full_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/full_normalized_mean_train_return", full_normalized_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/full_stddev_train_return", full_stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 

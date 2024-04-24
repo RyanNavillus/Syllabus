@@ -6,7 +6,6 @@ import numpy as np
 from gymnasium.spaces import Dict
 
 from syllabus.task_space import TaskSpace
-from .stat_recorder import StatRecorder
 
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
@@ -29,7 +28,6 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
-        self.stat_recorder = StatRecorder(self.task_space)
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
@@ -76,7 +74,6 @@ class Curriculum:
         :param task: Task for which progress is being updated.
         :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
         """
-
         self.completed_tasks += 1
 
     def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
@@ -99,32 +96,19 @@ class Curriculum:
 
         :param step_results: List of step results
         """
-        
-        #obs, rews, terms, truncs, infos = tuple(step_results)
-        obs = [r[0] for r in step_results]
-        rews = [r[1] for r in step_results]
-        terms = [r[2] for r in step_results]
-        truncs = [r[3] for r in step_results]
-        infos = [r[4] for r in step_results]
-        
+        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
         for i in range(len(obs)):
             self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task, env_id=None) -> None:
+    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return
         :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
         :raises NotImplementedError:
         """
-        self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
-        #raise NotImplementedError("Not yet implemented.")
-
-    def normalize(self, reward, task):
-        """
-        Normalize reward by task.
-        """
-        return self.stat_recorder.normalize(reward, task)
+        # TODO: Add update_on_episode option similar to update-on_step
+        pass
 
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
