@@ -121,7 +121,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "request_sample": True
             }
             self.components.put_update([task_update, episode_update])
-
+        
+        info["task"] = self.task_space.encode(self.get_task())
+        
         return obs, rew, term, trunc, info
 
     def _package_step_updates(self):
