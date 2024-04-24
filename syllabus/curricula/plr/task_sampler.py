@@ -47,7 +47,7 @@ class TaskSampler:
         staleness_transform: str = "power",
         staleness_temperature: float = 1.0,
         robust_plr: bool = False,
-        eval_envs: List[gym.Env] = None,
+        eval_envs = None,
         action_value_fn=None,
     ):
         self.action_space = action_space
@@ -108,6 +108,28 @@ class TaskSampler:
             raise ValueError(f"Unsupported strategy, {self.strategy}")
 
         self._update_with_rollouts(rollouts, score_function)
+
+    def update_with_episode_data(self, episode_data):
+        if self.strategy == "random":
+            return
+
+        # Update with a EpisodeRolloutStorage object
+        if self.strategy == "policy_entropy":
+            score_function = self._average_entropy
+        elif self.strategy == "least_confidence":
+            score_function = self._average_least_confidence
+        elif self.strategy == "min_margin":
+            score_function = self._average_min_margin
+        elif self.strategy == "gae":
+            score_function = self._average_gae
+        elif self.strategy == "value_l1":
+            score_function = self._average_value_l1
+        elif self.strategy == "one_step_td_error":
+            score_function = self._one_step_td_error
+        else:
+            raise ValueError(f"Unsupported strategy, {self.strategy}")
+
+        self._update_with_episode_data(episode_data, score_function)
 
     def update_task_score(self, actor_index, task_idx, score, num_steps):
         score = self._partial_update_task_score(actor_index, task_idx, score, num_steps, done=True)
@@ -179,6 +201,67 @@ class TaskSampler:
     def requires_value_buffers(self):
         return self.strategy in ["gae", "value_l1", "one_step_td_error"]
 
+    def _update_with_rollouts(self, rollouts, score_function):
+        tasks = rollouts.tasks
+        if not self.requires_value_buffers:
+            policy_logits = rollouts.action_log_dist
+        done = ~(rollouts.masks > 0)
+        total_steps, num_actors = rollouts.tasks.shape[:2]
+
+        for actor_index in range(num_actors):
+            done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
+            start_t = 0
+
+            for t in done_steps:
+                if not start_t < total_steps:
+                    break
+
+                if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
+                    continue
+
+                # If there is only 1 step, we can't calculate the one-step td error
+                if self.strategy == "one_step_td_error" and t - start_t <= 1:
+                    continue
+
+                task_idx_t = tasks[start_t, actor_index].item()
+
+                # Store kwargs for score function
+                score_function_kwargs = {}
+                if self.requires_value_buffers:
+                    score_function_kwargs["returns"] = rollouts.returns[start_t:t, actor_index]
+                    score_function_kwargs["rewards"] = rollouts.rewards[start_t:t, actor_index]
+                    score_function_kwargs["value_preds"] = rollouts.value_preds[start_t:t, actor_index]
+                else:
+                    episode_logits = policy_logits[start_t:t, actor_index]
+                    score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
+                score = score_function(**score_function_kwargs)
+                num_steps = len(rollouts.tasks[start_t:t, actor_index])
+                # TODO: Check that task_idx_t is correct
+                self.update_task_score(actor_index, task_idx_t, score, num_steps)
+
+                start_t = t.item()
+            if start_t < total_steps:
+                # If there is only 1 step, we can't calculate the one-step td error
+                if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
+                    continue
+                # TODO: Check this too
+                task_idx_t = tasks[start_t, actor_index].item()
+
+                # Store kwargs for score function
+                score_function_kwargs = {}
+                if self.requires_value_buffers:
+                    score_function_kwargs["returns"] = rollouts.returns[start_t:, actor_index]
+                    score_function_kwargs["rewards"] = rollouts.rewards[start_t:, actor_index]
+                    score_function_kwargs["value_preds"] = rollouts.value_preds[start_t:, actor_index]
+                else:
+                    episode_logits = policy_logits[start_t:, actor_index]
+                    score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
+
+                score = score_function(**score_function_kwargs)
+                self._last_score = score
+                num_steps = len(rollouts.tasks[start_t:, actor_index])
+                self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
+
     def after_update(self):
         # Reset partial updates, since weights have changed, and thus logits are now stale
         for actor_index in range(self.partial_task_scores.shape[0]):
@@ -214,26 +297,49 @@ class TaskSampler:
 
         return task
 
-    def compute_returns(self, gamma, gae_lambda, rewards, value_preds, masks):
+    def _evaluate_unseen_level(self):
+        sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
+        task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
+        task = self.tasks[task_idx]
+
+        episode_data = self.evaluate_task(task, self.eval_envs, self.action_value_fn)
+        self.update_with_episode_data(episode_data)
+
+        self._update_staleness(task_idx)
+
+        return task
+
+    def compute_returns(self, rewards, values, masks, gamma, gae_lambda):
         assert self.requires_value_buffers, "Selected strategy does not use compute_rewards."
+
+        if isinstance(rewards, float):
+            rewards = [np.array(rewards)]
+
+        num_steps = len(rewards)
         gae = 0
-        value_preds_tensor = torch.tensor(value_preds, dtype=torch.float64)
-        returns = torch.zeros_like(value_preds_tensor, dtype=torch.float64)  # Initialize with the correct size
-        for step in reversed(range(len(rewards))):
-            if step + 1 < len(value_preds) and step + 1 < len(masks):
-                delta = (
-                        rewards[step]
-                        + gamma * value_preds_tensor[step + 1] * masks[step + 1]
-                        - value_preds_tensor[step]
-                )
-                gae = delta + gamma * gae_lambda * masks[step + 1] * gae
-            else:
-                delta = rewards[step] - value_preds_tensor[step]
+        returns = np.zeros_like(rewards)
+        for step in reversed(range(num_steps)):
+            # Check if we are at the last step
+            if step == num_steps - 1:
+                delta = (rewards[step] - values[step])
                 gae = delta
-            returns[step] = gae + value_preds_tensor[step]
+            else:
+                next_value = values[step + 1] if step + 1 < num_steps else 0
+                next_mask = masks[step + 1] if step + 1 < num_steps else 0
+                delta = (rewards[step]
+                         + gamma * next_value * next_mask
+                         - values[step]
+                         )
+                gae = delta + gamma * gae_lambda * next_mask * gae
+
+            gae_scal = gae[0] if isinstance(gae, np.ndarray) else gae
+            value_scal = values[step][0] if isinstance(values[step], np.ndarray) else values[step]
+
+            returns[step] = gae_scal + value_scal
+
         return returns
 
-    def evaluate_task(self, task, env, action_value_fn, gamma, gae_lambda):
+    def evaluate_task(self, task, env, action_value_fn):
         if env is None:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
 
@@ -261,26 +367,17 @@ class TaskSampler:
             if term or trunc:
                 done = True
 
-        # Compute returns after the episode is complete
-        returns = self.compute_returns(gamma, gae_lambda, rewards, values, masks)
+        returns = self.compute_returns(rewards, values, masks, self.gamma, self.gae_lambda)
 
         return {
             "tasks": task,
             "masks": masks,
             "rewards": rewards,
-            "value_preds": values,
+            "values": values,
             "returns": returns
         }
 
-    def _evaluate_unseen_level(self):
-        task_idx = \
-        np.random.choice(range(self.num_tasks), 1, p=self.unseen_task_weights / self.unseen_task_weights.sum())[0]
-        task = self.tasks[task_idx]
-        episode_data = self.evaluate_task(task, self.eval_envs, self.action_value_fn, self.gamma, self.gae_lambda)
-        self.update_with_episode_data(episode_data, self._average_gae)  # Update task scores
-        return task
-
-    def sample(self, strategy=None, score_function=None):
+    def sample(self, strategy=None):
         if not strategy:
             strategy = self.strategy
 
@@ -304,33 +401,32 @@ class TaskSampler:
                 if np.random.rand() > self.nu or not proportion_seen < 1.0:
                     return self._sample_replay_level()
 
-            # Otherwise, evaluate a new level
+            # Otherwise, sample a new level
             if self.robust_plr:
-                self.update_with_episode_data(self._evaluate_unseen_level(), score_function)
+                self.update_with_episode_data(self._evaluate_unseen_level())
                 return self.sample(strategy=strategy)
             else:
-                # Otherwise, sample a new level
                 return self._sample_unseen_level()
-
 
         elif self.replay_schedule == "proportionate":
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
                 return self._sample_replay_level()
             else:
                 if self.robust_plr:
-                    return self.update_with_episode_data(self._evaluate_unseen_level(), score_function)
+                    self.update_with_episode_data(self._evaluate_unseen_level())
                     return self.sample(strategy=strategy)
                 else:
                     return self._sample_unseen_level()
-
         else:
             raise NotImplementedError(
                 f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
 
-    def update_with_episode_data(self, episode_data, score_function):
-        tasks = np.array(episode_data['tasks'])  # Convert to numpy array
-        done = ~(np.array(episode_data['masks']) > 0)
-        total_steps, num_actors = tasks.shape[:2] if tasks.ndim >= 2 else (0, 0)
+    def _update_with_episode_data(self, episode_data, score_function):
+        tasks = np.array(episode_data["tasks"])
+        if not self.requires_value_buffers:
+            policy_logits = episode_data.action_log_dist
+        done = np.array([not mask > 0 for mask in episode_data["masks"]])
+        total_steps, num_actors = tasks.shape[:2]
 
         for actor_index in range(num_actors):
             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
@@ -343,25 +439,47 @@ class TaskSampler:
                 if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
                     continue
 
+                # If there is only 1 step, we can't calculate the one-step td error
+                if self.strategy == "one_step_td_error" and t - start_t <= 1:
+                    continue
+
                 task_idx_t = tasks[start_t, actor_index].item()
 
+                # Store kwargs for score function
                 score_function_kwargs = {}
-                score_function_kwargs["returns"] = episode_data['returns'][start_t:t, actor_index]
-                score_function_kwargs["value_preds"] = episode_data['value_preds'][start_t:t, actor_index]
+                if self.requires_value_buffers:
+                    score_function_kwargs["returns"] = episode_data.returns[start_t:t, actor_index]
+                    score_function_kwargs["rewards"] = episode_data.rewards[start_t:t, actor_index]
+                    score_function_kwargs["values"] = episode_data.values[start_t:t, actor_index]
+                else:
+                    episode_logits = policy_logits[start_t:t, actor_index]
+                    score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
                 score = score_function(**score_function_kwargs)
-                num_steps = len(episode_data['tasks'][start_t:t, actor_index])
+                num_steps = len(episode_data.tasks[start_t:t, actor_index])
+                # TODO: Check that task_idx_t is correct
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
 
                 start_t = t.item()
             if start_t < total_steps:
+                # If there is only 1 step, we can't calculate the one-step td error
+                if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
+                    continue
+                # TODO: Check this too
                 task_idx_t = tasks[start_t, actor_index].item()
 
+                # Store kwargs for score function
                 score_function_kwargs = {}
-                score_function_kwargs["returns"] = episode_data['returns'][start_t:, actor_index]
-                score_function_kwargs["value_preds"] = episode_data['value_preds'][start_t:, actor_index]
+                if self.requires_value_buffers:
+                    score_function_kwargs["returns"] = episode_data.returns[start_t:, actor_index]
+                    score_function_kwargs["rewards"] = episode_data.rewards[start_t:, actor_index]
+                    score_function_kwargs["values"] = episode_data.values[start_t:, actor_index]
+                else:
+                    episode_logits = policy_logits[start_t:, actor_index]
+                    score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
+
                 score = score_function(**score_function_kwargs)
                 self._last_score = score
-                num_steps = len(episode_data['tasks'][start_t:, actor_index])
+                num_steps = len(episode_data.tasks[start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
     def sample_weights(self):

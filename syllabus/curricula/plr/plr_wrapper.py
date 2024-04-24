@@ -206,7 +206,7 @@ class PrioritizedLevelReplay(Curriculum):
         get_value=null,
         get_action_log_dist=null,
         robust_plr: bool = False,  # Option to use RobustPLR
-        eval_envs: List[gym.Env] = None,
+        eval_envs = None,
         action_value_fn = None,
         **curriculum_kwargs,
     ):
