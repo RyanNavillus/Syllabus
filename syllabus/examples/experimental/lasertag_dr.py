@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import time
-from typing import TypeVar
+from typing import Dict, Tuple, TypeVar
 
 import joblib
 import numpy as np
@@ -131,7 +131,7 @@ class LasertagParallelWrapper(TaskWrapper):
         """
         return getattr(self.env, name)
 
-    def _np_array_to_pz_dict(self, array: np.ndarray) -> dict[str : np.ndarray]:
+    def _np_array_to_pz_dict(self, array: np.ndarray) -> Dict[str, np.ndarray]:
         """
         Returns a dictionary containing individual observations for each agent.
         Assumes that the batch dimension represents individual agents.
@@ -141,7 +141,7 @@ class LasertagParallelWrapper(TaskWrapper):
             out[self.possible_agents[idx]] = value
         return out
 
-    def _singleton_to_pz_dict(self, value: bool) -> dict[str:bool]:
+    def _singleton_to_pz_dict(self, value: bool) -> Dict[str, bool]:
         """
         Broadcasts the `done` and `trunc` flags to dictionaries keyed by agent id.
         """
@@ -149,7 +149,7 @@ class LasertagParallelWrapper(TaskWrapper):
 
     def reset(
         self, env_task: int
-    ) -> tuple[dict[AgentID, ObsType], dict[AgentID, dict]]:
+    ) -> Tuple[Dict[AgentID, ObsType], Dict[AgentID, dict]]:
         """
         Resets the environment and returns a dictionary of observations
         keyed by agent ID.
@@ -161,13 +161,13 @@ class LasertagParallelWrapper(TaskWrapper):
         return pz_obs
 
     def step(
-        self, action: dict[AgentID, ActionType], device: str, agent_task: int
-    ) -> tuple[
-        dict[AgentID, ObsType],
-        dict[AgentID, float],
-        dict[AgentID, bool],
-        dict[AgentID, bool],
-        dict[AgentID, dict],
+        self, action: Dict[AgentID, ActionType], device: str, agent_task: int
+    ) -> Tuple[
+        Dict[AgentID, ObsType],
+        Dict[AgentID, float],
+        Dict[AgentID, bool],
+        Dict[AgentID, bool],
+        Dict[AgentID, dict],
     ]:
         """
         Takes inputs in the PettingZoo (PZ) Parallel API format, performs a step and
