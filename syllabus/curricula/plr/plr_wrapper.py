@@ -264,6 +264,25 @@ class PrioritizedLevelReplay(Curriculum):
             task=tasks,
         )
 
+    #def update_on_episode(self, episode_return: float, episode_task, env_id: int = None) -> None:
+        #"""
+        ##Update the curriculum with episode results from the environment.
+        #""
+        #raise NotImplementedError(
+            #"PrioritizedLevelReplay does not support the episode updates. Use on_demand from the learner process."
+        #)
+
+
+    def update_task_progress(self, task: Any, success_prob: float, env_id: int = None) -> None:
+        """
+        Update the curriculum with a task and its success probability upon
+        success or failure.
+        """
+        assert env_id is not None, "env_id must be provided for PLR updates."
+        self._rollouts.insert_at_index(
+            env_id,
+            task=task,
+        )
         # Update task sampler
         if env_id in self._rollouts.ready_buffers:
             self._update_sampler(env_id)

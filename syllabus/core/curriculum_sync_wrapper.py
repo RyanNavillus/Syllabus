@@ -55,6 +55,9 @@ class CurriculumWrapper:
     def update_on_step_batch(self, step_results):
         self.curriculum.update_on_step_batch(step_results)
 
+    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
+        self.curriculum.update_on_episode(episode_return, episode_length, episode_task, env_id)
+
     def update(self, metrics):
         self.curriculum.update(metrics)
 
@@ -233,6 +236,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 time.sleep(0)
             else:
                 time.sleep(0.01)
+
+    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
+        super().update_on_episode(episode_return, episode_length, episode_task, env_id)
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)

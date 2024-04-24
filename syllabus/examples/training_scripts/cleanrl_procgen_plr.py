@@ -211,7 +211,7 @@ if __name__ == "__main__":
         )
         # wandb.run.log_code("./syllabus/examples")
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+    writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -269,7 +269,8 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.SyncVectorEnv(
+    #envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
                 args.env_id,
@@ -281,6 +282,24 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
+
+    test_eval_envs = gym.vector.SyncVectorEnv(
+    #test_eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(args.env_id, args.seed + i, num_levels=0)
+            for i in range(args.num_eval_episodes)
+        ]
+    )
+    test_eval_envs = wrap_vecenv(test_eval_envs)
+
+    train_eval_envs = gym.vector.SyncVectorEnv(
+    #train_eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(args.env_id, args.seed + i, num_levels=200)
+            for i in range(args.num_eval_episodes)
+        ]
+    )
+    train_eval_envs = wrap_vecenv(train_eval_envs)
 
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
@@ -344,6 +363,12 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
                         curriculum.log_metrics(writer, global_step)
+
+                        # track return for individual tasks
+                        idx = info.index(item)
+                        multiprocessing_sync_wrapper_envs = envs.venv.venv.envs # extract envs of class MultiProcessingSyncWrapper from envs of class VecNormalize, which has access to task id
+                        episode_task = multiprocessing_sync_wrapper_envs[idx]._latest_task
+                        curriculum.update_on_episode(item["episode"]["r"], item["episode"]["l"], episode_task, args.env_id)
                     break
 
         # bootstrap value if not done
