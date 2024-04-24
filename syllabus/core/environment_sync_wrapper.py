@@ -82,14 +82,15 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
 
         # Add reset obs
-        if self._batch_step > 0:
-            self._batch_step -= 1
-        self._obs[self._batch_step] = obs
-        self._infos[self._batch_step] = info
-        self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
-        self._task_progresses[self._batch_step] = self.task_progress
-        self._batch_step += 1
-        self._send_if_full()
+        if self.update_on_step:
+            if self._batch_step > 0:
+                self._batch_step -= 1
+            self._obs[self._batch_step] = obs
+            self._infos[self._batch_step] = info
+            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+            self._task_progresses[self._batch_step] = self.task_progress
+            self._batch_step += 1
+            self._send_if_full()
 
         return obs, info
 
@@ -108,10 +109,10 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             self._infos[self._batch_step] = info
             self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
             self._task_progresses[self._batch_step] = self.task_progress
+            self._batch_step += 1
 
-            # Do not send updates until after reset overrides obs and info
+            # Do not send updates until reset overrides obs and info
             if not term and not trunc:
-                self._batch_step += 1
                 self._send_if_full()
 
         # Episode update

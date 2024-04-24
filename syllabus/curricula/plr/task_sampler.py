@@ -171,7 +171,7 @@ class TaskSampler:
         if not self.requires_value_buffers:
             policy_logits = rollouts.action_log_dist[:rollouts.num_steps]
         done = ~(rollouts.masks[:rollouts.num_steps] > 0)
-        total_steps, num_actors = rollouts.num_steps, rollouts.num_processes
+        total_steps, num_actors = tasks.shape[:2]
 
         actors = [actor_index] if actor_index is not None else range(num_actors)
         for actor_index in actors:
