@@ -269,8 +269,7 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    envs = gym.vector.SyncVectorEnv(
-    #envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
                 args.env_id,
