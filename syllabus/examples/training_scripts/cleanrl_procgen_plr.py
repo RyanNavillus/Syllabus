@@ -350,6 +350,7 @@ if __name__ == "__main__":
                         idx = info.index(item)
                         multiprocessing_sync_wrapper_envs = envs.venv.venv.envs # extract envs of class MultiProcessingSyncWrapper from envs of class VecNormalize, which has access to task id
                         episode_task = multiprocessing_sync_wrapper_envs[idx]._latest_task
+                        episode_task = info[idx]["task"]
                         curriculum.update_on_episode(item["episode"]["r"], item["episode"]["l"], episode_task, args.env_id)
                     break
 
