@@ -1,8 +1,9 @@
 import argparse
+import json
 import os
 import sys
 from dataclasses import dataclass
-from typing import Dict, Tuple, TypeVar, Union
+from typing import Dict, Tuple, TypeVar
 
 import joblib
 import numpy as np
@@ -194,48 +195,62 @@ class LasertagFixedParallelWrapper(TaskWrapper):
 
 @dataclass
 class AgentConfig:
+    """
+    Dataclass used to store information about the current version
+    of an agent, as defined by its checkpoint, seed and curriculums.
+    """
+
     agent_curriculum: str
     env_curriculum: str
+    agent: AgentType = None
+    checkpoint: int = None
+    seed: int = None
+
+    def set_task(self, checkpoint: int, seed: int) -> None:
+        self.checkpoint = checkpoint
+        self.seed = seed
+
+    @property
+    def path(self) -> str:
+        return f"{self.env_curriculum}_{self.agent_curriculum}"
 
     def __str__(self) -> str:
-        return f"{self.env_curriculum}_{self.agent_curriculum}"
+        return (
+            f"{self.env_curriculum}_{self.agent_curriculum}_"
+            f"{self.checkpoint}_seed_{self.seed}"
+        )
 
 
 def load_agent(
-    agent_config: AgentConfig,
-    step: int,
-    seed: int,
+    agent_cfg: AgentConfig,
     device: str = "cpu",
-) -> AgentType:
+) -> Tuple[AgentType, AgentConfig]:
+    """Loads an agent to `device` and updates `AgentConfig`"""
 
-    return joblib.load(
-        (
-            f"lasertag_{str(agent_config)}_checkpoints/"
-            f"{str(agent_config)}_{step}_seed_{seed}.pkl"
-        )
+    agent = joblib.load(
+        (f"lasertag_{agent_cfg.path}_checkpoints/" f"{str(agent_cfg)}.pkl")
     ).to(device)
+    agent_cfg.agent = agent
+
+    return agent, agent_cfg
 
 
 def play_n_episodes(
-    agent_1_config: Dict[str, Union[AgentCurriculum, EnvCurriculum]],
-    agent_2_config: Dict[str, Union[AgentCurriculum, EnvCurriculum]],
-    step: int,
-    seed: int,
+    agent_1_cfg: AgentConfig,
+    agent_2_cfg: AgentConfig,
     n_episodes: int = 10,
     environment_id: str = "LasertagArena1",
-) -> Dict[str, int]:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    env = test_envs[environment_id]()  # 2 agents by default
-    env = LasertagFixedParallelWrapper(env=env, n_agents=2)
+    device: str = "cpu",
+) -> float:
 
-    agent_1 = load_agent(agent_config=agent_1_config, step=step, seed=seed)
-    agent_2 = load_agent(agent_config=agent_2_config, step=step, seed=seed)
-
+    n_agents = 2
     stack_size = 3
+    env = test_envs[environment_id]()  # 2 agents by default
+    env = LasertagFixedParallelWrapper(env=env, n_agents=n_agents)
+
     frame_size = (env.agent_view_size, env.agent_view_size)
     max_cycles = env.max_steps
-    n_agents = 2
-    agent_c_rew, opp_c_rew = 0, 0
+    agent_1_c_rew, agent_2_c_rew = 0, 0
 
     """ALGO LOGIC: EPISODE STORAGE"""
     rb_obs = torch.zeros((max_cycles, n_agents, stack_size, *frame_size)).to(device)
@@ -243,8 +258,10 @@ def play_n_episodes(
     rb_rewards = torch.zeros((max_cycles, n_agents)).to(device)
     rb_terms = torch.zeros((max_cycles, n_agents)).to(device)
 
+    agent_1, agent_2 = agent_1_cfg.agent, agent_2_cfg.agent
+
     """ TRAINING LOGIC """
-    for episode in tqdm(range(n_episodes)):
+    for episode in range(n_episodes):
         # collect an episode
         with torch.no_grad():
 
@@ -265,12 +282,12 @@ def play_n_episodes(
                 )
                 # execute the environment and log data
                 joint_actions = torch.tensor((agent_1_action, agent_2_action))
-                next_obs, rewards, terms, truncs, info = env.step(
+                next_obs, rewards, terms, truncs, _ = env.step(
                     unbatchify(joint_actions, env.possible_agents), device
                 )
 
-                agent_c_rew += rewards["agent_0"]
-                opp_c_rew += rewards["agent_1"]
+                agent_1_c_rew += rewards["agent_0"]
+                agent_2_c_rew += rewards["agent_1"]
 
                 # add to episode storage
                 rb_obs[step] = batchify(next_obs, device)
@@ -282,10 +299,9 @@ def play_n_episodes(
                 if any([terms[a] for a in terms]) or any([truncs[a] for a in truncs]):
                     break
 
-    return {
-        f"agent_1_step_{step}_seed_{seed}_rewards": agent_c_rew / n_episodes,
-        f"agent_2_step_{step}_seed_{seed}_rewards": opp_c_rew / n_episodes,
-    }
+    agent_1_norm_rew = agent_1_c_rew / n_episodes
+
+    return agent_1_norm_rew
 
 
 test_envs = {
@@ -306,29 +322,47 @@ test_envs = {
 
 if __name__ == "__main__":
     args = parse_args()
-    agent_1_config = AgentConfig(args.agent_curriculum_1, args.env_curriculum_1)
-    agent_2_config = AgentConfig(args.agent_curriculum_2, args.env_curriculum_2)
+    agent_1_cfg = AgentConfig(args.agent_curriculum_1, args.env_curriculum_1)
+    agent_2_cfg = AgentConfig(args.agent_curriculum_2, args.env_curriculum_2)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if not os.path.exists(f"{args.logging_dir}"):
         os.makedirs(f"{args.logging_dir}", exist_ok=True)
 
-    logs = {}
+    checkpoints = [2000, 4000, 6000]
+    seeds = [1]
 
-    for checkpoint in [2000, 4000, 6000]:
-        for seed in [1]:
-            returns = play_n_episodes(
-                agent_1_config=agent_1_config,
-                agent_2_config=agent_2_config,
-                step=checkpoint,
-                seed=seed,
-                n_episodes=args.n_episodes,
-                environment_id="LasertagArena1",
-            )
-            print(returns)
-            title = (
-                f"{str(agent_1_config)}_VS_{str(agent_2_config)}_"
-                f"checkpoint_{checkpoint}_seed_{seed}"
-            )
-            logs[title] = returns
+    logs = {env_name: {} for env_name in list(test_envs.keys())}
 
-    print(logs)
+    for checkpoint_1 in tqdm(checkpoints):
+        for seed_1 in seeds:
+            agent_1_cfg.set_task(checkpoint_1, seed_1)
+            agent_1, agent_1_cfg = load_agent(agent_1_cfg, device)
+
+            for checkpoint_2 in checkpoints:
+                for seed_2 in seeds:
+                    agent_2_cfg.set_task(checkpoint_2, seed_2)
+                    agent_2, agent_2_cfg = load_agent(agent_2_cfg, device)
+
+                    for environment_id in list(test_envs.keys()):
+                        returns = play_n_episodes(
+                            agent_1_cfg,
+                            agent_2_cfg,
+                            n_episodes=args.n_episodes,
+                            environment_id=environment_id,
+                        )
+                        if str(agent_1_cfg) not in logs[environment_id].keys():
+                            logs[environment_id][str(agent_1_cfg)] = {}
+
+                        logs[environment_id][str(agent_1_cfg)][
+                            str(agent_2_cfg)
+                        ] = returns
+
+    if not os.path.exists(f"{args.logging_dir}/round_robin/"):
+        os.makedirs(f"{args.logging_dir}/round_robin/")
+
+    with open(
+        f"{args.logging_dir}/round_robin/{agent_1_cfg.path}_{agent_2_cfg.path}.json",
+        "w",
+    ) as outfile:
+        json.dump(logs, outfile)
