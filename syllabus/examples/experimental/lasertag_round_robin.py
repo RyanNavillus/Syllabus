@@ -39,6 +39,22 @@ ActionType = TypeVar("ActionType")
 ObsType = TypeVar("ObsType")
 
 
+test_envs = {
+    "LasertagArena1": LasertagArena1,
+    "LasertagArena2": LasertagArena2,
+    "LasertagCorridor1": LasertagCorridor1,
+    "LasertagCorridor2": LasertagCorridor2,
+    "LasertagMaze1": LasertagMaze1,
+    "LasertagMaze2": LasertagMaze2,
+    "LasertagRuins": LasertagRuins,
+    "LasertagRuins2": LasertagRuins2,
+    "LasertagStar": LasertagStar,
+    "LasertagCross": LasertagCross,
+    "LasertagLargeCorridor": LasertagLargeCorridor,
+    "LasertagSixteenRoomsN2": LasertagSixteenRoomsN2,
+}
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--track", type=bool, default=False)
@@ -302,22 +318,6 @@ def play_n_episodes(
     agent_1_norm_rew = agent_1_c_rew / n_episodes
 
     return agent_1_norm_rew
-
-
-test_envs = {
-    "LasertagArena1": LasertagArena1,
-    "LasertagArena2": LasertagArena2,
-    "LasertagCorridor1": LasertagCorridor1,
-    "LasertagCorridor2": LasertagCorridor2,
-    "LasertagMaze1": LasertagMaze1,
-    "LasertagMaze2": LasertagMaze2,
-    "LasertagRuins": LasertagRuins,
-    "LasertagRuins2": LasertagRuins2,
-    "LasertagStar": LasertagStar,
-    "LasertagCross": LasertagCross,
-    "LasertagLargeCorridor": LasertagLargeCorridor,
-    "LasertagSixteenRoomsN2": LasertagSixteenRoomsN2,
-}
 
 
 if __name__ == "__main__":

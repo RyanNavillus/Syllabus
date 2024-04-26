@@ -253,7 +253,9 @@ if __name__ == "__main__":
             html_table += f"<tr><td>{key}</td><td>{value}</td></tr>"
         wandb.log({"hyperparameters": wandb.Html(html_table)})
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, f"/runs/{run_name}"))
+    writer = SummaryWriter(
+        os.path.join(args.logging_dir, f"{args.logging_dir}/runs/{run_name}")
+    )
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s"
@@ -407,7 +409,7 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             next_value = agent.get_value(
-                torch.tensor(next_obs["agent_0"]), flatten_start_dim=0
+                torch.tensor(next_obs["agent_0"]).to(device), flatten_start_dim=0
             )
             rb_advantages = torch.zeros_like(rb_rewards).to(device)
             last_gae_lam = 0
