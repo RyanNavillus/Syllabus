@@ -116,8 +116,14 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "env_id": self.instance_id,
                 "request_sample": False,
             }
-            self.components.put_update(update)
-        
+            episode_update = {
+                "update_type": "episode",
+                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task)),
+                "env_id": self.instance_id,
+                "request_sample": True
+            }
+            self.components.put_update([task_update, episode_update])
+
         info["task"] = self.task_space.encode(self.get_task())
 
         return obs, rew, term, trunc, info

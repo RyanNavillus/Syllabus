@@ -14,7 +14,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -29,7 +29,8 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
-        self.stat_recorder = StatRecorder(self.task_space)
+        if record_stats:
+            self.stat_recorder = StatRecorder(self.task_space)
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
@@ -103,7 +104,7 @@ class Curriculum:
         for i in range(len(obs)):
             self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task, env_id=None) -> None:
+    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return
@@ -111,8 +112,7 @@ class Curriculum:
         :raises NotImplementedError:
         """
         self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
-        #raise NotImplementedError("Not yet implemented.")
-    
+
     def normalize(self, reward, task):
         """
         Normalize reward by task.
@@ -230,3 +230,5 @@ class Curriculum:
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
+        if self.stat_recorder is not None:
+            self.stat_recorder.log_metrics(writer, step=step)
