@@ -82,7 +82,8 @@ class FictitiousSelfPlay(Curriculum):
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
-        self.current_agent_index += 1
+        if self.current_agent_index < self.max_agents:
+            self.current_agent_index += 1
 
     def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
         """
@@ -147,7 +148,8 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
-        self.current_agent_index += 1
+        if self.current_agent_index < self.max_agents:
+            self.current_agent_index += 1
 
     def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
         """
