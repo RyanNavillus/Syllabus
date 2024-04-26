@@ -80,6 +80,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
                 self.env.add_task(add_task)
+        obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+        info["task"] = self.task_space.encode(self.get_task())
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
@@ -114,13 +116,9 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "env_id": self.instance_id,
                 "request_sample": False,
             }
-            episode_update = {
-                "update_type": "episode",
-                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task)),
-                "env_id": self.instance_id,
-                "request_sample": True
-            }
-            self.components.put_update([task_update, episode_update])
+            self.components.put_update(update)
+        
+        info["task"] = self.task_space.encode(self.get_task())
 
         return obs, rew, term, trunc, info
 

@@ -211,7 +211,7 @@ if __name__ == "__main__":
         )
         # wandb.run.log_code("./syllabus/examples")
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+    writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -344,6 +344,11 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
                         curriculum.log_metrics(writer, global_step)
+
+                        # track return for individual tasks
+                        idx = info.index(item)
+                        episode_task = info[idx]["task"]
+                        curriculum.update_on_episode(item["episode"]["r"], item["episode"]["l"], episode_task, args.env_id)
                     break
 
         # bootstrap value if not done
