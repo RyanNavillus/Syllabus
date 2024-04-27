@@ -135,7 +135,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env,
-                curriculum.get_components(),
+                curriculum[0].get_components(),
                 update_on_step=False,
                 task_space=env.task_space,
             )
@@ -202,6 +202,7 @@ def level_replay_evaluate(
     eval_envs = ProcgenEnv(
         num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
     )
+
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
@@ -321,7 +322,6 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
-
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
     agent = ProcgenAgent(
@@ -383,7 +383,7 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
-                        curriculum.log_metrics(writer, global_step)
+                        curriculum[0].log_metrics(writer, global_step)
                     break
 
         # bootstrap value if not done
