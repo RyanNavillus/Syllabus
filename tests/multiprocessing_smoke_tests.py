@@ -21,26 +21,26 @@ nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
 
 curricula = [
-        (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
-        (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
-        # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
-        (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
-        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
-           "get_value": get_test_values,
-           "device": "cpu",
-           "num_processes": N_ENVS,
-           "num_steps": 2048,
-           "robust_plr": True,
-           "eval_envs": create_nethack_env(),
-           "action_value_fn": get_action_value
-        }),
-        (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
-        (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
-            'start_values': [-0.02, 0.02],
-            'end_values': [-0.3, 0.3],
-            'total_steps': [10]
-        }),
-        (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
+    (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
+    (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
+    # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
+    (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
+    (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
+        "get_value": get_test_values,
+        "device": "cpu",
+        "num_processes": N_ENVS,
+        "num_steps": 2048
+        "robust_plr": True,
+        "eval_envs": create_nethack_env(),
+        "action_value_fn": get_action_value
+    }),
+    (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
+    (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
+        'start_values': [-0.02, 0.02],
+        'end_values': [-0.3, 0.3],
+        'total_steps': [10]
+    }),
+    (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
 ]
 
 test_names = [curriculum_args[0].__name__ for curriculum_args in curricula]

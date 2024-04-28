@@ -177,9 +177,9 @@ class SequentialCurriculum(Curriculum):
         if self.current_curriculum.requires_episode_updates:
             self.current_curriculum.update_on_episode(episode_return, episode_len, episode_task, env_id)
 
-    def update_on_step(self, obs, rew, term, trunc, info, env_id=None):
+    def update_on_step(self, task, obs, rew, term, trunc, info, env_id=None):
         if self.current_curriculum.requires_step_updates:
-            self.current_curriculum.update_on_step(obs, rew, term, trunc, info, env_id)
+            self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, env_id)
 
     def update_on_step_batch(self, step_results, env_id=None):
         if self.current_curriculum.requires_step_updates:

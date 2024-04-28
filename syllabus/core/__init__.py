@@ -13,3 +13,4 @@ from .curriculum_sync_wrapper import (CurriculumWrapper,
 
 from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper    # , PettingZooMultiProcessingSyncWrapper
 from .multivariate_curriculum_wrapper import MultitaskWrapper
+from .stat_recorder import StatRecorder
