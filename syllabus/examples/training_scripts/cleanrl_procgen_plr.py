@@ -257,6 +257,7 @@ if __name__ == "__main__":
             print("Using prioritized level replay.")
 
             plr_eval_env = make_env(args.env_id, args.seed, num_levels=200)()
+            plr_eval_env = ProcgenTaskWrapper(plr_eval_env, args.env_id, seed=args.seed)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
