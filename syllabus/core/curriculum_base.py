@@ -29,8 +29,7 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
-        if record_stats:
-            self.stat_recorder = StatRecorder(self.task_space)
+        self.stat_recorder = StatRecorder(self.task_space) if record_stats else None
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
