@@ -60,7 +60,7 @@ class RolloutStorage(object):
     def insert_at_index(self, env_index, mask=None, action_log_dist=None, obs=None, reward=None, task=None, steps=1):
         if self._first_step[env_index]:
             self._first_step[env_index] = False
-            self.obs[0][env_index] = obs
+            self.obs[0][env_index] = obs[0]
             return
 
         step = self.env_steps[env_index]
@@ -96,8 +96,8 @@ class RolloutStorage(object):
         for step in range(0, self.num_steps, self.num_processes):
             ob_list = []
             for i in range(self.num_processes):
-                o = self.obs[step + i]
-                ob_list.append(o[env_index])
+                o = self.obs[step + i][env_index]
+                ob_list.append(o)
             values = self._get_value(ob_list)
 
             # Reshape values if necessary
