@@ -80,6 +80,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             for add_task in added_tasks:
                 self.env.add_task(add_task)
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+        info["task"] = self.task_space.encode(self.get_task())
 
         # Add reset obs
         if self.update_on_step:
@@ -131,6 +132,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 "request_sample": True
             }
             self.components.put_update([task_update, episode_update])
+
+        info["task"] = self.task_space.encode(self.get_task())
 
         return obs, rew, term, trunc, info
 

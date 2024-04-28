@@ -29,7 +29,7 @@ class RolloutStorage(object):
         self._get_value = get_value
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.obs = [[[0] for _ in range(self.num_processes)]] * (self.buffer_steps + 1)
+        self.obs = [[[0] for _ in range(self.num_processes)] for _ in range(self.buffer_steps)]
         self.env_steps = [0] * num_processes
         self.ready_buffers = set()
 
