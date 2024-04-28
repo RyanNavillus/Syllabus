@@ -16,6 +16,8 @@ class SyncTestEnv(TaskEnv):
     def reset(self, new_task=None):
         if new_task == "error task":
             warnings.warn("Received error task. This likely means that too many tasks are being requested.")
+        if new_task is None:
+            warnings.warn("No task provided. Resetting to error task.")
         self.task = new_task
         self._turn = 0
         return (self._turn, None), {"content": "reset", "task": self.task}

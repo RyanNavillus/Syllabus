@@ -120,7 +120,13 @@ class RolloutStorage(object):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(self.num_steps):
-            values = self._get_value(self.obs[step])[:, None]
+            values = self._get_value(self.obs[step])
+            if len(values.shape) == 3:
+                warnings.warn(f"Value function returned a 3D tensor of shape {values.shape}. Attempting to squeeze last dimension.")
+                values = torch.squeeze(values, -1)
+            if len(values.shape) == 1:
+                warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
+                values = torch.unsqueeze(values, -1)
             self.value_preds[step].copy_(values)
 
     def after_update(self):
@@ -275,14 +281,6 @@ class PrioritizedLevelReplay(Curriculum):
             reward=rews,
             obs=obs,
             steps=len(rews),
-        )
-
-    def update_on_episode(self, episode_return: float, episode_task, env_id: int = None) -> None:
-        """
-        Update the curriculum with episode results from the environment.
-        """
-        raise NotImplementedError(
-            "PrioritizedLevelReplay does not support the episode updates. Use on_demand from the learner process."
         )
 
     def update_task_progress(self, task: Any, success_prob: float, env_id: int = None) -> None:
