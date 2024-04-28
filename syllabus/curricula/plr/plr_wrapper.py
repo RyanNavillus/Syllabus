@@ -224,6 +224,9 @@ class PrioritizedLevelReplay(Curriculum):
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
+        if robust_plr and eval_envs is None:
+            raise UsageError("RobustPLR requires evaluation environments to be provided.")
+
         self._num_steps = num_steps  # Number of steps stored in rollouts and used to update task sampler
         self._num_processes = num_processes  # Number of parallel environments
         self._gamma = gamma

@@ -227,12 +227,22 @@ def fast_level_replay_evaluate(
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
-def make_value_fn():
+def make_value_fn(agent):
     def get_value(obs):
         obs = np.array(obs)
+        print(obs.shape)
         with torch.no_grad():
             return agent.get_value(torch.Tensor(obs).to(device))
     return get_value
+
+
+def make_action_value_fn(agent):
+    def get_action_value(obs):
+        obs = np.array(obs[None,:])
+        with torch.no_grad():
+            action, logprob, _, value = agent.get_action_and_value(torch.Tensor(obs).to(device))
+        return action.cpu().numpy(), value
+    return get_action_value
 
 
 if __name__ == "__main__":
@@ -268,6 +278,15 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     print("Device:", device)
 
+    print("Creating agent")
+    agent = ProcgenAgent(
+        (64, 64, 3),
+        15,
+        arch="large",
+        base_kwargs={'recurrent': False, 'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+
     # Curriculum setup
     curriculum = None
     if args.curriculum:
@@ -278,6 +297,8 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
+
+            plr_eval_env = make_env(args.env_id, args.seed, num_levels=200)()
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -286,7 +307,10 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
-                get_value=make_value_fn(),
+                get_value=make_value_fn(agent),
+                robust_plr=True,
+                eval_envs=plr_eval_env,
+                action_value_fn=make_action_value_fn(agent),
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -340,16 +364,6 @@ if __name__ == "__main__":
     )
     train_eval_envs = wrap_vecenv(train_eval_envs)
 
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        envs.single_observation_space.shape,
-        envs.single_action_space.n,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
     actions = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
@@ -369,6 +383,7 @@ if __name__ == "__main__":
     completed_episodes = 0
 
     for update in range(1, num_updates + 1):
+        print("Update", update)
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
             frac = 1.0 - (update - 1.0) / num_updates
