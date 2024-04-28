@@ -111,12 +111,14 @@ class Curriculum:
         :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
         :raises NotImplementedError:
         """
-        self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
+        if self.stat_recorder is not None:
+            self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
 
     def normalize(self, reward, task):
         """
         Normalize reward by task.
         """
+        assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
     def update_on_demand(self, metrics: Dict):
