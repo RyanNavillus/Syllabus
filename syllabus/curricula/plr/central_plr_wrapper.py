@@ -1,7 +1,9 @@
 import warnings
+from collections import deque
 from typing import Any, Dict, List, Tuple, Union
 
 import gymnasium as gym
+import numpy as np
 import torch
 from gymnasium.spaces import Discrete, MultiDiscrete
 
@@ -141,6 +143,9 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             action_space=action_space,
         )
         self._rollouts.to(device)
+
+        self._recent_tasks = deque(maxlen=100)
+
         # TODO: Fix this feature
         self.num_updates = 0  # Used to ensure proper usage
         self.num_samples = 0  # Used to ensure proper usage
@@ -215,10 +220,11 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
     def sample(self, k: int = 1) -> Union[List, Any]:
         self.num_samples += 1
         if self._should_use_startup_sampling():
-            return self._startup_sample()
+            tasks = self._startup_sample()
         else:
-            return [self._task_sampler.sample() for _ in range(k)]
-
+            tasks = [self._task_sampler.sample() for _ in range(k)]
+        self._recent_tasks.extend(tasks)
+        return tasks
     def _enumerate_tasks(self, space):
         assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
         if isinstance(space, Discrete):
@@ -230,10 +236,12 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        super().log_metrics(writer, step)
+        # super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
         writer.add_scalar("curriculum/score", metrics["score"], step)
+        writer.add_scalar("curriculum/unique_tasks", len(np.unique(self._recent_tasks)), step)
+
         for task in list(self.task_space.tasks)[:10]:
             writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
             writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)

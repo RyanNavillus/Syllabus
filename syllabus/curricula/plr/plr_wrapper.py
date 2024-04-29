@@ -1,4 +1,5 @@
 import warnings
+from collections import deque
 from typing import Any, Dict, List, Tuple, Union
 
 import gymnasium as gym
@@ -226,6 +227,7 @@ class PrioritizedLevelReplay(Curriculum):
             get_value=get_value if get_value is not None else null,
         )
         self._rollouts.to(device)
+        self._recent_tasks = deque(maxlen=100)
 
     def set_value_fn(self, value_fn):
         self._rollouts._get_value = value_fn
@@ -238,9 +240,11 @@ class PrioritizedLevelReplay(Curriculum):
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         if self._should_use_startup_sampling():
-            return self._startup_sample()
+            tasks = self._startup_sample()
         else:
-            return [self._task_sampler.sample() for _ in range(k)]
+            tasks = [self._task_sampler.sample() for _ in range(k)]
+        self._recent_tasks.extend(tasks)
+        return tasks
 
     def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
@@ -312,6 +316,8 @@ class PrioritizedLevelReplay(Curriculum):
         metrics = self._task_sampler.metrics()
         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
         writer.add_scalar("curriculum/score", metrics["score"], step)
+        writer.add_scalar("curriculum/unique_tasks", len(np.unique(self._recent_tasks)), step)
+
         for task in list(self.task_space.tasks)[:10]:
             writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
             writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)

@@ -94,7 +94,7 @@ class TaskSampler:
         else:
             raise ValueError(f"Unsupported strategy, {self.strategy}")
 
-        self._update_with_rollouts(rollouts, score_function, actor_index=actor_id)
+        self._update_with_rollouts(rollouts, score_function, actor_index=actor_index)
 
     def update_task_score(self, actor_index, task_idx, score, num_steps):
         score = self._partial_update_task_score(actor_index, task_idx, score, num_steps, done=True)
