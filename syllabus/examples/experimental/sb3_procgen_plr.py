@@ -16,7 +16,7 @@ from procgen import ProcgenEnv
 import torch
 import wandb
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import BaseCallback, CallbackList
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList, EvalCallback
 from stable_baselines3.common.vec_env import (VecExtractDictObs, DummyVecEnv, VecMonitor,
                                               VecNormalize)
 from stable_baselines3.common.env_util import make_vec_env
@@ -30,7 +30,6 @@ from syllabus.core import (MultiProcessingSyncWrapper,
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from wandb.integration.sb3 import WandbCallback
-from syllabus.core import MultiProcessingComponents
 
 
 
@@ -156,11 +155,11 @@ class VecExtractDictObs(VecEnvWrapper):
         return obs[self.key], reward, done, infos
 
 
-def make_env(task_queue, update_queue, env_id, seed, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-        components = MultiProcessingComponents(task_queue=task_queue, update_queue=update_queue)  
+        components = curriculum.get_components()
         if curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
@@ -172,15 +171,7 @@ def make_env(task_queue, update_queue, env_id, seed, curriculum=None, start_leve
         return env
     return thunk
 
-
-def wrap_vecenv(vecenv):
-    vecenv = VecMonitor(venv=vecenv, filename=None)
-    vecenv = VecNormalize(venv=vecenv, norm_obs=False, norm_reward=True, training=True)
-    return vecenv
-
-
 def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
-    model.policy.eval()
 
     eval_envs = ProcgenEnv(
     num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
@@ -189,23 +180,26 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_envs = VecExtractDictObs(eval_envs, "rgb") 
     eval_envs = wrap_vecenv(eval_envs)
 
-    eval_obs = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
+    episode_rewards, _ = evaluate_policy(
+                model,
+                eval_envs,
+                n_eval_episodes=num_episodes,
+                render=False,
+                deterministic=False,
+                return_episode_rewards=True,
+                warn=True,
+            )
 
-    while -1 in eval_episode_rewards:
-        eval_action, _states = model.predict(eval_obs, deterministic=False) 
-
-        eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
-
-    mean_returns = np.mean(eval_episode_rewards)
-    stddev_returns = np.std(eval_episode_rewards)
+    mean_returns = np.mean(episode_rewards)
+    stddev_returns = np.std(episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    model.policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
+
+def wrap_vecenv(vecenv):
+    vecenv = VecMonitor(venv=vecenv, filename=None)
+    vecenv = VecNormalize(venv=vecenv, norm_obs=False, norm_reward=True, training=False)
+    return vecenv
 
 
 class CustomCallback(BaseCallback):
@@ -217,26 +211,24 @@ class CustomCallback(BaseCallback):
     def __init__(self, curriculum, verbose=0):
         super().__init__(verbose)
         self.curriculum = curriculum
-        self.global_step = 0
 
     def _on_step(self) -> bool:
-        if args.curriculum and args.curriculum_method == "plr":
-            tasks = self.training_env.venv.venv.venv.get_attr("task")
-
-            update = {
-                "update_type": "on_demand",
-                "metrics": {
-                    "value": self.locals["values"],
-                    "next_value": self.locals["values"],
-                    "rew": self.locals["rewards"],
-                    "dones": self.locals["dones"],
-                    "tasks": tasks,
-                },
-            }
-            self.curriculum.update_curriculum(update)
-        self.global_step += args.num_steps * args.num_envs
-        mean_eval_returns, _, _ = level_replay_evaluate_sb3(args.env_id, model, args.num_eval_episodes, num_levels=0)
-        writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.global_step)
+        if self.num_timesteps % 256 * 64 == 0:
+            if args.curriculum and args.curriculum_method == "plr":
+                tasks = self.training_env.venv.venv.venv.get_attr("task")
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": self.locals["values"],
+                        "next_value": self.locals["values"],
+                        "rew": self.locals["rewards"],
+                        "dones": self.locals["dones"],
+                        "tasks": tasks,
+                    },
+                }
+                self.curriculum.update_curriculum(update)
+            mean_eval_returns, _, _ = level_replay_evaluate_sb3(args.env_id, model, args.num_eval_episodes, num_levels=0)
+            writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
         return True
 
 
@@ -260,7 +252,7 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
-            dir=args.logging_dir
+            dir=args.logging_dir,
         )
 
     writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
@@ -291,18 +283,18 @@ if __name__ == "__main__":
             curriculum = DomainRandomization(sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+        curriculum = make_multiprocessing_curriculum(curriculum)
         del sample_env
 
     # env setup
     print("Creating env")
     venv = DummyVecEnv(
     [
-        make_env(task_queue, update_queue, args.env_id,
+        make_env(args.env_id,
                 args.seed + i,
                 curriculum=curriculum if args.curriculum else None,
                 num_levels=1 if args.curriculum else 0)
-        for i in range(64)
+        for i in range(args.num_envs)
     ]
     )
     venv = wrap_vecenv(venv)
@@ -328,6 +320,7 @@ if __name__ == "__main__":
         model_save_path=f"models/{run.id}",
         verbose=2,
     )
+    
     plr_callback = CustomCallback(curriculum)
     callback = CallbackList([wandb_callback, plr_callback])
     model.learn(
