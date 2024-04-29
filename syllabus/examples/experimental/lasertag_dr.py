@@ -4,6 +4,8 @@ import sys
 import time
 from typing import Dict, Tuple, TypeVar
 
+
+import joblib
 import numpy as np
 import pandas as pd
 import plotly
@@ -402,6 +404,22 @@ if __name__ == "__main__":
 
                         next_obs = env.reset(env_task)
 
+                        # store learner checkpoints
+                        if (
+                            args.save_agent_checkpoints
+                            and n_updates % args.checkpoint_frequency == 0
+                        ):
+                            print(f"saving checkpoint --{n_updates}")
+                            joblib.dump(
+                                agent,
+                                filename=(
+                                    f"{args.logging_dir}/{exp_name}_checkpoints/"
+                                    f"{mp_curriculum.curriculum.env_curriculum.name}_"
+                                    f"{mp_curriculum.curriculum.agent_curriculum.name}_{n_updates}"
+                                    f"_seed_{args.seed}.pkl"
+                                ),
+                            )
+
             # gae
             with torch.no_grad():
                 next_value = agent.get_value(
@@ -514,16 +532,19 @@ if __name__ == "__main__":
                     n_updates += 1
                     pbar.update(1)
 
+                    # update opponent
+                    if args.agent_curriculum in ["FSP", "PFSP"]:
+                        if (
+                            n_updates % args.agent_update_frequency == 0
+                            and episode != 0
+                        ):
+                            mp_curriculum.update_agent(agent)
+
             y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
             var_y = np.var(y_true)
             explained_var = (
                 np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
             )
-
-            # update opponent
-            if args.agent_curriculum in ["FSP", "PFSP"]:
-                if n_updates % args.agent_update_frequency == 0 and episode != 0:
-                    mp_curriculum.update_agent(agent)
 
     if args.track:
         # agent tasks
