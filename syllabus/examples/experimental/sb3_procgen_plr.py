@@ -16,7 +16,7 @@ from procgen import ProcgenEnv
 import torch
 import wandb
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import BaseCallback, CallbackList
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList, EvalCallback
 from stable_baselines3.common.vec_env import (VecExtractDictObs, DummyVecEnv, VecMonitor,
                                               VecNormalize)
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
@@ -171,7 +171,6 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     return thunk
 
 def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
-    model.policy.eval()
 
     eval_envs = ProcgenEnv(
     num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
@@ -180,22 +179,20 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_envs = VecExtractDictObs(eval_envs, "rgb") 
     eval_envs = wrap_vecenv(eval_envs)
 
-    eval_obs = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
+    episode_rewards, _ = evaluate_policy(
+                model,
+                eval_envs,
+                n_eval_episodes=num_episodes,
+                render=False,
+                deterministic=False,
+                return_episode_rewards=True,
+                warn=True,
+            )
 
-    while -1 in eval_episode_rewards:
-        eval_action, _states = model.predict(eval_obs, deterministic=False) 
-
-        eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
-
-    mean_returns = np.mean(eval_episode_rewards)
-    stddev_returns = np.std(eval_episode_rewards)
+    mean_returns = np.mean(episode_rewards)
+    stddev_returns = np.std(episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    model.policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 def wrap_vecenv(vecenv):
