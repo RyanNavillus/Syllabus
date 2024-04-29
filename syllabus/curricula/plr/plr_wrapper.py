@@ -95,13 +95,13 @@ class RolloutStorage(object):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(0, self.num_steps + 1, self.num_processes):
-            ob_list = []
+            obs_list = []
             for i in range(self.num_processes):
                 if step + i >= self.num_steps + 1:
                     break
                 o = self.obs[step + i][env_index]
-                ob_list.append(o)
-            values = self._get_value(ob_list)
+                obs_list.append(o)
+            values = self._get_value(obs_list)
 
             # Reshape values if necessary
             if len(values.shape) == 3:
@@ -111,30 +111,30 @@ class RolloutStorage(object):
                 warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
                 values = torch.unsqueeze(values, -1)
 
-            self.value_preds[step: step + self.num_processes, env_index].copy_(values)
+            self.value_preds[step: step + len(obs_list), env_index].copy_(values)
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
-        self.tasks = self.tasks.roll(-self.num_steps, 0)
+        self.tasks[:, env_index] = self.tasks[:, env_index].roll(-self.num_steps, 0)
         self.tasks[-self.num_steps:, env_index] = 0
-        self.masks = self.masks.roll(-(self.num_steps - 1), 0)
+        self.masks[:, env_index] = self.masks[:, env_index].roll(-(self.num_steps - 1), 0)
         self.masks[-self.num_steps:, env_index] = 0
 
         for step in range(self.num_steps):
             self.obs[step][env_index] = self.obs[self.num_steps + step - 1][env_index]
 
         if self._requires_value_buffers:
-            self.returns = self.returns.roll(-self.num_steps, 0)
+            self.returns[:, env_index] = self.returns[:, env_index].roll(-self.num_steps, 0)
             self.returns[-self.num_steps:, env_index] = 0
 
-            self.rewards = self.rewards.roll(-self.num_steps, 0)
+            self.rewards[:, env_index] = self.rewards[:, env_index].roll(-self.num_steps, 0)
             self.rewards[-self.num_steps:, env_index] = 0
 
-            self.value_preds = self.value_preds.roll(-self.num_steps, 0)
+            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-self.num_steps, 0)
             self.value_preds[-self.num_steps:, env_index] = 0
 
         else:
-            self.action_log_dist = self.action_log_dist.roll(-self.num_steps, 0)
+            self.action_log_dist[:, env_index] = self.action_log_dist[:, env_index].roll(-self.num_steps, 0)
             self.action_log_dist[-self.num_steps:, env_index] = 0
 
         self.env_steps[env_index] -= self.num_steps
