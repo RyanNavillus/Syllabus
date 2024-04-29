@@ -93,9 +93,11 @@ class RolloutStorage(object):
     def _get_values(self, env_index):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
-        for step in range(0, self.num_steps, self.num_processes):
+        for step in range(0, self.num_steps + 1, self.num_processes):
             ob_list = []
             for i in range(self.num_processes):
+                if step + i >= self.num_steps + 1:
+                    break
                 o = self.obs[step + i][env_index]
                 ob_list.append(o)
             values = self._get_value(ob_list)
@@ -113,16 +115,26 @@ class RolloutStorage(object):
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
         self.tasks = self.tasks.roll(-self.num_steps, 0)
+        self.tasks[-self.num_steps:, env_index] = 0
         self.masks = self.masks.roll(-(self.num_steps - 1), 0)
+        self.masks[-self.num_steps:, env_index] = 0
+
         for step in range(self.num_steps):
             self.obs[step][env_index] = self.obs[self.num_steps + step - 1][env_index]
 
         if self._requires_value_buffers:
             self.returns = self.returns.roll(-self.num_steps, 0)
+            self.returns[-self.num_steps:, env_index] = 0
+
             self.rewards = self.rewards.roll(-self.num_steps, 0)
+            self.rewards[-self.num_steps:, env_index] = 0
+
             self.value_preds = self.value_preds.roll(-self.num_steps, 0)
+            self.value_preds[-self.num_steps:, env_index] = 0
+
         else:
             self.action_log_dist = self.action_log_dist.roll(-self.num_steps, 0)
+            self.action_log_dist[-self.num_steps:, env_index] = 0
 
         self.env_steps[env_index] -= self.num_steps
         self.ready_buffers.remove(env_index)
@@ -131,7 +143,7 @@ class RolloutStorage(object):
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
         self._get_values(env_index)
         gae = 0
-        for step in reversed(range(self.rewards.size(0), self.num_steps)):
+        for step in reversed(range(self.num_steps)):
             delta = (
                 self.rewards[step, env_index]
                 + gamma * self.value_preds[step + 1, env_index] * self.masks[step + 1, env_index]
