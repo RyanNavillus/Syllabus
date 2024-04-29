@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
-from syllabus.examples.task_wrappers import ProcgenTaskWrapper, MinigridTaskWrapper
+from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
 
 
@@ -136,7 +136,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
-                update_on_step=False,
+                update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
             )
         return env
@@ -148,40 +148,6 @@ def wrap_vecenv(vecenv):
     vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
-
-
-def slow_level_replay_evaluate(
-    env_name,
-    policy,
-    num_episodes,
-    device,
-    num_levels=0
-):
-    policy.eval()
-
-    eval_envs = ProcgenEnv(
-        num_envs=1, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
-    )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = wrap_vecenv(eval_envs)
-    eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = []
-
-    while len(eval_episode_rewards) < num_episodes:
-        with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
-
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys():
-                eval_episode_rewards.append(info['episode']['r'])
-
-    mean_returns = np.mean(eval_episode_rewards)
-    stddev_returns = np.std(eval_episode_rewards)
-    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
-    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    policy.train()
-    return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def level_replay_evaluate(
@@ -265,9 +231,7 @@ if __name__ == "__main__":
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
-				# code to edit
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
-        # sample_env = MinigridTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
@@ -292,11 +256,11 @@ if __name__ == "__main__":
             print("Using sequential curriculum.")
             curricula = []
             stopping = []
-            for i in range(199):
-                curricula.append(i + 1)
-                stopping.append("steps>=50000")
-                curricula.append(list(range(i + 1)))
-                stopping.append("steps>=50000")
+            for i in range(0, 199, 10):
+                curricula.append(list(range(i, i+10)))
+                stopping.append("steps>=500000")
+                curricula.append(list(range(i + 10)))
+                stopping.append("steps>=500000")
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
@@ -481,13 +445,7 @@ if __name__ == "__main__":
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
-        slow_mean_eval_returns, slow_stddev_eval_returns, slow_normalized_mean_eval_returns = slow_level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
-        )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
-        )
-        slow_mean_train_returns, slow_stddev_train_returns, slow_normalized_mean_train_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
@@ -506,17 +464,11 @@ if __name__ == "__main__":
 
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_mean_episode_return", slow_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_normalized_mean_eval_return", slow_normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_stddev_eval_return", slow_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
 
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_mean_episode_return", slow_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_normalized_mean_train_return", slow_normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_stddev_train_return", slow_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
