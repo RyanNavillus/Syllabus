@@ -293,9 +293,9 @@ class PrioritizedLevelReplay(Curriculum):
     def _update_sampler(self, env_id):
         if self._task_sampler.requires_value_buffers:
             self._rollouts.compute_returns(self._gamma, self._gae_lambda, env_id)
-        self._task_sampler.update_with_rollouts(self._rollouts, env_id)
+        self._task_sampler.update_with_rollouts(self._rollouts, actor_index=env_id)
         self._rollouts.after_update(env_id)
-        self._task_sampler.after_update()
+        self._task_sampler.after_update(actor_index=env_id)
 
     def _enumerate_tasks(self, space):
         assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"

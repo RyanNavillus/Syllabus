@@ -74,7 +74,7 @@ class TaskSampler:
                 'Must provide action space to PLR if using "policy_entropy", "least_confidence", or "min_margin" strategies'
             )
 
-    def update_with_rollouts(self, rollouts, actor_id=None):
+    def update_with_rollouts(self, rollouts, actor_index=None):
         if self.strategy == "random":
             return
 
@@ -170,7 +170,7 @@ class TaskSampler:
         tasks = rollouts.tasks[:rollouts.num_steps]
         if not self.requires_value_buffers:
             policy_logits = rollouts.action_log_dist[:rollouts.num_steps]
-        done = ~(rollouts.masks[:rollouts.num_steps] > 0)
+        done = ~(rollouts.masks[:rollouts.num_steps + 1] > 0)
         total_steps, num_actors = tasks.shape[:2]
 
         actors = [actor_index] if actor_index is not None else range(num_actors)
@@ -230,14 +230,15 @@ class TaskSampler:
                 num_steps = len(rollouts.tasks[start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
-    def after_update(self):
+    def after_update(self, actor_index=None):
         # Reset partial updates, since weights have changed, and thus logits are now stale
-        for actor_index in range(self.partial_task_scores.shape[0]):
+        actors = [actor_index] if actor_index is not None else range(self.partial_task_scores.shape[0])
+        for actor_index in actors:
             for task_idx in range(self.partial_task_scores.shape[1]):
                 if self.partial_task_scores[actor_index][task_idx] != 0:
                     self.update_task_score(actor_index, task_idx, 0, 0)
-        self.partial_task_scores.fill(0)
-        self.partial_task_steps.fill(0)
+            self.partial_task_scores[actor_index].fill(0)
+            self.partial_task_steps[actor_index].fill(0)
 
     def _update_staleness(self, selected_idx):
         if self.staleness_coef > 0:
