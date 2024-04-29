@@ -1,0 +1,1 @@
+{"global_step": 16320, "_timestamp": 1713841250.5553138, "_runtime": 15.14670991897583, "_step": 82, "charts/episodic_return": 1.0, "charts/episodic_length": 150.0, "curriculum/proportion_seen": 0.0, "curriculum/score": 0.0, "_wandb": {"runtime": 27}}

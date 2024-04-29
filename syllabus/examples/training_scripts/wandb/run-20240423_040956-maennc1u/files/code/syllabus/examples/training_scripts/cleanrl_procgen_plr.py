@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
-from syllabus.examples.task_wrappers import ProcgenTaskWrapper, MinigridTaskWrapper
+from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
 
 
@@ -266,8 +266,8 @@ if __name__ == "__main__":
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
 				# code to edit
-        sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
-        # sample_env = MinigridTaskWrapper(sample_env, args.env_id, seed=args.seed)
+        # sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
+        sample_env = MinigridTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":

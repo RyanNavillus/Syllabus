@@ -1,0 +1,1417 @@
+diff --git a/setup.py b/setup.py
+index 31e09f2..22a94e8 100644
+--- a/setup.py
++++ b/setup.py
+@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
+ 
+ 
+ extras = dict()
+-extras['test'] = ['cmake', 'ninja', 'nle>=0.9.0', 'matplotlib>=3.7.1', 'scipy==1.10.0', 'tensorboard>=2.13.0', 'shimmy']
++extras['test'] = ['cmake', 'matplotlib>=3.7.1', 'scipy==1.10.0', 'tensorboard>=2.13.0', 'shimmy']
+ extras['docs'] = ['sphinx-tabs', 'sphinxcontrib-spelling', 'furo']
+ extras['all'] = extras['test'] + extras['docs']
+ 
+diff --git a/syllabus/core/curriculum_base.py b/syllabus/core/curriculum_base.py
+index 03284da..4ca9aeb 100644
+--- a/syllabus/core/curriculum_base.py
++++ b/syllabus/core/curriculum_base.py
+@@ -76,7 +76,7 @@ class Curriculum:
+         """
+         self.completed_tasks += 1
+ 
+-    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
++    def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
+         """ Update the curriculum with the current step results from the environment.
+ 
+         :param obs: Observation from teh environment
+@@ -88,7 +88,7 @@ class Curriculum:
+         """
+         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+ 
+-    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int, int]], env_id: int = None) -> None:
++    def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
+         """Update the curriculum with a batch of step results from the environment.
+ 
+         This method can be overridden to provide a more efficient implementation. It is used
+@@ -96,9 +96,9 @@ class Curriculum:
+ 
+         :param step_results: List of step results
+         """
+-        obs, rews, terms, truncs, infos = tuple(step_results)
++        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
+         for i in range(len(obs)):
+-            self.update_on_step(obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
++            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+ 
+     def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+         """Update the curriculum with episode results from the environment.
+diff --git a/syllabus/core/curriculum_sync_wrapper.py b/syllabus/core/curriculum_sync_wrapper.py
+index 6e069d8..f986643 100644
+--- a/syllabus/core/curriculum_sync_wrapper.py
++++ b/syllabus/core/curriculum_sync_wrapper.py
+@@ -29,6 +29,14 @@ class CurriculumWrapper:
+     def tasks(self):
+         return self.task_space.tasks
+ 
++    @property
++    def requires_step_updates(self):
++        return self.curriculum.requires_step_updates
++
++    @property
++    def requires_episode_updates(self):
++        return self.curriculum.requires_episode_updates
++
+     def get_tasks(self, task_space=None):
+         return self.task_space.get_tasks(gym_space=task_space)
+ 
+diff --git a/syllabus/core/environment_sync_wrapper.py b/syllabus/core/environment_sync_wrapper.py
+index c995aa1..6edee7c 100644
+--- a/syllabus/core/environment_sync_wrapper.py
++++ b/syllabus/core/environment_sync_wrapper.py
+@@ -19,7 +19,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
+     def __init__(self,
+                  env,
+                  components: MultiProcessingComponents,
+-                 update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
++                 update_on_step: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
++                 update_on_progress: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
+                  batch_size: int = 100,
+                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
+                  task_space: TaskSpace = None,
+@@ -34,6 +35,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
+         self.update_queue = components.update_queue
+         self.task_space = task_space
+         self.update_on_step = update_on_step
++        self.update_on_progress = update_on_progress
+         self.batch_size = batch_size
+         self.global_task_completion = global_task_completion
+         self.task_progress = 0.0
+@@ -125,17 +127,21 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
+     def _package_step_updates(self):
+         step_batch = {
+             "update_type": "step_batch",
+-            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
++            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+             "env_id": self.instance_id,
+             "request_sample": False
+         }
+-        task_batch = {
+-            "update_type": "task_progress_batch",
+-            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
+-            "env_id": self.instance_id,
+-            "request_sample": False
+-        }
+-        return [step_batch, task_batch]
++        update = [step_batch]
++
++        if self.update_on_progress:
++            task_batch = {
++                "update_type": "task_progress_batch",
++                "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
++                "env_id": self.instance_id,
++                "request_sample": False
++            }
++            update.append(task_batch)
++        return update
+ 
+     def add_task(self, task):
+         update = {
+diff --git a/syllabus/curricula/annealing_box.py b/syllabus/curricula/annealing_box.py
+index 6c565ec..101981c 100644
+--- a/syllabus/curricula/annealing_box.py
++++ b/syllabus/curricula/annealing_box.py
+@@ -49,8 +49,8 @@ class AnnealingBoxCurriculum(Curriculum):
+         """
+         # Linear annealing from start_values to end_values
+         annealed_values = (
+-                self.start_values + (self.end_values - self.start_values) *
+-                np.minimum(self.current_step, self.total_steps) / self.total_steps
++            self.start_values + (self.end_values - self.start_values) *
++            np.minimum(self.current_step, self.total_steps) / self.total_steps
+         )
+ 
+-        return [annealed_values.copy() for _ in range(k)]
+\ No newline at end of file
++        return [annealed_values.copy() for _ in range(k)]
+diff --git a/syllabus/curricula/noop.py b/syllabus/curricula/noop.py
+index f6bd5dc..fb5d8ae 100644
+--- a/syllabus/curricula/noop.py
++++ b/syllabus/curricula/noop.py
+@@ -28,7 +28,7 @@ class NoopCurriculum(Curriculum):
+         """
+         pass
+ 
+-    def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
++    def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
+         """
+         Update the curriculum with the current step results from the environment.
+         """
+diff --git a/syllabus/curricula/plr/plr_wrapper.py b/syllabus/curricula/plr/plr_wrapper.py
+index 9515df4..9c808dd 100644
+--- a/syllabus/curricula/plr/plr_wrapper.py
++++ b/syllabus/curricula/plr/plr_wrapper.py
+@@ -23,16 +23,15 @@ class RolloutStorage(object):
+         get_value=None,
+     ):
+         self.num_steps = num_steps
+-        self.buffer_steps = num_steps * 2  # Hack to prevent overflow from lagging updates.
++        self.buffer_steps = num_steps * 4  # Hack to prevent overflow from lagging updates.
+         self.num_processes = num_processes
+         self._requires_value_buffers = requires_value_buffers
+         self._get_value = get_value
+         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
+         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
+         self.obs = [[[0] for _ in range(self.num_processes)]] * self.buffer_steps
+-        self._fill = torch.zeros(self.buffer_steps, num_processes, 1)
+         self.env_steps = [0] * num_processes
+-        self.should_update = False
++        self.ready_buffers = set()
+ 
+         if requires_value_buffers:
+             self.returns = torch.zeros(self.buffer_steps + 1, num_processes, 1)
+@@ -46,12 +45,10 @@ class RolloutStorage(object):
+             self.action_log_dist = torch.zeros(self.buffer_steps, num_processes, action_space.n)
+ 
+         self.num_steps = num_steps
+-        self.step = 0
+ 
+     def to(self, device):
+         self.masks = self.masks.to(device)
+         self.tasks = self.tasks.to(device)
+-        self._fill = self._fill.to(device)
+         if self._requires_value_buffers:
+             self.rewards = self.rewards.to(device)
+             self.value_preds = self.value_preds.to(device)
+@@ -59,108 +56,79 @@ class RolloutStorage(object):
+         else:
+             self.action_log_dist = self.action_log_dist.to(device)
+ 
+-    def insert(self, masks, action_log_dist=None, value_preds=None, rewards=None, tasks=None):
+-        if self._requires_value_buffers:
+-            assert (value_preds is not None and rewards is not None), "Selected strategy requires value_preds and rewards"
+-            if len(rewards.shape) == 3:
+-                rewards = rewards.squeeze(2)
+-            self.value_preds[self.step].copy_(torch.as_tensor(value_preds))
+-            self.rewards[self.step].copy_(torch.as_tensor(rewards)[:, None])
+-            self.masks[self.step + 1].copy_(torch.as_tensor(masks)[:, None])
+-        else:
+-            self.action_log_dist[self.step].copy_(action_log_dist)
+-        if tasks is not None:
+-            assert isinstance(tasks[0], int), "Provided task must be an integer"
+-            self.tasks[self.step].copy_(torch.as_tensor(tasks)[:, None])
+-        self.step = (self.step + 1) % self.num_steps
+-
+     def insert_at_index(self, env_index, mask=None, action_log_dist=None, obs=None, reward=None, task=None, steps=1):
+-        if env_index >= self.num_processes:
+-            warnings.warn(f"Env index {env_index} is greater than the number of processes {self.num_processes}. Using index {env_index % self.num_processes} instead.")
+-            env_index = env_index % self.num_processes
+-
+         step = self.env_steps[env_index]
+         end_step = step + steps
+-        # Update buffer fill traacker, and check for common usage errors.
+-        try:
+-            if end_step > len(self._fill):
+-                raise IndexError
+-            self._fill[step:end_step, env_index] = 1
+-        except IndexError as e:
+-            if any(self._fill[:][env_index] == 0):
+-                raise UsageError(f"Step {step} + {steps} = {end_step} is out of range for env index {env_index}. Your value for PLR's num_processes may be too high.") from e
+-            else:
+-                raise UsageError(f"Step {step} + {steps} = {end_step}  is out of range for env index {env_index}. Your value for PLR's num_processes may be too low.") from e
+ 
+         if mask is not None:
+             self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
++
+         if obs is not None:
+             for s in range(step, end_step):
+                 self.obs[s][env_index] = obs[s - step]
++
+         if reward is not None:
+             self.rewards[step:end_step, env_index].copy_(torch.as_tensor(reward[:, None]))
++
+         if action_log_dist is not None:
+             self.action_log_dist[step:end_step, env_index].copy_(torch.as_tensor(action_log_dist[:, None]))
++
+         if task is not None:
+             try:
+-                task = int(task)
++                int(task[0])
+             except TypeError:
+-                assert isinstance(task, int), f"Provided task must be an integer, got {task} with type {type(task)} instead."
+-            self.tasks[step:end_step, env_index].copy_(torch.as_tensor(task))
+-        else:
+-            self.env_steps[env_index] += steps
+-            # Hack for now, we call insert_at_index twice
+-            while all(self._fill[self.step] == 1):
+-                self.step = (self.step + 1) % self.buffer_steps
+-                # Check if we have enough steps to compute a task sampler update
+-                if self.step == self.num_steps + 1:
+-                    self.should_update = True
+-
+-    def _get_values(self):
++                assert isinstance(task, int), f"Provided task must be an integer, got {task[0]} with type {type(task[0])} instead."
++            self.tasks[step:end_step, env_index].copy_(torch.as_tensor(np.array(task)[:, None]))
++
++        self.env_steps[env_index] += steps
++        if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps:
++            self.ready_buffers.add(env_index)
++
++    def _get_values(self, env_index):
+         if self._get_value is None:
+             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
+-        for step in range(self.num_steps):
+-            values = self._get_value(self.obs[step])
++        for step in range(0, self.num_steps, self.num_processes):
++            obs = self.obs[step: step + self.num_processes][env_index]
++            values = self._get_value(obs)
++
++            # Reshape values if necessary
+             if len(values.shape) == 3:
+                 warnings.warn(f"Value function returned a 3D tensor of shape {values.shape}. Attempting to squeeze last dimension.")
+                 values = torch.squeeze(values, -1)
+             if len(values.shape) == 1:
+                 warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
+                 values = torch.unsqueeze(values, -1)
+-            self.value_preds[step].copy_(values)
+ 
+-    def after_update(self):
++            self.value_preds[step: step + self.num_processes, env_index].copy_(values)
++
++    def after_update(self, env_index):
+         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
+-        self.tasks[0: self.num_steps].copy_(self.tasks[self.num_steps: self.buffer_steps])
+-        self.masks[0: self.num_steps].copy_(self.masks[self.num_steps: self.buffer_steps])
+-        self.obs[0: self.num_steps][:] = self.obs[self.num_steps: self.buffer_steps][:]
++        self.tasks = self.tasks.roll(-self.num_steps, 0)
++        self.masks = self.masks.roll(-self.num_steps, 0)
++        self.obs[0:][env_index] = self.obs[self.num_steps: self.buffer_steps][env_index]
+ 
+         if self._requires_value_buffers:
+-            self.returns[0: self.num_steps].copy_(self.returns[self.num_steps: self.buffer_steps])
+-            self.rewards[0: self.num_steps].copy_(self.rewards[self.num_steps: self.buffer_steps])
+-            self.value_preds[0: self.num_steps].copy_(self.value_preds[self.num_steps: self.buffer_steps])
++            self.returns = self.returns.roll(-self.num_steps, 0)
++            self.rewards = self.rewards.roll(-self.num_steps, 0)
++            self.value_preds = self.value_preds.roll(-self.num_steps, 0)
+         else:
+-            self.action_log_dist[0: self.num_steps].copy_(self.action_log_dist[self.num_steps: self.buffer_steps])
++            self.action_log_dist = self.action_log_dist.roll(-self.num_steps, 0)
+ 
+-        self._fill[0: self.num_steps].copy_(self._fill[self.num_steps: self.buffer_steps])
+-        self._fill[self.num_steps: self.buffer_steps].copy_(0)
++        self.env_steps[env_index] -= self.num_steps
++        self.ready_buffers.remove(env_index)
+ 
+-        self.env_steps = [steps - self.num_steps for steps in self.env_steps]
+-        self.should_update = False
+-        self.step = self.step - self.num_steps
+-
+-    def compute_returns(self, gamma, gae_lambda):
++    def compute_returns(self, gamma, gae_lambda, env_index):
+         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
+-        self._get_values()
++        self._get_values(env_index)
+         gae = 0
+         for step in reversed(range(self.rewards.size(0), self.num_steps)):
+             delta = (
+-                self.rewards[step]
+-                + gamma * self.value_preds[step + 1] * self.masks[step + 1]
+-                - self.value_preds[step]
++                self.rewards[step, env_index]
++                + gamma * self.value_preds[step + 1, env_index] * self.masks[step + 1, env_index]
++                - self.value_preds[step, env_index]
+             )
+-            gae = delta + gamma * gae_lambda * self.masks[step + 1] * gae
+-            self.returns[step] = gae + self.value_preds[step]
++            gae = delta + gamma * gae_lambda * self.masks[step + 1, env_index] * gae
++            self.returns[step, env_index] = gae + self.value_preds[step, env_index]
+ 
+ 
+ def null(x):
+@@ -252,11 +220,15 @@ class PrioritizedLevelReplay(Curriculum):
+         else:
+             return [self._task_sampler.sample() for _ in range(k)]
+ 
+-    def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
++    def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
+         """
+         Update the curriculum with the current step results from the environment.
+         """
+         assert env_id is not None, "env_id must be provided for PLR updates."
++        if env_id >= self._num_processes:
++            warnings.warn(f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
++            env_id = env_id % self._num_processes
++
+         # Update rollouts
+         self._rollouts.insert_at_index(
+             env_id,
+@@ -266,14 +238,22 @@ class PrioritizedLevelReplay(Curriculum):
+             obs=np.array([obs]),
+         )
+ 
++        # Update task sampler
++        if env_id in self._rollouts.ready_buffers:
++            self._update_sampler(env_id)
++
+     def update_on_step_batch(
+-        self, step_results: List[Tuple[Any, int, bool, bool, Dict]], env_id: int = None
++        self, step_results: List[Tuple[int, Any, int, bool, bool, Dict]], env_id: int = None
+     ) -> None:
+         """
+         Update the curriculum with a batch of step results from the environment.
+         """
+         assert env_id is not None, "env_id must be provided for PLR updates."
+-        obs, rews, terms, truncs, infos = step_results
++        if env_id >= self._num_processes:
++            warnings.warn(f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
++            env_id = env_id % self._num_processes
++
++        tasks, obs, rews, terms, truncs, infos = step_results
+         self._rollouts.insert_at_index(
+             env_id,
+             mask=np.logical_not(np.logical_or(terms, truncs)),
+@@ -281,25 +261,19 @@ class PrioritizedLevelReplay(Curriculum):
+             reward=rews,
+             obs=obs,
+             steps=len(rews),
++            task=tasks,
+         )
+ 
+-    def update_task_progress(self, task: Any, success_prob: float, env_id: int = None) -> None:
+-        """
+-        Update the curriculum with a task and its success probability upon
+-        success or failure.
+-        """
+-        assert env_id is not None, "env_id must be provided for PLR updates."
+-        self._rollouts.insert_at_index(
+-            env_id,
+-            task=task,
+-        )
+         # Update task sampler
+-        if self._rollouts.should_update:
+-            if self._task_sampler.requires_value_buffers:
+-                self._rollouts.compute_returns(self._gamma, self._gae_lambda)
+-            self._task_sampler.update_with_rollouts(self._rollouts)
+-            self._rollouts.after_update()
+-            self._task_sampler.after_update()
++        if env_id in self._rollouts.ready_buffers:
++            self._update_sampler(env_id)
++
++    def _update_sampler(self, env_id):
++        if self._task_sampler.requires_value_buffers:
++            self._rollouts.compute_returns(self._gamma, self._gae_lambda, env_id)
++        self._task_sampler.update_with_rollouts(self._rollouts, env_id)
++        self._rollouts.after_update(env_id)
++        self._task_sampler.after_update()
+ 
+     def _enumerate_tasks(self, space):
+         assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
+@@ -312,10 +286,10 @@ class PrioritizedLevelReplay(Curriculum):
+         """
+         Log the task distribution to the provided tensorboard writer.
+         """
+-        super().log_metrics(writer, step)
++        # super().log_metrics(writer, step)
+         metrics = self._task_sampler.metrics()
+         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
+         writer.add_scalar("curriculum/score", metrics["score"], step)
+-        for task in list(self.task_space.tasks)[:10]:
+-            writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
+-            writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
++        # for task in list(self.task_space.tasks)[:10]:
++        #     writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
++        #     writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
+diff --git a/syllabus/curricula/plr/task_sampler.py b/syllabus/curricula/plr/task_sampler.py
+index 15ad485..c1e97a1 100644
+--- a/syllabus/curricula/plr/task_sampler.py
++++ b/syllabus/curricula/plr/task_sampler.py
+@@ -73,7 +73,7 @@ class TaskSampler:
+                 'Must provide action space to PLR if using "policy_entropy", "least_confidence", or "min_margin" strategies'
+             )
+ 
+-    def update_with_rollouts(self, rollouts):
++    def update_with_rollouts(self, rollouts, actor_id=None):
+         if self.strategy == "random":
+             return
+ 
+@@ -93,7 +93,7 @@ class TaskSampler:
+         else:
+             raise ValueError(f"Unsupported strategy, {self.strategy}")
+ 
+-        self._update_with_rollouts(rollouts, score_function)
++        self._update_with_rollouts(rollouts, score_function, actor_index=actor_id)
+ 
+     def update_task_score(self, actor_index, task_idx, score, num_steps):
+         score = self._partial_update_task_score(actor_index, task_idx, score, num_steps, done=True)
+@@ -165,14 +165,15 @@ class TaskSampler:
+     def requires_value_buffers(self):
+         return self.strategy in ["gae", "value_l1", "one_step_td_error"]
+ 
+-    def _update_with_rollouts(self, rollouts, score_function):
++    def _update_with_rollouts(self, rollouts, score_function, actor_index=None):
+         tasks = rollouts.tasks
+         if not self.requires_value_buffers:
+             policy_logits = rollouts.action_log_dist
+         done = ~(rollouts.masks > 0)
+         total_steps, num_actors = rollouts.tasks.shape[:2]
+ 
+-        for actor_index in range(num_actors):
++        actors = [actor_index] if actor_index is not None else range(num_actors)
++        for actor_index in actors:
+             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
+             start_t = 0
+ 
+diff --git a/syllabus/curricula/sequential.py b/syllabus/curricula/sequential.py
+index baa1263..ec3b8b0 100644
+--- a/syllabus/curricula/sequential.py
++++ b/syllabus/curricula/sequential.py
+@@ -177,9 +177,9 @@ class SequentialCurriculum(Curriculum):
+         if self.current_curriculum.requires_episode_updates:
+             self.current_curriculum.update_on_episode(episode_return, episode_len, episode_task, env_id)
+ 
+-    def update_on_step(self, obs, rew, term, trunc, info, env_id=None):
++    def update_on_step(self, task, obs, rew, term, trunc, info, env_id=None):
+         if self.current_curriculum.requires_step_updates:
+-            self.current_curriculum.update_on_step(obs, rew, term, trunc, info, env_id)
++            self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, env_id)
+ 
+     def update_on_step_batch(self, step_results, env_id=None):
+         if self.current_curriculum.requires_step_updates:
+diff --git a/syllabus/examples/training_scripts/cleanrl_procgen_centralplr.py b/syllabus/examples/training_scripts/cleanrl_procgen_centralplr.py
+index a6d469e..b848d69 100644
+--- a/syllabus/examples/training_scripts/cleanrl_procgen_centralplr.py
++++ b/syllabus/examples/training_scripts/cleanrl_procgen_centralplr.py
+@@ -14,6 +14,7 @@ import gym as openai_gym
+ import gymnasium as gym
+ import numpy as np
+ import procgen  # noqa: F401
++from procgen import ProcgenEnv
+ import torch
+ import torch.nn as nn
+ import torch.optim as optim
+@@ -21,10 +22,10 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
+ from torch.utils.tensorboard import SummaryWriter
+ 
+ from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+-from syllabus.curricula import DomainRandomization, LearningProgressCurriculum, CentralizedPrioritizedLevelReplay
++from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+ from syllabus.examples.models import ProcgenAgent
+ from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+-from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize
++from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
+ 
+ 
+ def parse_args():
+@@ -46,6 +47,8 @@ def parse_args():
+                         help="the entity (team) of wandb's project")
+     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                         help="weather to capture videos of the agent performances (check out `videos` folder)")
++    parser.add_argument("--logging-dir", type=str, default=".",
++                        help="the base directory for logging and wandb storage.")
+ 
+     # Algorithm specific arguments
+     parser.add_argument("--env-id", type=str, default="starpilot",
+@@ -124,15 +127,15 @@ PROCGEN_RETURN_BOUNDS = {
+ }
+ 
+ 
+-def make_env(env_id, seed, curriculum_components=None, start_level=0, num_levels=1):
++def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
+     def thunk():
+         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+         env = GymV21CompatibilityV0(env=env)
+-        env = ProcgenTaskWrapper(env, env_id, seed=seed)
+-        if curriculum_components is not None:
++        if curriculum is not None:
++            env = ProcgenTaskWrapper(env, env_id, seed=seed)
+             env = MultiProcessingSyncWrapper(
+                 env,
+-                curriculum_components,
++                curriculum.get_components(),
+                 update_on_step=False,
+                 task_space=env.task_space,
+             )
+@@ -147,36 +150,38 @@ def wrap_vecenv(vecenv):
+     return vecenv
+ 
+ 
+-def level_replay_evaluate(
++def full_level_replay_evaluate(
+     env_name,
+     policy,
+     num_episodes,
+     device,
+-    num_levels=0
++    num_levels=1    # Not used
+ ):
+     policy.eval()
+-    eval_envs = gym.vector.SyncVectorEnv(
+-        [
+-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=num_levels)
+-            for i in range(1)
+-        ]
++
++    eval_envs = ProcgenEnv(
++        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
+     )
++    eval_envs = VecExtractDictObs(eval_envs, "rgb")
+     eval_envs = wrap_vecenv(eval_envs)
+ 
+-    eval_episode_rewards = []
++    # Seed environments
++    seeds = [int.from_bytes(os.urandom(3), byteorder="little") for _ in range(num_episodes)]
++    for i, seed in enumerate(seeds):
++        eval_envs.seed(seed, i)
++
+     eval_obs, _ = eval_envs.reset()
++    eval_episode_rewards = [-1] * num_episodes
+ 
+-    while len(eval_episode_rewards) < num_episodes:
++    while -1 in eval_episode_rewards:
+         with torch.no_grad():
+             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+ 
+-        eval_obs, _, truncs, terms, infos = eval_envs.step(np.array([eval_action.cpu().numpy()]))
+-
+-        for info in infos:
+-            if 'episode' in info.keys():
+-                eval_episode_rewards.append(info['episode']['r'])
++        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
++        for i, info in enumerate(infos):
++            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
++                eval_episode_rewards[i] = info['episode']['r']
+ 
+-    eval_envs.close()
+     mean_returns = np.mean(eval_episode_rewards)
+     stddev_returns = np.std(eval_episode_rewards)
+     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+@@ -185,8 +190,7 @@ def level_replay_evaluate(
+     return mean_returns, stddev_returns, normalized_mean_returns
+ 
+ 
+-def fast_level_replay_evaluate(
+-    eval_envs,
++def level_replay_evaluate(
+     env_name,
+     policy,
+     num_episodes,
+@@ -194,9 +198,13 @@ def fast_level_replay_evaluate(
+     num_levels=0
+ ):
+     policy.eval()
+-    possible_seeds = np.arange(0, num_levels + 1)
+-    eval_obs, _ = eval_envs.reset(seed=list(np.random.choice(possible_seeds, size=num_episodes)))
+ 
++    eval_envs = ProcgenEnv(
++        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
++    )
++    eval_envs = VecExtractDictObs(eval_envs, "rgb")
++    eval_envs = wrap_vecenv(eval_envs)
++    eval_obs, _ = eval_envs.reset()
+     eval_episode_rewards = [-1] * num_episodes
+ 
+     while -1 in eval_episode_rewards:
+@@ -231,10 +239,11 @@ if __name__ == "__main__":
+             name=run_name,
+             monitor_gym=True,
+             save_code=True,
+-            # dir="/fs/nexus-scratch/rsulli/"
++            dir=args.logging_dir
+         )
+-        wandb.run.log_code("./syllabus/examples")
+-    writer = SummaryWriter(f"./runs/{run_name}")
++        # wandb.run.log_code("./syllabus/examples")
++
++    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+     writer.add_text(
+         "hyperparameters",
+         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+@@ -250,7 +259,7 @@ if __name__ == "__main__":
+     print("Device:", device)
+ 
+     # Curriculum setup
+-    task_queue = update_queue = None
++    curriculum = None
+     if args.curriculum:
+         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
+         sample_env = GymV21CompatibilityV0(env=sample_env)
+@@ -273,6 +282,16 @@ if __name__ == "__main__":
+         elif args.curriculum_method == "lp":
+             print("Using learning progress.")
+             curriculum = LearningProgressCurriculum(sample_env.task_space)
++        elif args.curriculum_method == "sq":
++            print("Using sequential curriculum.")
++            curricula = []
++            stopping = []
++            for i in range(199):
++                curricula.append(i + 1)
++                stopping.append("steps>=50000")
++                curricula.append(list(range(i + 1)))
++                stopping.append("steps>=50000")
++            curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
+         else:
+             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
+         curriculum = make_multiprocessing_curriculum(curriculum)
+@@ -285,7 +304,7 @@ if __name__ == "__main__":
+             make_env(
+                 args.env_id,
+                 args.seed + i,
+-                curriculum_components=curriculum.get_components() if args.curriculum else None,
++                curriculum=curriculum if args.curriculum else None,
+                 num_levels=1 if args.curriculum else 0
+             )
+             for i in range(args.num_envs)
+@@ -293,22 +312,6 @@ if __name__ == "__main__":
+     )
+     envs = wrap_vecenv(envs)
+ 
+-    test_eval_envs = gym.vector.AsyncVectorEnv(
+-        [
+-            make_env(args.env_id, args.seed + i, num_levels=0)
+-            for i in range(args.num_eval_episodes)
+-        ]
+-    )
+-    test_eval_envs = wrap_vecenv(test_eval_envs)
+-
+-    train_eval_envs = gym.vector.AsyncVectorEnv(
+-        [
+-            make_env(args.env_id, args.seed + i, num_levels=200)
+-            for i in range(args.num_eval_episodes)
+-        ]
+-    )
+-    train_eval_envs = wrap_vecenv(train_eval_envs)
+-
+     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+     print("Creating agent")
+     agent = ProcgenAgent(
+@@ -369,6 +372,8 @@ if __name__ == "__main__":
+                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
+                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
+                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
++                    if curriculum is not None:
++                        curriculum.log_metrics(writer, global_step)
+                     break
+ 
+             # Syllabus curriculum update
+@@ -388,8 +393,6 @@ if __name__ == "__main__":
+                     },
+                 }
+                 curriculum.update(update)
+-            #if args.curriculum:
+-            #    curriculum.log_metrics(writer, global_step)
+ 
+         # bootstrap value if not done
+         with torch.no_grad():
+@@ -487,8 +490,18 @@ if __name__ == "__main__":
+         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
+ 
+         # Evaluate agent
+-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = fast_level_replay_evaluate(test_eval_envs, args.env_id, agent, args.num_eval_episodes, device, num_levels=0)
+-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = fast_level_replay_evaluate(train_eval_envs, args.env_id, agent, args.num_eval_episodes, device, num_levels=200)
++        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
++        )
++        full_mean_eval_returns, full_stddev_eval_returns, full_normalized_mean_eval_returns = full_level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
++        )
++        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
++        )
++        full_mean_train_returns, full_stddev_train_returns, full_normalized_mean_train_returns = full_level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
++        )
+ 
+         # TRY NOT TO MODIFY: record rewards for plotting purposes
+         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+@@ -502,12 +515,21 @@ if __name__ == "__main__":
+         writer.add_scalar("losses/explained_variance", explained_var, global_step)
+         print("SPS:", int(global_step / (time.time() - start_time)))
+         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
++
+         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
+         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
+-        writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
++        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
++        writer.add_scalar("test_eval/full_mean_episode_return", full_mean_eval_returns, global_step)
++        writer.add_scalar("test_eval/full_normalized_mean_eval_return", full_normalized_mean_eval_returns, global_step)
++        writer.add_scalar("test_eval/full_stddev_eval_return", full_stddev_eval_returns, global_step)
++
+         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
+         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
+-        writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
++        writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
++        writer.add_scalar("train_eval/full_mean_episode_return", full_mean_train_returns, global_step)
++        writer.add_scalar("train_eval/full_normalized_mean_train_return", full_normalized_mean_train_returns, global_step)
++        writer.add_scalar("train_eval/full_stddev_train_return", full_stddev_train_returns, global_step)
++
+         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
+ 
+     envs.close()
+diff --git a/syllabus/examples/training_scripts/cleanrl_procgen_plr.py b/syllabus/examples/training_scripts/cleanrl_procgen_plr.py
+index e13c22e..dabcd50 100644
+--- a/syllabus/examples/training_scripts/cleanrl_procgen_plr.py
++++ b/syllabus/examples/training_scripts/cleanrl_procgen_plr.py
+@@ -14,6 +14,7 @@ import gym as openai_gym
+ import gymnasium as gym
+ import numpy as np
+ import procgen  # noqa: F401
++from procgen import ProcgenEnv
+ import torch
+ import torch.nn as nn
+ import torch.optim as optim
+@@ -24,7 +25,7 @@ from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curri
+ from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+ from syllabus.examples.models import ProcgenAgent
+ from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+-from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize
++from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
+ 
+ 
+ def parse_args():
+@@ -126,18 +127,17 @@ PROCGEN_RETURN_BOUNDS = {
+ }
+ 
+ 
+-def make_env(env_id, seed, curriculum_components=None, start_level=0, num_levels=1):
++def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
+     def thunk():
+         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+         env = GymV21CompatibilityV0(env=env)
+-        env = ProcgenTaskWrapper(env, env_id, seed=seed)
+-        if curriculum_components is not None:
++        if curriculum is not None:
++            env = ProcgenTaskWrapper(env, env_id, seed=seed)
+             env = MultiProcessingSyncWrapper(
+                 env,
+-                curriculum_components,
+-                update_on_step=False,
++                curriculum.get_components(),
++                update_on_step=curriculum.requires_step_updates,
+                 task_space=env.task_space,
+-                buffer_size=4,
+             )
+         return env
+     return thunk
+@@ -150,36 +150,38 @@ def wrap_vecenv(vecenv):
+     return vecenv
+ 
+ 
+-def level_replay_evaluate(
++def full_level_replay_evaluate(
+     env_name,
+     policy,
+     num_episodes,
+     device,
+-    num_levels=0
++    num_levels=1    # Not used
+ ):
+     policy.eval()
+-    eval_envs = gym.vector.SyncVectorEnv(
+-        [
+-            make_env(args.env_id, args.seed + i, task_queue, update_queue, num_levels=num_levels)
+-            for i in range(1)
+-        ]
++
++    eval_envs = ProcgenEnv(
++        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
+     )
++    eval_envs = VecExtractDictObs(eval_envs, "rgb")
+     eval_envs = wrap_vecenv(eval_envs)
+ 
+-    eval_episode_rewards = []
++    # Seed environments
++    seeds = [int.from_bytes(os.urandom(3), byteorder="little") for _ in range(num_episodes)]
++    for i, seed in enumerate(seeds):
++        eval_envs.seed(seed, i)
++
+     eval_obs, _ = eval_envs.reset()
++    eval_episode_rewards = [-1] * num_episodes
+ 
+-    while len(eval_episode_rewards) < num_episodes:
++    while -1 in eval_episode_rewards:
+         with torch.no_grad():
+             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+ 
+-        eval_obs, _, truncs, terms, infos = eval_envs.step(np.array([eval_action.cpu().numpy()]))
+-
+-        for info in infos:
+-            if 'episode' in info.keys():
+-                eval_episode_rewards.append(info['episode']['r'])
++        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
++        for i, info in enumerate(infos):
++            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
++                eval_episode_rewards[i] = info['episode']['r']
+ 
+-    eval_envs.close()
+     mean_returns = np.mean(eval_episode_rewards)
+     stddev_returns = np.std(eval_episode_rewards)
+     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+@@ -188,8 +190,7 @@ def level_replay_evaluate(
+     return mean_returns, stddev_returns, normalized_mean_returns
+ 
+ 
+-def fast_level_replay_evaluate(
+-    eval_envs,
++def level_replay_evaluate(
+     env_name,
+     policy,
+     num_episodes,
+@@ -198,15 +199,12 @@ def fast_level_replay_evaluate(
+ ):
+     policy.eval()
+ 
+-    # Choose evaluation seeds
+-    if num_levels == 0:
+-        seeds = np.random.randint(0, 2 ** 16 - 1, size=num_episodes)
+-    else:
+-        seeds = np.random.choice(np.arange(0, num_levels), size=num_episodes)
+-
+-    seed_envs = [(int(seed), env) for seed, env in zip(seeds, range(num_episodes))]
+-    eval_obs, _ = eval_envs.reset(seed=seed_envs)
+-
++    eval_envs = ProcgenEnv(
++        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
++    )
++    eval_envs = VecExtractDictObs(eval_envs, "rgb")
++    eval_envs = wrap_vecenv(eval_envs)
++    eval_obs, _ = eval_envs.reset()
+     eval_episode_rewards = [-1] * num_episodes
+ 
+     while -1 in eval_episode_rewards:
+@@ -251,7 +249,7 @@ if __name__ == "__main__":
+             save_code=True,
+             dir=args.logging_dir
+         )
+-        wandb.run.log_code(os.path.join(args.logging_dir, "/syllabus/examples"))
++        # wandb.run.log_code("./syllabus/examples")
+ 
+     writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+     writer.add_text(
+@@ -316,7 +314,7 @@ if __name__ == "__main__":
+             make_env(
+                 args.env_id,
+                 args.seed + i,
+-                curriculum_components=curriculum.get_components() if args.curriculum else None,
++                curriculum=curriculum if args.curriculum else None,
+                 num_levels=1 if args.curriculum else 0
+             )
+             for i in range(args.num_envs)
+@@ -324,22 +322,6 @@ if __name__ == "__main__":
+     )
+     envs = wrap_vecenv(envs)
+ 
+-    test_eval_envs = gym.vector.AsyncVectorEnv(
+-        [
+-            make_env(args.env_id, args.seed + i, num_levels=0)
+-            for i in range(args.num_eval_episodes)
+-        ]
+-    )
+-    test_eval_envs = wrap_vecenv(test_eval_envs)
+-
+-    train_eval_envs = gym.vector.AsyncVectorEnv(
+-        [
+-            make_env(args.env_id, args.seed + i, num_levels=200)
+-            for i in range(args.num_eval_episodes)
+-        ]
+-    )
+-    train_eval_envs = wrap_vecenv(train_eval_envs)
+-
+     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+     print("Creating agent")
+     agent = ProcgenAgent(
+@@ -500,8 +482,18 @@ if __name__ == "__main__":
+         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
+ 
+         # Evaluate agent
+-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = fast_level_replay_evaluate(test_eval_envs, args.env_id, agent, args.num_eval_episodes, device, num_levels=0)
+-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = fast_level_replay_evaluate(train_eval_envs, args.env_id, agent, args.num_eval_episodes, device, num_levels=200)
++        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
++        )
++        full_mean_eval_returns, full_stddev_eval_returns, full_normalized_mean_eval_returns = full_level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
++        )
++        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
++        )
++        full_mean_train_returns, full_stddev_train_returns, full_normalized_mean_train_returns = full_level_replay_evaluate(
++            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
++        )
+ 
+         # TRY NOT TO MODIFY: record rewards for plotting purposes
+         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+@@ -515,12 +507,21 @@ if __name__ == "__main__":
+         writer.add_scalar("losses/explained_variance", explained_var, global_step)
+         print("SPS:", int(global_step / (time.time() - start_time)))
+         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
++
+         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
+         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
+-        writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
++        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
++        writer.add_scalar("test_eval/full_mean_episode_return", full_mean_eval_returns, global_step)
++        writer.add_scalar("test_eval/full_normalized_mean_eval_return", full_normalized_mean_eval_returns, global_step)
++        writer.add_scalar("test_eval/full_stddev_eval_return", full_stddev_eval_returns, global_step)
++
+         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
+         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
+-        writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
++        writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
++        writer.add_scalar("train_eval/full_mean_episode_return", full_mean_train_returns, global_step)
++        writer.add_scalar("train_eval/full_normalized_mean_train_return", full_normalized_mean_train_returns, global_step)
++        writer.add_scalar("train_eval/full_stddev_train_return", full_stddev_train_returns, global_step)
++
+         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
+ 
+     envs.close()
+diff --git a/syllabus/examples/utils/vecenv.py b/syllabus/examples/utils/vecenv.py
+index 6e5a0a9..af3b187 100644
+--- a/syllabus/examples/utils/vecenv.py
++++ b/syllabus/examples/utils/vecenv.py
+@@ -1,7 +1,6 @@
+ import time
+ from collections import deque
+ 
+-import gym
+ import numpy as np
+ 
+ 
+@@ -154,12 +153,20 @@ class VecEnvObservationWrapper(VecEnvWrapper):
+         pass
+ 
+     def reset(self):
+-        obs, infos = self.venv.reset()
++        outputs = self.venv.reset()
++        if len(outputs) == 2:
++            obs, infos = outputs
++        else:
++            obs, infos = outputs, {}
+         return self.process(obs), infos
+ 
+     def step_wait(self):
+-        print(self.venv)
+-        obs, rews, terms, truncs, infos = self.venv.step_wait()
++        env_outputs = self.venv.step_wait()
++        if len(env_outputs) == 4:
++            obs, rews, terms, infos = env_outputs
++            truncs = np.zeros_like(terms)
++        else:
++            obs, rews, terms, truncs, infos = env_outputs
+         return self.process(obs), rews, terms, truncs, infos
+ 
+ 
+@@ -209,7 +216,10 @@ class VecNormalize(VecEnvWrapper):
+ 
+     def reset(self, seed=None):
+         self.ret = np.zeros(self.num_envs)
+-        obs, infos = self.venv.reset(seed=seed)
++        if seed is not None:
++            obs, infos = self.venv.reset(seed=seed)
++        else:
++            obs, infos = self.venv.reset()
+         return self._obfilt(obs), infos
+ 
+ 
+@@ -228,7 +238,10 @@ class VecMonitor(VecEnvWrapper):
+             self.eplen_buf = deque([], maxlen=keep_buf)
+ 
+     def reset(self, seed=None):
+-        obs, infos = self.venv.reset(seed=seed)
++        if seed is not None:
++            obs, infos = self.venv.reset(seed=seed)
++        else:
++            obs, infos = self.venv.reset()
+         self.eprets = np.zeros(self.num_envs, 'f')
+         self.eplens = np.zeros(self.num_envs, 'i')
+         return obs, infos
+@@ -239,7 +252,8 @@ class VecMonitor(VecEnvWrapper):
+         self.eprets += rews
+         self.eplens += 1
+         # Convert dict of lists to list of dicts
+-        infos = [dict(zip(infos, t)) for t in zip(*infos.values())]
++        if isinstance(infos, dict):
++            infos = [dict(zip(infos, t)) for t in zip(*infos.values())]
+         newinfos = list(infos[:])
+         for i in range(len(dones)):
+             if dones[i]:
+diff --git a/syllabus/task_space/task_space.py b/syllabus/task_space/task_space.py
+index 316e2f2..1ef674b 100644
+--- a/syllabus/task_space/task_space.py
++++ b/syllabus/task_space/task_space.py
+@@ -7,20 +7,53 @@ from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Sp
+ 
+ class TaskSpace():
+     def __init__(self, gym_space: Union[Space, int], tasks=None):
+-        if isinstance(gym_space, int):
+-            # Syntactic sugar for discrete space
+-            gym_space = Discrete(gym_space)
++
++        if not isinstance(gym_space, Space):
++            gym_space = self._create_gym_space(gym_space)
+ 
+         self.gym_space = gym_space
+ 
+-        # Autogenerate task names for discrete spaces
+-        if isinstance(gym_space, Discrete):
+-            if tasks is None:
+-                tasks = range(gym_space.n)
++        # Autogenerate task names
++        if tasks is None:
++            tasks = self._generate_task_names(gym_space)
+ 
+         self._tasks = set(tasks) if tasks is not None else None
+         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
+ 
++    def _create_gym_space(self, gym_space):
++        if isinstance(gym_space, int):
++            # Syntactic sugar for discrete space
++            gym_space = Discrete(gym_space)
++        elif isinstance(gym_space, tuple):
++            # Syntactic sugar for discrete space
++            gym_space = MultiDiscrete(gym_space)
++        elif isinstance(gym_space, list):
++            # Syntactic sugar for tuple space
++            spaces = []
++            for i, value in enumerate(gym_space):
++                spaces[i] = self._create_gym_space(value)
++            gym_space = Tuple(spaces)
++        elif isinstance(gym_space, dict):
++            # Syntactic sugar for dict space
++            spaces = {}
++            for key, value in gym_space.items():
++                spaces[key] = self._create_gym_space(value)
++            gym_space = Dict(spaces)
++        return gym_space
++
++    def _generate_task_names(self, gym_space):
++        if isinstance(gym_space, Discrete):
++            tasks = tuple(range(gym_space.n))
++        elif isinstance(gym_space, MultiDiscrete):
++            tasks = [tuple(range(dim)) for dim in gym_space.nvec]
++        elif isinstance(gym_space, Tuple):
++            tasks = [self._generate_task_names(value) for value in gym_space.spaces]
++        elif isinstance(gym_space, Dict):
++            tasks = {key: tuple(self._generate_task_names(value)) for key, value in gym_space.spaces.items()}
++        else:
++            tasks = None
++        return tasks
++
+     def _make_task_encoder(self, space, tasks):
+         if isinstance(space, Discrete):
+             assert space.n == len(tasks), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
+@@ -28,14 +61,46 @@ class TaskSpace():
+             self._decode_map = {i: task for i, task in enumerate(tasks)}
+             encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
+             decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
++
++        elif isinstance(space, Box):
++            encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
++            decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
+         elif isinstance(space, Tuple):
+-            for i, task in enumerate(tasks):
+-                assert self.count_tasks(space.spaces[i]) == len(task), "Each task must have number of components equal to Tuple space length. Got {len(task)} components and space length {self.count_tasks(space.spaces[i])}."
++
++            assert len(space.spaces) == len(tasks), f"Number of task ({len(space.spaces)})must match options in Tuple ({len(tasks)})"
+             results = [list(self._make_task_encoder(s, t)) for (s, t) in zip(space.spaces, tasks)]
+             encoders = [r[0] for r in results]
+             decoders = [r[1] for r in results]
+             encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
+             decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
++
++        elif isinstance(space, MultiDiscrete):
++            assert len(space.nvec) == len(tasks), f"Number of steps in a tasks ({len(space.nvec)}) must match number of discrete options ({len(tasks)})"
++
++            combinations = [p for p in itertools.product(*tasks)]
++            encode_map = {task: i for i, task in enumerate(combinations)}
++            decode_map = {i: task for i, task in enumerate(combinations)}
++
++            encoder = lambda task: encode_map[task] if task in encode_map else None
++            decoder = lambda task: decode_map[task] if task in decode_map else None
++
++        elif isinstance(space, Dict):
++
++            def helper(task, spaces, tasks, action="encode"):
++                # Iteratively encodes or decodes each space in the dictionary
++                output = {}
++                if (isinstance(spaces, dict) or isinstance(spaces, Dict)):
++                    for key, value in spaces.items():
++                        if (isinstance(value, dict) or isinstance(value, Dict)):
++                            temp = helper(task[key], value, tasks[key], action)
++                            output.update({key: temp})
++                        else:
++                            encoder, decoder = self._make_task_encoder(value, tasks[key])
++                            output[key] = encoder(task[key]) if action == "encode" else decoder(task[key])
++                return output
++
++            encoder = lambda task: helper(task, space.spaces, tasks, "encode")
++            decoder = lambda task: helper(task, space.spaces, tasks, "decode")
+         else:
+             encoder = lambda task: task
+             decoder = lambda task: task
+@@ -152,6 +217,7 @@ class TaskSpace():
+             return Discrete(self.gym_space.n + amount)
+ 
+     def sample(self):
++        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) or isinstance(self.gym_space, Tuple)
+         return self.decode(self.gym_space.sample())
+ 
+     def list_tasks(self):
+diff --git a/syllabus/task_space/test_task_space.py b/syllabus/task_space/test_task_space.py
+index 0ec6b4e..109d0a7 100644
+--- a/syllabus/task_space/test_task_space.py
++++ b/syllabus/task_space/test_task_space.py
+@@ -2,33 +2,148 @@ import gymnasium as gym
+ from syllabus.task_space import TaskSpace
+ 
+ if __name__ == "__main__":
++    # Discrete Tests
+     task_space = TaskSpace(gym.spaces.Discrete(3), ["a", "b", "c"])
++
+     assert task_space.encode("a") == 0, f"Expected 0, got {task_space.encode('a')}"
+     assert task_space.encode("b") == 1, f"Expected 1, got {task_space.encode('b')}"
+     assert task_space.encode("c") == 2, f"Expected 2, got {task_space.encode('c')}"
+-    assert task_space.encode("d") == None, f"Expected None, got {task_space.encode('d')}"
++    assert task_space.encode("d") is None, f"Expected None, got {task_space.encode('d')}"
+ 
+     assert task_space.decode(0) == "a", f"Expected a, got {task_space.decode(0)}"
+     assert task_space.decode(1) == "b", f"Expected b, got {task_space.decode(1)}"
+     assert task_space.decode(2) == "c", f"Expected c, got {task_space.decode(2)}"
+-    assert task_space.decode(3) == None, f"Expected None, got {task_space.decode(3)}"
++    assert task_space.decode(3) is None, f"Expected None, got {task_space.decode(3)}"
+     print("Discrete tests passed!")
+ 
++    # MultiDiscrete Tests
++    task_space = TaskSpace(gym.spaces.MultiDiscrete([3, 2]), [("a", "b", "c"), (1, 0)])
++
++    assert task_space.encode(('a', 1)) == 0, f"Expected 0, got {task_space.encode(('a', 1))}"
++    assert task_space.encode(('b', 0)) == 3, f"Expected 3, got {task_space.encode(('b', 0))}"
++    assert task_space.encode(('c', 1)) == 4, f"Expected 4, got {task_space.encode(('c', 1))}"
++
++    assert task_space.decode(3) == ('b', 0), f"Expected ('b', 0), got {task_space.decode(3)}"
++    assert task_space.decode(5) == ('c', 0), f"Expected ('c', 0), got {task_space.decode(5)}"
++    print("MultiDiscrete tests passed!")
++
++    # Box Tests
+     task_space = TaskSpace(gym.spaces.Box(low=0, high=1, shape=(2,)), [(0, 0), (0, 1), (1, 0), (1, 1)])
++
+     assert task_space.encode([0.0, 0.0]) == [0.0, 0.0], f"Expected [0.0, 0.0], got {task_space.encode([0.0, 0.0])}"
+     assert task_space.encode([0.0, 0.1]) == [0.0, 0.1], f"Expected [0.0, 0.1], got {task_space.encode([0.0, 0.1])}"
+     assert task_space.encode([0.1, 0.1]) == [0.1, 0.1], f"Expected [0.1, 0.1], got {task_space.encode([0.1, 0.1])}"
+     assert task_space.encode([1.0, 0.1]) == [1.0, 0.1], f"Expected [1.0, 0.1], got {task_space.encode([1.0, 0.1])}"
+     assert task_space.encode([1.0, 1.0]) == [1.0, 1.0], f"Expected [1.0, 1.0], got {task_space.encode([1.0, 1.0])}"
+-    assert task_space.encode([1.2, 1.0]) == None, f"Expected None, got {task_space.encode([1.2, 1.0])}"
+-    assert task_space.encode([1.0, 1.2]) == None, f"Expected None, got {task_space.encode([1.2, 1.0])}"
+-    assert task_space.encode([-0.1, 1.0]) == None, f"Expected None, got {task_space.encode([1.2, 1.0])}"
++    assert task_space.encode([1.2, 1.0]) is None, f"Expected None, got {task_space.encode([1.2, 1.0])}"
++    assert task_space.encode([1.0, 1.2]) is None, f"Expected None, got {task_space.encode([1.2, 1.0])}"
++    assert task_space.encode([-0.1, 1.0]) is None, f"Expected None, got {task_space.encode([1.2, 1.0])}"
+ 
+     assert task_space.decode([1.0, 1.0]) == [1.0, 1.0], f"Expected [1.0, 1.0], got {task_space.decode([1.0, 1.0])}"
+     assert task_space.decode([0.1, 0.1]) == [0.1, 0.1], f"Expected [0.1, 0.1], got {task_space.decode([0.1, 0.1])}"
+-    assert task_space.decode([-0.1, 1.0]) == None, f"Expected None, got {task_space.decode([1.2, 1.0])}"
++    assert task_space.decode([-0.1, 1.0]) is None, f"Expected None, got {task_space.decode([1.2, 1.0])}"
+     print("Box tests passed!")
+ 
++    # Tuple Tests
++    task_spaces = (gym.spaces.MultiDiscrete([3, 2]), gym.spaces.Discrete(3))
++    task_names = ((("a", "b", "c"), (1, 0)), ("X", "Y", "Z"))
++    task_space = TaskSpace(gym.spaces.Tuple(task_spaces), task_names)
++
++    assert task_space.encode((('a', 0), 'Y')) == [1, 1], f"Expected 0, got {task_space.encode((('a', 1),'Y'))}"
++    assert task_space.decode([0, 1]) == [('a', 1), 'Y'], f"Expected 0, got {task_space.decode([0, 1])}"
++    print("Tuple tests passed!")
++
++    # Dictionary Tests
++    task_spaces = gym.spaces.Dict({
++        "ext_controller": gym.spaces.MultiDiscrete([5, 2, 2]),
++        "inner_state": gym.spaces.Dict(
++            {
++                "charge": gym.spaces.Discrete(10),
++                "system_checks": gym.spaces.Tuple((gym.spaces.MultiDiscrete([3, 2]), gym.spaces.Discrete(3))),
++                "job_status": gym.spaces.Dict(
++                    {
++                        "task": gym.spaces.Discrete(5),
++                        "progress": gym.spaces.Box(low=0, high=1, shape=(2,)),
++                    }
++                ),
++            }
++        ),
++    })
++    task_names = {
++        "ext_controller": [("a", "b", "c", "d", "e"), (1, 0), ("X", "Y")],
++        "inner_state": {
++            "charge": [0, 1, 13, 3, 94, 35, 6, 37, 8, 9],
++            "system_checks": ((("a", "b", "c"), (1, 0)), ("X", "Y", "Z")),
++            "job_status": {
++                "task": ["A", "B", "C", "D", "E"],
++                "progress": [(0, 0), (0, 1), (1, 0), (1, 1)],
++            }
++        }
++    }
++    task_space = TaskSpace(task_spaces, task_names)
++
++    test_val = {
++        "ext_controller": ('b', 1, 'X'),
++        'inner_state': {
++            'charge': 1,
++            'system_checks': [('a', 0), 'Y'],
++            'job_status': {'task': 'C', 'progress': [0.0, 0.0]}
++        }
++    }
++    decode_val = {
++        "ext_controller": 4,
++        "inner_state": {
++            "charge": 1,
++            "system_checks": [1, 1],
++            "job_status": {"progress": [0.0, 0.0], "task": 2},
++        },
++    }
++
++    assert task_space.encode(test_val) == decode_val, f"Expected {decode_val}, \n but got {task_space.encode(test_val)}"
++    assert task_space.decode(decode_val) == test_val, f"Expected {test_val}, \n but got {task_space.decode(decode_val)}"
++
++    test_val_2 = {
++        "ext_controller": ("e", 1, "Y"),
++        "inner_state": {
++            "charge": 37,
++            "system_checks": [("b", 0), "Z"],
++            "job_status": {"progress": [0.0, 0.1], "task": "D"},
++        },
++    }
++    decode_val_2 = {
++        "ext_controller": 17,
++        "inner_state": {
++            "charge": 7,
++            "system_checks": [3, 2],
++            "job_status": {"progress": [0.0, 0.1], "task": 3},
++        },
++    }
++
++    assert task_space.encode(test_val_2) == decode_val_2, f"Expected {decode_val_2}, \n but got {task_space.encode(test_val_2)}"
++    assert task_space.decode(decode_val_2) == test_val_2, f"Expected {test_val_2}, \n but got {task_space.decode(decode_val_2)}"
++
++    test_val_3 = {
++        "ext_controller": ("e", 1, "X"),
++        "inner_state": {
++            "charge": 8,
++            "system_checks": [("c", 0), "X"],
++            "job_status": {"progress": [0.5, 0.1], "task": "E"},
++        },
++    }
++    decode_val_3 = {
++        "ext_controller": 16,
++        "inner_state": {
++            "charge": 8,
++            "system_checks": [5, 0],
++            "job_status": {"progress": [0.5, 0.1], "task": 4},
++        },
++    }
++
++    assert task_space.encode(test_val_3) == decode_val_3, f"Expected {decode_val_3}, \n but got {task_space.encode(test_val_3)}"
++    assert task_space.decode(decode_val_3) == test_val_3, f"Expected {test_val_3}, \n but got {task_space.decode(decode_val_3)}"
++
++    print("Dictionary tests passed!")
++
+     # Test syntactic sugar
+     task_space = TaskSpace(3)
+     assert task_space.encode(0) == 0, f"Expected 0, got {task_space.encode(0)}"
+@@ -36,4 +151,32 @@ if __name__ == "__main__":
+     assert task_space.encode(2) == 2, f"Expected 2, got {task_space.encode(2)}"
+     assert task_space.encode(3) is None, f"Expected None, got {task_space.encode(3)}"
+ 
++    task_space = TaskSpace((2, 4))
++    assert task_space.encode((0, 0)) == 0, f"Expected 0, got {task_space.encode((0, 0))}"
++    assert task_space.encode((0, 1)) == 1, f"Expected 1, got {task_space.encode((0, 1))}"
++    assert task_space.encode((1, 0)) == 4, f"Expected 2, got {task_space.encode((1, 0))}"
++    assert task_space.encode((3, 3)) is None, f"Expected None, got {task_space.encode((3, 3))}"
++
++    task_space = TaskSpace((2, 4))
++    assert task_space.encode((0, 0)) == 0, f"Expected 0, got {task_space.encode((0, 0))}"
++    assert task_space.encode((0, 1)) == 1, f"Expected 1, got {task_space.encode((0, 1))}"
++    assert task_space.encode((1, 0)) == 4, f"Expected 2, got {task_space.encode((1, 0))}"
++    assert task_space.encode((3, 3)) is None, f"Expected None, got {task_space.encode((3, 3))}"
++
++    task_space = TaskSpace({"map": 5, "level": (4, 10), "difficulty": 3})
++
++    encoding = task_space.encode({"map": 0, "level": (0, 0), "difficulty": 0})
++    expected = {"map": 0, "level": 0, "difficulty": 0}
++
++    encoding = task_space.encode({"map": 4, "level": (3, 9), "difficulty": 2})
++    expected = {"map": 4, "level": 39, "difficulty": 2}
++    assert encoding == expected, f"Expected {expected}, got {encoding}"
++
++    encoding = task_space.encode({"map": 2, "level": (2, 0), "difficulty": 1})
++    expected = {"map": 2, "level": 20, "difficulty": 1}
++    assert encoding == expected, f"Expected {expected}, got {encoding}"
++
++    encoding = task_space.encode({"map": 5, "level": (2, 11), "difficulty": -1})
++    expected = {"map": None, "level": None, "difficulty": None}
++    assert encoding == expected, f"Expected {expected}, got {encoding}"
+     print("All tests passed!")
+diff --git a/syllabus/tests/utils.py b/syllabus/tests/utils.py
+index 314a29c..98bac82 100644
+--- a/syllabus/tests/utils.py
++++ b/syllabus/tests/utils.py
+@@ -57,7 +57,7 @@ def run_episode(env, new_task=None, curriculum=None, env_id=0):
+         action = env.action_space.sample()
+         obs, rew, term, trunc, info = env.step(action)
+         if curriculum and curriculum.requires_step_updates:
+-            curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
++            curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, env_id=env_id)
+             curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
+         ep_rew += rew
+         ep_len += 1
+@@ -87,7 +87,7 @@ def run_set_length(env, curriculum=None, episodes=None, steps=None, env_id=0, en
+             action = env.action_space.sample()
+             obs, rew, term, trunc, info = env.step(action)
+             if curriculum and curriculum.requires_step_updates:
+-                curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
++                curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, env_id=env_id)
+                 curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
+             ep_rew += rew
+             ep_len += 1
+diff --git a/tests/multiprocessing_smoke_tests.py b/tests/multiprocessing_smoke_tests.py
+index 9db9f47..b788179 100644
+--- a/tests/multiprocessing_smoke_tests.py
++++ b/tests/multiprocessing_smoke_tests.py
+@@ -21,23 +21,23 @@ nethack_env = create_nethack_env()
+ cartpole_env = create_cartpole_env()
+ 
+ curricula = [
+-        (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
+-        (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
+-        # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
+-        (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
+-        (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
+-           "get_value": get_test_values,
+-           "device": "cpu",
+-           "num_processes": N_ENVS,
+-           "num_steps": 2048
+-        }),
+-        (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
+-        (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
+-            'start_values': [-0.02, 0.02],
+-            'end_values': [-0.3, 0.3],
+-            'total_steps': [10]
+-        }),
+-        (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
++    (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
++    (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
++    # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
++    (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
++    (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
++        "get_value": get_test_values,
++        "device": "cpu",
++        "num_processes": N_ENVS,
++        "num_steps": 2048
++    }),
++    (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
++    (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
++        'start_values': [-0.02, 0.02],
++        'end_values': [-0.3, 0.3],
++        'total_steps': [10]
++    }),
++    (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
+ ]
+ 
+ test_names = [curriculum_args[0].__name__ for curriculum_args in curricula]

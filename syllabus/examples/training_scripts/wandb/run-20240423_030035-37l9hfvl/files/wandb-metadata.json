@@ -1,0 +1,167 @@
+{
+    "os": "Linux-3.10.0-1160.11.1.el7.x86_64-x86_64-with-glibc2.10",
+    "python": "3.8.5",
+    "heartbeatAt": "2024-04-23T03:00:36.306872",
+    "startedAt": "2024-04-23T03:00:35.394736",
+    "docker": null,
+    "cuda": "10.1.243",
+    "args": [
+        "--curriculum",
+        "True",
+        "--track",
+        "True",
+        "--env-id",
+        "bigfish"
+    ],
+    "state": "running",
+    "program": "cleanrl_procgen_plr.py",
+    "codePathLocal": "cleanrl_procgen_plr.py",
+    "codePath": "syllabus/examples/training_scripts/cleanrl_procgen_plr.py",
+    "git": {
+        "remote": "https://github.com/RoseyGreenBlue/Syllabus.git",
+        "commit": "63dc8f62e4d9d567eb92bb2f6c2bb186a0dc8ffb"
+    },
+    "email": "djhaayusv04@gmail.com",
+    "root": "/data/averma/MARL/Syllabus",
+    "host": "f411843fc70b",
+    "username": "root",
+    "executable": "/home/user/miniconda/envs/test2_py/bin/python",
+    "cpu_count": 12,
+    "cpu_count_logical": 24,
+    "cpu_freq": {
+        "current": 1236.6083333333333,
+        "min": 1200.0,
+        "max": 3700.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1200.5,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1200.292,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1211.291,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1200.292,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1200.5,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1246.984,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.877,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1204.65,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1200.085,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.877,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.877,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1205.48,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1228.723,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1225.195,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1214.819,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1204.65,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1269.396,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1238.269,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1200.292,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.877,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1397.436,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1388.928,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1200.708,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1329.162,
+            "min": 1200.0,
+            "max": 3700.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 5952.626953125,
+            "used": 988.7820014953613
+        }
+    },
+    "memory": {
+        "total": 251.63711166381836
+    }
+}

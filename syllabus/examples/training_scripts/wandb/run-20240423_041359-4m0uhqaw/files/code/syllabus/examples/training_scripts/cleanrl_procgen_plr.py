@@ -266,8 +266,8 @@ if __name__ == "__main__":
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
 				# code to edit
-        sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
-        # sample_env = MinigridTaskWrapper(sample_env, args.env_id, seed=args.seed)
+        # sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
+        sample_env = MinigridTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
