@@ -190,9 +190,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         # components.task_queue.close()
         # components.update_queue.close()
 
-    def update_curriculum(self, update):
-        self.update(update)
-
     def _update_queues(self):
         """
         Continuously process completed tasks and sample new tasks.
@@ -271,7 +268,7 @@ def make_multiprocessing_curriculum(curriculum, **kwargs):
 
     mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
     mp_curriculum.start()
-    return mp_curriculum, task_queue, update_queue
+    return mp_curriculum
 
 
 @ray.remote
