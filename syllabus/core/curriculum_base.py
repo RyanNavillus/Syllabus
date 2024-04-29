@@ -13,7 +13,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, seed: int, task_names: Callable = None) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -28,6 +28,7 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
+        self.seed = seed
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
