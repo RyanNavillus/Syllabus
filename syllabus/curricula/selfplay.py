@@ -27,6 +27,10 @@ class SelfPlay(Curriculum):
         self.task_space = TaskSpace(
             spaces.Discrete(1)
         )  # SelfPlay can only return agent_id = 0
+        self.history = {
+            "winrate": 0,
+            "n_games": 0,
+        }
 
     def update_agent(self, agent: AgentType) -> AgentType:
         self.agent = deepcopy(agent).to(self.device)
@@ -42,6 +46,17 @@ class SelfPlay(Curriculum):
 
     def sample(self, k=1):
         return 0
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
+        """
+        Uses an incremental mean to update the opponent's winrate.
+        """
+        opponent_reward = opponent_reward > 0  # converts the reward to 0 or 1
+        self.history["n_games"] += 1
+        old_winrate = self.history["winrate"]
+        n = self.history["n_games"]
+
+        self.history["winrate"] = old_winrate + (opponent_reward - old_winrate) / n
 
 
 class FictitiousSelfPlay(Curriculum):

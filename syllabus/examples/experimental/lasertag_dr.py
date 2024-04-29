@@ -4,8 +4,8 @@ import sys
 import time
 from typing import Dict, Tuple, TypeVar
 
-import joblib
 import numpy as np
+import pandas as pd
 import plotly
 import plotly.express as px
 import plotly.graph_objects as go
@@ -47,18 +47,33 @@ ObsType = TypeVar("ObsType")
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--track", type=bool, default=False)
+    parser.add_argument("--total-updates", type=int, default=1000)
+    parser.add_argument("--rollout_length", type=int, default=256)
+    parser.add_argument(
+        "--batch-size", type=int, default=32
+    )  # TODO: determine correct value
+
+    # PPO args
+    parser.add_argument("--ent-coef", type=float, default=0.0)
+    parser.add_argument("--vf-coef", type=float, default=0.5)
+    parser.add_argument("--clip-coef", type=float, default=0.2)
+    parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--epsilon", type=float, default=1e-5)
+    parser.add_argument("--gamma", type=float, default=0.995)
+    parser.add_argument("--gae-lambda", type=float, default=0.95)
+    parser.add_argument("--epochs", type=int, default=5)
+
+    # curriculum args
     parser.add_argument(
         "--agent-curriculum", type=str, default="SP", choices=["SP", "FSP", "PFSP"]
     )
-    parser.add_argument("--agent-update-frequency", type=int, default=50)
-    parser.add_argument(
-        "--max-agents", type=int, default=10
-    )  # number of opponents in FSP and PFSP
+    parser.add_argument("--agent-update-frequency", type=int, default=8000)
+    # number of opponents in FSP and PFSP
+    parser.add_argument("--max-agents", type=int, default=10)
     parser.add_argument("--save-agent-checkpoints", type=bool, default=False)
     parser.add_argument(
         "--checkpoint-frequency", type=int, default=500
     )  # agent checkpoints every N steps
-    parser.add_argument("--total-episodes", type=int, default=500)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--exp-name",
@@ -227,10 +242,6 @@ agent_curriculums = {
 
 if __name__ == "__main__":
     args = parse_args()
-    assert args.agent_curriculum in list(agent_curriculums.keys()), (
-        f"Agent curriculum should be one of {list(agent_curriculums.keys())},"
-        f"got {args.agent_curriculum}"
-    )
     exp_name = f"{args.exp_name}_{args.agent_curriculum}"
     run_name = f"lasertag__{exp_name}__seed_{args.seed}__{int(time.time())}"
 
@@ -272,19 +283,9 @@ if __name__ == "__main__":
 
     """ALGO PARAMS"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    ent_coef = 0.0
-    vf_coef = 0.5
-    clip_coef = 0.2
-    learning_rate = 1e-4
-    epsilon = 1e-5
-    gamma = 0.995
-    gae_lambda = 0.95
-    epochs = 5
-    batch_size = 32
+
     stack_size = 3
     frame_size = (5, 5)
-    max_cycles = 201  # lasertag has 200 maximum steps by default
-    total_episodes = 500
     n_agents = 2
     num_actions = 5
 
@@ -294,11 +295,11 @@ if __name__ == "__main__":
         "max_agents": args.max_agents,
     }
 
-    n_env_stasks = 200
+    n_env_tasks = 200
 
     """ LEARNER SETUP """
     agent = Agent(num_actions=num_actions).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=learning_rate, eps=epsilon)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=args.epsilon)
 
     """ ENV SETUP """
     env = LasertagAdversarial(record_video=False)  # 2 agents by default
@@ -306,7 +307,7 @@ if __name__ == "__main__":
     agent_curriculum = agent_curriculums[args.agent_curriculum](
         agent=agent, **agent_curriculum_settings
     )
-    env_curriculum = DomainRandomization(TaskSpace(spaces.Discrete(n_env_stasks)))
+    env_curriculum = DomainRandomization(TaskSpace(spaces.Discrete(n_env_tasks)))
     curriculum = DualCurriculumWrapper(
         env=env,
         agent_curriculum=agent_curriculum,
@@ -315,209 +316,214 @@ if __name__ == "__main__":
     mp_curriculum = make_multiprocessing_curriculum(curriculum)
 
     """ ALGO LOGIC: EPISODE STORAGE"""
-    end_step = 0
     total_episodic_return = 0
-    rb_obs = torch.zeros((max_cycles, n_agents, stack_size, *frame_size)).to(device)
-    rb_actions = torch.zeros((max_cycles, n_agents)).to(device)
-    rb_logprobs = torch.zeros((max_cycles, n_agents)).to(device)
-    rb_rewards = torch.zeros((max_cycles, n_agents)).to(device)
-    rb_terms = torch.zeros((max_cycles, n_agents)).to(device)
-    rb_values = torch.zeros((max_cycles, n_agents)).to(device)
+    rb_obs = torch.zeros((args.rollout_length, n_agents, stack_size, *frame_size)).to(
+        device
+    )
+    rb_actions = torch.zeros((args.rollout_length, n_agents)).to(device)
+    rb_logprobs = torch.zeros((args.rollout_length, n_agents)).to(device)
+    rb_rewards = torch.zeros((args.rollout_length, n_agents)).to(device)
+    rb_terms = torch.zeros((args.rollout_length, n_agents)).to(device)
+    rb_values = torch.zeros((args.rollout_length, n_agents)).to(device)
 
-    agent_tasks, env_tasks = [], []
+    agent_tasks, env_tasks, rewards_history = [], [], []
     agent_c_rew, opp_c_rew = 0, 0
-    n_ends, n_learner_wins = 0, 0
+    episode, n_learner_wins = 0, 0
+    n_updates = 0
     info = {}
 
     """ TRAINING LOGIC """
-    # train for n number of episodes
-    for episode in tqdm(range(args.total_episodes)):
-        # collect an episode
-        with torch.no_grad():
-            # collect observations and convert to batch of torch tensors
-            env_task, agent_task = mp_curriculum.sample()
+    with tqdm(total=args.total_updates) as pbar:
+        while n_updates < args.total_updates:
+            with torch.no_grad():
+                env_task, agent_task = mp_curriculum.sample()
 
-            env_tasks.append(env_task)
-            agent_tasks.append(agent_task)
+                env_tasks.append(env_task)
+                agent_tasks.append(agent_task)
 
-            next_obs = env.reset(env_task)
-            # reset the episodic return
-            total_episodic_return = 0
+                next_obs = env.reset(env_task)
+                total_episodic_return = 0
 
-            # each episode has num_steps
-            for step in range(0, max_cycles):
-                # rollover the observation
-                joint_obs = batchify(next_obs, device).squeeze()
-                agent_obs, opponent_obs = joint_obs
+                for step in range(0, args.rollout_length):
+                    joint_obs = batchify(next_obs, device).squeeze()
+                    agent_obs, opponent_obs = joint_obs
 
-                # get action from the agent and the opponent
-                actions, logprobs, _, values = agent.get_action_and_value(
-                    agent_obs, flatten_start_dim=0
-                )
-
-                opponent = mp_curriculum.get_opponent(info.get("agent_id", 0)).to(
-                    device
-                )
-                opponent_action, *_ = opponent.get_action_and_value(
-                    opponent_obs, flatten_start_dim=0
-                )
-                # execute the environment and log data
-                joint_actions = torch.tensor((actions, opponent_action))
-                next_obs, rewards, terms, truncs, info = env.step(
-                    unbatchify(joint_actions, env.possible_agents), device, agent_task
-                )
-
-                opp_reward = rewards["agent_1"]
-                if opp_reward != 0:
-                    n_ends += 1
-                    if args.agent_curriculum in ["FSP", "PFSP"]:
-                        mp_curriculum.update_winrate(info["agent_id"], opp_reward)
-                    if opp_reward == -1:
-                        n_learner_wins += 1
-
-                # add to episode storage
-                rb_obs[step] = batchify(next_obs, device)
-                rb_rewards[step] = batchify(rewards, device)
-                rb_terms[step] = batchify(terms, device)
-                rb_actions[step] = joint_actions
-                rb_logprobs[step] = logprobs
-                rb_values[step] = values.flatten()
-
-                # compute episodic return
-                total_episodic_return += rb_rewards[step].cpu().numpy()
-
-                # store learner checkpoints
-                if (
-                    args.save_agent_checkpoints
-                    and env.n_steps % args.checkpoint_frequency == 0
-                ):
-                    print(f"saving checkpoint --{env.n_steps}")
-                    joblib.dump(
-                        agent,
-                        filename=(
-                            f"{args.logging_dir}/{exp_name}_checkpoints/"
-                            f"{mp_curriculum.curriculum.env_curriculum.name}_"
-                            f"{mp_curriculum.curriculum.agent_curriculum.name}_{env.n_steps}"
-                            f"_seed_{args.seed}.pkl"
-                        ),
+                    actions, logprobs, _, values = agent.get_action_and_value(
+                        agent_obs, flatten_start_dim=0
                     )
 
-                # if we reach termination or truncation, end
-                if any([terms[a] for a in terms]) or any([truncs[a] for a in truncs]):
-                    end_step = step
-                    break
+                    opponent = mp_curriculum.get_opponent(info.get("agent_id", 0)).to(
+                        device
+                    )
+                    opponent_action, *_ = opponent.get_action_and_value(
+                        opponent_obs, flatten_start_dim=0
+                    )
 
-        with torch.no_grad():
-            next_value = agent.get_value(
-                torch.tensor(next_obs["agent_0"]).to(device), flatten_start_dim=0
+                    joint_actions = torch.tensor((actions, opponent_action))
+                    next_obs, rewards, terms, truncs, info = env.step(
+                        unbatchify(joint_actions, env.possible_agents),
+                        device,
+                        agent_task,
+                    )
+
+                    opp_reward = rewards["agent_1"]
+                    if opp_reward != 0:
+                        mp_curriculum.update_winrate(info["agent_id"], opp_reward)
+                        if opp_reward == -1:
+                            n_learner_wins += 1
+
+                    rb_obs[step] = batchify(next_obs, device)
+                    rb_rewards[step] = batchify(rewards, device)
+                    rb_terms[step] = batchify(terms, device)
+                    rb_actions[step] = joint_actions
+                    rb_logprobs[step] = logprobs
+                    rb_values[step] = values.flatten()
+
+                    total_episodic_return += rb_rewards[step].cpu().numpy()
+
+                    agent_c_rew += rewards["agent_0"]
+                    opp_c_rew += rewards["agent_1"]
+                    grid_size = env.level[3]["grid_size_selected"]
+                    walls_percentage = env.level[3]["clutter_rate_selected"]
+
+                    if any([terms[a] for a in terms]) or any(
+                        [truncs[a] for a in truncs]
+                    ):
+                        episode += 1
+                        rewards_history.append(rewards)
+                        env_task, agent_task = mp_curriculum.sample()
+                        env_tasks.append(env_task)
+                        agent_tasks.append(agent_task)
+
+                        writer.add_scalar("charts/grid_size", grid_size, episode)
+                        writer.add_scalar(
+                            "charts/walls_percentage", walls_percentage, episode
+                        )
+
+                        next_obs = env.reset(env_task)
+
+            # gae
+            with torch.no_grad():
+                next_value = agent.get_value(
+                    torch.tensor(next_obs["agent_0"]).to(device), flatten_start_dim=0
+                )
+                rb_advantages = torch.zeros_like(rb_rewards).to(device)
+                last_gae_lam = 0
+                for t in reversed(range(args.rollout_length - 1)):
+                    if t == args.rollout_length - 1:
+                        next_non_terminal = 1.0 - rb_terms[t + 1]
+                        next_values = next_value
+                    else:
+                        next_non_terminal = 1.0 - rb_terms[t + 1]
+                        next_values = rb_values[t + 1]
+                    delta = (
+                        rb_rewards[t]
+                        + args.gamma * next_values * next_non_terminal
+                        - rb_values[t]
+                    )
+                    rb_advantages[t] = last_gae_lam = (
+                        delta
+                        + args.gamma
+                        * args.gae_lambda
+                        * next_non_terminal
+                        * last_gae_lam
+                    )
+                rb_returns = rb_advantages + rb_values
+
+            b_obs = torch.flatten(rb_obs[: args.rollout_length], start_dim=0, end_dim=1)
+            b_logprobs = torch.flatten(
+                rb_logprobs[: args.rollout_length], start_dim=0, end_dim=1
             )
-            rb_advantages = torch.zeros_like(rb_rewards).to(device)
-            last_gae_lam = 0
-            for t in reversed(range(end_step)):
-                if t == end_step - 1:
-                    next_non_terminal = 1.0 - rb_terms[t + 1]
-                    next_values = next_value
-                else:
-                    next_non_terminal = 1.0 - rb_terms[t + 1]
-                    next_values = rb_values[t + 1]
-                delta = (
-                    rb_rewards[t]
-                    + gamma * next_values * next_non_terminal
-                    - rb_values[t]
-                )
-                rb_advantages[t] = last_gae_lam = (
-                    delta + gamma * gae_lambda * next_non_terminal * last_gae_lam
-                )
-            rb_returns = rb_advantages + rb_values
-        # convert our episodes to batch of individual transitions
-        b_obs = torch.flatten(rb_obs[:end_step], start_dim=0, end_dim=1)
-        b_logprobs = torch.flatten(rb_logprobs[:end_step], start_dim=0, end_dim=1)
-        b_actions = torch.flatten(rb_actions[:end_step], start_dim=0, end_dim=1)
-        b_returns = torch.flatten(rb_returns[:end_step], start_dim=0, end_dim=1)
-        b_values = torch.flatten(rb_values[:end_step], start_dim=0, end_dim=1)
-        b_advantages = torch.flatten(rb_advantages[:end_step], start_dim=0, end_dim=1)
+            b_actions = torch.flatten(
+                rb_actions[: args.rollout_length], start_dim=0, end_dim=1
+            )
+            b_returns = torch.flatten(
+                rb_returns[: args.rollout_length], start_dim=0, end_dim=1
+            )
+            b_values = torch.flatten(
+                rb_values[: args.rollout_length], start_dim=0, end_dim=1
+            )
+            b_advantages = torch.flatten(
+                rb_advantages[: args.rollout_length], start_dim=0, end_dim=1
+            )
 
-        # Optimizing the policy and value network
-        b_index = np.arange(len(b_obs))
-        clip_fracs = []
-        for repeat in range(epochs):
-            # shuffle the indices we use to access the data
-            np.random.shuffle(b_index)
-            for start in range(0, len(b_obs), batch_size):
-                # select the indices we want to train on
-                end = start + batch_size
-                batch_index = b_index[start:end]
+            b_index = np.arange(len(b_obs))
+            clip_fracs = []
+            for repeat in range(args.epochs):
+                np.random.shuffle(b_index)
+                for start in range(0, len(b_obs), args.batch_size):
+                    # select the indices we want to train on
+                    end = start + args.batch_size
+                    batch_index = b_index[start:end]
 
-                _, newlogprob, entropy, value = agent.get_action_and_value(
-                    b_obs[batch_index], b_actions.long()[batch_index]
-                )
-                logratio = newlogprob - b_logprobs[batch_index]
-                ratio = logratio.exp()
+                    _, newlogprob, entropy, value = agent.get_action_and_value(
+                        b_obs[batch_index], b_actions.long()[batch_index]
+                    )
+                    logratio = newlogprob - b_logprobs[batch_index]
+                    ratio = logratio.exp()
 
-                with torch.no_grad():
-                    # calculate approx_kl http://joschu.net/blog/kl-approx.html
-                    old_approx_kl = (-logratio).mean()
-                    approx_kl = ((ratio - 1) - logratio).mean()
-                    clip_fracs += [
-                        ((ratio - 1.0).abs() > clip_coef).float().mean().item()
-                    ]
+                    with torch.no_grad():
+                        # calculate approx_kl http://joschu.net/blog/kl-approx.html
+                        old_approx_kl = (-logratio).mean()
+                        approx_kl = ((ratio - 1) - logratio).mean()
+                        clip_fracs += [
+                            ((ratio - 1.0).abs() > args.clip_coef).float().mean().item()
+                        ]
 
-                # normalize advantages
-                rb_advantages = b_advantages[batch_index]
-                rb_advantages = (rb_advantages - rb_advantages.mean()) / (
-                    rb_advantages.std() + 1e-8
-                )
+                    # normalize advantages
+                    rb_advantages = b_advantages[batch_index]
+                    rb_advantages = (rb_advantages - rb_advantages.mean()) / (
+                        rb_advantages.std() + 1e-8
+                    )
 
-                # Policy loss
-                pg_loss1 = -b_advantages[batch_index] * ratio
-                pg_loss2 = -b_advantages[batch_index] * torch.clamp(
-                    ratio, 1 - clip_coef, 1 + clip_coef
-                )
-                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
+                    # Policy loss
+                    pg_loss1 = -b_advantages[batch_index] * ratio
+                    pg_loss2 = -b_advantages[batch_index] * torch.clamp(
+                        ratio, 1 - args.clip_coef, 1 + args.clip_coef
+                    )
+                    pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
-                # Value loss
-                value = value.flatten()
-                v_loss_unclipped = (value - b_returns[batch_index]) ** 2
-                v_clipped = b_values[batch_index] + torch.clamp(
-                    value - b_values[batch_index],
-                    -clip_coef,
-                    clip_coef,
-                )
-                v_loss_clipped = (v_clipped - b_returns[batch_index]) ** 2
-                v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
-                v_loss = 0.5 * v_loss_max.mean()
+                    # Value loss
+                    value = value.flatten()
+                    v_loss_unclipped = (value - b_returns[batch_index]) ** 2
+                    v_clipped = b_values[batch_index] + torch.clamp(
+                        value - b_values[batch_index],
+                        -args.clip_coef,
+                        args.clip_coef,
+                    )
+                    v_loss_clipped = (v_clipped - b_returns[batch_index]) ** 2
+                    v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
+                    v_loss = 0.5 * v_loss_max.mean()
 
-                entropy_loss = entropy.mean()
-                loss = pg_loss - ent_coef * entropy_loss + v_loss * vf_coef
+                    entropy_loss = entropy.mean()
+                    loss = (
+                        pg_loss - args.ent_coef * entropy_loss + v_loss * args.vf_coef
+                    )
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
 
-        y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
-        var_y = np.var(y_true)
-        explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
+                    writer.add_scalar("losses/value_loss", v_loss.item(), n_updates)
+                    writer.add_scalar("losses/policy_loss", pg_loss.item(), n_updates)
+                    writer.add_scalar("losses/entropy", entropy_loss.item(), n_updates)
+                    writer.add_scalar(
+                        "losses/old_approx_kl", old_approx_kl.item(), n_updates
+                    )
+                    writer.add_scalar("losses/approx_kl", approx_kl.item(), n_updates)
+                    n_updates += 1
+                    pbar.update(1)
 
-        # update opponent
-        if args.agent_curriculum in ["FSP", "PFSP"]:
-            if episode % args.agent_update_frequency == 0 and episode != 0:
-                mp_curriculum.update_agent(agent)
+            y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
+            var_y = np.var(y_true)
+            explained_var = (
+                np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
+            )
 
-        agent_c_rew += rewards["agent_0"]
-        opp_c_rew += rewards["agent_1"]
-        grid_size = env.level[3]["grid_size_selected"]
-        walls_percentage = env.level[3]["clutter_rate_selected"]
-
-        writer.add_scalar("charts/steps_per_ep", end_step, episode)
-        writer.add_scalar("charts/agent_reward", agent_c_rew, episode)
-        writer.add_scalar("charts/opponent_reward", opp_c_rew, episode)
-        writer.add_scalar("charts/grid_size", grid_size, episode)
-        writer.add_scalar("charts/walls_percentage", walls_percentage, episode)
-        writer.add_scalar("losses/value_loss", v_loss.item(), episode)
-        writer.add_scalar("losses/policy_loss", pg_loss.item(), episode)
-        writer.add_scalar("losses/entropy", entropy_loss.item(), episode)
-        writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), episode)
-        writer.add_scalar("losses/approx_kl", approx_kl.item(), episode)
+            # update opponent
+            if args.agent_curriculum in ["FSP", "PFSP"]:
+                if n_updates % args.agent_update_frequency == 0 and episode != 0:
+                    mp_curriculum.update_agent(agent)
 
     if args.track:
         # agent tasks
@@ -532,13 +538,21 @@ if __name__ == "__main__":
         fig.update_layout(showlegend=False)
         wandb.log({"charts/env_tasks": wandb.Html(plotly.io.to_html(fig))})
 
-        learner_winrate = n_learner_wins / n_ends
-        wandb.run.summary["n_episodes"] = total_episodes
+        learner_winrate = n_learner_wins / episode
+        # wandb.run.summary["n_episodes"] = total_episodes
         wandb.run.summary["learner_winrate"] = learner_winrate
         writer.add_scalar("charts/learner_winrate", learner_winrate)
 
+        # agent rewards
+        fig = px.line(
+            pd.DataFrame(rewards_history).cumsum(),
+            title="Agent rewards",
+            labels={"index": "Episodes", "value": "Cumulative rewards"},
+        )
+        wandb.log({"charts/agent_rewards": wandb.Html(plotly.io.to_html(fig))})
+
+        # win rates and replays
         if args.agent_curriculum in ["FSP", "PFSP"]:
-            # win rates and replays
             agent_ids = np.arange(agent_curriculum_settings["max_agents"])
             values = list(mp_curriculum.curriculum.agent_curriculum.history.values())
             winrates = [i["winrate"] for i in values]
