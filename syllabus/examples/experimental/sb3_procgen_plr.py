@@ -16,11 +16,9 @@ from procgen import ProcgenEnv
 import torch
 import wandb
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import BaseCallback, CallbackList, EvalCallback
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.vec_env import (VecExtractDictObs, DummyVecEnv, VecMonitor,
                                               VecNormalize)
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
@@ -29,6 +27,7 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from syllabus.examples.models import ProcgenAgent
 from wandb.integration.sb3 import WandbCallback
 
 
@@ -172,6 +171,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     return thunk
 
 def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
+    model.policy.eval()
 
     eval_envs = ProcgenEnv(
     num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
@@ -180,20 +180,22 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_envs = VecExtractDictObs(eval_envs, "rgb") 
     eval_envs = wrap_vecenv(eval_envs)
 
-    episode_rewards, _ = evaluate_policy(
-                model,
-                eval_envs,
-                n_eval_episodes=num_episodes,
-                render=False,
-                deterministic=False,
-                return_episode_rewards=True,
-                warn=True,
-            )
+    eval_obs = eval_envs.reset()
+    eval_episode_rewards = [-1] * num_episodes
 
-    mean_returns = np.mean(episode_rewards)
-    stddev_returns = np.std(episode_rewards)
+    while -1 in eval_episode_rewards:
+        eval_action, _states = model.predict(eval_obs, deterministic=False) 
+
+        eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
+        for i, info in enumerate(infos):
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
+                eval_episode_rewards[i] = info['episode']['r']
+
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    model.policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 def wrap_vecenv(vecenv):
@@ -213,24 +215,43 @@ class CustomCallback(BaseCallback):
         self.curriculum = curriculum
 
     def _on_step(self) -> bool:
-        if self.num_timesteps % 256 * 64 == 0:
-            if args.curriculum and args.curriculum_method == "plr":
-                tasks = self.training_env.venv.venv.venv.get_attr("task")
-                update = {
-                    "update_type": "on_demand",
-                    "metrics": {
-                        "value": self.locals["values"],
-                        "next_value": self.locals["values"],
-                        "rew": self.locals["rewards"],
-                        "dones": self.locals["dones"],
-                        "tasks": tasks,
-                    },
-                }
-                self.curriculum.update_curriculum(update)
-            mean_eval_returns, _, _ = level_replay_evaluate_sb3(args.env_id, model, args.num_eval_episodes, num_levels=0)
-            writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
+        if args.curriculum and args.curriculum_method == "plr":
+            tasks = self.training_env.venv.venv.venv.get_attr("task")
+            update = {
+                "update_type": "on_demand",
+                "metrics": {
+                    "value": self.locals["values"],
+                    "next_value": self.locals["values"],
+                    "rew": self.locals["rewards"],
+                    "dones": self.locals["dones"],
+                    "tasks": tasks,
+                },
+            }
+            self.curriculum.update_curriculum(update)
         return True
+    
+class Level_Replay_EvalCallback(BaseCallback):
 
+    def __init__(self, env_name, model, eval_freq, num_episodes, num_levels=0, verbose=0):
+        super().__init__(verbose)
+        self.env_name = env_name
+        self.model = model
+        self.num_episodes = num_episodes
+        self.num_levels = num_levels
+        self.eval_freq = eval_freq
+
+    def _on_step(self) -> bool:
+        """
+        This method will be called by the model after each call to `env.step()`.
+        You must return True to continue training, or False to stop.
+        """
+        return True  
+
+    def _on_rollout_end(self) -> None:
+        if self.num_timesteps % self.eval_freq == 0:
+            mean_eval_returns, _, _ = level_replay_evaluate_sb3(self.env_name, self.model, self.num_episodes, self.num_levels)
+            writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
+            
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
@@ -300,6 +321,14 @@ if __name__ == "__main__":
     venv = wrap_vecenv(venv)
     assert isinstance(venv.action_space, gym.spaces.discrete.Discrete), "only discrete action space is supported"
 
+    print("Creating agent")
+    agent = ProcgenAgent(
+        venv.single_observation_space.shape,
+        venv.single_action_space.n,
+        arch="large",
+        base_kwargs={'recurrent': False, 'hidden_size': 256}
+    ).to(device)
+
     print("Creating model")
     model = PPO(
         "CnnPolicy",
@@ -322,7 +351,9 @@ if __name__ == "__main__":
     )
     
     plr_callback = CustomCallback(curriculum)
-    callback = CallbackList([wandb_callback, plr_callback])
+    level_replay_evaluate_callback = Level_Replay_EvalCallback(args.env_id, model, int(args.num_envs * args.num_steps), args.num_eval_episodes, num_levels=0)
+
+    callback = CallbackList([wandb_callback, plr_callback, level_replay_evaluate_callback])
     model.learn(
         25000000,
         callback=callback,

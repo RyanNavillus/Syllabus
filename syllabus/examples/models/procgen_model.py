@@ -357,6 +357,7 @@ class SmallNetBase(NNBase):
 
 class ProcgenAgent(Policy):
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+        
         h, w, c = obs_shape
         shape = (c, h, w)
         super().__init__(shape, num_actions, arch=arch, base_kwargs=base_kwargs)
