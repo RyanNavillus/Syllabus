@@ -179,18 +179,19 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_envs = VecExtractDictObs(eval_envs, "rgb") 
     eval_envs = wrap_vecenv(eval_envs)
 
-    episode_rewards, _ = evaluate_policy(
-                model,
-                eval_envs,
-                n_eval_episodes=num_episodes,
-                render=False,
-                deterministic=False,
-                return_episode_rewards=True,
-                warn=True,
-            )
+    eval_obs = eval_envs.reset()
+    eval_episode_rewards = [-1] * num_episodes
 
-    mean_returns = np.mean(episode_rewards)
-    stddev_returns = np.std(episode_rewards)
+    while -1 in eval_episode_rewards:
+        eval_action, _states = model.predict(eval_obs, deterministic=False) 
+
+        eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
+        for i, info in enumerate(infos):
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
+                eval_episode_rewards[i] = info['episode']['r']
+
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
     return mean_returns, stddev_returns, normalized_mean_returns
