@@ -6,6 +6,7 @@ import numpy as np
 from gymnasium.spaces import Dict
 
 from syllabus.task_space import TaskSpace
+from .stat_recorder import StatRecorder
 
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
@@ -13,7 +14,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -28,6 +29,7 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names
         self.n_updates = 0
+        self.stat_recorder = StatRecorder(self.task_space) if record_stats else None
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
@@ -74,9 +76,10 @@ class Curriculum:
         :param task: Task for which progress is being updated.
         :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
         """
+
         self.completed_tasks += 1
 
-    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
+    def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
@@ -88,7 +91,7 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int, int]], env_id: int = None) -> None:
+    def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
         This method can be overridden to provide a more efficient implementation. It is used
@@ -96,9 +99,9 @@ class Curriculum:
 
         :param step_results: List of step results
         """
-        obs, rews, terms, truncs, infos = tuple(step_results)
+        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
         for i in range(len(obs)):
-            self.update_on_step(obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
     def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
@@ -107,8 +110,15 @@ class Curriculum:
         :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
         :raises NotImplementedError:
         """
-        # TODO: Add update_on_episode option similar to update-on_step
-        pass
+        if self.stat_recorder is not None:
+            self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
+
+    def normalize(self, reward, task):
+        """
+        Normalize reward by task.
+        """
+        assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
+        return self.stat_recorder.normalize(reward, task)
 
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
@@ -221,3 +231,5 @@ class Curriculum:
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
+        if self.stat_recorder is not None:
+            self.stat_recorder.log_metrics(writer, step=step)

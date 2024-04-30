@@ -1,7 +1,6 @@
 import time
 from collections import deque
 
-import gym
 import numpy as np
 
 
@@ -154,12 +153,20 @@ class VecEnvObservationWrapper(VecEnvWrapper):
         pass
 
     def reset(self):
-        obs, infos = self.venv.reset()
+        outputs = self.venv.reset()
+        if len(outputs) == 2:
+            obs, infos = outputs
+        else:
+            obs, infos = outputs, {}
         return self.process(obs), infos
 
     def step_wait(self):
-        print(self.venv)
-        obs, rews, terms, truncs, infos = self.venv.step_wait()
+        env_outputs = self.venv.step_wait()
+        if len(env_outputs) == 4:
+            obs, rews, terms, infos = env_outputs
+            truncs = np.zeros_like(terms)
+        else:
+            obs, rews, terms, truncs, infos = env_outputs
         return self.process(obs), rews, terms, truncs, infos
 
 
@@ -209,7 +216,10 @@ class VecNormalize(VecEnvWrapper):
 
     def reset(self, seed=None):
         self.ret = np.zeros(self.num_envs)
-        obs, infos = self.venv.reset(seed=seed)
+        if seed is not None:
+            obs, infos = self.venv.reset(seed=seed)
+        else:
+            obs, infos = self.venv.reset()
         return self._obfilt(obs), infos
 
 
@@ -228,7 +238,10 @@ class VecMonitor(VecEnvWrapper):
             self.eplen_buf = deque([], maxlen=keep_buf)
 
     def reset(self, seed=None):
-        obs, infos = self.venv.reset(seed=seed)
+        if seed is not None:
+            obs, infos = self.venv.reset(seed=seed)
+        else:
+            obs, infos = self.venv.reset()
         self.eprets = np.zeros(self.num_envs, 'f')
         self.eplens = np.zeros(self.num_envs, 'i')
         return obs, infos
@@ -239,7 +252,8 @@ class VecMonitor(VecEnvWrapper):
         self.eprets += rews
         self.eplens += 1
         # Convert dict of lists to list of dicts
-        infos = [dict(zip(infos, t)) for t in zip(*infos.values())]
+        if isinstance(infos, dict):
+            infos = [dict(zip(infos, t)) for t in zip(*infos.values())]
         newinfos = list(infos[:])
         for i in range(len(dones)):
             if dones[i]:
