@@ -7,9 +7,9 @@ import time
 from collections import deque
 from distutils.util import strtobool
 
+from gym import spaces
 import gym as openai_gym
 import gymnasium as gym
-from gym import spaces
 import numpy as np
 import procgen  # noqa: F401
 from procgen import ProcgenEnv
@@ -17,7 +17,7 @@ import torch
 import wandb
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList, EvalCallback
-from stable_baselines3.common.vec_env import (VecExtractDictObs, DummyVecEnv, VecMonitor,
+from stable_baselines3.common.vec_env import (VecExtractDictObs, DummyVecEnv, SubprocVecEnv, VecMonitor,
                                               VecNormalize)
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
@@ -27,10 +27,12 @@ from syllabus.core import (MultiProcessingSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.models import ProcgenAgent
+from syllabus.examples.models import Sb3ProcgenAgent
 from wandb.integration.sb3 import WandbCallback
 
 
+import logging
+import cloudpickle
 
 def parse_args():
     # fmt: off
@@ -152,14 +154,13 @@ class VecExtractDictObs(VecEnvWrapper):
             if "terminal_observation" in info:
                 info["terminal_observation"] = info["terminal_observation"][self.key]
         return obs[self.key], reward, done, infos
-
-
+    
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-        components = curriculum.get_components()
         if curriculum is not None:
+            components = curriculum.get_components()  # This must be safe to call here
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env=env,
@@ -198,7 +199,7 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
 
 def wrap_vecenv(vecenv):
     vecenv = VecMonitor(venv=vecenv, filename=None)
-    vecenv = VecNormalize(venv=vecenv, norm_obs=False, norm_reward=True, training=False)
+    vecenv = VecNormalize(venv=vecenv, norm_obs=False, norm_reward=True, training=True)
     return vecenv
 
 
@@ -208,9 +209,10 @@ class CustomCallback(BaseCallback):
 
     :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
     """
-    def __init__(self, curriculum, verbose=0):
+    def __init__(self, curriculum, model, verbose=0):
         super().__init__(verbose)
         self.curriculum = curriculum
+        self.model = model
 
     def _on_step(self) -> bool:
         if args.curriculum and args.curriculum_method == "plr":
@@ -228,28 +230,10 @@ class CustomCallback(BaseCallback):
             self.curriculum.update_curriculum(update)
         return True
     
-class Level_Replay_EvalCallback(BaseCallback):
-
-    def __init__(self, env_name, model, eval_freq, num_episodes, num_levels=0, verbose=0):
-        super().__init__(verbose)
-        self.env_name = env_name
-        self.model = model
-        self.num_episodes = num_episodes
-        self.num_levels = num_levels
-        self.eval_freq = eval_freq
-
-    def _on_step(self) -> bool:
-        """
-        This method will be called by the model after each call to `env.step()`.
-        You must return True to continue training, or False to stop.
-        """
-        return True  
-
     def _on_rollout_end(self) -> None:
-        if self.num_timesteps % self.eval_freq == 0:
-            mean_eval_returns, _, _ = level_replay_evaluate_sb3(self.env_name, self.model, self.num_episodes, self.num_levels)
-            writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
-            
+        mean_eval_returns, _, _ = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
+        writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
+
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
@@ -307,29 +291,32 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    venv = DummyVecEnv(
-    [
-        make_env(args.env_id,
+    venv_fn = [
+            make_env(
+                args.env_id,
                 args.seed + i,
                 curriculum=curriculum if args.curriculum else None,
-                num_levels=1 if args.curriculum else 0)
-        for i in range(args.num_envs)
-    ]
-    )
+                num_levels=1 if args.curriculum else 0
+            )
+            for i in range(args.num_envs)
+            ]
+    venv = DummyVecEnv(venv_fn)
     venv = wrap_vecenv(venv)
     assert isinstance(venv.action_space, gym.spaces.discrete.Discrete), "only discrete action space is supported"
 
     print("Creating agent")
-    agent = ProcgenAgent(
-        venv.single_observation_space.shape,
-        venv.single_action_space.n,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
+    agent = Sb3ProcgenAgent(
+    observation_space=venv.observation_space,
+    action_space=venv.action_space,
+    lr_schedule=linear_schedule(0.0005),  # Ensure this matches the expected function format
+    num_actions=venv.action_space.n,
+    arch="large",
+    base_kwargs={'recurrent': False, 'hidden_size': 256},
+    )
 
     print("Creating model")
     model = PPO(
-        "CnnPolicy",
+        agent,
         venv,
         verbose=1,
         n_steps=256,
@@ -339,7 +326,7 @@ if __name__ == "__main__":
         n_epochs=3,
         clip_range_vf=0.2,
         ent_coef=0.01,
-        batch_size=256 * 64,
+        batch_size=2048,
         tensorboard_log="runs/testing"
     )
 
@@ -348,10 +335,9 @@ if __name__ == "__main__":
         verbose=2,
     )
     
-    plr_callback = CustomCallback(curriculum)
-    level_replay_evaluate_callback = Level_Replay_EvalCallback(args.env_id, model, int(args.num_envs * args.num_steps), args.num_eval_episodes, num_levels=0)
+    plr_callback = CustomCallback(curriculum, model)
 
-    callback = CallbackList([wandb_callback, plr_callback, level_replay_evaluate_callback])
+    callback = CallbackList([wandb_callback, plr_callback])
     model.learn(
         25000000,
         callback=callback,

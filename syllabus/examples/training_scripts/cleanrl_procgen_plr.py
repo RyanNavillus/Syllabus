@@ -164,11 +164,6 @@ def full_level_replay_evaluate(
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
 
-    # Seed environments
-    seeds = [int.from_bytes(os.urandom(3), byteorder="little") for _ in range(num_episodes)]
-    for i, seed in enumerate(seeds):
-        eval_envs.seed(seed, i)
-
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = [-1] * num_episodes
 
