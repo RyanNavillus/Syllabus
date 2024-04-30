@@ -118,7 +118,7 @@ class RolloutStorage(object):
         self.tasks[:, env_index] = self.tasks[:, env_index].roll(-self.num_steps, 0)
         self.tasks[-self.num_steps:, env_index] = 0
         self.masks[:, env_index] = self.masks[:, env_index].roll(-(self.num_steps - 1), 0)
-        self.masks[-self.num_steps:, env_index] = 0
+        self.masks[-self.num_steps:, env_index] = 1
 
         for step in range(self.num_steps):
             self.obs[step][env_index] = self.obs[self.num_steps + step - 1][env_index]

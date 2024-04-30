@@ -225,6 +225,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             tasks = [self._task_sampler.sample() for _ in range(k)]
         self._recent_tasks.extend(tasks)
         return tasks
+
     def _enumerate_tasks(self, space):
         assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
         if isinstance(space, Discrete):
