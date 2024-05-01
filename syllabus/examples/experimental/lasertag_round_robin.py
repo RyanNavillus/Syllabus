@@ -57,7 +57,6 @@ test_envs = {
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--track", type=bool, default=False)
     parser.add_argument(
         "--agent-curriculum-1", type=str, default="SP", choices=["SP", "FSP", "PFSP"]
     )
@@ -71,7 +70,6 @@ def parse_args():
         "--env-curriculum-2", type=str, default="DR", choices=["DR", "PLR"]
     )
     parser.add_argument("--n-episodes", type=int, default=10)
-    parser.add_argument("--n-seeds", type=int, default=10)
     parser.add_argument(
         "--exp-name",
         type=str,
@@ -218,9 +216,12 @@ class AgentConfig:
 
     agent_curriculum: str
     env_curriculum: str
-    agent: AgentType = None
+    agent = None
     checkpoint: int = None
     seed: int = None
+
+    def __post_init__(self):
+        self.get_checkpoints_and_seeds()
 
     def set_task(self, checkpoint: int, seed: int) -> None:
         self.checkpoint = checkpoint
@@ -229,6 +230,13 @@ class AgentConfig:
     @property
     def path(self) -> str:
         return f"{self.env_curriculum}_{self.agent_curriculum}"
+
+    def get_checkpoints_and_seeds(self) -> None:
+        """Extracts all unique checkpoints and seeds from a checkpoint folder path."""
+        files = os.listdir(f"lasertag_{self.path}_checkpoints")
+        checkpoints = [file for file in files if file != "cached"]
+        self.checkpoints = set(map(lambda x: x.split("_")[2], checkpoints))
+        self.seeds = set(map(lambda x: x.split("_")[-1].split(".")[0], checkpoints))
 
     def __str__(self) -> str:
         return (
@@ -242,10 +250,10 @@ def load_agent(
     device: str = "cpu",
 ) -> Tuple[AgentType, AgentConfig]:
     """Loads an agent to `device` and updates `AgentConfig`"""
+    path = f"lasertag_{agent_cfg.path}_checkpoints/" f"{str(agent_cfg)}.pkl"
+    agent = joblib.load(path)
+    agent = agent.to(device)
 
-    agent = joblib.load(
-        (f"lasertag_{agent_cfg.path}_checkpoints/" f"{str(agent_cfg)}.pkl")
-    ).to(device)
     agent_cfg.agent = agent
 
     return agent, agent_cfg
@@ -254,10 +262,10 @@ def load_agent(
 def play_n_episodes(
     agent_1_cfg: AgentConfig,
     agent_2_cfg: AgentConfig,
+    device: str,
     n_episodes: int = 10,
     environment_id: str = "LasertagArena1",
-    device: str = "cpu",
-) -> float:
+) -> Tuple[float, float]:
 
     n_agents = 2
     stack_size = 3
@@ -287,7 +295,10 @@ def play_n_episodes(
             for step in range(0, max_cycles):
                 # rollover the observation
                 joint_obs = batchify(next_obs, device).squeeze()
-                agent_obs, opponent_obs = joint_obs
+                agent_obs, opponent_obs = joint_obs.split(1, dim=0)
+
+                agent_obs = agent_obs.squeeze().to(device)
+                opponent_obs = opponent_obs.squeeze().to(device)
 
                 # get action from the agent and the opponent
                 agent_1_action, *_ = agent_1.get_action_and_value(
@@ -316,8 +327,9 @@ def play_n_episodes(
                     break
 
     agent_1_norm_rew = agent_1_c_rew / n_episodes
+    agent_2_norm_rew = agent_2_c_rew / n_episodes
 
-    return agent_1_norm_rew
+    return agent_1_norm_rew, agent_2_norm_rew
 
 
 if __name__ == "__main__":
@@ -329,34 +341,31 @@ if __name__ == "__main__":
     if not os.path.exists(f"{args.logging_dir}"):
         os.makedirs(f"{args.logging_dir}", exist_ok=True)
 
-    checkpoints = [2000, 4000, 6000]
-    seeds = [1]
+    logs = {
+        agent.path: {checkpoint: [] for checkpoint in agent.checkpoints}
+        for agent in (agent_1_cfg, agent_2_cfg)
+    }
 
-    logs = {env_name: {} for env_name in list(test_envs.keys())}
-
-    for checkpoint_1 in tqdm(checkpoints):
-        for seed_1 in seeds:
+    for checkpoint_1 in tqdm(agent_1_cfg.checkpoints, desc="outer loop"):
+        for seed_1 in agent_1_cfg.seeds:
             agent_1_cfg.set_task(checkpoint_1, seed_1)
             agent_1, agent_1_cfg = load_agent(agent_1_cfg, device)
 
-            for checkpoint_2 in checkpoints:
-                for seed_2 in seeds:
+            for checkpoint_2 in tqdm(agent_2_cfg.checkpoints, desc="inner loop"):
+                for seed_2 in agent_2_cfg.seeds:
                     agent_2_cfg.set_task(checkpoint_2, seed_2)
                     agent_2, agent_2_cfg = load_agent(agent_2_cfg, device)
 
                     for environment_id in list(test_envs.keys()):
-                        returns = play_n_episodes(
+                        returns_1, returns_2 = play_n_episodes(
                             agent_1_cfg,
                             agent_2_cfg,
+                            device,
                             n_episodes=args.n_episodes,
                             environment_id=environment_id,
                         )
-                        if str(agent_1_cfg) not in logs[environment_id].keys():
-                            logs[environment_id][str(agent_1_cfg)] = {}
-
-                        logs[environment_id][str(agent_1_cfg)][
-                            str(agent_2_cfg)
-                        ] = returns
+                        logs[agent_1_cfg.path][checkpoint_1].append(returns_1)
+                        logs[agent_2_cfg.path][checkpoint_2].append(returns_2)
 
     if not os.path.exists(f"{args.logging_dir}/round_robin/"):
         os.makedirs(f"{args.logging_dir}/round_robin/")

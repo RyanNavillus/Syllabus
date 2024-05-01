@@ -4,7 +4,6 @@ import sys
 import time
 from typing import Dict, Tuple, TypeVar
 
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -410,15 +409,23 @@ if __name__ == "__main__":
                             and n_updates % args.checkpoint_frequency == 0
                         ):
                             print(f"saving checkpoint --{n_updates}")
+                            checkpoint_path = (
+                                f"{args.logging_dir}/{exp_name}_checkpoints/"
+                                f"{mp_curriculum.curriculum.env_curriculum.name}_"
+                                f"{mp_curriculum.curriculum.agent_curriculum.name}_{n_updates}"
+                                f"_seed_{args.seed}.pkl"
+                            )
+                            # --- local checkpoint ---
                             joblib.dump(
                                 agent,
-                                filename=(
-                                    f"{args.logging_dir}/{exp_name}_checkpoints/"
-                                    f"{mp_curriculum.curriculum.env_curriculum.name}_"
-                                    f"{mp_curriculum.curriculum.agent_curriculum.name}_{n_updates}"
-                                    f"_seed_{args.seed}.pkl"
-                                ),
+                                filename=checkpoint_path,
                             )
+
+                            # --- wandb checkpoint ---
+                            if args.track:
+                                agent_artifact = wandb.Artifact("model", type="model")
+                                agent_artifact.add_dir(checkpoint_path)
+                                wandb.run.log(agent_artifact)
 
             # gae
             with torch.no_grad():
@@ -560,7 +567,6 @@ if __name__ == "__main__":
         wandb.log({"charts/env_tasks": wandb.Html(plotly.io.to_html(fig))})
 
         learner_winrate = n_learner_wins / episode
-        # wandb.run.summary["n_episodes"] = total_episodes
         wandb.run.summary["learner_winrate"] = learner_winrate
         writer.add_scalar("charts/learner_winrate", learner_winrate)
 
