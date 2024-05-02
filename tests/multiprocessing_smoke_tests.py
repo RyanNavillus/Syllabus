@@ -29,7 +29,7 @@ curricula = [
         "get_value": get_test_values,
         "device": "cpu",
         "num_processes": N_ENVS,
-        "num_steps": 2048
+        "num_steps": 2048,
         "robust_plr": True,
         "eval_envs": create_nethack_env(),
         "action_value_fn": get_action_value
