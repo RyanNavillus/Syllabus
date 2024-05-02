@@ -46,7 +46,7 @@ class RolloutStorage(object):
             self.action_log_dist = torch.zeros(self.buffer_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
-        self._first_step = [True] * num_processes
+        self._first_step = [True for _ in range(self.num_processes)]
 
     def to(self, device):
         self.masks = self.masks.to(device)
@@ -60,9 +60,14 @@ class RolloutStorage(object):
 
     def insert_at_index(self, env_index, mask=None, action_log_dist=None, obs=None, reward=None, task=None, steps=1):
         if self._first_step[env_index]:
-            self._first_step[env_index] = False
             self.obs[0][env_index] = obs[0]
-            return
+            mask = mask[1:] if mask is not None else mask
+            action_log_dist = action_log_dist[1:] if action_log_dist is not None else action_log_dist
+            obs = obs[1:] if obs is not None else obs
+            reward = reward[1:] if reward is not None else reward
+            task = task[1:] if task is not None else task
+            steps -= 1
+            self._first_step[env_index] = False
 
         step = self.env_steps[env_index]
         end_step = step + steps
@@ -88,16 +93,24 @@ class RolloutStorage(object):
             self.tasks[step:end_step, env_index].copy_(torch.as_tensor(np.array(task)[:, None]))
 
         self.env_steps[env_index] += steps
+
+        # Check if there are more than self.num_processes obs that we need to get values for
+        if self.env_steps[env_index] - self.value_preds[:, env_index].count_nonzero() > self.num_processes:
+            self._get_values(env_index)
+
         if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps:
             self.ready_buffers.add(env_index)
 
     def _get_values(self, env_index):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
-        for step in range(0, self.num_steps + 1, self.num_processes):
+
+        start_index = self.value_preds[:, env_index].count_nonzero()
+        end_index = min(self.env_steps[env_index], self.num_steps + 1)
+        for step in range(start_index, end_index, self.num_processes):
             obs_list = []
             for i in range(self.num_processes):
-                if step + i >= self.num_steps + 1:
+                if step + i >= end_index:
                     break
                 o = self.obs[step + i][env_index]
                 obs_list.append(o)

@@ -138,6 +138,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
                 curriculum.get_components(),
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
+                batch_size=10,
             )
         return env
     return thunk
