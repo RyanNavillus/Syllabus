@@ -49,7 +49,7 @@ ObsType = TypeVar("ObsType")
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--track", type=bool, default=False)
-    parser.add_argument("--total-updates", type=int, default=1000)
+    parser.add_argument("--total-updates", type=int, default=40000)
     parser.add_argument("--rollout_length", type=int, default=256)
     parser.add_argument(
         "--batch-size", type=int, default=32
@@ -77,14 +77,14 @@ def parse_args():
     parser.add_argument("--max-agents", type=int, default=10)
     parser.add_argument("--save-agent-checkpoints", type=bool, default=False)
     parser.add_argument(
-        "--checkpoint-frequency", type=int, default=500
+        "--checkpoint-frequency", type=int, default=4000
     )  # agent checkpoints every N steps
     parser.add_argument("--n-env-tasks", type=int, default=4000)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--exp-name",
         type=str,
-        default="lasertag_DR",
+        default="lasertag_",
         help="the name of this experiment",
     )
     parser.add_argument(
@@ -252,7 +252,7 @@ env_curriculums = {
 
 if __name__ == "__main__":
     args = parse_args()
-    exp_name = f"{args.exp_name}_{args.agent_curriculum}"
+    exp_name = f"{args.exp_name}_{args.env_curriculum}_{args.agent_curriculum}"
     run_name = f"lasertag__{exp_name}__seed_{args.seed}__{int(time.time())}"
 
     if args.track:
@@ -448,8 +448,8 @@ if __name__ == "__main__":
                             # --- wandb checkpoint ---
                             if args.track:
                                 agent_artifact = wandb.Artifact("model", type="model")
-                                agent_artifact.add_dir(checkpoint_path)
-                                wandb.run.log(agent_artifact)
+                                agent_artifact.add_file(checkpoint_path)
+                                wandb.log_artifact(agent_artifact)
 
                 if args.env_curriculum == "PLR":
                     with torch.no_grad():
