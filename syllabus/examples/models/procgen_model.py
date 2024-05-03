@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import math
 
 def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
@@ -55,6 +55,10 @@ class Conv2d_tf(nn.Conv2d):
         self.padding = kwargs.get("padding", "SAME")
 
     def _compute_padding(self, input, dim):
+        if input.dim() == 2:
+            channels = 3 
+            side_length = int(math.sqrt(input.size(1) / channels))
+            input = input.view(-1, channels, side_length, side_length)
         input_size = input.size(dim + 2)
         filter_size = self.weight.size(dim + 2)
         effective_filter_size = (filter_size - 1) * self.dilation[dim] + 1
@@ -67,6 +71,10 @@ class Conv2d_tf(nn.Conv2d):
         return additional_padding, total_padding
 
     def forward(self, input):
+        if input.dim() == 2:
+            channels = 3 
+            side_length = int(math.sqrt(input.size(1) / channels))
+            input = input.view(-1, channels, side_length, side_length)
         if self.padding == "VALID":
             return F.conv2d(
                 input,
@@ -142,37 +150,53 @@ class Policy(nn.Module):
 
         if base_kwargs is None:
             base_kwargs = {}
-
+        
         if len(obs_shape) == 3:
             if arch == 'small':
-                base = SmallNetBase
+                value_net = SmallNetBase
             else:
-                base = ResNetBase
+                value_net = ResNetBase
         elif len(obs_shape) == 1:
-            base = MLPBase
+            value_net = MLPBase
 
-        self.base = base(obs_shape[0], **base_kwargs)
-        self.dist = Categorical(self.base.output_size, num_actions)
-        self.latent_dim_pi = 256
-        self.latent_dim_vf = 256
+        self.latent_dim_vf = 1
+        self.latent_dim_pi = 1
+        self.value_net = value_net(obs_shape[0], **base_kwargs)
+        self.policy_net = Categorical(self.value_net.output_size, num_actions)
+        
 
     @property
     def is_recurrent(self):
-        return self.base.is_recurrent
+        return self.value_net.is_recurrent
 
     @property
     def recurrent_hidden_state_size(self):
         """Size of rnn_hx."""
-        return self.base.recurrent_hidden_state_size
+        return self.value_net.recurrent_hidden_state_size
+    
+    def forward_critic(self, features):
+        values, _ = self.value_net(features)
+        return values
+    
+    def forward_actor(self, features):
+        value, actor_features = self.value_net(features)
+        dist = self.policy_net(actor_features)
+        dist = dist.sample().float()
+        return dist
 
     def forward(self, inputs):
-        value, actor_features, rnn_hxs = self.base(inputs, None, None)
-        dist = self.dist(actor_features)
-        return dist.sample(), value
+        if inputs.dim() == 2:
+            channels = 3 
+            side_length = int(math.sqrt(inputs.size(1) / channels))
+            inputs = inputs.view(-1, channels, side_length, side_length)
+        value, actor_features = self.value_net(inputs)
+        dist = self.policy_net(actor_features)
+        dist = dist.sample().float()
+        return dist, value
 
     def act(self, inputs, deterministic=False):
-        value, actor_features = self.base(inputs)
-        dist = self.dist(actor_features)
+        value, actor_features = self.value_net(inputs)
+        dist = self.policy_net (actor_features)
 
         if deterministic:
             action = dist.mode()
@@ -184,12 +208,12 @@ class Policy(nn.Module):
         return value, action, action_log_dist
 
     def get_value(self, inputs):
-        value, _, _ = self.base(inputs)
+        value, _, _ = self.value_net(inputs)
         return value
 
     def evaluate_actions(self, inputs, rnn_hxs, masks, action):
-        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
-        dist = self.dist(actor_features)
+        value, actor_features, rnn_hxs = self.value_net(inputs, rnn_hxs, masks)
+        dist = self.policy_net(actor_features)
 
         action_log_probs = dist.log_probs(action)
         dist_entropy = dist.entropy().mean()
@@ -243,12 +267,14 @@ class MLPBase(NNBase):
         self.train()
 
     def forward(self, inputs):
+        # print('MLPBase')
         x = inputs
 
         hidden_critic = self.critic(x)
         hidden_actor = self.actor(x)
 
-        return self.critic_linear(hidden_critic), hidden_actor
+        critic_output = self.critic_linear(hidden_critic)
+        return critic_output, hidden_actor
 
 
 class BasicBlock(nn.Module):
@@ -312,15 +338,14 @@ class ResNetBase(NNBase):
         return nn.Sequential(*layers)
 
     def forward(self, inputs):
+        # print('ResNetBase')
         x = inputs
 
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-
         x = self.relu(self.flatten(x))
         x = self.relu(self.fc(x))
-
         return self.critic_linear(x), x
 
 
@@ -345,13 +370,13 @@ class SmallNetBase(NNBase):
         self.train()
 
     def forward(self, inputs):
+        # print('SmallNetBase')
         x = inputs
 
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.flatten(x)
         x = self.relu(self.fc(x))
-
         return self.critic_linear(x), x
 
 

@@ -304,19 +304,9 @@ if __name__ == "__main__":
     venv = wrap_vecenv(venv)
     assert isinstance(venv.action_space, gym.spaces.discrete.Discrete), "only discrete action space is supported"
 
-    print("Creating agent")
-    agent = Sb3ProcgenAgent(
-    observation_space=venv.observation_space,
-    action_space=venv.action_space,
-    lr_schedule=linear_schedule(0.0005),  # Ensure this matches the expected function format
-    num_actions=venv.action_space.n,
-    arch="large",
-    base_kwargs={'recurrent': False, 'hidden_size': 256},
-    )
-
     print("Creating model")
     model = PPO(
-        agent,
+        Sb3ProcgenAgent,
         venv,
         verbose=1,
         n_steps=256,
@@ -327,7 +317,11 @@ if __name__ == "__main__":
         clip_range_vf=0.2,
         ent_coef=0.01,
         batch_size=2048,
-        tensorboard_log="runs/testing"
+        tensorboard_log="runs/testing",
+        policy_kwargs={
+        'arch': "large",
+        'base_kwargs': {'recurrent': False, 'hidden_size': 256}
+    }
     )
 
     wandb_callback = WandbCallback(
