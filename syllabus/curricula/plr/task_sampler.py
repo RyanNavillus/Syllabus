@@ -4,11 +4,10 @@
 import gymnasium as gym
 import numpy as np
 import torch
-import warnings
 from typing import List
 
-from syllabus.core import Curriculum, UsageError, enumerate_axes
 from syllabus.curricula.plr.storage import RolloutStorage
+from syllabus.task_space.task_space import TaskSpace
 
 
 def null(x):
@@ -39,6 +38,7 @@ class TaskSampler:
     def __init__(
         self,
         tasks: list,
+        task_space: TaskSpace,
         action_space: gym.spaces.Space = None,
         num_actors: int = 1,
         strategy: str = "value_l1",
@@ -56,12 +56,15 @@ class TaskSampler:
         staleness_coef: float = 0.1,
         staleness_transform: str = "power",
         staleness_temperature: float = 1.0,
+
         robust_plr: bool = False,
         eval_envs = None,
         action_value_fn=None,
         get_value=None,
-        observation_space = None
+        observation_space = None,
+
     ):
+        self.task_space = task_space
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
@@ -336,7 +339,7 @@ class TaskSampler:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
         print("Evaluating")
 
-        obs, _ = env.reset(new_task=task)
+        obs = env.reset(new_task=task)
         done = False
 
         while not done:
@@ -344,8 +347,10 @@ class TaskSampler:
 
             obs, rew, term, trunc, _ = env.step(action)
 
+            task_encoded = self.task_space.encode(task)
+
             mask = torch.FloatTensor([0.0] if term or trunc else [1.0])
-            self._robust_rollouts.insert(mask, value_preds=value[0], rewards=torch.Tensor([rew]), tasks=torch.Tensor([task]))
+            self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor([rew]), tasks=torch.Tensor([task_encoded]))
 
 
             # Check if the episode is done

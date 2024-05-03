@@ -192,7 +192,9 @@ def get_test_values(x):
 
 
 def get_action_value(obs):
-    return 0,0
+    action = 0
+    value = 0
+    return action, value
 
 
 # Sync Test Environment

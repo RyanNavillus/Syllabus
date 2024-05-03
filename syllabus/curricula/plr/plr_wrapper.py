@@ -206,7 +206,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._eval_envs = eval_envs
         self.action_value_fn = action_value_fn
 
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, get_value = get_value, observation_space = observation_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, task_space=task_space, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, **task_sampler_kwargs_dict)
 
         self._rollouts = RolloutStorage(
             self._num_steps,
