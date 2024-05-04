@@ -294,6 +294,7 @@ if __name__ == "__main__":
         "device": device,
         "storage_path": f"{args.agent_curriculum}_agents",
         "max_agents": args.max_agents,
+        "seed": args.seed,
     }
 
     n_env_tasks = 200

@@ -20,6 +20,7 @@ class SelfPlay(Curriculum):
         device: str,
         storage_path=None,  # unused
         max_agents=None,  # unused
+        seed: int = 0,
     ):
         self.name = "SP"
         self.device = device
@@ -66,10 +67,12 @@ class FictitiousSelfPlay(Curriculum):
         device: str,
         storage_path: str,
         max_agents: int,
+        seed: int = 0,
     ):
         self.name = "FSP"
         self.device = device
         self.storage_path = storage_path
+        self.seed = seed
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
@@ -93,7 +96,7 @@ class FictitiousSelfPlay(Curriculum):
         joblib.dump(
             agent,
             filename=(
-                f"{self.storage_path}/{self.name}_agent_checkpoint_"
+                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_"
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
@@ -118,7 +121,7 @@ class FictitiousSelfPlay(Curriculum):
     def get_opponent(self, agent_id: int) -> AgentType:
         """Loads an agent from the buffer of saved agents."""
         return joblib.load(
-            f"{self.storage_path}/{self.name}_agent_checkpoint_{agent_id}.pkl"
+            f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
         ).to(self.device)
 
     def sample(self, k=1):
@@ -132,10 +135,12 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         device: str,
         storage_path: str,
         max_agents: int,
+        seed: int = 0,
     ):
         self.name = "PFSP"
         self.device = device
         self.storage_path = storage_path
+        self.seed = seed
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
@@ -159,7 +164,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         joblib.dump(
             agent,
             filename=(
-                f"{self.storage_path}/{self.name}_agent_checkpoint_"
+                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_"
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
@@ -187,7 +192,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         then loads the selected agent from the buffer of saved agents.
         """
         return joblib.load(
-            f"{self.storage_path}/{self.name}_agent_checkpoint_{agent_id}.pkl"
+            f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
         ).to(self.device)
 
     def sample(self, k=1):
