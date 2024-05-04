@@ -230,7 +230,9 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
         warnings.warn("Unable to import nle.")
 
     env = NetHackScore(*env_args, **env_kwargs)
+    env = GymV21CompatibilityV0(env=env)
     env = NethackTaskWrapper(env)
+
 
     if type == "queue":
         env = MultiProcessingSyncWrapper(

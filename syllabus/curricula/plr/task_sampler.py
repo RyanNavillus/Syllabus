@@ -339,7 +339,7 @@ class TaskSampler:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
         print("Evaluating")
 
-        obs = env.reset(new_task=task)
+        obs, info = env.reset(new_task=task)
         done = False
 
         while not done:
@@ -419,12 +419,12 @@ class TaskSampler:
         tasks = episode_data["tasks"]
         if not self.requires_value_buffers:
             policy_logits = episode_data.action_log_dist
-        done = np.array([not mask > 0 for mask in episode_data["masks"]])
+        done = ~(episode_data["masks"] > 0)
 
         total_steps, num_actors = tasks.shape[:2]
 
         for actor_index in range(num_actors):
-            done_steps = done.nonzero()[0][:total_steps]
+            done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
             start_t = 0
 
             for t in done_steps:
@@ -438,14 +438,14 @@ class TaskSampler:
                 if self.strategy == "one_step_td_error" and t - start_t <= 1:
                     continue
 
-                task_idx_t = np.array(tasks[start_t, actor_index]).item()
+                task_idx_t = tasks[start_t, actor_index].item()
 
                 # Store kwargs for score function
                 score_function_kwargs = {}
                 if self.requires_value_buffers:
-                    score_function_kwargs["returns"] = episode_data["returns"][start_t:t]
-                    score_function_kwargs["rewards"] = episode_data["rewards"][start_t:t]
-                    score_function_kwargs["value_preds"] = episode_data["value_preds"][start_t:t]
+                    score_function_kwargs["returns"] = episode_data["returns"][start_t:t, actor_index]
+                    score_function_kwargs["rewards"] = episode_data["rewards"][start_t:t, actor_index]
+                    score_function_kwargs["value_preds"] = episode_data["value_preds"][start_t:t, actor_index]
                 else:
                     episode_logits = policy_logits[start_t:t, actor_index]
                     score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
@@ -477,7 +477,6 @@ class TaskSampler:
                 num_steps = len(episode_data["tasks"][start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
         print("Updated")
-
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)
