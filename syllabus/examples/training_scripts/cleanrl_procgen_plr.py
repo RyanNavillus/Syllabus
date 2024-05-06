@@ -142,6 +142,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
         return env
     return thunk
 
+
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
     vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)

@@ -1,38 +1,31 @@
-from typing import Callable
-
 import argparse
 import os
 import random
 import time
-from collections import deque
 from distutils.util import strtobool
+from typing import Callable, Tuple
 
-from gym import spaces
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
 import procgen  # noqa: F401
-from procgen import ProcgenEnv
 import torch
 import wandb
-from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import BaseCallback, CallbackList, EvalCallback
-from stable_baselines3.common.vec_env import (VecExtractDictObs, DummyVecEnv, SubprocVecEnv, VecMonitor,
-                                              VecNormalize)
-from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
+from gym import spaces
+from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
-from torch.utils.tensorboard import SummaryWriter
-
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           make_multiprocessing_curriculum)
+from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList
+from stable_baselines3.common.policies import ActorCriticPolicy
+from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor, VecNormalize
+from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
+from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
+from syllabus.examples.models import ResNetBase
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.models import Sb3ProcgenAgent
+from torch.utils.tensorboard import SummaryWriter
 from wandb.integration.sb3 import WandbCallback
 
-
-import logging
-import cloudpickle
 
 def parse_args():
     # fmt: off
@@ -132,9 +125,9 @@ PROCGEN_RETURN_BOUNDS = {
     "bossfight": (0.5, 13),
 }
 
-# Copy to avoid using the wrong space in the origional class for sb3 verison VecExtractDictObs
-class VecExtractDictObs(VecEnvWrapper):
 
+class VecExtractDictObs(VecEnvWrapper):
+    # Copy to avoid using the wrong space in the origional class for sb3 verison VecExtractDictObs
     def __init__(self, venv: VecEnv, key: str):
         self.key = key
         assert isinstance(
@@ -154,7 +147,8 @@ class VecExtractDictObs(VecEnvWrapper):
             if "terminal_observation" in info:
                 info["terminal_observation"] = info["terminal_observation"][self.key]
         return obs[self.key], reward, done, infos
-    
+
+
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
@@ -171,20 +165,25 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
         return env
     return thunk
 
-def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
 
+def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_envs = ProcgenEnv(
-    num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+        num_envs=args.num_eval_episodes,
+        env_name=env_name,
+        num_levels=num_levels,
+        start_level=0,
+        distribution_mode="easy",
+        paint_vel_info=False
     )
 
-    eval_envs = VecExtractDictObs(eval_envs, "rgb") 
+    eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
 
     eval_obs = eval_envs.reset()
     eval_episode_rewards = [-1] * num_episodes
 
     while -1 in eval_episode_rewards:
-        eval_action, _states = model.predict(eval_obs, deterministic=False) 
+        eval_action, _states = model.predict(eval_obs, deterministic=False)
 
         eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
         for i, info in enumerate(infos):
@@ -196,6 +195,7 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
     return mean_returns, stddev_returns, normalized_mean_returns
+
 
 def wrap_vecenv(vecenv):
     vecenv = VecMonitor(venv=vecenv, filename=None)
@@ -215,7 +215,7 @@ class CustomCallback(BaseCallback):
         self.model = model
 
     def _on_step(self) -> bool:
-        if args.curriculum and args.curriculum_method == "plr":
+        if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
             tasks = self.training_env.venv.venv.venv.get_attr("task")
             update = {
                 "update_type": "on_demand",
@@ -227,18 +227,91 @@ class CustomCallback(BaseCallback):
                     "tasks": tasks,
                 },
             }
-            self.curriculum.update_curriculum(update)
+            self.curriculum.update(update)
         return True
-    
+
     def _on_rollout_end(self) -> None:
         mean_eval_returns, _, _ = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
+        if self.curriculum is not None:
+            self.curriculum.log_metrics(writer, step=self.num_timesteps)
 
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
         return progress_remaining * initial_value
     return func
+
+
+class SB3Policy(torch.nn.Module):
+    def __init__(self, num_actions, hidden_size=256):
+        super(SB3Policy, self).__init__()
+
+        self.latent_dim_vf = 256
+        self.latent_dim_pi = 256
+        # self.policy_net = Categorical(hidden_size, num_actions)
+        # self.value_net = init_(nn.Linear(hidden_size, 1))
+        # self.policy_net = Categorical(hidden_size, 256)
+        # self.value_net = init_(nn.Linear(hidden_size, 256))
+        self.policy_net = torch.nn.Identity()
+        self.value_net = torch.nn.Identity()
+
+    def forward(self, features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        :return: (th.Tensor, th.Tensor) latent_policy, latent_value of the specified network.
+            If all layers are shared, then ``latent_policy == latent_value``
+        """
+        return self.forward_actor(features), self.forward_critic(features)
+
+    def forward_actor(self, features: torch.Tensor) -> torch.Tensor:
+        return self.policy_net(features)
+
+    def forward_critic(self, features: torch.Tensor) -> torch.Tensor:
+        return self.value_net(features)
+
+
+class SB3ResNetBase(ResNetBase):
+    def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
+        super().__init__(**kwargs)
+        assert features_dim > 0
+        self._observation_space = observation_space
+        self._features_dim = features_dim
+
+    @property
+    def features_dim(self) -> int:
+        return self._features_dim
+
+    def forward(self, inputs):
+        return super().forward(inputs / 255.0)
+
+
+class Sb3ProcgenAgent(ActorCriticPolicy):
+    def __init__(
+        self,
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
+        lr_schedule: Callable[[float], float],
+        *args,
+        hidden_size=256,
+        **kwargs
+    ):
+
+        self.shape = observation_space.shape
+        self.num_actions = action_space.n
+        self.hidden_size = hidden_size
+
+        super(Sb3ProcgenAgent, self).__init__(
+            observation_space,
+            action_space,
+            lr_schedule,
+            *args,
+            **kwargs
+        )
+        self.ortho_init = False
+        print(self)
+
+    def _build_mlp_extractor(self) -> None:
+        self.mlp_extractor = SB3Policy(self.num_actions, hidden_size=self.hidden_size)
 
 
 if __name__ == "__main__":
@@ -281,7 +354,17 @@ if __name__ == "__main__":
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
-        if args.curriculum_method == "dr":
+        if args.curriculum_method == "plr":
+            print("Using prioritized level replay.")
+            curriculum = CentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
+            )
+        elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
         else:
@@ -292,14 +375,14 @@ if __name__ == "__main__":
     # env setup
     print("Creating env")
     venv_fn = [
-            make_env(
-                args.env_id,
-                args.seed + i,
-                curriculum=curriculum if args.curriculum else None,
-                num_levels=1 if args.curriculum else 0
-            )
-            for i in range(args.num_envs)
-            ]
+        make_env(
+            args.env_id,
+            args.seed + i,
+            curriculum=curriculum if args.curriculum else None,
+            num_levels=1 if args.curriculum else 0
+        )
+        for i in range(args.num_envs)
+    ]
     venv = DummyVecEnv(venv_fn)
     venv = wrap_vecenv(venv)
     assert isinstance(venv.action_space, gym.spaces.discrete.Discrete), "only discrete action space is supported"
@@ -319,23 +402,24 @@ if __name__ == "__main__":
         batch_size=2048,
         tensorboard_log="runs/testing",
         policy_kwargs={
-        'arch': "large",
-        'base_kwargs': {'recurrent': False, 'hidden_size': 256}
-    }
+            "hidden_size": 256,
+            "features_extractor_class": SB3ResNetBase,
+            "features_extractor_kwargs": {'num_inputs': 3, "features_dim": 256},
+        }
     )
 
-    wandb_callback = WandbCallback(
-        model_save_path=f"models/{run.id}",
-        verbose=2,
-    )
-    
     plr_callback = CustomCallback(curriculum, model)
 
-    callback = CallbackList([wandb_callback, plr_callback])
+    if args.track:
+        wandb_callback = WandbCallback(
+            model_save_path=f"models/{run.id}",
+            verbose=2,
+        )
+        callback = CallbackList([wandb_callback, plr_callback])
+    else:
+        callback = plr_callback
+
     model.learn(
         25000000,
         callback=callback,
     )
-
-    
-
