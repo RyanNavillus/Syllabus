@@ -196,10 +196,18 @@ class Curriculum:
                 task_dist = task_dist[:10]
             if self.task_names:
                 for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
+                    if writer == wandb:
+                        writer.log({f"curriculum/task_{self.task_names(idx)}_prob": prob}, step=step)
+                    else:
+                        writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
             else:
                 for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
+                    if writer == wandb:
+                        writer.log({f"curriculum/task_{idx}_prob": prob}, step=step)
+                    else:
+                        writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
+                if writer == wandb:
+                    writer.log({f"global_step": step}, step=step)
         except ImportError:
             warnings.warn("Wandb is not installed. Skipping logging.")
         except wandb.errors.Error:
