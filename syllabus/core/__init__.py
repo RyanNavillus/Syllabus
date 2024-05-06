@@ -15,3 +15,4 @@ from .curriculum_sync_wrapper import (CurriculumWrapper,
 from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper, PettingZooMultiProcessingSyncWrapper, PettingZooRaySyncWrapper
 from .multivariate_curriculum_wrapper import MultitaskWrapper
 from .multiagent_curriculum_wrappers import MultiagentSharedCurriculumWrapper, MultiagentIndependentCurriculumWrapper
+from .stat_recorder import StatRecorder

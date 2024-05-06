@@ -33,6 +33,14 @@ class CurriculumWrapper:
     def tasks(self):
         return self.task_space.tasks
 
+    @property
+    def requires_step_updates(self):
+        return self.curriculum.requires_step_updates
+
+    @property
+    def requires_episode_updates(self):
+        return self.curriculum.requires_episode_updates
+
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
 
@@ -51,6 +59,9 @@ class CurriculumWrapper:
     def update_on_step_batch(self, step_results):
         self.curriculum.update_on_step_batch(step_results)
 
+    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
+        self.curriculum.update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
+
     def update(self, metrics):
         self.curriculum.update(metrics)
 
@@ -59,6 +70,9 @@ class CurriculumWrapper:
 
     def add_task(self, task):
         self.curriculum.add_task(task)
+
+    def normalize(self, rewards, task):
+        return self.curriculum.normalize(rewards, task)
 
 
 class MultiProcessingComponents:
@@ -231,6 +245,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             else:
                 time.sleep(0.01)
 
+    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
+        super().update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
+
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
         if isinstance(writer, SummaryWriter):
@@ -244,6 +261,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def get_components(self):
         return self._components
+
+    def normalize(self, rewards, task):
+        return super().normalize(rewards, task)
 
 
 def remote_call(func):

@@ -21,7 +21,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     def __init__(self,
                  env,
                  components: MultiProcessingComponents,
-                 update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
+                 update_on_step: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
+                 update_on_progress: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  task_space: TaskSpace = None,
@@ -36,6 +37,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.update_queue = components.update_queue
         self.task_space = task_space
         self.update_on_step = update_on_step
+        self.update_on_progress = update_on_progress
         self.batch_size = batch_size
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
@@ -79,6 +81,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
                 self.env.add_task(add_task)
+        obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+        info["task"] = self.task_space.encode(self.get_task())
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
@@ -121,22 +125,28 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             }
             self.components.put_update([task_update, episode_update])
 
+        info["task"] = self.task_space.encode(self.get_task())
+
         return obs, rew, term, trunc, info
 
     def _package_step_updates(self):
         step_batch = {
             "update_type": "step_batch",
-            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
             "env_id": self.instance_id,
             "request_sample": False
         }
-        task_batch = {
-            "update_type": "task_progress_batch",
-            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
-            "env_id": self.instance_id,
-            "request_sample": False
-        }
-        return [step_batch, task_batch]
+        update = [step_batch]
+
+        if self.update_on_progress:
+            task_batch = {
+                "update_type": "task_progress_batch",
+                "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
+                "env_id": self.instance_id,
+                "request_sample": False
+            }
+            update.append(task_batch)
+        return update
 
     def add_task(self, task):
         update = {
@@ -224,6 +234,9 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
             added_tasks = message["added_tasks"]
             for add_task in added_tasks:
                 self.env.add_task(add_task)
+
+        obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+        info["task"] = self.task_space.encode(self.get_task())
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, action):
@@ -276,17 +289,21 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
     def _package_step_updates(self):
         step_batch = {
             "update_type": "step_batch",
-            "metrics": ([self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
             "env_id": self.instance_id,
             "request_sample": False
         }
-        task_batch = {
-            "update_type": "task_progress_batch",
-            "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
-            "env_id": self.instance_id,
-            "request_sample": False
-        }
-        return [step_batch, task_batch]
+        update = [step_batch]
+
+        if self.update_on_progress:
+            task_batch = {
+                "update_type": "task_progress_batch",
+                "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
+                "env_id": self.instance_id,
+                "request_sample": False
+            }
+            update.append(task_batch)
+        return update
 
     def add_task(self, task):
         update = {

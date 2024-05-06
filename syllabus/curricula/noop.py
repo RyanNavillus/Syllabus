@@ -28,7 +28,7 @@ class NoopCurriculum(Curriculum):
         """
         pass
 
-    def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
+    def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
@@ -40,7 +40,7 @@ class NoopCurriculum(Curriculum):
         """
         pass
 
-    def update_on_episode(self, episode_return, episode_task, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return, episode_length, episode_task, env_id: int = None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """
