@@ -28,11 +28,13 @@ class BatchedDomainRandomization(Curriculum):
     REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, batch_size: int, task_space, **kwargs):
+    def __init__(self, batch_size: int, task_space, warmup_batches: int = 5, **kwargs):
         super().__init__(task_space, **kwargs)
         self.batch_size = batch_size
         self.current_task = None
         self._batch_steps = batch_size  # Start by sampling new task
+        self._batch_count = 0
+        self.warmup_batches = warmup_batches
         self.distribution = [1.0 / self.num_tasks for _ in range(self.num_tasks)]
 
     def _sample_distribution(self) -> List[float]:
@@ -42,18 +44,14 @@ class BatchedDomainRandomization(Curriculum):
         return self.distribution
 
     def sample(self, k: int = 1) -> Any:
-        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
-
-        if self._should_use_startup_sampling():
-            return self._startup_sample()
+        if self._batch_count < self.warmup_batches:
+            return super().sample(k=k)
 
         if self._batch_steps >= self.batch_size:
             # Uniform distribution
-            n_tasks = self.num_tasks
-            task_dist = self._sample_distribution()
-            task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
-            self.current_task = task_idx
+            self.current_task = super().sample(k=1)
             self._batch_steps -= self.batch_size
+            self._batch_count += 1
         return [self.current_task[0] for _ in range(k)]
 
     def update_on_episode(self, episode_returns, episode_length, episode_task, env_id: int = None) -> None:
