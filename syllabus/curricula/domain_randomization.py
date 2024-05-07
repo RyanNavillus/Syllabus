@@ -42,9 +42,17 @@ class BatchedDomainRandomization(Curriculum):
         return self.distribution
 
     def sample(self, k: int = 1) -> Any:
+        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+
+        if self._should_use_startup_sampling():
+            return self._startup_sample()
+
         if self._batch_steps >= self.batch_size:
             # Uniform distribution
-            self.current_task = super().sample(k=1)
+            n_tasks = self.num_tasks
+            task_dist = self._sample_distribution()
+            task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
+            self.current_task = task_idx
             self._batch_steps -= self.batch_size
         return [self.current_task[0] for _ in range(k)]
 
