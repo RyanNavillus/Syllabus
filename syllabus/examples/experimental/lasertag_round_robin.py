@@ -9,7 +9,7 @@ import joblib
 import numpy as np
 import torch
 import torch.nn as nn
-from lasertag_dr import batchify, unbatchify
+from syllabus.examples.experimental.lasertag_dr import batchify, unbatchify
 from torch.distributions.categorical import Categorical
 from tqdm import tqdm
 
@@ -64,10 +64,16 @@ def parse_args():
         "--env-curriculum-1", type=str, default="DR", choices=["DR", "PLR"]
     )
     parser.add_argument(
+        "--base-path-1", type=str, default="",
+    )
+    parser.add_argument(
         "--agent-curriculum-2", type=str, default="SP", choices=["SP", "FSP", "PFSP"]
     )
     parser.add_argument(
         "--env-curriculum-2", type=str, default="DR", choices=["DR", "PLR"]
+    )
+    parser.add_argument(
+        "--base-path-2", type=str, default="",
     )
     parser.add_argument("--n-episodes", type=int, default=10)
     parser.add_argument(
@@ -216,6 +222,7 @@ class AgentConfig:
 
     agent_curriculum: str
     env_curriculum: str
+    base_path: str
     agent = None
     checkpoint: int = None
     seed: int = None
@@ -233,7 +240,7 @@ class AgentConfig:
 
     def get_checkpoints_and_seeds(self) -> None:
         """Extracts all unique checkpoints and seeds from a checkpoint folder path."""
-        files = os.listdir(f"lasertag_{self.path}_checkpoints")
+        files = os.listdir(f"{self.base_path}")
         checkpoints = [file for file in files if file != "cached"]
         self.checkpoints = set(map(lambda x: x.split("_")[2], checkpoints))
         self.seeds = set(map(lambda x: x.split("_")[-1].split(".")[0], checkpoints))
@@ -250,11 +257,14 @@ def load_agent(
     device: str = "cpu",
 ) -> Tuple[AgentType, AgentConfig]:
     """Loads an agent to `device` and updates `AgentConfig`"""
-    path = f"lasertag_{agent_cfg.path}_checkpoints/" f"{str(agent_cfg)}.pkl"
-    agent = joblib.load(path)
-    agent = agent.to(device)
+    path = f"{agent_cfg.base_path}/{str(agent_cfg)}.pkl"
+    try:
+        agent = joblib.load(path)
+        agent = agent.to(device)
 
-    agent_cfg.agent = agent
+        agent_cfg.agent = agent
+    except FileNotFoundError:
+        return None, agent_cfg
 
     return agent, agent_cfg
 
@@ -334,8 +344,8 @@ def play_n_episodes(
 
 if __name__ == "__main__":
     args = parse_args()
-    agent_1_cfg = AgentConfig(args.agent_curriculum_1, args.env_curriculum_1)
-    agent_2_cfg = AgentConfig(args.agent_curriculum_2, args.env_curriculum_2)
+    agent_1_cfg = AgentConfig(args.agent_curriculum_1, args.env_curriculum_1, args.base_path_1)
+    agent_2_cfg = AgentConfig(args.agent_curriculum_2, args.env_curriculum_2, args.base_path_2)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if not os.path.exists(f"{args.logging_dir}"):
@@ -355,6 +365,10 @@ if __name__ == "__main__":
                 for seed_2 in agent_2_cfg.seeds:
                     agent_2_cfg.set_task(checkpoint_2, seed_2)
                     agent_2, agent_2_cfg = load_agent(agent_2_cfg, device)
+
+                    if agent_1 is None or agent_2 is None:
+                        print(f"Skipping checkpoints=[{checkpoint_1},{checkpoint_2}] seeds=[{seed_1},{seed_2}]")
+                        continue
 
                     for environment_id in list(test_envs.keys()):
                         returns_1, returns_2 = play_n_episodes(

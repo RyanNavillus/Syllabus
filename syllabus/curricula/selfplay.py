@@ -1,4 +1,5 @@
 import os
+import time
 from copy import deepcopy
 from typing import TypeVar
 
@@ -70,6 +71,7 @@ class FictitiousSelfPlay(Curriculum):
         seed: int = 0,
     ):
         self.name = "FSP"
+        self.uid = int(time.time())
         self.device = device
         self.storage_path = storage_path
         self.seed = seed
@@ -138,6 +140,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         seed: int = 0,
     ):
         self.name = "PFSP"
+        self.uid = int(time.time())
         self.device = device
         self.storage_path = storage_path
         self.seed = seed
