@@ -311,7 +311,7 @@ if __name__ == "__main__":
         "DR": {"task_space": env_task_space},
         "PLR": {
             "task_space": env_task_space,
-            "num_steps": args.total_updates * args.rollout_length,
+            "num_steps": args.rollout_length,
             "num_processes": 1,  # TODO: modify if using vecenvs
             "gamma": args.gamma,
             "gae_lambda": args.gae_lambda,
