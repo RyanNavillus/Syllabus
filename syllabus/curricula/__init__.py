@@ -1,6 +1,6 @@
 import sys
 
-from .domain_randomization import DomainRandomization, BatchedDomainRandomization
+from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
 from .learning_progress import LearningProgressCurriculum
 from .noop import NoopCurriculum
 from .plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
