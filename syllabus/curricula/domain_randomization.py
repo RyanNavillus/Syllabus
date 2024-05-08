@@ -67,8 +67,8 @@ class SyncedBatchedDomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = True
-    REQUIRES_CENTRAL_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(self, batch_size: int, task_space, warmup_batches: int = 1, uniform_chance: float = 0.05, **kwargs):
         super().__init__(task_space, **kwargs)
