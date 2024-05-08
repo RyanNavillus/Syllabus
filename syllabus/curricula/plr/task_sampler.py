@@ -113,48 +113,32 @@ class TaskSampler:
                 'Must provide action space to PLR if using "policy_entropy", "least_confidence", or "min_margin" strategies'
             )
 
-    def update_with_rollouts(self, rollouts, actor_id=None):
-        if self.strategy == "random":
-            return
-
-        # Update with a RolloutStorage object
+    def _get_score_function(self):
         if self.strategy == "policy_entropy":
-            score_function = self._average_entropy
+            return self._average_entropy
         elif self.strategy == "least_confidence":
-            score_function = self._average_least_confidence
+            return self._average_least_confidence
         elif self.strategy == "min_margin":
-            score_function = self._average_min_margin
+            return self._average_min_margin
         elif self.strategy == "gae":
-            score_function = self._average_gae
+            return self._average_gae
         elif self.strategy == "value_l1":
-            score_function = self._average_value_l1
+            return self._average_value_l1
         elif self.strategy == "one_step_td_error":
-            score_function = self._one_step_td_error
+            return self._one_step_td_error
         else:
             raise ValueError(f"Unsupported strategy, {self.strategy}")
 
+    def update_with_rollouts(self, rollouts, actor_id=None):
+        if self.strategy == "random":
+            return
+        score_function = self._get_score_function()
         self._update_with_rollouts(rollouts, score_function, actor_index=actor_id)
 
     def update_with_episode_data(self, episode_data):
         if self.strategy == "random":
             return
-
-        # Update with a EpisodeRolloutStorage object
-        if self.strategy == "policy_entropy":
-            score_function = self._average_entropy
-        elif self.strategy == "least_confidence":
-            score_function = self._average_least_confidence
-        elif self.strategy == "min_margin":
-            score_function = self._average_min_margin
-        elif self.strategy == "gae":
-            score_function = self._average_gae
-        elif self.strategy == "value_l1":
-            score_function = self._average_value_l1
-        elif self.strategy == "one_step_td_error":
-            score_function = self._one_step_td_error
-        else:
-            raise ValueError(f"Unsupported strategy, {self.strategy}")
-
+        score_function = self._get_score_function()
         self._update_with_episode_data(episode_data, score_function)
 
     def update_task_score(self, actor_index, task_idx, score, num_steps):
@@ -199,17 +183,16 @@ class TaskSampler:
     def _average_gae(self, **kwargs):
         returns = kwargs["returns"]
         value_preds = kwargs["value_preds"]
+        advantages = returns - value_preds
 
-        advantages = np.abs(returns - value_preds)
-
-        return np.mean(advantages).item()
+        return advantages.mean().item()
 
     def _average_value_l1(self, **kwargs):
         returns = kwargs["returns"]
         value_preds = kwargs["value_preds"]
         advantages = np.asarray(np.abs(returns - value_preds))
 
-        return np.mean(advantages).item()
+        return advantages.mean().item()
 
     def _one_step_td_error(self, **kwargs):
         rewards = kwargs["rewards"]
@@ -337,7 +320,6 @@ class TaskSampler:
     def evaluate_task(self, task, env, action_value_fn):
         if env is None:
             raise ValueError("Environment object is None. Please ensure it is properly initialized.")
-        print("Evaluating")
 
         obs, info = env.reset(new_task=task)
         done = False
@@ -352,14 +334,12 @@ class TaskSampler:
             mask = torch.FloatTensor([0.0] if term or trunc else [1.0])
             self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor([rew]), tasks=torch.Tensor([task_encoded]))
 
-
             # Check if the episode is done
             if term or trunc:
                 done = True
 
         _, next_value = action_value_fn(obs)
         self._robust_rollouts.compute_returns(next_value, self.gamma, self.gae_lambda)
-        print("Evaluated")
         return {
             "tasks": self._robust_rollouts.tasks,
             "masks": self._robust_rollouts.masks,
@@ -407,6 +387,8 @@ class TaskSampler:
             else:
                 if self.robust_plr:
                     self._evaluate_unseen_level()
+                    self._robust_rollouts.after_update()
+                    self.after_update()
                     return self.sample(strategy=strategy)
                 else:
                     return self._sample_unseen_level()
@@ -415,7 +397,6 @@ class TaskSampler:
                 f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
 
     def _update_with_episode_data(self, episode_data, score_function):
-        print("Updating")
         tasks = episode_data["tasks"]
         if not self.requires_value_buffers:
             policy_logits = episode_data.action_log_dist
@@ -476,7 +457,6 @@ class TaskSampler:
                 self._last_score = score
                 num_steps = len(episode_data["tasks"][start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
-        print("Updated")
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)

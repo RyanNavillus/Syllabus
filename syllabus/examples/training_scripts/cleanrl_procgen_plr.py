@@ -188,7 +188,6 @@ def level_replay_evaluate(
 def make_value_fn(agent):
     def get_value(obs):
         obs = np.array(obs)
-        print(obs.shape)
         with torch.no_grad():
             return agent.get_value(torch.Tensor(obs).to(device))
     return get_value
@@ -234,7 +233,6 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-    print("Device:", device)
 
     print("Creating agent")
     agent = ProcgenAgent(
@@ -307,17 +305,6 @@ if __name__ == "__main__":
     )
     envs = wrap_vecenv(envs)
 
-
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        envs.single_observation_space.shape,
-        envs.single_action_space.n,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
     actions = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
@@ -337,7 +324,6 @@ if __name__ == "__main__":
     completed_episodes = 0
 
     for update in range(1, num_updates + 1):
-        print("Update", update)
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
             frac = 1.0 - (update - 1.0) / num_updates

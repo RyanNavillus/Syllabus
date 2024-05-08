@@ -233,7 +233,6 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = GymV21CompatibilityV0(env=env)
     env = NethackTaskWrapper(env)
 
-
     if type == "queue":
         env = MultiProcessingSyncWrapper(
             env, *args, task_space=env.task_space, **kwargs
