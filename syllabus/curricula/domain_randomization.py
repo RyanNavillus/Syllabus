@@ -35,7 +35,7 @@ class BatchedDomainRandomization(Curriculum):
         self._batch_steps = batch_size  # Start by sampling new task
         self._batch_count = 0
         self.warmup_batches = warmup_batches
-        self.distribution = [1.0 / self.num_tasks for _ in range(self.num_tasks)]
+        self.distribution = [1.0 / self.num_tasks for _ in range(self.num_tasks)]   # Uniform distribution
 
     def _sample_distribution(self) -> List[float]:
         """
@@ -44,15 +44,18 @@ class BatchedDomainRandomization(Curriculum):
         return self.distribution
 
     def sample(self, k: int = 1) -> Any:
+        tasks = None
         if self._batch_count < self.warmup_batches:
-            return super().sample(k=k)
+            tasks = super().sample(k=k)
 
         if self._batch_steps >= self.batch_size:
-            # Uniform distribution
             self.current_task = super().sample(k=1)
             self._batch_steps -= self.batch_size
             self._batch_count += 1
-        return [self.current_task[0] for _ in range(k)]
+
+        if tasks is None:
+            tasks = [self.current_task[0] for _ in range(k)]
+        return tasks
 
     def update_on_episode(self, episode_returns, episode_length, episode_task, env_id: int = None) -> None:
         super().update_on_episode(episode_returns, episode_length, episode_task, env_id=env_id)
