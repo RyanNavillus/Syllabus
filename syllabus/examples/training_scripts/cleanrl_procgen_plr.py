@@ -319,7 +319,7 @@ if __name__ == "__main__":
 
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
-    print()
+
     agent = ProcgenAgent(
         envs.single_observation_space.shape,
         envs.single_action_space.n,

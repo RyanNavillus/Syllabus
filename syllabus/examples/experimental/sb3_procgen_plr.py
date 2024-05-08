@@ -3,26 +3,24 @@ import os
 import random
 import time
 from distutils.util import strtobool
-from typing import Callable, Tuple
-
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
 import procgen  # noqa: F401
 import torch
+import torch.nn as nn
 import wandb
 from gym import spaces
 from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
-from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor, VecNormalize
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
-from syllabus.examples.models import ResNetBase
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from syllabus.examples.models import Sb3ProcgenAgent, SB3ResNetBase
 from torch.utils.tensorboard import SummaryWriter
 from wandb.integration.sb3 import WandbCallback
 
@@ -154,7 +152,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
-            components = curriculum.get_components()  # This must be safe to call here
+            components = curriculum.get_components()  
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env=env,
@@ -178,7 +176,6 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
 
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
-
     eval_obs = eval_envs.reset()
     eval_episode_rewards = [-1] * num_episodes
 
@@ -231,87 +228,14 @@ class CustomCallback(BaseCallback):
         return True
 
     def _on_rollout_end(self) -> None:
-        mean_eval_returns, _, _ = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
+        mean_eval_returns, _, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
+        mean_train_returns, _, normalized_mean_train_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=200)
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
+        writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, self.num_timesteps)
+        writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, self.num_timesteps)
+        writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, self.num_timesteps)
         if self.curriculum is not None:
             self.curriculum.log_metrics(writer, step=self.num_timesteps)
-
-
-def linear_schedule(initial_value: float) -> Callable[[float], float]:
-    def func(progress_remaining: float) -> float:
-        return progress_remaining * initial_value
-    return func
-
-
-class SB3Policy(torch.nn.Module):
-    def __init__(self, num_actions, hidden_size=256):
-        super(SB3Policy, self).__init__()
-
-        self.latent_dim_vf = 256
-        self.latent_dim_pi = 256
-        # self.policy_net = Categorical(hidden_size, num_actions)
-        # self.value_net = init_(nn.Linear(hidden_size, 1))
-        # self.policy_net = Categorical(hidden_size, 256)
-        # self.value_net = init_(nn.Linear(hidden_size, 256))
-        self.policy_net = torch.nn.Identity()
-        self.value_net = torch.nn.Identity()
-
-    def forward(self, features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        :return: (th.Tensor, th.Tensor) latent_policy, latent_value of the specified network.
-            If all layers are shared, then ``latent_policy == latent_value``
-        """
-        return self.forward_actor(features), self.forward_critic(features)
-
-    def forward_actor(self, features: torch.Tensor) -> torch.Tensor:
-        return self.policy_net(features)
-
-    def forward_critic(self, features: torch.Tensor) -> torch.Tensor:
-        return self.value_net(features)
-
-
-class SB3ResNetBase(ResNetBase):
-    def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
-        super().__init__(**kwargs)
-        assert features_dim > 0
-        self._observation_space = observation_space
-        self._features_dim = features_dim
-
-    @property
-    def features_dim(self) -> int:
-        return self._features_dim
-
-    def forward(self, inputs):
-        return super().forward(inputs / 255.0)
-
-
-class Sb3ProcgenAgent(ActorCriticPolicy):
-    def __init__(
-        self,
-        observation_space: gym.spaces.Space,
-        action_space: gym.spaces.Space,
-        lr_schedule: Callable[[float], float],
-        *args,
-        hidden_size=256,
-        **kwargs
-    ):
-
-        self.shape = observation_space.shape
-        self.num_actions = action_space.n
-        self.hidden_size = hidden_size
-
-        super(Sb3ProcgenAgent, self).__init__(
-            observation_space,
-            action_space,
-            lr_schedule,
-            *args,
-            **kwargs
-        )
-        self.ortho_init = False
-        print(self)
-
-    def _build_mlp_extractor(self) -> None:
-        self.mlp_extractor = SB3Policy(self.num_actions, hidden_size=self.hidden_size)
 
 
 if __name__ == "__main__":
@@ -393,18 +317,18 @@ if __name__ == "__main__":
         venv,
         verbose=1,
         n_steps=256,
-        learning_rate=linear_schedule(0.0005),
+        learning_rate=0.0005,
         gamma=0.999,
         gae_lambda=0.95,
         n_epochs=3,
         clip_range_vf=0.2,
         ent_coef=0.01,
         batch_size=2048,
-        tensorboard_log="runs/testing",
         policy_kwargs={
             "hidden_size": 256,
             "features_extractor_class": SB3ResNetBase,
             "features_extractor_kwargs": {'num_inputs': 3, "features_dim": 256},
+            "normalize_images": False
         }
     )
 

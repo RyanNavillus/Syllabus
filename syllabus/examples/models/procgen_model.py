@@ -1,7 +1,12 @@
+from typing import Callable
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import gymnasium as gym
+from stable_baselines3.common.policies import ActorCriticPolicy
+from stable_baselines3.common.torch_layers import MlpExtractor
 
 
 def init(module, weight_init, bias_init, gain=1):
@@ -253,7 +258,6 @@ class MLPBase(NNBase):
         self.train()
 
     def forward(self, inputs):
-        # print('MLPBase')
         x = inputs
 
         hidden_critic = self.critic(x)
@@ -352,7 +356,6 @@ class SmallNetBase(NNBase):
         self.train()
 
     def forward(self, inputs):
-        # print('SmallNetBase')
         x = inputs
 
         x = self.relu(self.conv1(x))
@@ -389,3 +392,52 @@ class ProcgenAgent(Policy):
             return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value
+
+
+class SB3ResNetBase(ResNetBase):
+    def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
+        super().__init__(**kwargs)
+        assert features_dim > 0
+        self._observation_space = observation_space
+        self._features_dim = features_dim
+
+    @property
+    def features_dim(self) -> int:
+        return self._features_dim
+
+    def forward(self, inputs):
+        return super().forward(inputs / 255.0)
+
+class Sb3ProcgenAgent(ActorCriticPolicy):
+    def __init__(
+        self,
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
+        lr_schedule: Callable[[float], float],
+        *args,
+        hidden_size=256,
+        **kwargs
+    ):
+
+        self.shape = observation_space.shape
+        self.num_actions = action_space.n
+        self.hidden_size = hidden_size
+
+        super(Sb3ProcgenAgent, self).__init__(
+            observation_space,
+            action_space,
+            lr_schedule,
+            *args,
+            **kwargs
+        )
+        self.ortho_init = False
+        self.apply(self.init_weights)
+
+    def _build_mlp_extractor(self) -> None:
+        self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
+
+    def init_weights(self, m, **kwargs):
+        if isinstance(m, nn.Linear):
+            gain = kwargs.get('gain', nn.init.calculate_gain('relu')) 
+            nn.init.orthogonal_(m.weight, gain=gain)
+            nn.init.constant_(m.bias, 0)
