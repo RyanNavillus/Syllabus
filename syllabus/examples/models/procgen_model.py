@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple
 
 import numpy as np
 import torch
@@ -393,7 +393,6 @@ class ProcgenAgent(Policy):
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value
 
-
 class SB3ResNetBase(ResNetBase):
     def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -432,12 +431,18 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
         )
         self.ortho_init = False
         self.apply(self.init_weights)
-
+  
     def _build_mlp_extractor(self) -> None:
         self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
 
     def init_weights(self, m, **kwargs):
-        if isinstance(m, nn.Linear):
-            gain = kwargs.get('gain', nn.init.calculate_gain('relu')) 
-            nn.init.orthogonal_(m.weight, gain=gain)
-            nn.init.constant_(m.bias, 0)
+        if m is not self.action_net:
+            if isinstance(m, nn.Linear):
+                gain = kwargs.get('gain', nn.init.calculate_gain('relu'))
+                nn.init.orthogonal_(m.weight, gain=gain)
+                nn.init.constant_(m.bias, 0)
+            if isinstance(m, BasicBlock):
+                apply_init_(m.modules())
+            if isinstance(m, Categorical):
+                nn.init.orthogonal_(m.linear.weight, gain=0.01)
+                nn.init.constant_(m.linear.bias, 0)
