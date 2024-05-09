@@ -183,6 +183,7 @@ class TaskSampler:
     def _average_gae(self, **kwargs):
         returns = kwargs["returns"]
         value_preds = kwargs["value_preds"]
+
         advantages = returns - value_preds
 
         return advantages.mean().item()
@@ -190,9 +191,10 @@ class TaskSampler:
     def _average_value_l1(self, **kwargs):
         returns = kwargs["returns"]
         value_preds = kwargs["value_preds"]
-        advantages = np.asarray(np.abs(returns - value_preds))
 
-        return advantages.mean().item()
+        advantages = returns - value_preds
+
+        return advantages.abs().mean().item()
 
     def _one_step_td_error(self, **kwargs):
         rewards = kwargs["rewards"]
