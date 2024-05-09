@@ -435,10 +435,14 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
     def _build_mlp_extractor(self) -> None:
         self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
 
-    def init_weights(self, m):
+    def init_weights(self, m, **kwargs):
         if m is self.action_net:
             nn.init.orthogonal_(m.weight, gain=0.01)
             nn.init.constant_(m.bias, 0)
         elif m is self.value_net:
             nn.init.orthogonal_(m.weight, gain=1.0) 
             nn.init.constant_(m.bias, 0)
+
+
+        
+        
