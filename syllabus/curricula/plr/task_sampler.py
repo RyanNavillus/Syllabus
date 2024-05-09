@@ -23,6 +23,7 @@ class TaskSampler:
         staleness_coef (float): Linear interpolation weight for task staleness vs. task score. 0.0 means only use task score, 1.0 means only use staleness.
         staleness_transform (str): Transform to apply to task staleness. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
         staleness_temperature (float): Temperature for staleness transform. Increasing temperature makes the sampling distribution more uniform.
+        seed (int): seed 
     """
     def __init__(
         self,
@@ -40,6 +41,7 @@ class TaskSampler:
         staleness_coef: float = 0.1,
         staleness_transform: str = "power",
         staleness_temperature: float = 1.0,
+        seed: int = None
     ):
         self.action_space = action_space
         self.tasks = tasks
@@ -64,9 +66,11 @@ class TaskSampler:
         self.task_staleness = np.array([0.0] * self.num_tasks, dtype=float)
 
         self.next_task_index = 0  # Only used for sequential strategy
+        self.seed = seed
 
         # Logging metrics
         self._last_score = 0.0
+
 
         if not self.requires_value_buffers and self.action_space is None:
             raise ValueError(
@@ -241,6 +245,8 @@ class TaskSampler:
             self.task_staleness[selected_idx] = 0
 
     def _sample_replay_level(self):
+
+        np.random.seed(self.seed)
         sample_weights = self.sample_weights()
         if np.isclose(np.sum(sample_weights), 0):
             sample_weights = np.ones_like(sample_weights, dtype=float) / len(sample_weights)
@@ -253,6 +259,8 @@ class TaskSampler:
         return task
 
     def _sample_unseen_level(self):
+
+        np.random.seed(self.seed)
         sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
         task = self.tasks[task_idx]
@@ -262,6 +270,8 @@ class TaskSampler:
         return task
 
     def sample(self, strategy=None):
+
+        np.random.seed(self.seed)
         if not strategy:
             strategy = self.strategy
 
@@ -318,6 +328,8 @@ class TaskSampler:
         return weights
 
     def _score_transform(self, transform, temperature, scores):
+
+        np.random.seed(seed)
         if transform == "constant":
             weights = np.ones_like(scores)
         if transform == "max":
