@@ -1,13 +1,13 @@
-from typing import Callable, Tuple
+from typing import Callable
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import gymnasium as gym
-from stable_baselines3.common.policies import ActorCriticPolicy
-from stable_baselines3.common.torch_layers import MlpExtractor
 
+from stable_baselines3.common.torch_layers import MlpExtractor
+from stable_baselines3.common.policies import ActorCriticPolicy
 
 def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
@@ -431,18 +431,14 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
         )
         self.ortho_init = False
         self.apply(self.init_weights)
-  
+
     def _build_mlp_extractor(self) -> None:
         self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
 
-    def init_weights(self, m, **kwargs):
-        if m is not self.action_net:
-            if isinstance(m, nn.Linear):
-                gain = kwargs.get('gain', nn.init.calculate_gain('relu'))
-                nn.init.orthogonal_(m.weight, gain=gain)
-                nn.init.constant_(m.bias, 0)
-            if isinstance(m, BasicBlock):
-                apply_init_(m.modules())
-            if isinstance(m, Categorical):
-                nn.init.orthogonal_(m.linear.weight, gain=0.01)
-                nn.init.constant_(m.linear.bias, 0)
+    def init_weights(self, m):
+        if m is self.action_net:
+            nn.init.orthogonal_(m.weight, gain=0.01)
+            nn.init.constant_(m.bias, 0)
+        elif m is self.value_net:
+            nn.init.orthogonal_(m.weight, gain=1.0) 
+            nn.init.constant_(m.bias, 0)

@@ -3,6 +3,8 @@ import os
 import random
 import time
 from distutils.util import strtobool
+from typing import Callable
+
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
@@ -19,10 +21,11 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor, VecNormali
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
+from syllabus.examples.models import SB3ResNetBase, Sb3ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.models import Sb3ProcgenAgent, SB3ResNetBase
 from torch.utils.tensorboard import SummaryWriter
 from wandb.integration.sb3 import WandbCallback
+
 
 
 def parse_args():
@@ -152,7 +155,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
-            components = curriculum.get_components()  
+            components = curriculum.get_components()  # This must be safe to call here
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env=env,
@@ -228,14 +231,22 @@ class CustomCallback(BaseCallback):
         return True
 
     def _on_rollout_end(self) -> None:
-        mean_eval_returns, _, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
-        mean_train_returns, _, normalized_mean_train_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=200)
+        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
+        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=200)
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, self.num_timesteps)
+        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, self.num_timesteps)
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, self.num_timesteps)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, self.num_timesteps)
+        writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, self.num_timesteps)
         if self.curriculum is not None:
             self.curriculum.log_metrics(writer, step=self.num_timesteps)
+
+
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
+    def func(progress_remaining: float) -> float:
+        return progress_remaining * initial_value
+    return func
 
 
 if __name__ == "__main__":
