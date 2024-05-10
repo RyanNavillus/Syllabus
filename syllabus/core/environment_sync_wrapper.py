@@ -39,7 +39,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.task_progress = 0.0
         self._batch_step = 0
         self.instance_id = components.get_id()
-
+        self.seed = seed
+        
         self.episode_length = 0
         self.episode_return = 0
 
