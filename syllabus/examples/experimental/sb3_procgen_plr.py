@@ -342,7 +342,12 @@ if __name__ == "__main__":
             "normalize_images": False
         }
     )
-
+    
+    # print("Action Net Weight:", torch.mean(model.policy.action_net.weight))
+    # print("Action Net Sum:", torch.sum(model.policy.action_net.weight).item())
+    # print("Value Net Weight:", torch.mean(model.policy.value_net.weight))
+    # print("Value Net Sum:", torch.sum(model.policy.value_net.weight).item())
+    # exit()
     plr_callback = CustomCallback(curriculum, model)
 
     if args.track:

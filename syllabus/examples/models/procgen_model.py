@@ -132,7 +132,6 @@ class Categorical(nn.Module):
             gain=0.01)
 
         self.linear = init_(nn.Linear(num_inputs, num_outputs))
-
     def forward(self, x):
         x = self.linear(x)
         return FixedCategorical(logits=x)
@@ -430,19 +429,14 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
             **kwargs
         )
         self.ortho_init = False
+        self.action_net.is_target_net = True
         self.apply(self.init_weights)
 
     def _build_mlp_extractor(self) -> None:
         self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
 
     def init_weights(self, m, **kwargs):
-        if m is self.action_net:
-            nn.init.orthogonal_(m.weight, gain=0.01)
-            nn.init.constant_(m.bias, 0)
-        elif m is self.value_net:
-            nn.init.orthogonal_(m.weight, gain=1.0) 
-            nn.init.constant_(m.bias, 0)
-
-
-        
-        
+        if hasattr(m, 'is_target_net') and m.is_target_net:
+            if m is self.action_net:
+                nn.init.orthogonal_(m.weight, gain=0.01)
+                nn.init.constant_(m.bias, 0)   
