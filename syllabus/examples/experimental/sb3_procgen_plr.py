@@ -27,7 +27,6 @@ from torch.utils.tensorboard import SummaryWriter
 from wandb.integration.sb3 import WandbCallback
 
 
-
 def parse_args():
     # fmt: off
     parser = argparse.ArgumentParser()
@@ -184,7 +183,6 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
 
     while -1 in eval_episode_rewards:
         eval_action, _states = model.predict(eval_obs, deterministic=False)
-
         eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
         for i, info in enumerate(infos):
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
@@ -216,19 +214,28 @@ class CustomCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
+
             tasks = self.training_env.venv.venv.venv.get_attr("task")
+            obs = self.model.rollout_buffer.observations[-1]
+            obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
+            new_value = self.model.policy.predict_values(obs_tensor)
+            
             update = {
                 "update_type": "on_demand",
                 "metrics": {
-                    "value": self.locals["values"],
-                    "next_value": self.locals["values"],
+                    "value": self.locals.get("values"),  
+                    "next_value": new_value,  
                     "rew": self.locals["rewards"],
                     "dones": self.locals["dones"],
                     "tasks": tasks,
                 },
             }
             self.curriculum.update(update)
+            del obs_tensor
+            del obs
+            torch.cuda.empty_cache()
         return True
+
 
     def _on_rollout_end(self) -> None:
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
@@ -307,6 +314,7 @@ if __name__ == "__main__":
         curriculum = make_multiprocessing_curriculum(curriculum)
         del sample_env
 
+
     # env setup
     print("Creating env")
     venv_fn = [
@@ -343,11 +351,7 @@ if __name__ == "__main__":
         }
     )
     
-    # print("Action Net Weight:", torch.mean(model.policy.action_net.weight))
-    # print("Action Net Sum:", torch.sum(model.policy.action_net.weight).item())
-    # print("Value Net Weight:", torch.mean(model.policy.value_net.weight))
-    # print("Value Net Sum:", torch.sum(model.policy.value_net.weight).item())
-    # exit()
+    
     plr_callback = CustomCallback(curriculum, model)
 
     if args.track:

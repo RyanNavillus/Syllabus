@@ -428,8 +428,9 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
             *args,
             **kwargs
         )
-        self.ortho_init = False
+        self.ortho_init = True
         self.action_net.is_target_net = True
+        self.value_net.is_target_net = True
         self.apply(self.init_weights)
 
     def _build_mlp_extractor(self) -> None:
@@ -439,4 +440,7 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
         if hasattr(m, 'is_target_net') and m.is_target_net:
             if m is self.action_net:
                 nn.init.orthogonal_(m.weight, gain=0.01)
-                nn.init.constant_(m.bias, 0)   
+                nn.init.constant_(m.bias, 0)
+            if m is self.value_net:
+                nn.init.orthogonal_(m.weight, gain=1.0)
+                nn.init.constant_(m.bias, 0)
