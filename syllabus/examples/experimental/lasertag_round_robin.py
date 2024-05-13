@@ -9,11 +9,11 @@ import joblib
 import numpy as np
 import torch
 import torch.nn as nn
-from syllabus.examples.experimental.lasertag_dr import batchify, unbatchify
 from torch.distributions.categorical import Categorical
 from tqdm import tqdm
 
 from syllabus.core import TaskWrapper
+from syllabus.examples.experimental.lasertag_dr import batchify, unbatchify
 
 sys.path.append("../../..")
 from lasertag import (  # noqa
@@ -64,7 +64,9 @@ def parse_args():
         "--env-curriculum-1", type=str, default="DR", choices=["DR", "PLR"]
     )
     parser.add_argument(
-        "--base-path-1", type=str, default="",
+        "--base-path-1",
+        type=str,
+        default="",
     )
     parser.add_argument(
         "--agent-curriculum-2", type=str, default="SP", choices=["SP", "FSP", "PFSP"]
@@ -73,7 +75,9 @@ def parse_args():
         "--env-curriculum-2", type=str, default="DR", choices=["DR", "PLR"]
     )
     parser.add_argument(
-        "--base-path-2", type=str, default="",
+        "--base-path-2",
+        type=str,
+        default="",
     )
     parser.add_argument("--n-episodes", type=int, default=10)
     parser.add_argument(
@@ -344,8 +348,12 @@ def play_n_episodes(
 
 if __name__ == "__main__":
     args = parse_args()
-    agent_1_cfg = AgentConfig(args.agent_curriculum_1, args.env_curriculum_1, args.base_path_1)
-    agent_2_cfg = AgentConfig(args.agent_curriculum_2, args.env_curriculum_2, args.base_path_2)
+    agent_1_cfg = AgentConfig(
+        args.agent_curriculum_1, args.env_curriculum_1, args.base_path_1
+    )
+    agent_2_cfg = AgentConfig(
+        args.agent_curriculum_2, args.env_curriculum_2, args.base_path_2
+    )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if not os.path.exists(f"{args.logging_dir}"):
@@ -367,7 +375,9 @@ if __name__ == "__main__":
                     agent_2, agent_2_cfg = load_agent(agent_2_cfg, device)
 
                     if agent_1 is None or agent_2 is None:
-                        print(f"Skipping checkpoints=[{checkpoint_1},{checkpoint_2}] seeds=[{seed_1},{seed_2}]")
+                        print(
+                            f"Skipping checkpoints=[{checkpoint_1},{checkpoint_2}] seeds=[{seed_1},{seed_2}]"
+                        )
                         continue
 
                     for environment_id in list(test_envs.keys()):
