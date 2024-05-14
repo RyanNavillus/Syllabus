@@ -215,11 +215,11 @@ class CustomCallback(BaseCallback):
     def _on_step(self) -> bool:
         if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
             tasks = self.training_env.venv.venv.venv.get_attr("task")
-            obs = self.locals['obs']
             obs = self.model.rollout_buffer.observations[-1]
             obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
-            features = self.model.policy.features_extractor(obs_tensor)
+            
             with torch.no_grad():
+                features = self.model.policy.features_extractor(obs_tensor)
                 new_value = self.model.policy.value_net(features)
             
             update = {
