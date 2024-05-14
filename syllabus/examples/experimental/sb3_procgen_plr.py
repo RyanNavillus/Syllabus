@@ -214,16 +214,18 @@ class CustomCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
-
             tasks = self.training_env.venv.venv.venv.get_attr("task")
+            obs = self.locals['obs']
             obs = self.model.rollout_buffer.observations[-1]
             obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
-            new_value = self.model.policy.predict_values(obs_tensor)
+            features = self.model.policy.features_extractor(obs_tensor)
+            with torch.no_grad():
+                new_value = self.model.policy.value_net(features)
             
             update = {
                 "update_type": "on_demand",
                 "metrics": {
-                    "value": self.locals.get("values"),  
+                    "value": self.locals["values"],  
                     "next_value": new_value,  
                     "rew": self.locals["rewards"],
                     "dones": self.locals["dones"],
@@ -233,10 +235,8 @@ class CustomCallback(BaseCallback):
             self.curriculum.update(update)
             del obs_tensor
             del obs
-            torch.cuda.empty_cache()
         return True
-
-
+    
     def _on_rollout_end(self) -> None:
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=200)
