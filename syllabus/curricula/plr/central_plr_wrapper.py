@@ -133,7 +133,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, task_space=task_space, action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
