@@ -17,7 +17,7 @@ class TaskSpace():
         if tasks is None:
             tasks = self._generate_task_names(gym_space)
 
-        self._tasks = set(tasks) if tasks is not None else None
+        self._tasks = list(tasks) if tasks is not None else None
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
 
     def _create_gym_space(self, gym_space):

@@ -60,10 +60,10 @@ class NethackTaskWrapper(TaskWrapper):
                 NetHackScore,
                 NetHackStaircase,
                 NetHackStaircasePet,
-                NetHackOracle,
                 NetHackGold,
                 NetHackEat,
                 NetHackScout,
+                NetHackOracle
             ]
 
         # Add in custom nethack tasks
