@@ -12,7 +12,7 @@ class SequentialCurriculum(Curriculum):
     REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], seed : int = None, *curriculum_args, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
         assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
@@ -31,6 +31,7 @@ class SequentialCurriculum(Curriculum):
         self.n_tasks = 0
         self.total_tasks = 0
         self.episode_returns = []
+        self.seed = seed
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
         """ Parse the curriculum list to ensure that all items are curricula. 
@@ -39,12 +40,13 @@ class SequentialCurriculum(Curriculum):
         parsed_list = []
         for item in curriculum_list:
             if isinstance(item, Curriculum):
+                item.set_seed(self.seed)
                 parsed_list.append(item)
             elif isinstance(item, TaskSpace):
-                parsed_list.append(DomainRandomization(item))
+                parsed_list.append(DomainRandomization(item, seed = self.seed))
             elif isinstance(item, list):
                 task_space = TaskSpace(len(item), item)
-                parsed_list.append(DomainRandomization(task_space))
+                parsed_list.append(DomainRandomization(task_space, seed = self.seed))
             elif self.task_space.contains(item):
                 parsed_list.append(NoopCurriculum(item, self.task_space))
             else:
@@ -153,6 +155,7 @@ class SequentialCurriculum(Curriculum):
         Choose the next k tasks from the list.
         """
         curriculum = self.current_curriculum
+        curriculum.set_seed(self.seed)
         tasks = curriculum.sample(k)
 
         # Recode tasks into environment task space

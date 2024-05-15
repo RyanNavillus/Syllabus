@@ -102,6 +102,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
     def __init__(
         self,
         task_space: TaskSpace,
+        seed : int = None,
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
@@ -117,6 +118,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         if task_sampler_kwargs_dict is None:
             task_sampler_kwargs_dict = {}
 
+        self.seed = seed
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
         if not isinstance(task_space.gym_space, Discrete) and not isinstance(task_space.gym_space, MultiDiscrete):
             raise ValueError(
@@ -133,7 +135,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict, seed = seed)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,

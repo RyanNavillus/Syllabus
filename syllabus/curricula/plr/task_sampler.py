@@ -40,6 +40,7 @@ class TaskSampler:
         staleness_coef: float = 0.1,
         staleness_transform: str = "power",
         staleness_temperature: float = 1.0,
+        seed : int = None
     ):
         self.action_space = action_space
         self.tasks = tasks
@@ -62,7 +63,7 @@ class TaskSampler:
         self.partial_task_scores = np.zeros((num_actors, self.num_tasks), dtype=float)
         self.partial_task_steps = np.zeros((num_actors, self.num_tasks), dtype=np.int64)
         self.task_staleness = np.array([0.0] * self.num_tasks, dtype=float)
-
+        self.seed = seed
         self.next_task_index = 0  # Only used for sequential strategy
 
         # Logging metrics
@@ -280,6 +281,8 @@ class TaskSampler:
         proportion_seen = (self.num_tasks - num_unseen) / self.num_tasks
 
         if self.replay_schedule == "fixed":
+            if self.seed != None :
+                np.random.seed(self.seed)
             if proportion_seen >= self.rho:
                 # Sample replay level with fixed prob = 1 - nu OR if all levels seen
                 if np.random.rand() > self.nu or not proportion_seen < 1.0:
@@ -289,6 +292,8 @@ class TaskSampler:
             return self._sample_unseen_level()
 
         elif self.replay_schedule == "proportionate":
+            if self.seed != None :
+                np.random.seed(self.seed)
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
                 return self._sample_replay_level()
             else:

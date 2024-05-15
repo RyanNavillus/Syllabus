@@ -191,6 +191,7 @@ class PrioritizedLevelReplay(Curriculum):
         self,
         task_space: TaskSpace,
         observation_space: gym.Space,
+        seed: int = None,
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
@@ -225,8 +226,9 @@ class PrioritizedLevelReplay(Curriculum):
         self._supress_usage_warnings = suppress_usage_warnings
         self._get_action_log_dist = get_action_log_dist
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
+        self.seed = seed
 
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict, seed = self.seed)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
