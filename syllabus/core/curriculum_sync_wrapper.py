@@ -213,6 +213,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         while self.should_update:
             requested_tasks = 0
             while not self.update_queue.empty():
+
                 batch_updates = self.get_components().get_update()  # Blocks until update is available
 
                 if isinstance(batch_updates, dict):

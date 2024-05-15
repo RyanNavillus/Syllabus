@@ -107,14 +107,14 @@ class NethackTaskWrapper(TaskWrapper):
         calling the final reset.
         """
         # Change task if new one is provided
-        new_task = np.random.choice(self.task_list)
         if new_task is not None:
             self.change_task(new_task)
 
         self.done = False
         self.episode_return = 0
 
-        return self.observation(self.env.reset(**kwargs))
+        obs = self.env.reset(**kwargs)
+        return self.observation(obs), {}
 
     def change_task(self, new_task: int):
         """
