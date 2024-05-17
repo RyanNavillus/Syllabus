@@ -57,7 +57,7 @@ def run_episode(env, new_task=None, curriculum=None, env_id=0):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.requires_step_updates:
-            curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, env_id=env_id)
             curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
         ep_len += 1
@@ -87,7 +87,7 @@ def run_set_length(env, curriculum=None, episodes=None, steps=None, env_id=0, en
             action = env.action_space.sample()
             obs, rew, term, trunc, info = env.step(action)
             if curriculum and curriculum.requires_step_updates:
-                curriculum.update_on_step(obs, rew, term, trunc, info, env_id=env_id)
+                curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, env_id=env_id)
                 curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
             ep_rew += rew
             ep_len += 1
@@ -186,8 +186,13 @@ def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, nu
         ray.kill(curriculum.curriculum)
     return ray_speed
 
+
 def get_test_values(x):
     return torch.unsqueeze(torch.Tensor(np.array([0] * len(x))), -1)
+
+
+def get_test_actions(x):
+    return torch.IntTensor(np.array([0] * len(x)))
 
 
 # Sync Test Environment
@@ -223,6 +228,7 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
         warnings.warn("Unable to import nle.")
 
     env = NetHackScore(*env_args, **env_kwargs)
+    env = GymV21CompatibilityV0(env=env)
     env = NethackTaskWrapper(env)
 
     if type == "queue":

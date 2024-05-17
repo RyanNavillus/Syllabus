@@ -21,13 +21,14 @@ class LearningProgressCurriculum(Curriculum):
     REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, **kwargs):
+    def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.eval_envs = eval_envs
         self.get_action = get_action
         self.ema_alpha = ema_alpha
-        self.eval_interval = 25
-        self.eval_interval_steps = 409600
+        self.eval_interval = eval_interval
+        self.eval_interval_steps = eval_interval_steps
+        assert self.eval_interval is None or self.eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.completed_episodes = 0
         self.completed_steps = 0
 
@@ -40,7 +41,7 @@ class LearningProgressCurriculum(Curriculum):
     def _evaluate_all_tasks(self, eval_eps=20):
         task_progresses = np.zeros(self.task_space.num_tasks)
         for task_idx, task in enumerate(self.task_space.tasks):
-            obss, _ = self.eval_envs.reset([task] * self.eval_envs.num_envs)
+            obss, _ = self.eval_envs.reset(options=task)
             ep_counter = 0
             progress = 0.0
             while ep_counter < eval_eps:
@@ -49,7 +50,11 @@ class LearningProgressCurriculum(Curriculum):
                 dones = tuple(a | b for a, b in zip(terminateds, truncateds))
                 for i, done in enumerate(dones):
                     if done:
-                        progress += infos[i]["final_info"]['task_completion']
+                        if isinstance(infos, list):
+                            task_progress = infos[i]["final_info"]['task_completion']
+                        elif isinstance(infos, dict):
+                            task_progress = infos["final_info"][i]['task_completion']
+                        progress += task_progress
                         ep_counter += 1
             task_progresses[task_idx] = progress
         task_success_rates = np.divide(task_progresses, float(eval_eps))
@@ -74,9 +79,9 @@ class LearningProgressCurriculum(Curriculum):
     def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         self.completed_episodes += 1
         self.completed_steps += episode_length
-        # if self.completed_episodes % self.eval_interval == 0:
-        #     self._evaluate_all_tasks()
-        if self.completed_steps > self.eval_interval_steps:
+        if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
+            self._evaluate_all_tasks()
+        if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:
             self._evaluate_all_tasks()
             self.completed_steps = 0
 
