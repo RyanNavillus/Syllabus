@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -239,6 +239,9 @@ if __name__ == "__main__":
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
+        elif args.curriculum_method == "sbdr":
+            print("Using domain randomization.")
+            curriculum = SyncedBatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             curriculum = LearningProgressCurriculum(sample_env.task_space)
@@ -353,6 +356,12 @@ if __name__ == "__main__":
                     },
                 }
                 curriculum.update(update)
+        if args.curriculum and args.curriculum_method == "sbdr":
+            update = {
+                "update_type": "on_demand",
+                "metrics": None
+            }
+            curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():

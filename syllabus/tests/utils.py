@@ -257,8 +257,13 @@ def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, nu
         ray.kill(curriculum.curriculum)
     return ray_speed
 
+
 def get_test_values(x):
     return torch.unsqueeze(torch.Tensor(np.array([0] * len(x))), -1)
+
+
+def get_test_actions(x):
+    return torch.IntTensor(np.array([0] * len(x)))
 
 
 # Sync Test Environment
@@ -298,6 +303,7 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     from syllabus.examples.task_wrappers.nethack_wrappers import NethackTaskWrapper
 
     env = NetHackScore(*env_args, **env_kwargs)
+    env = GymV21CompatibilityV0(env=env)
     env = NethackTaskWrapper(env)
 
     if type == "queue":

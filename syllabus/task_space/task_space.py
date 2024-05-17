@@ -26,7 +26,7 @@ class TaskSpace():
         if tasks is None:
             tasks = self._generate_task_names(gym_space)
 
-        self._task_set = set(tasks) if tasks is not None else None
+        self._task_set = list(tasks) if tasks is not None else None
         self._task_list = tasks
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
         self.task_shape = np.array(self.encode(self.sample())).shape

@@ -83,7 +83,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                 self.env.add_task(add_task)
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
-        return self.env.reset(*args, new_task=next_task, **kwargs)
+        return obs, info
 
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
