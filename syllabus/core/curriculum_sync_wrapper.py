@@ -246,9 +246,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             else:
                 time.sleep(0.01)
 
-    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
-        super().update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
-
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
         if isinstance(writer, SummaryWriter):
@@ -262,9 +259,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def get_components(self):
         return self._components
-
-    def normalize(self, rewards, task):
-        return super().normalize(rewards, task)
 
 
 def remote_call(func):
