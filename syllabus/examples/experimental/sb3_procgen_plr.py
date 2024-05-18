@@ -182,7 +182,8 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_episode_rewards = [-1] * num_episodes
 
     while -1 in eval_episode_rewards:
-        eval_action, _states = model.predict(eval_obs, deterministic=False)
+        with torch.no_grad():
+            eval_action, _states = model.predict(eval_obs, deterministic=False)
         eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
         for i, info in enumerate(infos):
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
@@ -215,18 +216,15 @@ class CustomCallback(BaseCallback):
     def _on_step(self) -> bool:
         if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
             tasks = self.training_env.venv.venv.venv.get_attr("task")
-            obs = self.model.rollout_buffer.observations[-1]
+            obs = self.locals['new_obs']
             obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
-            
             with torch.no_grad():
-                features = self.model.policy.features_extractor(obs_tensor)
-                new_value = self.model.policy.value_net(features)
-            
+                new_value = self.model.policy.predict_values(obs_tensor)
             update = {
                 "update_type": "on_demand",
                 "metrics": {
-                    "value": self.locals["values"],  
-                    "next_value": new_value,  
+                    "value": self.locals["values"],
+                    "next_value": new_value,
                     "rew": self.locals["rewards"],
                     "dones": self.locals["dones"],
                     "tasks": tasks,
@@ -234,7 +232,6 @@ class CustomCallback(BaseCallback):
             }
             self.curriculum.update(update)
             del obs_tensor
-            del obs
         return True
     
     def _on_rollout_end(self) -> None:
@@ -248,12 +245,6 @@ class CustomCallback(BaseCallback):
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, self.num_timesteps)
         if self.curriculum is not None:
             self.curriculum.log_metrics(writer, step=self.num_timesteps)
-
-
-def linear_schedule(initial_value: float) -> Callable[[float], float]:
-    def func(progress_remaining: float) -> float:
-        return progress_remaining * initial_value
-    return func
 
 
 if __name__ == "__main__":
@@ -352,7 +343,7 @@ if __name__ == "__main__":
     )
     
     
-    plr_callback = CustomCallback(curriculum, model)
+    plr_callback = CustomCallback(curriculum, model, venv)
 
     if args.track:
         wandb_callback = WandbCallback(

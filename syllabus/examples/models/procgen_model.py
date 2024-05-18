@@ -356,7 +356,6 @@ class SmallNetBase(NNBase):
 
     def forward(self, inputs):
         x = inputs
-
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.flatten(x)
@@ -428,7 +427,7 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
             *args,
             **kwargs
         )
-        self.ortho_init = True
+        self.ortho_init = False
         self.action_net.is_target_net = True
         self.value_net.is_target_net = True
         self.apply(self.init_weights)
