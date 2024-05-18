@@ -248,9 +248,9 @@ class PrioritizedLevelReplay(Curriculum):
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         if self._should_use_startup_sampling():
-            return self._startup_sample()
-        else:
-            return [self._task_sampler.sample() for _ in range(k)]
+            return self._startup_sample(k)
+    
+        return [self._task_sampler.sample() for _ in range(k)]
 
     def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
