@@ -23,6 +23,8 @@ from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curri
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.models import SB3ResNetBase, Sb3ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from syllabus.examples.utils.vecenv import VecMonitor as SyllabusVecMonitor, VecNormalize as SyllabusVecNormalize, VecExtractDictObs as SyllabusVecExtractDictObs
+
 from torch.utils.tensorboard import SummaryWriter
 from wandb.integration.sb3 import WandbCallback
 
@@ -175,20 +177,22 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
         distribution_mode="easy",
         paint_vel_info=False
     )
-
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = wrap_vecenv(eval_envs)
-    eval_obs = eval_envs.reset()
+    model.policy.set_training_mode(False)
+    eval_envs = SyllabusVecExtractDictObs(eval_envs, "rgb")
+    eval_envs = SyllabusVecMonitor(venv=eval_envs, filename=None, keep_buf=100)
+    eval_envs = SyllabusVecNormalize(venv=eval_envs, ob=False, ret=True)
+    eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = [-1] * num_episodes
 
     while -1 in eval_episode_rewards:
         with torch.no_grad():
             eval_action, _states = model.predict(eval_obs, deterministic=False)
-        eval_obs, rewards, dones, infos = eval_envs.step(eval_action)
+        eval_obs, _, _, _, infos = eval_envs.step(eval_action)
         for i, info in enumerate(infos):
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 
+    model.policy.set_training_mode(True)
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
