@@ -132,6 +132,7 @@ class Categorical(nn.Module):
             gain=0.01)
 
         self.linear = init_(nn.Linear(num_inputs, num_outputs))
+
     def forward(self, x):
         x = self.linear(x)
         return FixedCategorical(logits=x)
@@ -372,13 +373,15 @@ class ProcgenAgent(Policy):
 
     def get_value(self, x):
         new_x = x.permute((0, 3, 1, 2)) / 255.0
-        value, _ = self.base(new_x)
+        features = self.base(new_x)
+        value = self.critic_linear(features)
         return value
 
     def get_action_and_value(self, x, action=None, full_log_probs=False, deterministic=False):
         new_x = x.permute((0, 3, 1, 2)) / 255.0
-        value, actor_features = self.base(new_x)
-        dist = self.dist(actor_features)
+        features = self.base(new_x)
+        value = self.critic_linear(features)
+        dist = self.dist(features)
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
@@ -390,6 +393,7 @@ class ProcgenAgent(Policy):
             return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value
+
 
 class SB3ResNetBase(ResNetBase):
     def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
@@ -404,6 +408,7 @@ class SB3ResNetBase(ResNetBase):
 
     def forward(self, inputs):
         return super().forward(inputs / 255.0)
+
 
 class Sb3ProcgenAgent(ActorCriticPolicy):
     def __init__(

@@ -219,7 +219,7 @@ class CustomCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
-            tasks = self.training_env.venv.venv.venv.get_attr("task")
+            tasks = [i["task"] for i in self.locals["infos"]]
             obs = self.locals['new_obs']
             obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
             with torch.no_grad():
@@ -237,7 +237,7 @@ class CustomCallback(BaseCallback):
             self.curriculum.update(update)
             del obs_tensor
         return True
-    
+
     def _on_rollout_end(self) -> None:
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=200)
@@ -345,8 +345,7 @@ if __name__ == "__main__":
             "normalize_images": False
         }
     )
-    
-    
+
     plr_callback = CustomCallback(curriculum, model, venv)
 
     if args.track:

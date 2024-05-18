@@ -488,18 +488,12 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
-        )
-        slow_mean_eval_returns, slow_stddev_eval_returns, slow_normalized_mean_eval_returns = slow_level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
-        )
-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
-        )
-        slow_mean_train_returns, slow_stddev_train_returns, slow_normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
-        )
+        # mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
+        #     args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+        # )
+        # mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
+        #     args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+        # )
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
@@ -514,19 +508,13 @@ if __name__ == "__main__":
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
 
-        writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_mean_episode_return", slow_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_normalized_mean_eval_return", slow_normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/slow_stddev_eval_return", slow_mean_eval_returns, global_step)
+        # writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
+        # writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
+        # writer.add_scalar("test_eval/stddev_eval_return", mean_eval_returns, global_step)
 
-        writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
-        writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_mean_episode_return", slow_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_normalized_mean_train_return", slow_normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/slow_stddev_train_return", slow_mean_train_returns, global_step)
+        # writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
+        # writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
+        # writer.add_scalar("train_eval/stddev_train_return", mean_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
