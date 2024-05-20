@@ -21,6 +21,7 @@ setup(
         'numpy>=1.24.0',
         'ray[rllib]>=2.8.1',
         'torch>=2.0.1',
+        'crafter>=1.8.3',
     ],
     extras_require=extras,
     python_requires=">=3.8, <=3.11",
