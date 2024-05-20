@@ -452,7 +452,7 @@ if __name__ == "__main__":
                     opponent = curriculum.get_opponent(info.get("agent_id", 0)).to(
                         device
                     )
-                    opponent_action, _, _, lstm_state_opponent = (
+                    opponent_action, _, _, _, lstm_state_opponent = (
                         opponent.get_action_and_value(
                             opponent_obs, lstm_state_opponent, batchify(dones, device)
                         )
@@ -542,7 +542,7 @@ if __name__ == "__main__":
                             "rew": rewards[
                                 "agent_0"
                             ],  # TODO: is this the expected use?
-                            "dones": dones["agent_0"],
+                            "dones": dones["0"],
                             "tasks": env_task,
                         },
                     }
@@ -711,7 +711,7 @@ if __name__ == "__main__":
         # win rates and replays
         if args.agent_curriculum in ["FSP", "PFSP"]:
             agent_ids = np.arange(agent_curriculum_settings["max_agents"])
-            values = list(curriculum.curriculum.agent_curriculum.history.values())
+            values = list(curriculum.agent_curriculum.history.values())
             winrates = [i["winrate"] for i in values]
             n_games = [i["n_games"] for i in values]
 

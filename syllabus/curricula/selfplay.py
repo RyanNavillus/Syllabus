@@ -108,6 +108,7 @@ class FictitiousSelfPlay(Curriculum):
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
+        agent = agent.to(self.device)
         if self.current_agent_index < self.max_agents:
             self.current_agent_index += 1
 
@@ -192,6 +193,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
+        agent = agent.to(self.device)
         if self.current_agent_index < self.max_agents:
             self.current_agent_index += 1
 
