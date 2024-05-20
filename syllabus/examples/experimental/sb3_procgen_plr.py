@@ -10,15 +10,12 @@ import gymnasium as gym
 import numpy as np
 import procgen  # noqa: F401
 import torch
-import torch.nn as nn
 import wandb
-from gym import spaces
 from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor, VecNormalize
-from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvStepReturn, VecEnvWrapper
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
 from syllabus.examples.models import SB3ResNetBase, Sb3ProcgenAgent
@@ -127,30 +124,6 @@ PROCGEN_RETURN_BOUNDS = {
     "bossfight": (0.5, 13),
 }
 
-
-class VecExtractDictObs(VecEnvWrapper):
-    # Copy to avoid using the wrong space in the origional class for sb3 verison VecExtractDictObs
-    def __init__(self, venv: VecEnv, key: str):
-        self.key = key
-        assert isinstance(
-            venv.observation_space, spaces.Dict
-        ), f"VecExtractDictObs can only be used with Dict obs space, not {venv.observation_space}"
-        super().__init__(venv=venv, observation_space=venv.observation_space.spaces[self.key])
-
-    def reset(self) -> np.ndarray:
-        obs = self.venv.reset()
-        assert isinstance(obs, dict)
-        return obs[self.key]
-
-    def step_wait(self) -> VecEnvStepReturn:
-        obs, reward, done, infos = self.venv.step_wait()
-        assert isinstance(obs, dict)
-        for info in infos:
-            if "terminal_observation" in info:
-                info["terminal_observation"] = info["terminal_observation"][self.key]
-        return obs[self.key], reward, done, infos
-
-
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
@@ -219,6 +192,7 @@ class CustomCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
+            self.update_locals(self.locals)
             tasks = [i["task"] for i in self.locals["infos"]]
             obs = self.locals['new_obs']
             obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
@@ -236,6 +210,7 @@ class CustomCallback(BaseCallback):
             }
             self.curriculum.update(update)
             del obs_tensor
+            del obs
         return True
 
     def _on_rollout_end(self) -> None:
