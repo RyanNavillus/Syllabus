@@ -91,17 +91,20 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
     else:
         obs = env.reset()
     term = trunc = False
-    ep_rew = 0
+    ep_rew = {agent: 0 for agent in env.agents}
+    steps = 0
     while env.agents:
         action = {agent: env.action_space(agent).sample() for agent in env.agents}
-        obs, rew, term, trunc, info = env.step(action)
-        if curriculum and curriculum.unwrapped.__class__.REQUIRES_STEP_UPDATES:
-            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rew.values()), list(term.values()), list(trunc.values()), info, env_id=env_id)
+        obs, rews, term, trunc, info = env.step(action)
+        steps += 1
+        if curriculum and curriculum.requires_step_updates:
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rews.values()), list(term.values()), list(trunc.values()), info, env_id=env_id)
             task_completion = max([i["task_completion"] for i in info.values()]) if len(env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
             curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
-        ep_rew += sum(rew.values())
-    if curriculum and curriculum.unwrapped.__class__.REQUIRES_EPISODE_UPDATES:
-        curriculum.update_on_episode(ep_rew, env.task_space.encode(env.task), env_id=env_id)
+        for agent, rew in rews.items():
+            ep_rew[agent] += rew
+    if curriculum and curriculum.requires_episode_updates:
+        curriculum.update_on_episode(ep_rew, steps, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
 
 
@@ -183,7 +186,7 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
 
 
 def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size, batch_size=1) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env, env_id=env_id))

@@ -44,6 +44,7 @@ class PettingZooSyncTestEnv(PettingZooTaskEnv):
                                   for agent in self.possible_agents}
         self.task_space = TaskSpace(gym.spaces.Discrete(num_episodes + 1), ["error task"] + [f"task {i+1}" for i in range(num_episodes)])
         self.task = "error_task"
+        self.metadata = {"render.modes": ["human"]}
 
     def action_space(self, agent):
         return self._action_spaces[agent]
