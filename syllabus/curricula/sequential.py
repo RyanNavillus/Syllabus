@@ -1,9 +1,12 @@
 import re
 import warnings
+from collections import deque
 from typing import Any, Callable, List, Union
 
+from torch.utils.tensorboard import SummaryWriter
+
 from syllabus.core import Curriculum
-from syllabus.curricula import NoopCurriculum, DomainRandomization
+from syllabus.curricula import DomainRandomization, NoopCurriculum
 from syllabus.task_space import TaskSpace
 
 
@@ -12,7 +15,7 @@ class SequentialCurriculum(Curriculum):
     REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
         assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
@@ -30,7 +33,7 @@ class SequentialCurriculum(Curriculum):
         self.total_episodes = 0
         self.n_tasks = 0
         self.total_tasks = 0
-        self.episode_returns = []
+        self.episode_returns = deque(maxlen=return_buffer_size)
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
         """ Parse the curriculum list to ensure that all items are curricula. 
@@ -173,6 +176,8 @@ class SequentialCurriculum(Curriculum):
         if self.current_curriculum.requires_episode_updates:
             self.current_curriculum.update_on_episode(episode_return, episode_len, episode_task, env_id)
 
+        self.check_stopping_conditions()
+
     def update_on_step(self, task, obs, rew, term, trunc, info, env_id=None):
         if self.current_curriculum.requires_step_updates:
             self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, env_id)
@@ -192,7 +197,7 @@ class SequentialCurriculum(Curriculum):
             self._curriculum_index += 1
             self.n_episodes = 0
             self.n_steps = 0
-            self.episode_returns = []
+            self.episode_returns = deque(maxlen=100)
             self.n_tasks = 0
 
     def _sample_distribution(self) -> List[float]:

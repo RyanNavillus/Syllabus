@@ -1,5 +1,5 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
-import gymnasium as gym
+from pettingzoo.utils.env import ParallelEnv
 from gymnasium import spaces
 from pettingzoo.butterfly import pistonball_v6
 from syllabus.core import PettingZooTaskWrapper
@@ -10,10 +10,11 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
     """
     This wrapper simply changes the seed of a Minigrid environment.
     """
-    def __init__(self, env: gym.Env):
+    def __init__(self, env: ParallelEnv):
         super().__init__(env)
         self.env = env
         self.env.unwrapped.task: str = 1
+        self.task = None
 
         # Task completion metrics
         self.episode_return = 0
@@ -31,5 +32,5 @@ class PistonballTaskWrapper(PettingZooTaskWrapper):
             self.env = pistonball_v6.parallel_env(
                 ball_friction=task, continuous=False, max_cycles=125
             )
-            self.env.unwrapped.task = new_task
+            self.task = new_task
         return self.observation(self.env.reset(**kwargs))

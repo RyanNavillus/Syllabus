@@ -197,7 +197,7 @@ class Curriculum:
         :param k: Number of tasks to sample, defaults to 1
         :return: Either returns a single task if k=1, or a list of k tasks
         """
-        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+        # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
             return self._startup_sample()

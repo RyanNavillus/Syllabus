@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import ray
 from torch.multiprocessing import Lock, SimpleQueue
+from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import Curriculum, decorate_all_functions
 
@@ -15,8 +16,11 @@ class CurriculumWrapper:
     """
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
-        self.task_space = curriculum.task_space
-        self.unwrapped = curriculum
+        if hasattr(curriculum, "unwrapped") and curriculum.unwrapped is not None:
+            self.unwrapped = curriculum.unwrapped
+        else:
+            self.unwrapped = curriculum
+        self.task_space = self.unwrapped.task_space
 
     @property
     def num_tasks(self):
@@ -194,6 +198,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             end = time.time()
 
         self.should_update = False
+        self.update_thread.join()
         components = self.get_components()
         components._env_count.shm.close()
         components._env_count.shm.unlink()
@@ -241,14 +246,12 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             else:
                 time.sleep(0.01)
 
-    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
-        super().update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
-
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components()._debug:
-            writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
-            writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
+        if isinstance(writer, SummaryWriter):
+            if self.get_components()._debug:
+                writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
+                writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
     def add_task(self, task):
         super().add_task(task)
@@ -256,9 +259,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def get_components(self):
         return self._components
-
-    def normalize(self, rewards, task):
-        return super().normalize(rewards, task)
 
 
 def remote_call(func):
