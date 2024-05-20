@@ -69,12 +69,14 @@ class FictitiousSelfPlay(Curriculum):
         storage_path: str,
         max_agents: int,
         seed: int = 0,
+        max_loaded_agents: int = 1,
     ):
         self.name = "FSP"
         self.uid = int(time.time())
         self.device = device
         self.storage_path = storage_path
         self.seed = seed
+
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
@@ -89,12 +91,16 @@ class FictitiousSelfPlay(Curriculum):
             }
             for i in range(self.max_agents)
         }
+        self.loaded_agents = {i: None for i in range(self.max_agents)}
+        self.n_loaded_agents = 0
+        self.max_loaded_agents = max_loaded_agents
 
     def update_agent(self, agent):
         """
         Saves the current agent instance to a pickle file.
         When the `max_agents` limit is met, older agent checkpoints are overwritten.
         """
+        agent = agent.to("cpu")
         joblib.dump(
             agent,
             filename=(
@@ -122,9 +128,19 @@ class FictitiousSelfPlay(Curriculum):
 
     def get_opponent(self, agent_id: int) -> AgentType:
         """Loads an agent from the buffer of saved agents."""
-        return joblib.load(
-            f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
-        ).to(self.device)
+        if self.loaded_agents[agent_id] is None:
+            if self.n_loaded_agents >= self.max_loaded_agents:
+                pass
+            print(
+                "get agent",
+                agent_id,
+                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
+            )
+            self.loaded_agents[agent_id] = joblib.load(
+                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
+            ).to(self.device)
+
+        return self.loaded_agents[agent_id]
 
     def sample(self, k=1):
         return np.random.randint(self.current_agent_index)
@@ -138,6 +154,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         storage_path: str,
         max_agents: int,
         seed: int = 0,
+        max_loaded_agents: int = 1,
     ):
         self.name = "PFSP"
         self.uid = int(time.time())
@@ -158,12 +175,16 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             }
             for i in range(self.max_agents)
         }
+        self.loaded_agents = {i: None for i in range(self.max_agents)}
+        self.n_loaded_agents = 0
+        self.max_loaded_agents = max_loaded_agents
 
     def update_agent(self, agent) -> None:
         """
         Saves the current agent instance to a pickle file and update
         its priority.
         """
+        agent = agent.to("cpu")
         joblib.dump(
             agent,
             filename=(
@@ -194,9 +215,19 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         Samples an agent id from the softmax distribution induced by winrates
         then loads the selected agent from the buffer of saved agents.
         """
-        return joblib.load(
-            f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
-        ).to(self.device)
+        if self.loaded_agents[agent_id] is None:
+            if self.n_loaded_agents >= self.max_loaded_agents:
+                pass
+            print(
+                "get agent",
+                agent_id,
+                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
+            )
+            self.loaded_agents[agent_id] = joblib.load(
+                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
+            ).to(self.device)
+
+        return self.loaded_agents[agent_id]
 
     def sample(self, k=1):
         logits = [

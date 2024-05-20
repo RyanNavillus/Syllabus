@@ -22,11 +22,7 @@ from tqdm.auto import tqdm
 
 sys.path.append("../../..")
 from lasertag import LasertagAdversarial  # noqa: E402
-from syllabus.core import (  # noqa: E402
-    DualCurriculumWrapper,
-    TaskWrapper,
-    make_multiprocessing_curriculum,
-)
+from syllabus.core import DualCurriculumWrapper, TaskWrapper  # noqa: E402
 
 # noqa: E402
 from syllabus.curricula import (  # noqa: E402
@@ -241,8 +237,7 @@ class Agent(nn.Module):
 
         batch_size = hidden.size(0)
         hidden = hidden.reshape(batch_size, -1)  # shape: batch_size, features
-        hidden = hidden.unsqueeze(1)  # add seq len dimension
-        # => shape: batch_size, seq_len=1, n_features
+        hidden = hidden.unsqueeze(1)  # => shape: batch_size, seq_len=1, n_features
 
         new_hidden = []
         # reset lstm state if done
@@ -338,10 +333,10 @@ if __name__ == "__main__":
     )
 
     if (
-        not os.path.exists(f"{args.logging_dir}/{exp_name}_checkpoints")
+        not os.path.exists(f"{args.logging_dir}/{run_name}_checkpoints")
         and args.save_agent_checkpoints
     ):
-        os.makedirs(f"{args.logging_dir}/{exp_name}_checkpoints", exist_ok=True)
+        os.makedirs(f"{args.logging_dir}/{run_name}_checkpoints", exist_ok=True)
 
     np.random.seed(args.seed)
 
@@ -393,7 +388,7 @@ if __name__ == "__main__":
         agent_curriculum=agent_curriculum,
         env_curriculum=env_curriculum,
     )
-    mp_curriculum = make_multiprocessing_curriculum(curriculum)
+    # mp_curriculum = make_multiprocessing_curriculum(curriculum)
 
     """ ALGO LOGIC: EPISODE STORAGE"""
     total_episodic_return = 0
@@ -420,14 +415,23 @@ if __name__ == "__main__":
         torch.zeros(agent.lstm.num_layers, 1, agent.lstm.hidden_size).to(device),
         torch.zeros(agent.lstm.num_layers, 1, agent.lstm.hidden_size).to(device),
     )
+    lstm_state_opponent = (
+        torch.zeros(agent.lstm.num_layers, 1, agent.lstm.hidden_size).to(device),
+        torch.zeros(agent.lstm.num_layers, 1, agent.lstm.hidden_size).to(device),
+    )
 
     """ TRAINING LOGIC """
+    print("training ...")
     with tqdm(total=args.total_updates) as pbar:
         while n_updates < args.total_updates:
 
             initial_lstm_state = (lstm_state[0].clone(), lstm_state[1].clone())
+            initial_lstm_state_opponent = (
+                lstm_state_opponent[0].clone(),
+                lstm_state_opponent[1].clone(),
+            )
             with torch.no_grad():
-                env_task, agent_task = mp_curriculum.sample()
+                env_task, agent_task = curriculum.sample()
 
                 env_tasks.append(env_task)
                 agent_tasks.append(agent_task)
@@ -445,11 +449,13 @@ if __name__ == "__main__":
                         )
                     )
 
-                    opponent = mp_curriculum.get_opponent(info.get("agent_id", 0)).to(
+                    opponent = curriculum.get_opponent(info.get("agent_id", 0)).to(
                         device
                     )
-                    opponent_action, *_ = opponent.get_action_and_value(
-                        opponent_obs, lstm_state, batchify(dones, device)
+                    opponent_action, _, _, lstm_state_opponent = (
+                        opponent.get_action_and_value(
+                            opponent_obs, lstm_state_opponent, batchify(dones, device)
+                        )
                     )
 
                     joint_actions = torch.tensor((actions, opponent_action))
@@ -461,7 +467,7 @@ if __name__ == "__main__":
 
                     opp_reward = rewards["agent_1"]
                     if opp_reward != 0:
-                        mp_curriculum.update_winrate(info["agent_id"], opp_reward)
+                        curriculum.update_winrate(info["agent_id"], opp_reward)
                         if opp_reward == -1:
                             n_learner_wins += 1
 
@@ -484,7 +490,7 @@ if __name__ == "__main__":
                     ):
                         episode += 1
                         rewards_history.append(rewards)
-                        env_task, agent_task = mp_curriculum.sample()
+                        env_task, agent_task = curriculum.sample()
                         env_tasks.append(env_task)
                         agent_tasks.append(agent_task)
 
@@ -492,6 +498,8 @@ if __name__ == "__main__":
                         writer.add_scalar(
                             "charts/walls_percentage", walls_percentage, episode
                         )
+                        learner_winrate = n_learner_wins / episode
+                        writer.add_scalar("charts/learner_winrate", learner_winrate)
 
                         next_obs = env.reset(env_task)
 
@@ -502,9 +510,9 @@ if __name__ == "__main__":
                         ):
                             print(f"saving checkpoint --{n_updates}")
                             checkpoint_path = (
-                                f"{args.logging_dir}/{exp_name}_checkpoints/"
-                                f"{mp_curriculum.curriculum.env_curriculum.name}_"
-                                f"{mp_curriculum.curriculum.agent_curriculum.name}_{n_updates}"
+                                f"{args.logging_dir}/{run_name}_checkpoints/"
+                                f"{curriculum.env_curriculum.name}_"
+                                f"{curriculum.agent_curriculum.name}_{n_updates}"
                                 f"_seed_{args.seed}.pkl"
                             )
                             # --- local checkpoint ---
@@ -514,16 +522,18 @@ if __name__ == "__main__":
                             )
 
                             # --- wandb checkpoint ---
-                            if args.track:
-                                agent_artifact = wandb.Artifact("model", type="model")
-                                agent_artifact.add_file(checkpoint_path)
-                                wandb.log_artifact(agent_artifact)
+                            # if args.track:
+                            #     agent_artifact = wandb.Artifact("model", type="model")
+                            #     agent_artifact.add_file(checkpoint_path)
+                            #     wandb.log_artifact(agent_artifact)
 
                 if args.env_curriculum == "PLR":
-                    next_value = agent.get_value(
-                        torch.tensor(next_obs["agent_0"]).to(device),
-                        flatten_start_dim=0,
-                    )
+                    with torch.no_grad():
+                        next_value = agent.get_value(
+                            torch.tensor(next_obs["agent_0"]).to(device),
+                            lstm_state,
+                            batchify(dones, device),
+                        )
                     update = {
                         "update_type": "on_demand",
                         "metrics": {
@@ -532,7 +542,7 @@ if __name__ == "__main__":
                             "rew": rewards[
                                 "agent_0"
                             ],  # TODO: is this the expected use?
-                            "dones": dones,
+                            "dones": dones["agent_0"],
                             "tasks": env_task,
                         },
                     }
@@ -650,13 +660,13 @@ if __name__ == "__main__":
                     loss.backward()
                     optimizer.step()
 
-                    writer.add_scalar("losses/value_loss", v_loss.item(), n_updates)
-                    writer.add_scalar("losses/policy_loss", pg_loss.item(), n_updates)
-                    writer.add_scalar("losses/entropy", entropy_loss.item(), n_updates)
-                    writer.add_scalar(
-                        "losses/old_approx_kl", old_approx_kl.item(), n_updates
-                    )
-                    writer.add_scalar("losses/approx_kl", approx_kl.item(), n_updates)
+                    # writer.add_scalar("losses/value_loss", v_loss.item(), n_updates)
+                    # writer.add_scalar("losses/policy_loss", pg_loss.item(), n_updates)
+                    # writer.add_scalar("losses/entropy", entropy_loss.item(), n_updates)
+                    # writer.add_scalar(
+                    #     "losses/old_approx_kl", old_approx_kl.item(), n_updates
+                    # )
+                    # writer.add_scalar("losses/approx_kl", approx_kl.item(), n_updates)
                     n_updates += 1
                     pbar.update(1)
 
@@ -666,7 +676,7 @@ if __name__ == "__main__":
                             n_updates % args.agent_update_frequency == 0
                             and episode != 0
                         ):
-                            mp_curriculum.update_agent(agent)
+                            curriculum.update_agent(agent)
 
             y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
             var_y = np.var(y_true)
@@ -689,7 +699,6 @@ if __name__ == "__main__":
 
         learner_winrate = n_learner_wins / episode
         wandb.run.summary["learner_winrate"] = learner_winrate
-        writer.add_scalar("charts/learner_winrate", learner_winrate)
 
         # agent rewards
         fig = px.line(
@@ -702,7 +711,7 @@ if __name__ == "__main__":
         # win rates and replays
         if args.agent_curriculum in ["FSP", "PFSP"]:
             agent_ids = np.arange(agent_curriculum_settings["max_agents"])
-            values = list(mp_curriculum.curriculum.agent_curriculum.history.values())
+            values = list(curriculum.curriculum.agent_curriculum.history.values())
             winrates = [i["winrate"] for i in values]
             n_games = [i["n_games"] for i in values]
 
