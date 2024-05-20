@@ -55,8 +55,7 @@ class NoopCurriculum(Curriculum):
     def add_task(self, task: tuple) -> None:
         pass
 
-    def update(self, update_data):
-        """
-        Update the curriculum with the specified update type.
-        """
-        pass
+    def _sample_distribution(self, k: int = 1) -> Union[List, Any]:
+        dist = [1.0 / self.num_tasks for _ in range(self.num_tasks)]
+        dist[self.default_task] = 1.0
+        return dist

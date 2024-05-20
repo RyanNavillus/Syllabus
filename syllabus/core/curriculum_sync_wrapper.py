@@ -297,6 +297,10 @@ class RayWrapper(CurriculumWrapper):
     def __init__(self, curriculum: Curriculum) -> None:
         super().__init__(curriculum)
 
+    def get_remote_attr(self, name: str):
+        next_obj = getattr(self.curriculum, name)
+        return next_obj
+
 
 @decorate_all_functions(remote_call)
 class RayCurriculumWrapper(CurriculumWrapper):

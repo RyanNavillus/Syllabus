@@ -16,6 +16,7 @@ class CartPoleTaskWrapper(TaskWrapper):
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")
             self.task = new_task
+
         return self.env.reset(options={"low": self.task[0], "high": self.task[1]})
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
