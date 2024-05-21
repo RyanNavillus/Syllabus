@@ -298,6 +298,19 @@ def play_n_episodes(
 
     agent_1, agent_2 = agent_1_cfg.agent, agent_2_cfg.agent
 
+    dones = {
+        "agent_0": 0,
+        "agent_1": 0,
+    }
+    lstm_state_1 = (
+        torch.zeros(agent_1.lstm.num_layers, 1, agent_1.lstm.hidden_size).to(device),
+        torch.zeros(agent_1.lstm.num_layers, 1, agent_1.lstm.hidden_size).to(device),
+    )
+    lstm_state_2 = (
+        torch.zeros(agent_2.lstm.num_layers, 1, agent_2.lstm.hidden_size).to(device),
+        torch.zeros(agent_2.lstm.num_layers, 1, agent_2.lstm.hidden_size).to(device),
+    )
+
     """ TRAINING LOGIC """
     for episode in range(n_episodes):
         # collect an episode
@@ -315,15 +328,17 @@ def play_n_episodes(
                 opponent_obs = opponent_obs.squeeze().to(device)
 
                 # get action from the agent and the opponent
-                agent_1_action, *_ = agent_1.get_action_and_value(
-                    agent_obs, flatten_start_dim=0
+                agent_1_action, _, _, _, lstm_state_1 = agent_1.get_action_and_value(
+                    agent_obs, lstm_state_1, batchify(dones, device)
                 )
-                agent_2_action, *_ = agent_2.get_action_and_value(
-                    opponent_obs, flatten_start_dim=0
+
+                agent_2_action, _, _, _, lstm_state_2 = agent_1.get_action_and_value(
+                    agent_obs, lstm_state_2, batchify(dones, device)
                 )
+
                 # execute the environment and log data
                 joint_actions = torch.tensor((agent_1_action, agent_2_action))
-                next_obs, rewards, terms, truncs, _ = env.step(
+                next_obs, rewards, dones, truncs, _ = env.step(
                     unbatchify(joint_actions, env.possible_agents), device
                 )
 
@@ -333,11 +348,11 @@ def play_n_episodes(
                 # add to episode storage
                 rb_obs[step] = batchify(next_obs, device)
                 rb_rewards[step] = batchify(rewards, device)
-                rb_terms[step] = batchify(terms, device)
+                rb_terms[step] = batchify(dones, device)
                 rb_actions[step] = joint_actions
 
                 # if we reach termination or truncation, end
-                if any([terms[a] for a in terms]) or any([truncs[a] for a in truncs]):
+                if any([dones[a] for a in dones]) or any([truncs[a] for a in truncs]):
                     break
 
     agent_1_norm_rew = agent_1_c_rew / n_episodes

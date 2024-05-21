@@ -521,12 +521,6 @@ if __name__ == "__main__":
                                 filename=checkpoint_path,
                             )
 
-                            # --- wandb checkpoint ---
-                            # if args.track:
-                            #     agent_artifact = wandb.Artifact("model", type="model")
-                            #     agent_artifact.add_file(checkpoint_path)
-                            #     wandb.log_artifact(agent_artifact)
-
                 if args.env_curriculum == "PLR":
                     with torch.no_grad():
                         next_value = agent.get_value(
@@ -539,13 +533,12 @@ if __name__ == "__main__":
                         "metrics": {
                             "value": values,
                             "next_value": next_value,
-                            "rew": rewards[
-                                "agent_0"
-                            ],  # TODO: is this the expected use?
+                            "rew": rewards["agent_0"],
                             "dones": dones["0"],
                             "tasks": env_task,
                         },
                     }
+                    # curriculum.update_on_demand(update)
 
             # gae
             with torch.no_grad():
