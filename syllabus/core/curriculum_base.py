@@ -6,6 +6,7 @@ import numpy as np
 from gymnasium.spaces import Dict, Box
 import random
 from syllabus.task_space import TaskSpace
+from itertools import product
 
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
@@ -30,6 +31,9 @@ class Curriculum:
         self.warmup_strategy = warmup_strategy
         self.warmup_tasks = warmup_samples
         self.fix_curr_index = 0
+        
+        if warmup_strategy == "fix" and isinstance(self.task_space.gym_space, Box):
+            self.fix_box_space = self._initialize_fixed_grid()
 
         if self.num_tasks is None:
             warnings.warn("Task space is continuous. Number of warmup tasks can't be compared to the task space size.")
@@ -178,6 +182,16 @@ class Curriculum:
         Any curriculum that maintains a true probability distribution should implement this method to retrieve it.
         """
         raise NotImplementedError
+    
+    def _initialize_fixed_grid(self):
+        dims = self.task_space.gym_space.shape[0]
+        samples_per_dim = int(round(pow(self.warmup_tasks,(1 / dims))))
+        ranges = [np.linspace(self.task_space.gym_space.low[i], self.task_space.gym_space.high[i], samples_per_dim)
+                  for i in range(dims)]
+        all_points = list(product(*ranges))
+        sampled_tasks = [tuple(point) for point in all_points]
+
+        return sampled_tasks
 
     def _should_use_startup_sampling(self) -> bool:  
         return self.warmup_strategy != "none" and self.startup_sampled_tasks < self.warmup_tasks
@@ -187,29 +201,11 @@ class Curriculum:
 
         if isinstance(self.task_space.gym_space, Box):
             if self.warmup_strategy == "fix":
-                dims = self.task_space.gym_space.shape[0]  
-                samples_per_dim = int(round(pow(k, 1/dims)))  
-
-                ranges = [np.linspace(self.task_space.gym_space.low[i], self.task_space.gym_space.high[i], samples_per_dim) for i in range(dims)]
-                
-                # Create a grid of samples across the dimensions
-                grid = np.meshgrid(*ranges, indexing='ij')
-                total_samples = samples_per_dim ** dims
-                grid_flattened = [g.flatten() for g in grid]
-                start_index = self.fix_curr_index % total_samples
-                indices = [(start_index + i) % total_samples for i in range(k)]
-
-                for index in indices:
-                    task = []  # Create an empty list to hold the elements of each task
-                    for dim in range(dims):
-                        task.append(grid_flattened[dim][index])  # Append the appropriate value from the flattened grid
-                    sampled_tasks.append(tuple(task))  # Convert the list to a tuple and append to sampled_tasks
-
-                self.fix_curr_index = (self.fix_curr_index + k) % total_samples
-
+                sampled_tasks = self.fix_box_space
+                self.fix_curr_index = (self.fix_curr_index + self.warmup_tasks) % len(sampled_tasks)
             elif self.warmup_strategy == "random":
                 sampled_tasks = [self.task_space.gym_space.sample() for _ in range(k)]
-                
+    
         else:
             if self.warmup_strategy == "fix":
                 if self.fix_curr_index + k > self.num_tasks:
