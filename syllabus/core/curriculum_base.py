@@ -27,9 +27,9 @@ class Curriculum:
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
-        self.task_names = task_names
+        self.task_names = task_names if task_names is not None else lambda task, idx: idx
         self.n_updates = 0
-        self.stat_recorder = StatRecorder(self.task_space) if record_stats else None
+        self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
@@ -197,7 +197,7 @@ class Curriculum:
         :param k: Number of tasks to sample, defaults to 1
         :return: Either returns a single task if k=1, or a list of k tasks
         """
-        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+        # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
             return self._startup_sample()
@@ -220,12 +220,15 @@ class Curriculum:
             if len(task_dist) > 10 and not log_full_dist:
                 warnings.warn("Only logging stats for 10 tasks.")
                 task_dist = task_dist[:10]
-            if self.task_names:
-                for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
-            else:
-                for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
+            log_data = []
+            for idx, prob in enumerate(task_dist):
+                name = self.task_names(self.tasks[idx], idx)
+                log_data.append((f"curriculum/{name}_prob", prob, step))
+            for name, prob, step in log_data:
+                if writer == wandb:
+                    writer.log({name: prob}, step=step)
+                else:
+                    writer.add_scalar(name, prob, step)
         except ImportError:
             warnings.warn("Wandb is not installed. Skipping logging.")
         except wandb.errors.Error:
