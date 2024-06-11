@@ -1,5 +1,5 @@
-#pettingzoo==1.19.0
-#supersuit==3.5.0
+# pettingzoo==1.19.0
+# supersuit==3.5.0
 gym==0.23.1
 numpy==1.23.3
 wandb>=0.15.3
@@ -13,5 +13,5 @@ pytest>=8.1.1
 pytest-benchmark>=3.4.1
 
 # documentation
-pip install sphinx-tabs
+# pip install sphinx-tabs
 
