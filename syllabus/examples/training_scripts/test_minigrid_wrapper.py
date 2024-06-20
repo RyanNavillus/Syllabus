@@ -205,7 +205,7 @@ def wrap_vecenv(vecenv):
 #     policy.train()
 #     return mean_returns, stddev_returns, normalized_mean_returns
 
-def level_replay_evaluate_minidgrid(
+def level_replay_evaluate_minigrid(
     env_name,
     policy,
     num_episodes,
@@ -220,6 +220,7 @@ def level_replay_evaluate_minidgrid(
                 args.seed + i,
                 curriculum=curriculum if args.curriculum else None
             )
+            # for i in range(args.num_envs)
             for i in range(args.num_envs)
         ]
     )
@@ -390,6 +391,27 @@ if __name__ == "__main__":
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
+    # eval_envs = gym.vector.AsyncVectorEnv(
+    #     [
+    #         make_env_minigrid(
+    #             env_name,
+    #             args.seed + i,
+    #             curriculum=curriculum if args.curriculum else None
+    #         )
+    #         for i in range(args.num_envs)
+    #     ]
+    # )
+    # 
+    # eval_envs = wrap_vecenv(eval_envs)
+    # eval_obs, _ = eval_envs.reset()
+    # with torch.no_grad():
+    #     eval_action, _, _, _ = agent.get_action_and_value(torch.Tensor(eval_obs).to(device))
+    # eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+    # print(len(eval_obs))
+    # print(len(infos))
+    # print(args.num_envs)
+    # print(args.num_eval_episodes)
+
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -559,10 +581,10 @@ if __name__ == "__main__":
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
         # Evaluate agent
-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_minidgrid(
+        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_minigrid(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_minidgrid(
+        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_minigrid(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
