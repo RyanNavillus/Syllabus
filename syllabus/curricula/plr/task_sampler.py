@@ -350,6 +350,37 @@ class TaskSampler:
             "returns": self._robust_rollouts.returns,
         }
 
+    # def efficient_evaluate_task(self, task, vector_env, action_value_fn):
+    #     if env is None:
+    #         raise ValueError("Environment object is None. Please ensure it is properly initialized.")
+    #
+    #     obs, info = env.reset(new_task=task)
+    #     done = False
+    #
+    #     while not done:
+    #         action, value = action_value_fn(obs)
+    #
+    #         obs, rew, term, trunc, _ = env.step(action)
+    #
+    #         task_encoded = self.task_space.encode(task)
+    #
+    #         mask = torch.FloatTensor([0.0] if term or trunc else [1.0])
+    #         self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor([rew]), tasks=torch.Tensor([task_encoded]))
+    #
+    #         # Check if the episode is done
+    #         if term or trunc:
+    #             done = True
+    #
+    #     _, next_value = action_value_fn(obs)
+    #     self._robust_rollouts.compute_returns(next_value, self.gamma, self.gae_lambda)
+    #     return {
+    #         "tasks": self._robust_rollouts.tasks,
+    #         "masks": self._robust_rollouts.masks,
+    #         "rewards": self._robust_rollouts.rewards,
+    #         "value_preds": self._robust_rollouts.value_preds,
+    #         "returns": self._robust_rollouts.returns,
+    #     }
+
     def sample(self, strategy=None):
         if not strategy:
             strategy = self.strategy

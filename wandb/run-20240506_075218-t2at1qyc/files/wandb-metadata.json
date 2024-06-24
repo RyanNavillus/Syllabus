@@ -1,0 +1,35 @@
+{
+    "os": "Linux-4.4.0-22621-Microsoft-x86_64-with-glibc2.17",
+    "python": "3.8.18",
+    "heartbeatAt": "2024-05-06T02:22:20.792831",
+    "startedAt": "2024-05-06T02:22:18.889462",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--curriculum",
+        "--track"
+    ],
+    "state": "running",
+    "program": "-m syllabus.examples.training_scripts.cleanrl_procgen_plr",
+    "codePathLocal": null,
+    "git": {
+        "remote": "git@github.com:AmeenUrRehman/Syllabus.git",
+        "commit": "2ea5979fca39c8fc869821e2fe8a69ebd1396ec2"
+    },
+    "email": "ameensadiya12345@gmail.com",
+    "root": "/mnt/d/ResearchWork/UMD/Syllabus",
+    "host": "Hacker",
+    "username": "ameen4799",
+    "executable": "/mnt/d/anaconda3/envs/nle2/bin/python",
+    "cpu_count": 4,
+    "cpu_count_logical": 8,
+    "disk": {
+        "/": {
+            "total": 237.24804306030273,
+            "used": 168.45875549316406
+        }
+    },
+    "memory": {
+        "total": 5.944164276123047
+    }
+}

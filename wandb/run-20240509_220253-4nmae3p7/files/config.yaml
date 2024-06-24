@@ -1,0 +1,129 @@
+wandb_version: 1
+
+exp_name:
+  desc: null
+  value: cleanrl_procgen_plr
+seed:
+  desc: null
+  value: 1
+torch_deterministic:
+  desc: null
+  value: true
+cuda:
+  desc: null
+  value: true
+track:
+  desc: null
+  value: true
+wandb_project_name:
+  desc: null
+  value: syllabus
+wandb_entity:
+  desc: null
+  value: null
+capture_video:
+  desc: null
+  value: false
+logging_dir:
+  desc: null
+  value: .
+env_id:
+  desc: null
+  value: starpilot
+total_timesteps:
+  desc: null
+  value: 25000000
+learning_rate:
+  desc: null
+  value: 0.0005
+num_envs:
+  desc: null
+  value: 64
+num_steps:
+  desc: null
+  value: 256
+anneal_lr:
+  desc: null
+  value: false
+gae:
+  desc: null
+  value: true
+gamma:
+  desc: null
+  value: 0.999
+gae_lambda:
+  desc: null
+  value: 0.95
+num_minibatches:
+  desc: null
+  value: 8
+update_epochs:
+  desc: null
+  value: 3
+norm_adv:
+  desc: null
+  value: true
+clip_coef:
+  desc: null
+  value: 0.2
+clip_vloss:
+  desc: null
+  value: true
+ent_coef:
+  desc: null
+  value: 0.01
+vf_coef:
+  desc: null
+  value: 0.5
+max_grad_norm:
+  desc: null
+  value: 0.5
+target_kl:
+  desc: null
+  value: null
+full_dist:
+  desc: null
+  value: true
+curriculum:
+  desc: null
+  value: true
+curriculum_method:
+  desc: null
+  value: plr
+num_eval_episodes:
+  desc: null
+  value: 10
+batch_size:
+  desc: null
+  value: 16384
+minibatch_size:
+  desc: null
+  value: 2048
+_wandb:
+  desc: null
+  value:
+    python_version: 3.8.18
+    cli_version: 0.16.3
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1715272373.435329
+    t:
+      1:
+      - 1
+      - 30
+      - 55
+      2:
+      - 1
+      - 30
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      - 35
+      4: 3.8.18
+      5: 0.16.3
+      8:
+      - 5
+      13: linux-x86_64
