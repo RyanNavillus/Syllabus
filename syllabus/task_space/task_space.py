@@ -11,14 +11,25 @@ class TaskSpace():
         if not isinstance(gym_space, Space):
             gym_space = self._create_gym_space(gym_space)
 
+        if isinstance(gym_space, tuple) and all([isinstance(x, int) for x in gym_space]):
+            # Syntactic sugar for multidiscrete space
+            gym_space = MultiDiscrete(gym_space)
+
+        # Expand Multidiscrete tasks
+        if isinstance(gym_space, MultiDiscrete) and tasks is not None:
+            # TODO: Add some check that task names are correct shape for gym space
+            tasks = list(itertools.product(*tasks))
+
         self.gym_space = gym_space
 
         # Autogenerate task names
         if tasks is None:
             tasks = self._generate_task_names(gym_space)
 
-        self._tasks = set(tasks) if tasks is not None else None
+        self._task_set = set(tasks) if tasks is not None else None
+        self._task_list = tasks
         self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
+        self.task_shape = np.array(self.encode(self.sample())).shape
 
     def _create_gym_space(self, gym_space):
         if isinstance(gym_space, int):
@@ -116,12 +127,12 @@ class TaskSpace():
 
     def add_task(self, task):
         """Add a task to the task space. Only implemented for discrete spaces."""
-        if task not in self._tasks:
-            self._tasks.add(task)
+        if task not in self._task_set:
+            self._task_set.add(task)
             # TODO: Increment task space size
             self.gym_space = self.increase_space()
             # TODO: Optimize adding tasks
-            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._tasks)
+            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._task_set)
 
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
@@ -145,7 +156,9 @@ class TaskSpace():
     @property
     def tasks(self) -> List[Any]:
         # TODO: Can I just use _tasks?
-        return self._tasks
+        if isinstance(self.gym_space, MultiDiscrete):
+            return list(range(len(self._task_list)))
+        return self._task_list
 
     def get_tasks(self, gym_space: Space = None, sample_interval: float = None) -> List[tuple]:
         """
@@ -209,7 +222,7 @@ class TaskSpace():
         return repr(self.decode(task))
 
     def contains(self, task):
-        return task in self._tasks or self.decode(task) in self._tasks
+        return task in self._task_set or self.decode(task) in self._task_set
 
     def increase_space(self, amount: Union[int, float] = 1):
         if isinstance(self.gym_space, Discrete):
@@ -217,11 +230,16 @@ class TaskSpace():
             return Discrete(self.gym_space.n + amount)
 
     def sample(self):
+        # TODO: Gross
         assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) or isinstance(self.gym_space, Tuple)
-        return self.decode(self.gym_space.sample())
+
+        if isinstance(self.gym_space, MultiDiscrete):
+            return self._task_list[np.random.choice(list(range(len(self._task_list))))]
+        else:
+            return self.decode(self.gym_space.sample())
 
     def list_tasks(self):
-        return list(self._tasks)
+        return self._task_list
 
     def box_contains(self, x) -> bool:
         """Return boolean specifying if x is a valid member of this space."""
