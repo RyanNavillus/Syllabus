@@ -39,11 +39,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        if hasattr(self.env, 'gym_env') and hasattr(self.env.gym_env, 'unwrapped'):
-            if hasattr(self.env.gym_env.unwrapped, '_venv'):
-                self.env.gym_env.unwrapped._venv.seed(int(seed), 0)
-        else:
-            self.env.seed(int(seed))
+        self.env.gym_env.unwrapped._venv.seed(int(seed), 0)
 
     def reset(self, new_task=None, **kwargs):
         """

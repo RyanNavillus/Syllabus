@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -127,21 +127,17 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-
-        if task_wrapper or curriculum is not None:
-            env = ProcgenTaskWrapper(env, env_id, seed=seed)
-
         if curriculum is not None:
+            env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
-                batch_size=10
             )
         return env
     return thunk
@@ -197,15 +193,6 @@ def make_value_fn():
     return get_value
 
 
-def make_action_fn():
-    def get_action(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            action, _, _, _ = agent.get_action_and_value(torch.Tensor(obs).to(device))
-            return action.to("cpu").numpy()
-    return get_action
-
-
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -239,23 +226,6 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     print("Device:", device)
 
-    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
-    sample_envs = wrap_vecenv(sample_envs)
-    single_action_space = sample_envs.single_action_space
-    single_observation_space = sample_envs.single_observation_space
-    sample_envs.close()
-
-    # Agent setup
-    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        single_observation_space.shape,
-        single_action_space.n,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-
     # Curriculum setup
     curriculum = None
     if args.curriculum:
@@ -279,16 +249,9 @@ if __name__ == "__main__":
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
-        elif args.curriculum_method == "bdr":
-            print("Using batched domain randomization.")
-            curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(64)]
-            )
-            eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgressCurriculum(sample_env.task_space)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -318,6 +281,16 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
+
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+    agent = ProcgenAgent(
+        envs.single_observation_space.shape,
+        envs.single_action_space.n,
+        arch="large",
+        base_kwargs={'recurrent': False, 'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)

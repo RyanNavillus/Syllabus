@@ -149,6 +149,9 @@ class PrioritizedLevelReplay(Curriculum):
         gamma (float): The discount factor used to compute returns
         gae_lambda (float): The GAE lambda value.
         suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
+        robust_plr (bool): Option to use RobustPLR.
+        eval_envs: Evaluation environments for RobustPLR.
+        action_value_fn (callable): A function that takes an observation as input and returns an action and value.
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
     REQUIRES_STEP_UPDATES = True
@@ -170,6 +173,9 @@ class PrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings=False,
         get_value=null,
         get_action_log_dist=null,
+        robust_plr: bool = False,  # Option to use RobustPLR
+        eval_envs = None,
+        action_value_fn = None,
         **curriculum_kwargs,
     ):
         # Preprocess curriculum intialization args
@@ -186,6 +192,9 @@ class PrioritizedLevelReplay(Curriculum):
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
+        if robust_plr and eval_envs is None:
+            raise UsageError("RobustPLR requires evaluation environments to be provided.")
+
         self._num_steps = num_steps  # Number of steps stored in rollouts and used to update task sampler
         self._num_processes = num_processes  # Number of parallel environments
         self._gamma = gamma
@@ -193,8 +202,12 @@ class PrioritizedLevelReplay(Curriculum):
         self._supress_usage_warnings = suppress_usage_warnings
         self._get_action_log_dist = get_action_log_dist
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
+        self._robust_plr = robust_plr
+        self._eval_envs = eval_envs
+        self.action_value_fn = action_value_fn
 
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, task_space=task_space, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, **task_sampler_kwargs_dict)
+
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
