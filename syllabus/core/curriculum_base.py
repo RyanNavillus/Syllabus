@@ -65,6 +65,12 @@ class Curriculum:
         """
         return list(self.task_space.tasks)
 
+    def set_seed(self, seed: int = None) -> None:
+        self.seed = seed
+        if(seed!=None) :
+            np.random.seed(seed)
+
+
     def add_task(self, task: typing.Any) -> None:
         # TODO
         raise NotImplementedError("This curriculum does not support adding tasks after initialization.")

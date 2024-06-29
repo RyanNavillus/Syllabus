@@ -311,7 +311,7 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.SyncVectorEnv(
         [
             make_env(
                 args.env_id,
@@ -324,7 +324,7 @@ if __name__ == "__main__":
     )
     envs = wrap_vecenv(envs)
 
-    test_eval_envs = gym.vector.AsyncVectorEnv(
+    test_eval_envs = gym.vector.SyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, num_levels=0)
             for i in range(args.num_eval_episodes)
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     )
     test_eval_envs = wrap_vecenv(test_eval_envs)
 
-    train_eval_envs = gym.vector.AsyncVectorEnv(
+    train_eval_envs = gym.vector.SyncVectorEnv(
         [
             make_env(args.env_id, args.seed + i, num_levels=200)
             for i in range(args.num_eval_episodes)
@@ -367,6 +367,7 @@ if __name__ == "__main__":
     num_updates = args.total_timesteps // args.batch_size
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
+
 
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
