@@ -8,11 +8,13 @@ from sequential import SequentialCurriculum
 from syllabus.curricula.plr import CentralizedPrioritizedLevelReplay
 from syllabus.curricula.plr import PrioritizedLevelReplay
 from syllabus.curricula.plr import TaskSampler
+import numpy as np
 
 def seed_test(c: Curriculum):
     sample = c.sample()
     for i in range(5):
         next_sample = c.sample()
+        print(next_sample)
         assert sample == next_sample, f"Expected all samples to be the same, got {sample} and {next_sample}"
         sample = next_sample
 
@@ -20,15 +22,21 @@ def seed_test(c: Curriculum):
 
 def no_seed_test(c: Curriculum):
     sample = c.sample()
+    list = [int(sample[0])]
     for i in range(5):
         next_sample = c.sample()
-        assert sample != next_sample, f"Expected all samples to be different, got {sample} and {next_sample}"
+        list.append(int(next_sample[0]))
+        print(next_sample)
         sample = next_sample
     
-    return True
-
+    if(len(set(list))<=1) :
+        raise Exception(f"Expected samples to variable, only one sample value {sample}")
+    else :
+        return True
+        
 #Seed Tests
 task_space = TaskSpace(200)
+# task_space = TaskSpace(gym.spaces.Box(low=0, high=1, shape=(2,)), [(0, 0), (0, 1), (1, 0), (1, 1)])
 seed = 3
 
 #1: DomainRandomization with seed
@@ -83,4 +91,16 @@ if seed_test(c = c) :
 c = PrioritizedLevelReplay(task_space = task_space, observation_space = gym.spaces.Discrete(3))
 if no_seed_test(c = c) :
     print("PrioritizedLevelReplay without seed! SUCCESSFUL")
+
+#11 DomainRandomization with seed with sample_weights
+space = TaskSpace(gym.spaces.Discrete(4), ["a", "b", "c","d"])
+c = DomainRandomization(task_space = space, seed = seed, sample_weights = [0.6,0.2,0.1,0.1])
+if seed_test(c = c) :
+    print("DomainRandomization with seed with sample weights! SUCCESSFUL")
+
+#2: DomainRandomization without seed
+c = DomainRandomization(task_space = space, sample_weights = [0.3,0.2,0.4,0.1])
+if no_seed_test(c = c) :
+    print("DomainRandomization without seed with sample weights! SUCCESSFUL")
+
 
