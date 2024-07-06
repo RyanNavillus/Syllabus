@@ -7,6 +7,87 @@ from syllabus.curricula import NoopCurriculum, DomainRandomization
 from syllabus.task_space import TaskSpace
 
 
+class Condition:
+
+    def __init__(self, metric_name: str, comparator: str, value: float, custom_metrics=None):
+        self.metric_name = metric_name
+        self.comparator = comparator
+        self.value = value
+        self.custom_metrics = custom_metrics or {}
+
+    def __call__(self, curriculum):
+        predefined_metrics = {
+        "steps": lambda curriculum: curriculum._get_steps(),
+        "total_steps": lambda curriculum: curriculum._get_total_steps(),
+        "episodes": lambda curriculum: curriculum._get_episodes(),
+        "total_episodes": lambda curriculum: curriculum._get_total_episodes(),
+        "tasks": lambda curriculum: curriculum._get_tasks(),
+        "total_tasks": lambda curriculum: curriculum._get_total_tasks(),
+        "episode_return": lambda curriculum: curriculum._get_episode_return()
+        }
+        if self.metric_name in predefined_metrics:
+            metric_fn = predefined_metrics[self.metric_name]
+        elif self.metric_name in self.custom_metrics:
+            metric_fn = self.custom_metrics[self.metric_name]
+        else:
+            raise ValueError(f"Invalid metric name: {self.metric_name}")
+
+        metric_value = metric_fn(curriculum)
+        if self.comparator == '<':
+            return metric_value < self.value
+        elif self.comparator == '>':
+            return metric_value > self.value
+        elif self.comparator == '<=':
+            return metric_value <= self.value
+        elif self.comparator == '>=':
+            return metric_value >= self.value
+        elif self.comparator == '==':
+            return metric_value == self.value
+        else:
+            raise ValueError(f"Invalid comparator: {self.comparator}")
+
+    def __and__(self, other):
+        if isinstance(other, Condition):
+            return CompositeCondition([self, other], all)
+        elif isinstance(other, CompositeCondition):
+            return CompositeCondition([self] + other.conditions, all)
+        else:
+            raise ValueError("Can only combine Condition with Condition or CompositeCondition")
+
+    def __or__(self, other):
+        if isinstance(other, Condition):
+            return CompositeCondition([self, other], any)
+        elif isinstance(other, CompositeCondition):
+            return CompositeCondition([self] + other.conditions, any)
+        else:
+            raise ValueError("Can only combine Condition with Condition or CompositeCondition")
+
+
+class CompositeCondition:
+    def __init__(self, conditions: List[Callable], operation: Callable):
+        self.conditions = conditions
+        self.operation = operation
+
+    def __call__(self, curriculum):
+        return self.operation(cond(curriculum) for cond in self.conditions)
+
+    def __and__(self, other):
+        if isinstance(other, Condition):
+            return CompositeCondition(self.conditions + [other], all)
+        elif isinstance(other, CompositeCondition):
+            return CompositeCondition(self.conditions + other.conditions, all)
+        else:
+            raise ValueError("Can only combine CompositeCondition with Condition or CompositeCondition")
+
+    def __or__(self, other):
+        if isinstance(other, Condition):
+            return CompositeCondition(self.conditions + [other], any)
+        elif isinstance(other, CompositeCondition):
+            return CompositeCondition(self.conditions + other.conditions, any)
+        else:
+            raise ValueError("Can only combine CompositeCondition with Condition or CompositeCondition")
+
+
 class SequentialCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = False
     REQUIRES_EPISODE_UPDATES = True
@@ -17,7 +98,7 @@ class SequentialCurriculum(Curriculum):
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
         assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
-            warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
+            warnings.warn("Your sequential curriculum only contains one element. Consider using that element directly instead.")
 
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
@@ -53,65 +134,42 @@ class SequentialCurriculum(Curriculum):
         return parsed_list
 
     def _parse_stopping_conditions(self, stopping_conditions: List[Any]) -> List[Any]:
-        """ Parse the stopping conditions to ensure that all items are integers. """
+        """ Parse the stopping conditions to ensure that all items are callable conditions. """
         parsed_list = []
         for item in stopping_conditions:
             if isinstance(item, Callable):
                 parsed_list.append(item)
-            elif isinstance(item, str):
-                parsed_list.append(self._parse_condition_string(item))
+            elif isinstance(item, Condition):
+                parsed_list.append(self._parse_condition(item))
             else:
                 raise ValueError(f"Invalid stopping condition: {item}")
 
         return parsed_list
 
-    def _parse_condition_string(self, condition: str) -> Callable:
-        """ Parse a string condition to a callable function. """
+    def _parse_condition(self, condition: Condition) -> Callable:
+        if condition.metric_name in self.predefined_metrics:
+            metric_fn = self.predefined_metrics[condition.metric_name]
+        elif condition.metric_name in condition.custom_metrics:
+            metric_fn = condition.custom_metrics[condition.metric_name]
+        else:
+            raise ValueError(f"Invalid metric name: {condition.metric_name}")
 
-        # Parse composite conditions
-        if '|' in condition:
-            conditions = re.split(re.escape('|'), condition)
-            return lambda: any(self._parse_condition_string(cond)() for cond in conditions)
-        elif '&' in condition:
-            conditions = re.split(re.escape('&'), condition)
-            return lambda: all(self._parse_condition_string(cond)() for cond in conditions)
+        return lambda curriculum: self._evaluate_condition(metric_fn, condition.comparator, condition.value, curriculum)
 
-        clauses = re.split('(<=|>=|=|<|>)', condition)
-
-        try:
-            metric, comparator, value = clauses
-
-            if metric == "steps":
-                metric_fn = self._get_steps
-            elif metric == "total_steps":
-                metric_fn = self._get_total_steps
-            elif metric == "episodes":
-                metric_fn = self._get_episodes
-            elif metric == "total_episodes":
-                metric_fn = self._get_total_episodes
-            elif metric == "tasks":
-                metric_fn = self._get_tasks
-            elif metric == "total_tasks":
-                metric_fn = self._get_total_tasks
-            elif metric == "episode_return":
-                metric_fn = self._get_episode_return
-            else:
-                raise ValueError(f"Invalid metric name: {metric}")
-
-            if comparator == '<':
-                return lambda: metric_fn() < float(value)
-            elif comparator == '>':
-                return lambda: metric_fn() > float(value)
-            elif comparator == '<=':
-                return lambda: metric_fn() <= float(value)
-            elif comparator == '>=':
-                return lambda: metric_fn() >= float(value)
-            elif comparator == '=':
-                return lambda: metric_fn() == float(value)
-            else:
-                raise ValueError(f"Invalid comparator: {comparator}")
-        except ValueError as e:
-            raise ValueError(f"Invalid condition string: {condition}") from e
+    def _evaluate_condition(self, metric_fn: Callable, comparator: str, value: float, curriculum) -> bool:
+        metric_value = metric_fn(curriculum)
+        if comparator == '<':
+            return metric_value < value
+        elif comparator == '>':
+            return metric_value > value
+        elif comparator == '<=':
+            return metric_value <= value
+        elif comparator == '>=':
+            return metric_value >= value
+        elif comparator == '==':
+            return metric_value == value
+        else:
+            raise ValueError(f"Invalid comparator: {comparator}")
 
     def _get_steps(self):
         return self.n_steps
@@ -195,7 +253,7 @@ class SequentialCurriculum(Curriculum):
         self.current_curriculum.update_task_progress(task, progress, env_id)
 
     def check_stopping_conditions(self):
-        if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
+        if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index](self):
             self._curriculum_index += 1
             self.n_episodes = 0
             self.n_steps = 0
