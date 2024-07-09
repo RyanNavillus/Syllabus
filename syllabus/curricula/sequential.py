@@ -147,29 +147,7 @@ class SequentialCurriculum(Curriculum):
         return parsed_list
 
     def _parse_condition(self, condition: Condition) -> Callable:
-        if condition.metric_name in self.predefined_metrics:
-            metric_fn = self.predefined_metrics[condition.metric_name]
-        elif condition.metric_name in condition.custom_metrics:
-            metric_fn = condition.custom_metrics[condition.metric_name]
-        else:
-            raise ValueError(f"Invalid metric name: {condition.metric_name}")
-
-        return lambda curriculum: self._evaluate_condition(metric_fn, condition.comparator, condition.value, curriculum)
-
-    def _evaluate_condition(self, metric_fn: Callable, comparator: str, value: float, curriculum) -> bool:
-        metric_value = metric_fn(curriculum)
-        if comparator == '<':
-            return metric_value < value
-        elif comparator == '>':
-            return metric_value > value
-        elif comparator == '<=':
-            return metric_value <= value
-        elif comparator == '>=':
-            return metric_value >= value
-        elif comparator == '==':
-            return metric_value == value
-        else:
-            raise ValueError(f"Invalid comparator: {comparator}")
+        return condition
 
     def _get_steps(self):
         return self.n_steps
