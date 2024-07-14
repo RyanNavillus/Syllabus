@@ -85,7 +85,7 @@ class TaskWrapper(gym.Wrapper):
             return env_attr
 
 
-<<<<<<< HEAD
+# <<<<<<< HEAD
 # class PettingZooTaskWrapper(TaskWrapper, BaseParallelWraper):
 #     def __init__(self, env: pettingzoo.ParallelEnv):
 #         super().__init__(env)
@@ -102,7 +102,7 @@ class TaskWrapper(gym.Wrapper):
     
 #     def get_current_task(self):
 #         return self.current_task
-=======
+# =======
 class PettingZooTaskWrapper(BaseParallelWrapper):
     def __init__(self, env: pettingzoo.ParallelEnv):
         super().__init__(env)
@@ -177,4 +177,4 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
         """
         # return 1.0 if term or trunc else 0.0
         return info
->>>>>>> b88c2fcba4658545e156188c85f48f0b1e54aab2
+# >>>>>>> b88c2fcba4658545e156188c85f48f0b1e54aab2

@@ -149,61 +149,11 @@ def make_env_minigrid(env_name, seed, curriculum=None):
 
     return thunk
         
-def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
-    def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
-        env = GymV21CompatibilityV0(env=env)
-        if curriculum is not None:
-            env = ProcgenTaskWrapper(env, env_id, seed=seed)
-            env = MultiProcessingSyncWrapper(
-                env,
-                curriculum.get_components(),
-                update_on_step=False,
-                task_space=env.task_space,
-            )
-        return env
-    return thunk
-
-
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
     vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
-
-
-# def slow_level_replay_evaluate(
-#     env_name,
-#     policy,
-#     num_episodes,
-#     device,
-#     num_levels=0
-# ):
-#     policy.eval()
-# 
-#     eval_envs = ProcgenEnv(
-#         num_envs=1, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
-#     )
-#     eval_envs = VecExtractDictObs(eval_envs, "rgb")
-#     eval_envs = wrap_vecenv(eval_envs)
-#     eval_obs, _ = eval_envs.reset()
-#     eval_episode_rewards = []
-# 
-#     while len(eval_episode_rewards) < num_episodes:
-#         with torch.no_grad():
-#             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
-# 
-#         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-#         for i, info in enumerate(infos):
-#             if 'episode' in info.keys():
-#                 eval_episode_rewards.append(info['episode']['r'])
-# 
-#     mean_returns = np.mean(eval_episode_rewards)
-#     stddev_returns = np.std(eval_episode_rewards)
-#     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
-#     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-#     policy.train()
-#     return mean_returns, stddev_returns, normalized_mean_returns
 
 def level_replay_evaluate_minigrid(
     env_name,
@@ -221,7 +171,7 @@ def level_replay_evaluate_minigrid(
                 curriculum=curriculum if args.curriculum else None
             )
             # for i in range(args.num_envs)
-            for i in range(args.num_envs)
+            for i in range(num_episodes)
         ]
     )
     eval_envs = wrap_vecenv(eval_envs)
@@ -235,9 +185,13 @@ def level_replay_evaluate_minigrid(
         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
         # len(infos) = 64
         # num_episodes = 10
+        # print("info length: %d"%len(infos))
+        # print("num_episode length: %d"%num_episodes)
+        sys.stdout.flush()
         for i, info in enumerate(infos):
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
+                print(f"level replay eval works! {eval_episode_rewards[i]}")
 
     # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
@@ -248,41 +202,6 @@ def level_replay_evaluate_minigrid(
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
     policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
-
-
-# def level_replay_evaluate(
-#     env_name,
-#     policy,
-#     num_episodes,
-#     device,
-#     num_levels=0
-# ):
-#     policy.eval()
-# 
-#     eval_envs = ProcgenEnv(
-#         num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
-#     )
-#     eval_envs = VecExtractDictObs(eval_envs, "rgb")
-#     eval_envs = wrap_vecenv(eval_envs)
-#     eval_obs, _ = eval_envs.reset()
-#     eval_episode_rewards = [-1] * num_episodes
-# 
-#     while -1 in eval_episode_rewards:
-#         with torch.no_grad():
-#             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
-# 
-#         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-#         for i, info in enumerate(infos):
-#             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-#                 eval_episode_rewards[i] = info['episode']['r']
-# 
-#     # print(eval_episode_rewards)
-#     mean_returns = np.mean(eval_episode_rewards)
-#     stddev_returns = np.std(eval_episode_rewards)
-#     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
-#     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-#     policy.train()
-#     return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def make_value_fn():
@@ -301,18 +220,42 @@ def print_values(obj):
 
 if __name__ == "__main__":
     
+    
     args = parse_args()
+    env_name = "MiniGrid-MultiRoom-N4-Random-v0"
+    args.env_id = env_name
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.backends.cudnn.deterministic = args.torch_deterministic
-
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+
     print("Device:", device)
+
+    if args.track:
+        import wandb
+
+        wandb.init(
+            project=args.wandb_project_name,
+            entity=args.wandb_entity,
+            sync_tensorboard=True,
+            config=vars(args),
+            name=run_name,
+            monitor_gym=True,
+            save_code=True,
+            dir=args.logging_dir
+        )
 
     # Curriculum setup
     curriculum = None
+
+    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+    writer.add_text(
+        "hyperparameters",
+        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+    )
+
     if args.curriculum:
         print("args:\n--------------")
         print(f"{args}\n-------------\n")
@@ -320,10 +263,6 @@ if __name__ == "__main__":
         # sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         # sample_env = GymV21CompatibilityV0(env=sample_env)
         # sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
-
-        env_name = "MiniGrid-ObstructedMaze-Full-v0"
-        args.env_id = env_name
-
 
         sample_env = openai_gym.make(env_name)
         sample_env = FullyObsWrapper(sample_env)
@@ -335,30 +274,31 @@ if __name__ == "__main__":
 
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
+            task_sampler_kwargs_dict = {"strategy": "value_l1", "temperature":0.1, "staleness_coef":0.3}
             curriculum = CentralizedPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict=task_sampler_kwargs_dict
             )
-        elif args.curriculum_method == "dr":
-            print("Using domain randomization.")
-            curriculum = DomainRandomization(sample_env.task_space)
-        elif args.curriculum_method == "lp":
-            print("Using learning progress.")
-            curriculum = LearningProgressCurriculum(sample_env.task_space)
-        elif args.curriculum_method == "sq":
-            print("Using sequential curriculum.")
-            curricula = []
-            stopping = []
-            for i in range(199):
-                curricula.append(i + 1)
-                stopping.append("steps>=50000")
-                curricula.append(list(range(i + 1)))
-                stopping.append("steps>=50000")
-            curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
+        # elif args.curriculum_method == "dr":
+        #     print("Using domain randomization.")
+        #     curriculum = DomainRandomization(sample_env.task_space)
+        # elif args.curriculum_method == "lp":
+        #     print("Using learning progress.")
+        #     curriculum = LearningProgressCurriculum(sample_env.task_space)
+        # elif args.curriculum_method == "sq":
+        #     print("Using sequential curriculum.")
+        #     curricula = []
+        #     stopping = []
+        #     for i in range(199):
+        #         curricula.append(i + 1)
+        #         stopping.append("steps>=50000")
+        #         curricula.append(list(range(i + 1)))
+        #         stopping.append("steps>=50000")
+        #     curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
@@ -367,8 +307,6 @@ if __name__ == "__main__":
     # env setup
     print("Creating env")
 	
-    # dummy_env = env_test[0]()
-
     envs = gym.vector.AsyncVectorEnv(
         [
             make_env_minigrid(
@@ -379,8 +317,8 @@ if __name__ == "__main__":
             for i in range(args.num_envs)
         ]
     )
-    next_obs, _ = envs.reset()
     envs = wrap_vecenv(envs)
+    next_obs, _ = envs.reset()
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     agent = MinigridAgentVerma(
