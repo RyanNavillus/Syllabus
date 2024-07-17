@@ -7,6 +7,7 @@ from gymnasium.spaces import Dict, Box
 import random
 from syllabus.task_space import TaskSpace
 from itertools import product
+from .stat_recorder import StatRecorder
 
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
@@ -14,24 +15,27 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, task_names: Callable = None, warmup_strategy: str = None, warmup_samples: int = 0) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False, warmup_strategy: str = None, warmup_samples: int = 0) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
-        TODO: Implement this in a way that works with any curriculum, maybe as a wrapper
-        TODO: Use task space for this
+        :param random_start_tasks: Number of tasks to sample randomly at the start, defaults to 0
         :param task_names: Names of the tasks in the task space, defaults to None
+        :param record_stats: Boolean to indicate if statistics should be recorded, defaults to False
+        :param warmup_strategy: Strategy for warmup, defaults to None
+        :param warmup_samples: Number of warmup samples, defaults to 0
         """
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
         self.completed_tasks = 0
-        self.task_names = task_names
+        self.task_names = task_names if task_names is not None else lambda task, idx: idx
         self.n_updates = 0
         self.startup_sampled_tasks = 0
         self.warmup_strategy = warmup_strategy
         self.warmup_tasks = warmup_samples
         self.fix_curr_index = 0
-        
+        self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
+
         if warmup_strategy == "fix" and isinstance(self.task_space.gym_space, Box):
             self.fix_box_space = self._initialize_fixed_grid()
 
