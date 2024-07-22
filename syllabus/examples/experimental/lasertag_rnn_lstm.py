@@ -13,12 +13,13 @@ import plotly.graph_objects as go
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import wandb
 from gymnasium import spaces
 from plotly.subplots import make_subplots
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
+
+import wandb
 
 sys.path.append("../../..")
 from lasertag import LasertagAdversarial  # noqa: E402
@@ -375,10 +376,10 @@ if __name__ == "__main__":
     """ ENV SETUP """
     env = LasertagAdversarial(record_video=False)  # 2 agents by default
     env = LasertagParallelWrapper(env=env, n_agents=n_agents)
+
     agent_curriculum = agent_curriculums[args.agent_curriculum](
         agent=agent, **agent_curriculum_settings
     )
-
     env_curriculum = env_curriculums[args.env_curriculum](
         **env_curriculum_settings[args.env_curriculum]
     )
@@ -426,10 +427,7 @@ if __name__ == "__main__":
         while n_updates < args.total_updates:
 
             initial_lstm_state = (lstm_state[0].clone(), lstm_state[1].clone())
-            initial_lstm_state_opponent = (
-                lstm_state_opponent[0].clone(),
-                lstm_state_opponent[1].clone(),
-            )
+
             with torch.no_grad():
                 env_task, agent_task = curriculum.sample()
 
@@ -731,4 +729,5 @@ if __name__ == "__main__":
             fig.update_layout(showlegend=False)
             wandb.log({"charts/opponent_winrates": wandb.Html(plotly.io.to_html(fig))})
 
+        writer.close()
         writer.close()

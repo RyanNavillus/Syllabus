@@ -18,8 +18,8 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Setup virtual env and path
-ENV VIRTUAL_ENV /syllabus
-ENV PATH /syllabus/bin:$PATH
+ENV VIRTUAL_ENV=/syllabus
+ENV PATH=/syllabus/bin:$PATH
 
 # Set working directory
 WORKDIR /home/app/syllabus
@@ -35,7 +35,7 @@ RUN pip install --quiet --upgrade pip setuptools wheel && \
 COPY . .
 
 RUN echo "Installing additional libraries ..."
-RUN pip install multi-agent-ale-py supersuit pettingzoo \ 
+RUN pip install multi-agent-ale-py griddly pettingzoo pufferlib \ 
     tensorboard pygame tqdm tyro colorama neptune python-dotenv && \
     pip install "autorom[accept-rom-license]" && \
     pip install jupyter ipykernel 

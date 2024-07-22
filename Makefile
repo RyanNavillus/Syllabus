@@ -16,9 +16,7 @@ endif
 BASE_FLAGS=-it --rm --shm-size=1g -v ${PWD}:/home/app/syllabus -w /home/app/syllabus
 RUN_FLAGS=$(GPUS) $(BASE_FLAGS)
 
-DOCKER_IMAGE_NAME = syllabus
-IMAGE = $(DOCKER_IMAGE_NAME):latest
-DOCKER_RUN=docker run $(RUN_FLAGS) $(IMAGE)
+DOCKER_RUN=docker run $(RUN_FLAGS) syllabus:latest
 USE_CUDA = $(if $(GPUS),true,false)
 
 # make file commands
