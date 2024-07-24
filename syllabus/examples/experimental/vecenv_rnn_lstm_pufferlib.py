@@ -487,10 +487,12 @@ if __name__ == "__main__":
                 optimizer.param_groups[0]["lr"] = lrnow
 
             initial_lstm_state = (lstm_state[0].clone(), lstm_state[1].clone())
-            env_task, agent_task = curriculum.sample()
-            next_obs, info = envs.reset(
-                env_task
-            )  # TODO: does vectorized reset work as expected?
+            env_task, agent_task = (
+                curriculum.sample()
+            )  # TODO: needs to return `num_workers` env_tasks and 1 agent_task/opponent
+            print(env_task, agent_task)
+            # TODO: check that vectorized reset work as expected
+            next_obs, info = envs.reset(int(env_task[0]))
             next_obs = torch.Tensor(next_obs).to(device)
             next_done = torch.zeros(args.num_workers).to(device)
 
@@ -510,7 +512,7 @@ if __name__ == "__main__":
 
                     opponent = curriculum.get_opponent(agent_task)
                     opp_actions, opp_logprob, _, opp_value, lstm_state_opp = (
-                        opponent.get_action_and_value(  # TODO: add opponent action
+                        opponent.get_action_and_value(
                             opp_obs, lstm_state_opp, next_done
                         )
                     )
