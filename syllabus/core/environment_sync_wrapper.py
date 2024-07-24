@@ -270,6 +270,10 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         for agent in rews.keys():
             self.episode_returns[agent] += rews[agent]
 
+        if "task_completion" in list(infos.values())[0]:
+            self.task_progress = max([info["task_completion"] for info in infos.values()])
+        is_finished = (len(self.env.agents) == 0) or all(terms.values())
+
         # Update curriculum with step info
         if self.update_on_step:
             agent_indices = [self.agent_map[agent] for agent in rews.keys()]
