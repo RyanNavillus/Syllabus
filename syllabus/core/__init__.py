@@ -16,6 +16,7 @@ from .environment_sync_wrapper import (  # , PettingZooMultiProcessingSyncWrappe
 )
 from .dual_curriculum_wrapper import DualCurriculumWrapper
 from .environment_sync_wrapper import (  # , PettingZooMultiProcessingSyncWrapper
+    PettingZooMultiProcessingSyncWrapper,
     MultiProcessingSyncWrapper,
     RaySyncWrapper,
 )
@@ -28,6 +29,7 @@ from .task_interface import (
     TaskEnv,
     TaskWrapper,
 )
+from .multiagent_curriculum_wrappers import MultiagentSharedCurriculumWrapper
 
 # Curriculum Code
 from .utils import UsageError, decorate_all_functions, enumerate_axes

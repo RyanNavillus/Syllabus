@@ -4,7 +4,7 @@ import random
 import sys
 import time
 from dataclasses import dataclass
-from typing import Dict, Tuple, TypeVar
+from typing import Any, Dict, Tuple, TypeVar
 
 import gymnasium
 import numpy as np
@@ -24,6 +24,8 @@ from lasertag import LasertagAdversarial  # noqa: E402
 from syllabus.core import (  # noqa: E402
     DualCurriculumWrapper,
     PettingZooTaskWrapper,
+    PettingZooMultiProcessingSyncWrapper,
+    MultiagentSharedCurriculumWrapper,
     make_multiprocessing_curriculum,
 )
 from syllabus.curricula import (  # noqa: E402
@@ -124,13 +126,13 @@ def log_rewards(r_batch: torch.tensor, run, step: int) -> None:
 
 
 class Agent(nn.Module):
-    def __init__(self, envs) -> None:
+    def __init__(self, obs_shape, n_actions) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(
             self.layer_init(
                 nn.Conv2d(
-                    envs.single_observation_space.shape[0],
+                    obs_shape[0],
                     out_channels=16,
                     kernel_size=3,
                     stride=1,
@@ -148,7 +150,7 @@ class Agent(nn.Module):
             nn.ReLU(),
         )
         self.actor = self.layer_init(
-            nn.Linear(32, envs.single_action_space.n), scale=0.01
+            nn.Linear(32, n_actions), scale=0.01
         )
         self.critic = self.layer_init(nn.Linear(32, 1), scale=1)
 
@@ -284,12 +286,18 @@ class LasertagParallelWrapper(PettingZooTaskWrapper):
         return {agent: value for agent in self.agents}
 
     def reset(
-        self, seed: int = None
+        self, seed: int = None, **kwargs
     ) -> Tuple[Dict[AgentID, ObsType], Dict[AgentID, dict]]:
         """
         Resets the environment and returns a dictionary of observations
         keyed by agent ID.
         """
+        print(kwargs["new_task"])
+        if "new_task" in kwargs and kwargs["new_task"] is not None:
+            self.task = kwargs.pop("new_task")
+            print("self task", self.task)
+            seed = self.task[0]
+        print("seed", seed)
         self.env.seed(seed)
         obs = self.env.reset_random()  # random level generation
         pz_obs = self._np_array_to_pz_dict(obs["image"])
@@ -319,7 +327,7 @@ class LasertagParallelWrapper(PettingZooTaskWrapper):
         done, trunc, info = map(
             self._singleton_to_pz_dict, [done, trunc, self.task_completion]
         )
-        # info["agent_id"] = agent_task
+        info["agent_id"] = self.task[1]
         self.n_steps += 1
         return self.observation(obs), rew, done, trunc, info
 
@@ -360,11 +368,15 @@ env_curriculums = {
 }
 
 
-def make_env():
-    env = LasertagAdversarial()
-    env = LasertagParallelWrapper(env=env, n_agents=2)
-    env = PettingZooPufferEnv(env)
-    return env
+def make_env_fn(components=None):
+    def thunk():
+        env = LasertagAdversarial()
+        env = LasertagParallelWrapper(env=env, n_agents=2)
+        if components is not None:
+            env = PettingZooMultiProcessingSyncWrapper(env, components, task_space=TaskSpace([args.n_env_tasks, args.max_agents]))
+        env = PettingZooPufferEnv(env)
+        return env
+    return thunk
 
 
 if __name__ == "__main__":
@@ -393,18 +405,9 @@ if __name__ == "__main__":
     agent_indices = torch.arange(0, args.num_workers * 2, 2)
     opponent_indices = torch.arange(1, args.num_workers * 2, 2)
 
-    # env setup
-    envs = [make_env for _ in range(args.num_workers)]
-    envs = Serial(
-        envs,
-        [() for _ in range(args.num_workers)],
-        [{} for _ in range(args.num_workers)],
-        args.num_workers,
-    )
-    envs.is_vector_env = True
-
     # agent setup
-    agent = Agent(envs).to(device)
+    exemplar_env = make_env_fn(None)()
+    agent = Agent(exemplar_env.observation_space("agent_0").shape, exemplar_env.action_space("agent_0").n).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.adam_lr, eps=args.adam_eps)
 
     # curriculum setup
@@ -430,15 +433,25 @@ if __name__ == "__main__":
     env_curriculum = env_curriculums[args.env_curriculum](
         **env_curriculum_settings[args.env_curriculum]
     )
+    env_curriculum = MultiagentSharedCurriculumWrapper(env_curriculum, exemplar_env.possible_agents)
     agent_curriculum = agent_curriculums[args.agent_curriculum](
         agent=agent, **agent_curriculum_settings
     )
     curriculum = DualCurriculumWrapper(
-        envs,
         env_curriculum,
         agent_curriculum,
     )
     curriculum = make_multiprocessing_curriculum(curriculum)
+
+    # env setup
+    envs = [make_env_fn(curriculum.get_components()) for _ in range(args.num_workers)]
+    envs = Serial(
+        envs,
+        [() for _ in range(args.num_workers)],
+        [{} for _ in range(args.num_workers)],
+        args.num_workers,
+    )
+    envs.is_vector_env = True
 
     # ALGO Logic: Storage setup
     obs = torch.zeros(
@@ -487,15 +500,15 @@ if __name__ == "__main__":
                 optimizer.param_groups[0]["lr"] = lrnow
 
             initial_lstm_state = (lstm_state[0].clone(), lstm_state[1].clone())
-            env_task, agent_task = (
-                curriculum.sample()
-            )  # TODO: needs to return `num_workers` env_tasks and 1 agent_task/opponent
-            print(env_task, agent_task)
+            # env_task, agent_task = (
+            #     curriculum.sample()
+            # )  # TODO: needs to return `num_workers` env_tasks and 1 agent_task/opponent
+            # print(env_task, agent_task)
             # TODO: check that vectorized reset work as expected
-            next_obs, info = envs.reset(int(env_task[0]))
+            next_obs, info = envs.reset()
             next_obs = torch.Tensor(next_obs).to(device)
             next_done = torch.zeros(args.num_workers).to(device)
-
+            agent_task = 0
             for step in range(0, args.rollout_length):
                 global_step += 1 * args.num_workers * 2
                 obs[step] = next_obs[agent_indices]
@@ -527,7 +540,7 @@ if __name__ == "__main__":
                 next_obs, reward, next_done, trunc, info = envs.step(
                     joint_actions.numpy()
                 )
-
+                agent_task = info["agent_id"][0]
                 rewards[step] = torch.tensor(reward[agent_indices]).to(device).view(-1)
                 next_obs = torch.Tensor(next_obs).to(device)
                 next_done = torch.Tensor(next_done[agent_indices]).to(device)

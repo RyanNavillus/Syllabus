@@ -47,7 +47,7 @@ class SelfPlay(Curriculum):
         return self.agent
 
     def sample(self, k=1):
-        return 0
+        return [0 for _ in range(k)]
 
     def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
         """
@@ -144,7 +144,7 @@ class FictitiousSelfPlay(Curriculum):
         return self.loaded_agents[agent_id]
 
     def sample(self, k=1):
-        return np.random.randint(self.current_agent_index)
+        return np.random.randint(self.current_agent_index, size=k)
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):
@@ -239,4 +239,5 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         return np.random.choice(
             np.arange(self.current_agent_index),
             p=softmax(logits),
+            size=k,
         )

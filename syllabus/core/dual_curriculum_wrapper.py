@@ -16,13 +16,12 @@ class DualCurriculumWrapper(Curriculum):
 
     def __init__(
         self,
-        env: TaskWrapper,
         env_curriculum: Curriculum,
         agent_curriculum: Curriculum,
+        batch_agent_tasks: bool = False,
         *args,
         **kwargs,
     ) -> None:
-        self.env = env
         self.agent_curriculum = agent_curriculum
         self.env_curriculum = env_curriculum
         self.task_space = TaskSpace(
@@ -33,13 +32,16 @@ class DualCurriculumWrapper(Curriculum):
                 }
             )
         )
+        self.batch_agent_tasks = batch_agent_tasks
+        self.agent_task = None
         super().__init__(task_space=self.task_space, *args, **kwargs)
 
     def sample(self, k=1) -> Tuple[EnvTask, AgentTask]:
         """Sets new tasks for the environment and agent curricula."""
-        env_task = self.env_curriculum.sample()
-        agent_task = self.agent_curriculum.sample()
-        return env_task, agent_task
+        env_task = self.env_curriculum.sample(k=k)
+        agent_task = self.agent_task if self.batch_agent_tasks else self.agent_curriculum.sample(k=k)
+        print("sampled", env_task, agent_task)
+        return list(zip(env_task, agent_task))
 
     def get_opponent(self, agent_task: AgentTask) -> Agent:
         return self.agent_curriculum.get_opponent(agent_task)

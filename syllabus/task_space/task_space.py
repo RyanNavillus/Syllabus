@@ -38,8 +38,8 @@ class TaskSpace:
         elif isinstance(gym_space, list):
             # Syntactic sugar for tuple space
             spaces = []
-            for i, value in enumerate(gym_space):
-                spaces[i] = self._create_gym_space(value)
+            for value in gym_space:
+                spaces.append(self._create_gym_space(value))
             gym_space = Tuple(spaces)
         elif isinstance(gym_space, dict):
             # Syntactic sugar for dict space
@@ -70,14 +70,14 @@ class TaskSpace:
             assert space.n == len(
                 tasks
             ), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
-            self._encode_map = {task: i for i, task in enumerate(tasks)}
-            self._decode_map = {i: task for i, task in enumerate(tasks)}
+            encode_map = {task: i for i, task in enumerate(tasks)}
+            decode_map = {i: task for i, task in enumerate(tasks)}
 
             def encoder(task):
-                return self._encode_map[task] if task in self._encode_map else None
+                return encode_map[task] if task in encode_map else None
 
             def decoder(task):
-                return self._decode_map[task] if task in self._decode_map else None
+                return decode_map[task] if task in decode_map else None
 
         elif isinstance(space, Box):
 

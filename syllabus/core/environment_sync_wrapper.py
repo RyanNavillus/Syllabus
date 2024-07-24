@@ -212,6 +212,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         ] = None,
     ):
         # TODO: reimplement global task progress metrics
+        print(task_space.gym_space)
         assert isinstance(
             task_space, TaskSpace
         ), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
