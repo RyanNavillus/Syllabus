@@ -77,7 +77,7 @@ class Config:
     clip_vloss: bool = True
     max_grad_norm: float = 0.5
     ent_coef: float = 0.0
-    num_workers: int = 32
+    num_workers: int = 8
     num_minibatches: int = 4
     rollout_length: int = 256
     update_epochs: int = 5
