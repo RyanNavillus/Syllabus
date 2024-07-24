@@ -77,12 +77,12 @@ class Config:
     clip_vloss: bool = True
     max_grad_norm: float = 0.5
     ent_coef: float = 0.0
-    num_workers: int = 8
+    num_workers: int = 32
     num_minibatches: int = 4
     rollout_length: int = 256
     update_epochs: int = 5
     # Curricula
-    agent_curriculum = "SP"
+    agent_curriculum = "FSP"
     env_curriculum = "DR"
     n_env_tasks = 4000
     max_agents = 10
@@ -292,12 +292,9 @@ class LasertagParallelWrapper(PettingZooTaskWrapper):
         Resets the environment and returns a dictionary of observations
         keyed by agent ID.
         """
-        print(kwargs["new_task"])
         if "new_task" in kwargs and kwargs["new_task"] is not None:
             self.task = kwargs.pop("new_task")
-            print("self task", self.task)
             seed = self.task[0]
-        print("seed", seed)
         self.env.seed(seed)
         obs = self.env.reset_random()  # random level generation
         pz_obs = self._np_array_to_pz_dict(obs["image"])
@@ -373,7 +370,7 @@ def make_env_fn(components=None):
         env = LasertagAdversarial()
         env = LasertagParallelWrapper(env=env, n_agents=2)
         if components is not None:
-            env = PettingZooMultiProcessingSyncWrapper(env, components, task_space=TaskSpace([args.n_env_tasks, args.max_agents]))
+            env = PettingZooMultiProcessingSyncWrapper(env, components, task_space=TaskSpace([args.n_env_tasks, args.max_agents]), buffer_size=4)
         env = PettingZooPufferEnv(env)
         return env
     return thunk
@@ -490,6 +487,7 @@ if __name__ == "__main__":
     env_tasks, agent_tasks = [], []
 
     cumulative_rewards = np.zeros(args.num_workers * 2)
+    next_obs, info = envs.reset()
 
     with tqdm(total=num_updates) as pbar:
         for update in range(1, num_updates + 1):
@@ -505,7 +503,6 @@ if __name__ == "__main__":
             # )  # TODO: needs to return `num_workers` env_tasks and 1 agent_task/opponent
             # print(env_task, agent_task)
             # TODO: check that vectorized reset work as expected
-            next_obs, info = envs.reset()
             next_obs = torch.Tensor(next_obs).to(device)
             next_done = torch.zeros(args.num_workers).to(device)
             agent_task = 0
@@ -540,7 +537,10 @@ if __name__ == "__main__":
                 next_obs, reward, next_done, trunc, info = envs.step(
                     joint_actions.numpy()
                 )
-                agent_task = info["agent_id"][0]
+                agent_tasks = [i["agent_id"] for i in info]
+                print(agent_tasks)
+                # assert all(agent_tasks[0] == at for at in agent_tasks), f"Agent tasks are not consistent across envs! {agent_tasks}"
+                agent_task = agent_tasks[0]
                 rewards[step] = torch.tensor(reward[agent_indices]).to(device).view(-1)
                 next_obs = torch.Tensor(next_obs).to(device)
                 next_done = torch.Tensor(next_done[agent_indices]).to(device)
@@ -589,7 +589,7 @@ if __name__ == "__main__":
             b_advantages = advantages.reshape(-1)
             b_returns = returns.reshape(-1)
             b_values = values.reshape(-1)
-
+            print("optimizing")
             # Optimizing the policy and value network
             b_inds = np.arange(args.batch_size)
             clipfracs = []
@@ -669,7 +669,9 @@ if __name__ == "__main__":
                 if args.target_kl is not None:
                     if approx_kl > args.target_kl:
                         break
-
+            
+            print("Update agent")
+            curriculum.update_agent(agent)
             y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
             var_y = np.var(y_true)
             explained_var = (
@@ -697,6 +699,5 @@ if __name__ == "__main__":
             pbar.update(1)
 
     envs.close()
-    if args.track():
-        run.stop()
+    if args.track:
         run.stop()

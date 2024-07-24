@@ -15,6 +15,10 @@ AgentType = TypeVar("AgentType")
 
 
 class SelfPlay(Curriculum):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
     def __init__(
         self,
         agent: AgentType,
@@ -62,6 +66,10 @@ class SelfPlay(Curriculum):
 
 
 class FictitiousSelfPlay(Curriculum):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
     def __init__(
         self,
         agent: AgentType,
@@ -144,10 +152,14 @@ class FictitiousSelfPlay(Curriculum):
         return self.loaded_agents[agent_id]
 
     def sample(self, k=1):
-        return np.random.randint(self.current_agent_index, size=k)
+        return list(np.random.randint(self.current_agent_index, size=k))
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_EPISODE_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
+
     def __init__(
         self,
         agent: AgentType,
@@ -236,8 +248,8 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             self.history[agent_id]["winrate"]
             for agent_id in range(self.current_agent_index)
         ]
-        return np.random.choice(
+        return list(np.random.choice(
             np.arange(self.current_agent_index),
             p=softmax(logits),
             size=k,
-        )
+        ))
