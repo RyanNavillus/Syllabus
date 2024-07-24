@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 import tyro
 from colorama import Fore, Style, init
+from gymnasium import spaces
 from pufferlib.emulation import PettingZooPufferEnv
 from pufferlib.vector import Serial
 from torch.distributions.categorical import Categorical
@@ -20,7 +21,11 @@ from tqdm import tqdm
 
 sys.path.append("../../..")
 from lasertag import LasertagAdversarial  # noqa: E402
-from syllabus.core import PettingZooTaskWrapper  # noqa: E402
+from syllabus.core import (  # noqa: E402
+    DualCurriculumWrapper,
+    PettingZooTaskWrapper,
+    make_multiprocessing_curriculum,
+)
 from syllabus.curricula import (  # noqa: E402
     CentralizedPrioritizedLevelReplay,
     DomainRandomization,
@@ -28,6 +33,7 @@ from syllabus.curricula import (  # noqa: E402
     PrioritizedFictitiousSelfPlay,
     SelfPlay,
 )
+from syllabus.task_space.task_space import TaskSpace  # noqa: E402
 
 ActionType = TypeVar("ActionType")
 AgentID = TypeVar("AgentID")
@@ -343,13 +349,6 @@ def reconstruct_batch(
     return batch
 
 
-def make_env():
-    env = LasertagAdversarial()
-    env = LasertagParallelWrapper(env=env, n_agents=2)
-    env = PettingZooPufferEnv(env)
-    return env
-
-
 agent_curriculums = {
     "SP": SelfPlay,
     "FSP": FictitiousSelfPlay,
@@ -359,6 +358,13 @@ env_curriculums = {
     "DR": DomainRandomization,
     "PLR": CentralizedPrioritizedLevelReplay,
 }
+
+
+def make_env():
+    env = LasertagAdversarial()
+    env = LasertagParallelWrapper(env=env, n_agents=2)
+    env = PettingZooPufferEnv(env)
+    return env
 
 
 if __name__ == "__main__":
@@ -397,8 +403,42 @@ if __name__ == "__main__":
     )
     envs.is_vector_env = True
 
+    # agent setup
     agent = Agent(envs).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.adam_lr, eps=args.adam_eps)
+
+    # curriculum setup
+    env_task_space = TaskSpace(spaces.Discrete(args.n_env_tasks))
+    env_curriculum_settings = {
+        "DR": {"task_space": env_task_space},
+        "PLR": {
+            "task_space": env_task_space,
+            "num_steps": args.rollout_length,
+            "num_processes": args.num_workers,
+            "gamma": args.gamma,
+            "gae_lambda": args.gae_lambda,
+            "task_sampler_kwargs_dict": {"strategy": "value_l1"},
+        },
+    }
+    agent_curriculum_settings = {
+        "device": device,
+        "storage_path": f"{args.agent_curriculum}_agents",
+        "max_agents": args.max_agents,
+        "seed": args.seed,
+    }
+
+    env_curriculum = env_curriculums[args.env_curriculum](
+        **env_curriculum_settings[args.env_curriculum]
+    )
+    agent_curriculum = agent_curriculums[args.agent_curriculum](
+        agent=agent, **agent_curriculum_settings
+    )
+    curriculum = DualCurriculumWrapper(
+        envs,
+        env_curriculum,
+        agent_curriculum,
+    )
+    curriculum = make_multiprocessing_curriculum(curriculum)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros(
@@ -432,10 +472,9 @@ if __name__ == "__main__":
     # TRY NOT TO MODIFY: start the game
     global_step = 0
     start_time = time.time()
-    next_obs, info = envs.reset()
-    next_obs = torch.Tensor(next_obs).to(device)
-    next_done = torch.zeros(args.num_workers).to(device)
+
     num_updates = int(args.total_timesteps // args.batch_size)
+    env_tasks, agent_tasks = [], []
 
     cumulative_rewards = np.zeros(args.num_workers * 2)
 
@@ -448,6 +487,12 @@ if __name__ == "__main__":
                 optimizer.param_groups[0]["lr"] = lrnow
 
             initial_lstm_state = (lstm_state[0].clone(), lstm_state[1].clone())
+            env_task, agent_task = curriculum.sample()
+            next_obs, info = envs.reset(
+                env_task
+            )  # TODO: does vectorized reset work as expected?
+            next_obs = torch.Tensor(next_obs).to(device)
+            next_done = torch.zeros(args.num_workers).to(device)
 
             for step in range(0, args.rollout_length):
                 global_step += 1 * args.num_workers * 2
@@ -456,14 +501,16 @@ if __name__ == "__main__":
 
                 # action selection
                 with torch.no_grad():
+
                     agent_obs, opp_obs = split_batch(next_obs)
 
                     agent_actions, logprob, _, agent_value, lstm_state = (
                         agent.get_action_and_value(agent_obs, lstm_state, next_done)
                     )
 
+                    opponent = curriculum.get_opponent(agent_task)
                     opp_actions, opp_logprob, _, opp_value, lstm_state_opp = (
-                        agent.get_action_and_value(  # TODO: add opponent action
+                        opponent.get_action_and_value(  # TODO: add opponent action
                             opp_obs, lstm_state_opp, next_done
                         )
                     )
@@ -636,4 +683,5 @@ if __name__ == "__main__":
 
     envs.close()
     if args.track():
+        run.stop()
         run.stop()
