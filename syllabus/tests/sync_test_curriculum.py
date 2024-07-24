@@ -23,6 +23,7 @@ class SyncTestCurriculum(SequentialCurriculum):
         self.task_counts[0] = 0     # Error task
         self.total_reward = 0
         self.total_dones = 0
+        self.metadata = {}
 
     def update_on_episode(self, episode_return, episode_len, episode_task, env_id: int = None) -> None:
         super().update_on_episode(episode_return, episode_len, episode_task, env_id)

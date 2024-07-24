@@ -214,10 +214,10 @@ class VecNormalize(VecEnvWrapper):
         else:
             return obs
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, options=None):
         self.ret = np.zeros(self.num_envs)
         if seed is not None:
-            obs, infos = self.venv.reset(seed=seed)
+            obs, infos = self.venv.reset(seed=seed, options=options)
         else:
             obs, infos = self.venv.reset()
         return self._obfilt(obs), infos
@@ -237,9 +237,9 @@ class VecMonitor(VecEnvWrapper):
             self.epret_buf = deque([], maxlen=keep_buf)
             self.eplen_buf = deque([], maxlen=keep_buf)
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, options=None):
         if seed is not None:
-            obs, infos = self.venv.reset(seed=seed)
+            obs, infos = self.venv.reset(seed=seed, options=options)
         else:
             obs, infos = self.venv.reset()
         self.eprets = np.zeros(self.num_envs, 'f')

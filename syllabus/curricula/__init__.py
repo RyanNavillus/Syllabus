@@ -1,7 +1,7 @@
 # flake8: noqa: F401
 import sys
 
-from .domain_randomization import DomainRandomization
+from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
 from .learning_progress import LearningProgressCurriculum
 from .noop import NoopCurriculum
 from .plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay

@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -150,46 +150,6 @@ def wrap_vecenv(vecenv):
     return vecenv
 
 
-def full_level_replay_evaluate(
-    env_name,
-    policy,
-    num_episodes,
-    device,
-    num_levels=1    # Not used
-):
-    policy.eval()
-
-    eval_envs = ProcgenEnv(
-        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
-    )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = wrap_vecenv(eval_envs)
-
-    # Seed environments
-    seeds = [int.from_bytes(os.urandom(3), byteorder="little") for _ in range(num_episodes)]
-    for i, seed in enumerate(seeds):
-        eval_envs.seed(seed, i)
-
-    eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
-
-    while -1 in eval_episode_rewards:
-        with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
-
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
-
-    mean_returns = np.mean(eval_episode_rewards)
-    stddev_returns = np.std(eval_episode_rewards)
-    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
-    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    policy.train()
-    return mean_returns, stddev_returns, normalized_mean_returns
-
-
 def level_replay_evaluate(
     env_name,
     policy,
@@ -279,6 +239,9 @@ if __name__ == "__main__":
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
+        elif args.curriculum_method == "sbdr":
+            print("Using domain randomization.")
+            curriculum = SyncedBatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             curriculum = LearningProgressCurriculum(sample_env.task_space)
@@ -393,6 +356,12 @@ if __name__ == "__main__":
                     },
                 }
                 curriculum.update(update)
+        if args.curriculum and args.curriculum_method == "sbdr":
+            update = {
+                "update_type": "on_demand",
+                "metrics": None
+            }
+            curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -493,13 +462,7 @@ if __name__ == "__main__":
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
-        full_mean_eval_returns, full_stddev_eval_returns, full_normalized_mean_eval_returns = full_level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
-        )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
-        )
-        full_mean_train_returns, full_stddev_train_returns, full_normalized_mean_train_returns = full_level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
@@ -519,16 +482,10 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
-        writer.add_scalar("test_eval/full_mean_episode_return", full_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/full_normalized_mean_eval_return", full_normalized_mean_eval_returns, global_step)
-        writer.add_scalar("test_eval/full_stddev_eval_return", full_stddev_eval_returns, global_step)
 
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
-        writer.add_scalar("train_eval/full_mean_episode_return", full_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/full_normalized_mean_train_return", full_normalized_mean_train_returns, global_step)
-        writer.add_scalar("train_eval/full_stddev_train_return", full_stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 
