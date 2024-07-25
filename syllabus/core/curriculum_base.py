@@ -88,9 +88,10 @@ class Curriculum:
         :param task: Task for which progress is being updated.
         :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
         """
+
         self.completed_tasks += 1
 
-    def update_on_step(self, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
+    def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
@@ -102,7 +103,7 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int, int]], env_id: int = None) -> None:
+    def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
         This method can be overridden to provide a more efficient implementation. It is used
@@ -110,9 +111,9 @@ class Curriculum:
 
         :param step_results: List of step results
         """
-        obs, rews, terms, truncs, infos = tuple(step_results)
+        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
         for i in range(len(obs)):
-            self.update_on_step(obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
 
     def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
@@ -121,8 +122,15 @@ class Curriculum:
         :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
         :raises NotImplementedError:
         """
-        # TODO: Add update_on_episode option similar to update-on_step
-        pass
+        if self.stat_recorder is not None:
+            self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
+
+    def normalize(self, reward, task):
+        """
+        Normalize reward by task.
+        """
+        assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
+        return self.stat_recorder.normalize(reward, task)
 
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
@@ -234,7 +242,7 @@ class Curriculum:
         :param k: Number of tasks to sample, defaults to 1
         :return: Either returns a single task if k=1, or a list of k tasks
         """
-        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+        # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
             tasks = self._startup_sample(k)
@@ -263,14 +271,19 @@ class Curriculum:
             if len(task_dist) > 10 and not log_full_dist:
                 warnings.warn("Only logging stats for 10 tasks.")
                 task_dist = task_dist[:10]
-            if self.task_names:
-                for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{self.task_space.task_name(idx)}_prob", prob, step)
-            else:
-                for idx, prob in enumerate(task_dist):
-                    writer.add_scalar(f"curriculum/task_{idx}_prob", prob, step)
+            log_data = []
+            for idx, prob in enumerate(task_dist):
+                name = self.task_names(self.tasks[idx], idx)
+                log_data.append((f"curriculum/{name}_prob", prob, step))
+            for name, prob, step in log_data:
+                if writer == wandb:
+                    writer.log({name: prob}, step=step)
+                else:
+                    writer.add_scalar(name, prob, step)
         except ImportError:
             warnings.warn("Wandb is not installed. Skipping logging.")
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
+        if self.stat_recorder is not None:
+            self.stat_recorder.log_metrics(writer, step=step)

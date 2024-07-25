@@ -17,7 +17,7 @@ class SimpleBoxCurriculum(Curriculum):
     def __init__(self,
                  *curriculum_args,
                  steps: int = 5,
-                 success_threshold: float = 0.25,
+                 success_threshold: float = 0.75,
                  required_successes: int = 10,
                  **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
@@ -64,4 +64,3 @@ class SimpleBoxCurriculum(Curriculum):
             return self._startup_sample(k)
         
         return [self.max_range for _ in range(k)]
-        

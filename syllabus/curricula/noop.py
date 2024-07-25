@@ -28,7 +28,7 @@ class NoopCurriculum(Curriculum):
         """
         pass
 
-    def update_on_step(self, obs, rew, term, trunc, info, env_id: int = None) -> None:
+    def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
@@ -55,8 +55,7 @@ class NoopCurriculum(Curriculum):
     def add_task(self, task: tuple) -> None:
         pass
 
-    def update(self, update_data):
-        """
-        Update the curriculum with the specified update type.
-        """
-        pass
+    def _sample_distribution(self, k: int = 1) -> Union[List, Any]:
+        dist = [1.0 / self.num_tasks for _ in range(self.num_tasks)]
+        dist[self.default_task] = 1.0
+        return dist

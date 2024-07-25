@@ -1,4 +1,5 @@
 """ Test curriculum synchronization across multiple processes. """
+import gymnasium as gym
 import pytest
 from nle.env.tasks import NetHackScore, NetHackScout, NetHackStaircase
 
@@ -10,7 +11,7 @@ from syllabus.curricula import (AnnealingBoxCurriculum,
                                 PrioritizedLevelReplay, SequentialCurriculum,
                                 SimpleBoxCurriculum)
 from syllabus.tests import (create_cartpole_env, create_nethack_env,
-                            get_test_values, run_native_multiprocess,
+                            get_test_values, get_test_actions, run_native_multiprocess,
                             run_ray_multiprocess, run_single_process)
 
 N_ENVS = 2
@@ -19,11 +20,13 @@ N_EPISODES = 20
 
 nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
-
+eval_envs = gym.vector.SyncVectorEnv(
+    [create_nethack_env for _ in range(8)]
+)
 curricula = [
     (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
     (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
-    # (LearningProgressCurriculum, create_nethack_env, (nethack_env.task_space,), {}),
+    (LearningProgressCurriculum, create_nethack_env, (eval_envs, get_test_actions, nethack_env.task_space,), {}),
     (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
     (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
         "get_value": get_test_values,

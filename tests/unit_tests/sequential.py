@@ -73,8 +73,8 @@ def test_curriculum_sequence_3step(create_env):
 
 
 if __name__ == "__main__":
-    # test_parsing_condition_operators(create_nethack_env)
-    # test_parsing_compount_conditions(create_nethack_env)
+    test_parsing_condition_operators(create_nethack_env)
+    test_parsing_compount_conditions(create_nethack_env)
     # test_curriculum_sequence_2step(create_nethack_env)
-    test_curriculum_sequence_3step(create_nethack_env)
+    # test_curriculum_sequence_3step(create_nethack_env)
     print("All tests passed!")

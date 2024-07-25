@@ -15,13 +15,15 @@ class SequentialCurriculum(Curriculum):
     REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, custom_metrics: dict = None, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
         assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
-            warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
+            warnings.warn("Your sequential curriculum only contains one element. Consider using that element directly instead.")
 
+        self.custom_metrics = custom_metrics if custom_metrics is not None else {}  # Stores the functions that can calculate the data during training
+        self.metric_values = {metric: None for metric in self.custom_metrics.keys()}  # Initialize the metric values dictionary with None
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
         self._curriculum_index = 0
@@ -83,23 +85,25 @@ class SequentialCurriculum(Curriculum):
 
         try:
             metric, comparator, value = clauses
-
-            if metric == "steps":
-                metric_fn = self._get_steps
-            elif metric == "total_steps":
-                metric_fn = self._get_total_steps
-            elif metric == "episodes":
-                metric_fn = self._get_episodes
-            elif metric == "total_episodes":
-                metric_fn = self._get_total_episodes
-            elif metric == "tasks":
-                metric_fn = self._get_tasks
-            elif metric == "total_tasks":
-                metric_fn = self._get_total_tasks
-            elif metric == "episode_return":
-                metric_fn = self._get_episode_return
+            if metric in self.metric_values:
+                metric_fn = lambda: self.metric_values[metric]
             else:
-                raise ValueError(f"Invalid metric name: {metric}")
+                if metric == "steps":
+                    metric_fn = self._get_steps
+                elif metric == "total_steps":
+                    metric_fn = self._get_total_steps
+                elif metric == "episodes":
+                    metric_fn = self._get_episodes
+                elif metric == "total_episodes":
+                    metric_fn = self._get_total_episodes
+                elif metric == "tasks":
+                    metric_fn = self._get_tasks
+                elif metric == "total_tasks":
+                    metric_fn = self._get_total_tasks
+                elif metric == "episode_return":
+                    metric_fn = self._get_episode_return
+                else:
+                    raise ValueError(f"Invalid metric name: {metric}")
 
             if comparator == '<':
                 return lambda: metric_fn() < float(value)
@@ -164,6 +168,7 @@ class SequentialCurriculum(Curriculum):
         return recoded_tasks
 
     def update_on_episode(self, episode_return, episode_len, episode_task, env_id=None):
+        print(self.metric_values)
         self.n_episodes += 1
         self.total_episodes += 1
         self.n_steps += episode_len

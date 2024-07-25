@@ -278,6 +278,9 @@ if __name__ == "__main__":
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
+        elif args.curriculum_method == "sbdr":
+            print("Using domain randomization.")
+            curriculum = SyncedBatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             curriculum = LearningProgressCurriculum(sample_env.task_space)
@@ -391,6 +394,12 @@ if __name__ == "__main__":
                     },
                 }
                 curriculum.update(update)
+        if args.curriculum and args.curriculum_method == "sbdr":
+            update = {
+                "update_type": "on_demand",
+                "metrics": None
+            }
+            curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
