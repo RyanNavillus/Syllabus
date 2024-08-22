@@ -1,3 +1,12 @@
+*.pkl
+*.env
+agents_buffer
+syllabus/examples/experimental/round_robin/DR_SP_DR_FSP/*.json
+syllabus/examples/experimental/round_robin/DR_SP_DR_PFSP/*.json
+syllabus/examples/experimental/round_robin/DR_FSP_DR_PFSP/*.json
+.neptune
+
+wandb
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

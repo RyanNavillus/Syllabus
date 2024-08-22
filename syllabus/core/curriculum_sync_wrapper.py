@@ -6,17 +6,22 @@ from typing import List, Tuple
 
 import ray
 from torch.multiprocessing import Lock, SimpleQueue
+from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import Curriculum, decorate_all_functions
+from syllabus.core import Curriculum
+from syllabus.core.utils import decorate_all_functions
 
 
 class CurriculumWrapper:
-    """Wrapper class for adding multiprocessing synchronization to a curriculum.
-    """
+    """Wrapper class for adding multiprocessing synchronization to a curriculum."""
+
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
-        self.task_space = curriculum.task_space
-        self.unwrapped = curriculum
+        if hasattr(curriculum, "unwrapped") and curriculum.unwrapped is not None:
+            self.unwrapped = curriculum.unwrapped
+        else:
+            self.unwrapped = curriculum
+        self.task_space = self.unwrapped.task_space
 
     @property
     def num_tasks(self):
@@ -42,6 +47,15 @@ class CurriculumWrapper:
 
     def sample(self, k=1):
         return self.curriculum.sample(k=k)
+
+    def get_opponent(self, agent_id: int):
+        return self.curriculum.get_opponent(agent_id)
+
+    def update_agent(self, agent):
+        return self.curriculum.update_agent(agent)
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int):
+        return self.curriculum.update_winrate(opponent_id, opponent_reward)
 
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
@@ -160,7 +174,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         curriculum: Curriculum,
         task_queue: SimpleQueue,
         update_queue: SimpleQueue,
-        sequential_start: bool = True
+        sequential_start: bool = True,
     ):
         super().__init__(curriculum)
         self.task_queue = task_queue
@@ -178,7 +192,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Start the thread that reads the complete_queue and reads the task_queue.
         """
-        self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
+        self.update_thread = threading.Thread(
+            name="update", target=self._update_queues, daemon=True
+        )
         self.should_update = True
         self.update_thread.start()
 
@@ -194,6 +210,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             end = time.time()
 
         self.should_update = False
+        self.update_thread.join()
         components = self.get_components()
         components._env_count.shm.close()
         components._env_count.shm.unlink()
@@ -241,14 +258,12 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             else:
                 time.sleep(0.01)
 
-    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
-        super().update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
-
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components()._debug:
-            writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
-            writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
+        if isinstance(writer, SummaryWriter):
+            if self.get_components()._debug:
+                writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
+                writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
 
     def add_task(self, task):
         super().add_task(task)
@@ -257,9 +272,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     def get_components(self):
         return self._components
 
-    def normalize(self, rewards, task):
-        return super().normalize(rewards, task)
-
 
 def remote_call(func):
     """
@@ -267,6 +279,7 @@ def remote_call(func):
 
     Note that this causes functions to block, and should be only used for operations that do not require parallelization.
     """
+
     @wraps(func)
     def wrapper(self, *args, **kw):
         f_name = func.__name__
@@ -277,6 +290,7 @@ def remote_call(func):
         if child_func == parent_func:
             curriculum_func = getattr(self.curriculum, f_name)
             return ray.get(curriculum_func.remote(*args, **kw))
+
     return wrapper
 
 
@@ -287,7 +301,9 @@ def make_multiprocessing_curriculum(curriculum, **kwargs):
     task_queue = SimpleQueue()
     update_queue = SimpleQueue()
 
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
+    mp_curriculum = MultiProcessingCurriculumWrapper(
+        curriculum, task_queue, update_queue, **kwargs
+    )
     mp_curriculum.start()
     return mp_curriculum
 
@@ -313,6 +329,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
     for convenience.
     # TODO: Implement the Curriculum methods explicitly
     """
+
     def __init__(self, curriculum, actor_name="curriculum") -> None:
         super().__init__(curriculum)
         self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
@@ -325,7 +342,9 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(
+        self, step_results: List[Tuple[int, int, int, int]]
+    ) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
     def add_task(self, task):

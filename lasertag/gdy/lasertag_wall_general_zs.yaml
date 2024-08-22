@@ -1,0 +1,194 @@
+Version: "0.1"
+Environment:
+  Name: Laser Tag
+  Observers:
+    Sprite2D:
+      TileSize: 24
+      BackgroundTile: Passage.png
+    Block2D:
+      TileSize: 32
+      BackgroundColor: [0.0,0.0,0.0]
+      Shader: 
+        ObserverAvatarMode: HIGHLIGHT
+        # ObserverAvatarHighlightColor: [0.1, 0.2, 0.35]
+        ObserverAvatarHighlightColor: [0.3, 0.3, 0.3]
+    Vector:
+      IncludePlayerID: false
+      IncludeRotation: false
+      IncludeVariables: false
+  Player:
+    Colors:
+          - [1.0, 0.2, 0.4]
+          - [0.27, 0.69, 0.99]
+          - [0.0, 1.0, 0.0]
+    Count: $N_AGENT
+    AvatarObject: agent # TODO set this programmatically
+    Observer:
+      HighlightPlayers: false # Add highlights to the players in visual observers.
+      RotateWithAvatar: true # rotate to follow the orientation of the avatar.
+      TrackAvatar: true # The observer view will track the position of the avatar
+      Height: 5
+      Width: 5
+      OffsetX: 0
+      OffsetY: 2
+  Variables:
+    - Name: dummy
+      InitialValue: 1
+  Termination:
+    End:
+      - eq: [ dummy, 0 ] # make sure episode doesn't terminate
+  Levels:
+    - |
+      .    .    .    .    .    .    .    .    a2
+      .    .    .    .    .    .    .    .    .
+      .    .    .    w    w    w    w    .    .
+      .    .    .    .    .    w    w    .    .
+      a1   .    .    w    .    .    w    .    .
+      .    .    .    w    w    .    .    .    .
+      .    .    .    w    w    w    w    .    w
+      .    .    .    .    .    .    .    .    .
+      .    .    .    .    w    .    .    .    .
+
+Actions:
+
+  - Name: flame_projectile_movement
+    InputMapping:
+      Internal: true
+    Behaviours:
+      - Src:
+          Object: flame
+          Commands:
+            - mov: _dest
+            - eq:
+                Arguments: [ range, 0 ]
+                Commands:
+                  - remove: true
+            - gt:
+                Arguments: [ range, 0 ]
+                Commands:
+                  - decr: range
+            - exec:
+                Action: flame_projectile_movement
+                Delay: 1
+        Dst:
+          Object: _empty
+      - Src: # Flame -> wall
+          Object: flame
+          Commands:
+            - remove: true
+        Dst:
+          Object: wall
+          # Commands:
+            # - remove: true
+      - Src: # Flame -> Agent
+          Object: flame
+          Commands:
+            - remove: true
+            - reward: 1
+        Dst:
+          Object: agent
+          Commands:
+            - remove: true
+            - reward: -1
+      - Src: # Flame -> [Flame, Border]
+          Object: flame
+          Commands:
+            - remove: true
+        Dst:
+          Object: [flame, _boundary]
+
+  - Name: stumble
+    InputMapping:
+      Inputs:
+        1:
+          Description: Rotate left
+          OrientationVector: [-1, 0]
+        2:
+          Description: Move forwards
+          OrientationVector: [0, -1]
+          VectorToDest: [0, -1]
+        3:
+          Description: Rotate right
+          OrientationVector: [1, 0]
+      Relative: true
+    Behaviours:
+      # Tell the agent to rotate if the agent performs an action on itself
+      - Src:
+          Object: agent
+          Commands:
+            - rot: _dir
+        Dst:
+          Object: agent
+
+      # The agent can move around freely in empty and always rotates the direction it is travelling
+      - Src:
+          Object: agent
+          Commands:
+            - mov: _dest
+        Dst:
+          Object: _empty
+
+  - Name: flame_shoot
+    InputMapping:
+      Inputs:
+        1:  # Only shoot the direction the agent is facing
+          OrientationVector: [ 0, -1 ]
+          VectorToDest: [ 0, -1 ]
+      Relative: true
+    Behaviours:
+      - Src:
+          Object: agent
+        Dst:
+          Object: _empty
+          Commands:
+            - spawn: flame
+
+
+Objects:
+  - Name: wall
+    Z: 2
+    MapCharacter: w
+    Observers:
+      Isometric:
+        - Image: oryx/oryx_iso_dungeon/crate-1.png
+      Sprite2D:
+        - Image: Rigid.png
+      Block2D:
+        - Shape: square
+          Color: [0.7, 0.7, 0.7]
+          Scale: 1.0
+
+  - Name: agent
+    Z: 2
+    MapCharacter: a
+    Observers:
+      Isometric:
+        - Image: oryx/oryx_iso_dungeon/jelly-1.png
+      Sprite2D:
+        - Image: Agent0.png
+      Block2D:
+        - Shape: triangle
+          Color: PLAYER
+          Scale: 1.0
+
+  - Name: flame
+    Z: 2
+    InitialActions:
+      - Action: flame_projectile_movement
+        Delay: 2
+    Variables:
+      - Name: range
+        InitialValue: 60
+    MapCharacter: f
+    Observers:
+      Isometric:
+        - Image: oryx/oryx_iso_dungeon/fire-pink-up.png
+        - Image: oryx/oryx_iso_dungeon/fire-pink-right.png
+        - Image: oryx/oryx_iso_dungeon/fire-pink-down.png
+        - Image: oryx/oryx_iso_dungeon/fire-pink-left.png
+      Sprite2D:
+        - Image: Flames.png
+      Block2D:
+        - Shape: circle
+          Color: [1.0, 0.0, 0.0]
+          Scale: 0.4

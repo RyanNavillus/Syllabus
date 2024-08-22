@@ -11,8 +11,7 @@ from .stat_recorder import StatRecorder
 
 # TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
 class Curriculum:
-    """Base class and API for defining curricula to interface with Gym environments.
-    """
+    """Base class and API for defining curricula to interface with Gym environments."""
 
     def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
         """Initialize the base Curriculum
@@ -23,7 +22,9 @@ class Curriculum:
         TODO: Use task space for this
         :param task_names: Names of the tasks in the task space, defaults to None
         """
-        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
+        assert isinstance(
+            task_space, TaskSpace
+        ), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
@@ -32,7 +33,9 @@ class Curriculum:
         self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
 
         if self.num_tasks == 0:
-            warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
+            warnings.warn(
+                "Task space is empty. This will cause errors during sampling if no tasks are added."
+            )
 
     @property
     def requires_step_updates(self) -> bool:
@@ -68,9 +71,13 @@ class Curriculum:
 
     def add_task(self, task: typing.Any) -> None:
         # TODO
-        raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
+        raise NotImplementedError(
+            "This curriculum does not support adding tasks after initialization."
+        )
 
-    def update_task_progress(self, task: typing.Any, progress: Tuple[float, bool], env_id: int = None) -> None:
+    def update_task_progress(
+        self, task: typing.Any, progress: Tuple[float, bool], env_id: int = None
+    ) -> None:
         """Update the curriculum with a task and its progress.
 
         :param task: Task for which progress is being updated.
@@ -79,8 +86,17 @@ class Curriculum:
 
         self.completed_tasks += 1
 
-    def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
-        """ Update the curriculum with the current step results from the environment.
+    def update_on_step(
+        self,
+        task: typing.Any,
+        obs: typing.Any,
+        rew: float,
+        term: bool,
+        trunc: bool,
+        info: dict,
+        env_id: int = None,
+    ) -> None:
+        """Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
         :param rew: Reward from the environment
@@ -89,9 +105,15 @@ class Curriculum:
         :param info: Extra information from the environment
         :raises NotImplementedError:
         """
-        raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+        raise NotImplementedError(
+            "This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error."
+        )
 
-    def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
+    def update_on_step_batch(
+        self,
+        step_results: List[typing.Tuple[Any, Any, int, int, int, int]],
+        env_id: int = None,
+    ) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
         This method can be overridden to provide a more efficient implementation. It is used
@@ -101,9 +123,17 @@ class Curriculum:
         """
         tasks, obs, rews, terms, truncs, infos = tuple(step_results)
         for i in range(len(obs)):
-            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+            self.update_on_step(
+                tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id
+            )
 
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+    def update_on_episode(
+        self,
+        episode_return: float,
+        episode_length: int,
+        episode_task: Any,
+        env_id: int = None,
+    ) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return
@@ -184,7 +214,10 @@ class Curriculum:
         raise NotImplementedError
 
     def _should_use_startup_sampling(self) -> bool:
-        return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
+        return (
+            self.random_start_tasks > 0
+            and self.completed_tasks < self.random_start_tasks
+        )
 
     def _startup_sample(self) -> List:
         task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
@@ -197,7 +230,7 @@ class Curriculum:
         :param k: Number of tasks to sample, defaults to 1
         :return: Either returns a single task if k=1, or a list of k tasks
         """
-        assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
+        # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
             return self._startup_sample()
@@ -209,6 +242,15 @@ class Curriculum:
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return task_idx
 
+    def get_opponent(self, agent_id: int):
+        raise NotImplementedError
+
+    def update_agent(self, agent):
+        raise NotImplementedError
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int):
+        raise NotImplementedError
+
     def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.
 
@@ -216,6 +258,7 @@ class Curriculum:
         """
         try:
             import wandb
+
             task_dist = self._sample_distribution()
             if len(task_dist) > 10 and not log_full_dist:
                 warnings.warn("Only logging stats for 10 tasks.")
