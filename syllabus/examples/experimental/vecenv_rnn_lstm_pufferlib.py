@@ -1,10 +1,11 @@
 # docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppo_pettingzoo_ma_ataripy
 import json
+import queue
 import random
 import sys
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple, TypeVar
+from typing import Dict, Tuple, TypeVar
 
 import gymnasium
 import numpy as np
@@ -23,9 +24,9 @@ sys.path.append("../../..")
 from lasertag import LasertagAdversarial  # noqa: E402
 from syllabus.core import (  # noqa: E402
     DualCurriculumWrapper,
-    PettingZooTaskWrapper,
-    PettingZooMultiProcessingSyncWrapper,
     MultiagentSharedCurriculumWrapper,
+    PettingZooMultiProcessingSyncWrapper,
+    PettingZooTaskWrapper,
     make_multiprocessing_curriculum,
 )
 from syllabus.curricula import (  # noqa: E402
@@ -149,9 +150,7 @@ class Agent(nn.Module):
             self.layer_init(nn.Linear(256, 32)),
             nn.ReLU(),
         )
-        self.actor = self.layer_init(
-            nn.Linear(32, n_actions), scale=0.01
-        )
+        self.actor = self.layer_init(nn.Linear(32, n_actions), scale=0.01)
         self.critic = self.layer_init(nn.Linear(32, 1), scale=1)
 
     def get_states(self, x, lstm_states, done):
@@ -329,6 +328,34 @@ class LasertagParallelWrapper(PettingZooTaskWrapper):
         return self.observation(obs), rew, done, trunc, info
 
 
+class AgentStorage:
+    """
+    First-In Last-Out queue for agent storage in vectorized setups.
+    """
+
+    def __init__(self, size: int = 5) -> None:
+        self.size = size
+        self.agent_queue = queue.Queue(maxsize=size)
+
+    def add_agent(self, agent: torch.nn.Module):
+        if self.agent_queue.full():
+            oldest_agent = self.agent_queue.get()
+            del oldest_agent
+        self.agent_queue.put(agent)
+
+    def get_agent_by_task(self, agent_task: int) -> torch.nn.Module:
+        """
+        Returns the agent corresponding to the input agent task.
+        Agent task 0 refers to the latest added agent.
+        """
+        assert (
+            agent_task >= 0 and agent_task < self.size
+        ), f"Expected task in range [0, {self.size-1}], got {agent_task}"
+        # we want task 0 to return the newest agent
+        # and task ``size` to return the oldest
+        return self.agent_queue.queue[-(agent_task + 1)]
+
+
 def split_batch(joint_obs: torch.Tensor) -> Tuple[torch.Tensor]:
     """Splits a batch of joint data in agent and opponent data."""
     assert (
@@ -370,9 +397,15 @@ def make_env_fn(components=None):
         env = LasertagAdversarial()
         env = LasertagParallelWrapper(env=env, n_agents=2)
         if components is not None:
-            env = PettingZooMultiProcessingSyncWrapper(env, components, task_space=TaskSpace([args.n_env_tasks, args.max_agents]), buffer_size=4)
+            env = PettingZooMultiProcessingSyncWrapper(
+                env,
+                components,
+                task_space=TaskSpace([args.n_env_tasks, args.max_agents]),
+                buffer_size=4,
+            )
         env = PettingZooPufferEnv(env)
         return env
+
     return thunk
 
 
@@ -404,8 +437,15 @@ if __name__ == "__main__":
 
     # agent setup
     exemplar_env = make_env_fn(None)()
-    agent = Agent(exemplar_env.observation_space("agent_0").shape, exemplar_env.action_space("agent_0").n).to(device)
+    agent = Agent(
+        exemplar_env.observation_space("agent_0").shape,
+        exemplar_env.action_space("agent_0").n,
+    ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.adam_lr, eps=args.adam_eps)
+
+    # queue used to store concurrent versions of the student agent
+    agents_storage = AgentStorage(5)
+    agents_storage.add_agent(agent)
 
     # curriculum setup
     env_task_space = TaskSpace(spaces.Discrete(args.n_env_tasks))
@@ -430,7 +470,9 @@ if __name__ == "__main__":
     env_curriculum = env_curriculums[args.env_curriculum](
         **env_curriculum_settings[args.env_curriculum]
     )
-    env_curriculum = MultiagentSharedCurriculumWrapper(env_curriculum, exemplar_env.possible_agents)
+    env_curriculum = MultiagentSharedCurriculumWrapper(
+        env_curriculum, exemplar_env.possible_agents
+    )
     agent_curriculum = agent_curriculums[args.agent_curriculum](
         agent=agent, **agent_curriculum_settings
     )
@@ -484,7 +526,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     num_updates = int(args.total_timesteps // args.batch_size)
-    env_tasks, agent_tasks = [], []
+    env_tasks, agent_tasks = [], np.zeros(args.num_workers)
 
     cumulative_rewards = np.zeros(args.num_workers * 2)
     next_obs, info = envs.reset()
@@ -498,14 +540,10 @@ if __name__ == "__main__":
                 optimizer.param_groups[0]["lr"] = lrnow
 
             initial_lstm_state = (lstm_state[0].clone(), lstm_state[1].clone())
-            # env_task, agent_task = (
-            #     curriculum.sample()
-            # )  # TODO: needs to return `num_workers` env_tasks and 1 agent_task/opponent
-            # print(env_task, agent_task)
-            # TODO: check that vectorized reset work as expected
             next_obs = torch.Tensor(next_obs).to(device)
             next_done = torch.zeros(args.num_workers).to(device)
-            agent_task = 0
+            # task = 0
+
             for step in range(0, args.rollout_length):
                 global_step += 1 * args.num_workers * 2
                 obs[step] = next_obs[agent_indices]
@@ -513,19 +551,81 @@ if __name__ == "__main__":
 
                 # action selection
                 with torch.no_grad():
-
                     agent_obs, opp_obs = split_batch(next_obs)
 
-                    agent_actions, logprob, _, agent_value, lstm_state = (
-                        agent.get_action_and_value(agent_obs, lstm_state, next_done)
-                    )
+                    # iterate over agent_tasks
+                    for task in set(agent_tasks):
+                        selected_agent = agents_storage.get_agent_by_task(int(task))
 
-                    opponent = curriculum.get_opponent(agent_task)
-                    opp_actions, opp_logprob, _, opp_value, lstm_state_opp = (
-                        opponent.get_action_and_value(
-                            opp_obs, lstm_state_opp, next_done
+                        # create batches for each task
+                        agent_task_indices = np.where(agent_tasks == task)[0]
+                        next_done_batch = next_done[agent_task_indices]
+                        agent_obs_batch = agent_obs[agent_task_indices]
+                        opp_obs_batch = opp_obs[agent_task_indices]
+
+                        lstm_state_batch = (
+                            lstm_state[0][:, agent_task_indices],
+                            lstm_state[1][:, agent_task_indices],
                         )
-                    )
+
+                        lstm_state_opp_batch = (
+                            lstm_state_opp[0][:, agent_task_indices],
+                            lstm_state_opp[1][:, agent_task_indices],
+                        )
+
+                        # initialize
+                        agent_actions = torch.zeros(
+                            args.num_workers, dtype=torch.int32
+                        ).to(device)
+                        opp_actions = torch.zeros(
+                            args.num_workers, dtype=torch.int32
+                        ).to(device)
+                        agent_value = torch.zeros(args.num_workers).to(device)
+                        logprob = torch.zeros(args.num_workers).to(device)
+
+                        # learner action selection
+                        (
+                            agent_actions_batch,
+                            logprob_batch,
+                            _,
+                            agent_value_batch,
+                            new_lstm_state_batch,
+                        ) = selected_agent.get_action_and_value(
+                            agent_obs_batch, lstm_state_batch, next_done_batch
+                        )
+
+                        # opponent action selection
+                        (
+                            opp_actions_batch,
+                            _,
+                            _,
+                            _,
+                            new_lstm_state_opp_batch,
+                        ) = selected_agent.get_action_and_value(
+                            agent_obs_batch, lstm_state_opp_batch, next_done_batch
+                        )
+
+                        # reconstruct data from batches
+                        agent_obs[agent_task_indices] = agent_obs_batch
+                        agent_value[agent_task_indices] = (
+                            agent_value_batch.flatten().float()
+                        )
+                        agent_actions[agent_task_indices] = agent_actions_batch.int()
+                        opp_actions[agent_task_indices] = opp_actions_batch.int()
+                        logprob[agent_task_indices] = logprob_batch.float()
+                        next_done[agent_task_indices] = next_done_batch.float()
+                        # print(agent_actions)
+
+                        # reconstruct the LSTM state
+                        for i, idx in enumerate(agent_task_indices):
+                            lstm_state[0][:, idx] = new_lstm_state_batch[0][:, i]
+                            lstm_state[1][:, idx] = new_lstm_state_batch[1][:, i]
+                            lstm_state_opp[0][:, idx] = new_lstm_state_opp_batch[0][
+                                :, i
+                            ]
+                            lstm_state_opp[1][:, idx] = new_lstm_state_opp_batch[1][
+                                :, i
+                            ]
 
                     values[step] = agent_value.flatten().cpu()
 
@@ -537,10 +637,10 @@ if __name__ == "__main__":
                 next_obs, reward, next_done, trunc, info = envs.step(
                     joint_actions.numpy()
                 )
-                agent_tasks = [i["agent_id"] for i in info]
+                agent_tasks = np.array([i["agent_id"] for i in info])
                 print(agent_tasks)
-                # assert all(agent_tasks[0] == at for at in agent_tasks), f"Agent tasks are not consistent across envs! {agent_tasks}"
-                agent_task = agent_tasks[0]
+
+                # task = agent_tasks[0]
                 rewards[step] = torch.tensor(reward[agent_indices]).to(device).view(-1)
                 next_obs = torch.Tensor(next_obs).to(device)
                 next_done = torch.Tensor(next_done[agent_indices]).to(device)
@@ -669,9 +769,11 @@ if __name__ == "__main__":
                 if args.target_kl is not None:
                     if approx_kl > args.target_kl:
                         break
-            
+
             print("Update agent")
             curriculum.update_agent(agent)
+            agents_storage.add_agent(agent)
+
             y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
             var_y = np.var(y_true)
             explained_var = (
@@ -700,4 +802,5 @@ if __name__ == "__main__":
 
     envs.close()
     if args.track:
+        run.stop()
         run.stop()

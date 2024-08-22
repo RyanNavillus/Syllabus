@@ -3,7 +3,6 @@ from typing import Tuple, TypeVar
 from gymnasium import spaces
 
 from syllabus.core.curriculum_base import Curriculum, TaskSpace
-from syllabus.core.task_interface import TaskWrapper
 
 AgentID = TypeVar("AgentID")
 Agent = TypeVar("Agent")
@@ -58,9 +57,13 @@ class DualCurriculumWrapper(Curriculum):
 
     def update_on_step(self, task, obs, reward, term, trunc, info, env_id=None):
         if self.env_curriculum.requires_step_updates:
-            self.env_curriculum.update_on_step(task, obs, reward, term, trunc, info, env_id=env_id)
+            self.env_curriculum.update_on_step(
+                task, obs, reward, term, trunc, info, env_id=env_id
+            )
         if self.agent_curriculum.requires_step_updates:
-            self.agent_curriculum.update_on_step(task, obs, reward, term, trunc, info, env_id=env_id)
+            self.agent_curriculum.update_on_step(
+                task, obs, reward, term, trunc, info, env_id=env_id
+            )
 
     def __getattr__(self, name):
         """Delegate attribute lookup to the curricula if not found."""

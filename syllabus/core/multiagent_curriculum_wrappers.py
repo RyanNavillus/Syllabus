@@ -9,27 +9,48 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
 
     def update_task_progress(self, task, progress, env_id=None):
         for i in range(self.num_agents):
-            self.curriculum.update_task_progress(task, progress, env_id=(env_id * self.num_agents) + i)
+            self.curriculum.update_task_progress(
+                task, progress, env_id=(env_id * self.num_agents) + i
+            )
 
-    def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
+    def update_on_step(
+        self, task, obs, rew, term, trunc, info, env_id: int = None
+    ) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
         for i, agent in enumerate(obs.keys()):
             agent_index = self.possible_agents.index(agent)
-            self.curriculum.update_on_step(task, obs[agent], rew[i], term[i], trunc[i], info[agent], env_id=(env_id * self.num_agents) + agent_index)
+            self.curriculum.update_on_step(
+                task,
+                obs[agent],
+                rew[i],
+                term[i],
+                trunc[i],
+                info[agent],
+                env_id=(env_id * self.num_agents) + agent_index,
+            )
 
     def update_on_step_batch(self, step_results, env_id: int = None) -> None:
         tasks, obs, rews, terms, truncs, infos = step_results
         for i in range(len(obs)):
-            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+            self.update_on_step(
+                tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id
+            )
 
-    def update_on_episode(self, episode_returns, episode_length, episode_task, env_id: int = None) -> None:
+    def update_on_episode(
+        self, episode_returns, episode_length, episode_task, env_id: int = None
+    ) -> None:
         """
         Update the curriculum with episode results from the environment.
         """
         for i, agent in enumerate(episode_returns.keys()):
-            self.curriculum.update_on_episode(episode_returns[agent], episode_length, episode_task, env_id=(env_id * self.num_agents) + i)
+            self.curriculum.update_on_episode(
+                episode_returns[agent],
+                episode_length,
+                episode_task,
+                env_id=(env_id * self.num_agents) + i,
+            )
 
     def update_batch(self, update_data):
         for update in update_data:
