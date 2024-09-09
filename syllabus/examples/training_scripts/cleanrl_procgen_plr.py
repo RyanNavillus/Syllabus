@@ -285,7 +285,7 @@ if __name__ == "__main__":
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(64)]
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
             curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)

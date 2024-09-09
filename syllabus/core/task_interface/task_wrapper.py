@@ -79,10 +79,11 @@ class TaskWrapper(gym.Wrapper):
         return self.observation(obs), rew, term, trunc, info
 
     def __getattr__(self, attr):
-        env_attr = self.env.__class__.__dict__.get(attr, None)
-
-        if env_attr and callable(env_attr):
+        env_attr = getattr(self.env, attr)
+        if env_attr:
             return env_attr
+        else:
+            raise AttributeError(f"TaskWrapper and env do not have attribute {attr}")
 
 
 class PettingZooTaskWrapper(BaseParallelWrapper):
