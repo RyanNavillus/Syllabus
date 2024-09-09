@@ -16,3 +16,4 @@ from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper
 from .multivariate_curriculum_wrapper import MultitaskWrapper
 from .multiagent_curriculum_wrappers import MultiagentSharedCurriculumWrapper, MultiagentIndependentCurriculumWrapper
 from .stat_recorder import StatRecorder
+from .evaluator import Evaluator, CleanRLDiscreteEvaluator

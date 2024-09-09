@@ -560,7 +560,7 @@ FodyWeavers.xsd
 
 # Other
 runs/
-models/
+./models/
 nle_data/
 .vscode/
 docs/_sources/
