@@ -83,18 +83,11 @@ class RolloutStorage(object):
 
         self.env_steps[env_index] += steps
         if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps:
-            for i, ob in enumerate(self.obs[0:][env_index]):
-                if np.asarray(ob).shape[0] == 1:
-                    print("FOUND 0 AFTER", env_index)
             self.ready_buffers.add(env_index)
 
     def _get_values(self, env_index):
         if self.evaluator is None:
             raise UsageError("Selected strategy requires value predictions. Please provide an evaluator to PLR.")
-        for i, ob in enumerate(self.obs[:][env_index]):
-            print(ob.shape)
-            if np.asarray(ob).shape[0] == 1:
-                print(env_index, i, ob)
         # Iterate by the batch size
         for step in range(0, self.num_steps, self.num_processes):
             obs = [o[env_index] for o in self.obs[step: step + self.num_processes]]
@@ -126,12 +119,6 @@ class RolloutStorage(object):
         self.ready_buffers.remove(env_index)
 
     def compute_returns(self, gamma, gae_lambda, env_index):
-        print("COMPUTE RETURNS", env_index)
-        obs = self.obs[:][env_index]
-        print(len(obs), self.num_steps, self.num_processes)
-        for i, ob in enumerate(obs):
-            if np.asarray(ob).shape[0] == 1:
-                print("cr", env_index, i, ob)
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
         self._get_values(env_index)
         gae = 0
@@ -254,7 +241,6 @@ class PrioritizedLevelReplay(Curriculum):
         """
         Update the curriculum with a batch of step results from the environment.
         """
-        print("Batch", env_id)
         assert env_id is not None, "env_id must be provided for PLR updates."
         assert env_id not in self._rollouts.ready_buffers
 
@@ -277,7 +263,6 @@ class PrioritizedLevelReplay(Curriculum):
             self._update_sampler(env_id)
 
     def _update_sampler(self, env_id):
-        print("UPDATE SAMPLER", env_id)
         if self._task_sampler.requires_value_buffers:
             self._rollouts.compute_returns(self._gamma, self._gae_lambda, env_id)
         self._task_sampler.update_with_rollouts(self._rollouts, env_id)
