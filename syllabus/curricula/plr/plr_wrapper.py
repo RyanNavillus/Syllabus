@@ -30,7 +30,7 @@ class RolloutStorage(object):
         self.evaluator = evaluator
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.obs = [[[0] for _ in range(self.num_processes)] for _ in range(self.buffer_steps)]
+        self.obs = [[None for _ in range(self.num_processes)] for _ in range(self.buffer_steps)]
         self.env_steps = [0] * num_processes
         self.ready_buffers = set()
 
@@ -97,8 +97,7 @@ class RolloutStorage(object):
                 print(env_index, i, ob)
         # Iterate by the batch size
         for step in range(0, self.num_steps, self.num_processes):
-            obs = self.obs[step: step + self.num_processes][env_index]
-            print(len(obs), [len(ob) for ob in obs])
+            obs = [o[env_index] for o in self.obs[step: step + self.num_processes]]
             values = self.evaluator.get_value(torch.Tensor(np.stack(obs)))
 
             # Reshape values if necessary
