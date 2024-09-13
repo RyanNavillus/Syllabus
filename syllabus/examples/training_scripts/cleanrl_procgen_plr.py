@@ -13,7 +13,7 @@ from distutils.util import strtobool
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
-import procgen  # noqa: F401
+import procgen  # type: ignore # noqa: F401
 from procgen import ProcgenEnv
 import torch
 import torch.nn as nn
@@ -22,6 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core.evaluator import Evaluator
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -266,6 +267,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
+            evaluator = Evaluator(agent, get_value=agent.get_value, get_action=agent.get_action, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -274,7 +276,7 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
-                get_value=make_value_fn(),
+                evaluator=evaluator,
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
