@@ -29,7 +29,7 @@ class RolloutStorage(object):
         self._get_value = get_value
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.obs = [[[0] for _ in range(self.num_processes)] for _ in range(self.buffer_steps)]
+        self.obs = [[None for _ in range(self.num_processes)] for _ in range(self.buffer_steps)]
         self.env_steps = [0] * num_processes
         self.ready_buffers = set()
 
@@ -88,7 +88,7 @@ class RolloutStorage(object):
         if self._get_value is None:
             raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
         for step in range(0, self.num_steps, self.num_processes):
-            obs = self.obs[step: step + self.num_processes][env_index]
+            obs = [o[env_index] for o in self.obs[step: step + self.num_processes]]
             values = self._get_value(obs)
 
             # Reshape values if necessary
