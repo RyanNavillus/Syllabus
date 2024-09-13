@@ -38,7 +38,8 @@ class LearningProgressCurriculum(Curriculum):
 
         self._evaluate_all_tasks()
 
-    def _evaluate_all_tasks(self, eval_eps=20):
+    def _evaluate_all_tasks(self, eval_eps=1):
+        print("EVALUATE")
         task_progresses = np.zeros(self.task_space.num_tasks)
         for task_idx, task in enumerate(self.task_space.tasks):
             obss, _ = self.eval_envs.reset(options=task)
