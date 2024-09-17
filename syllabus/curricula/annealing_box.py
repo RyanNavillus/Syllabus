@@ -48,6 +48,9 @@ class AnnealingBoxCurriculum(Curriculum):
         Sample k tasks from the curriculum.
         """
         # Linear annealing from start_values to end_values
+        if self._should_use_startup_sampling():
+            return self._startup_sample(k)
+        
         annealed_values = (
             self.start_values + (self.end_values - self.start_values) *
             np.minimum(self.current_step, self.total_steps) / self.total_steps

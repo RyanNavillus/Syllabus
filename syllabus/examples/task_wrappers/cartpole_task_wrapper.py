@@ -1,3 +1,5 @@
+import warnings
+
 from gymnasium.spaces import Box
 
 from syllabus.core import TaskWrapper
@@ -15,6 +17,9 @@ class CartPoleTaskWrapper(TaskWrapper):
         self.total_reward = 0
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")
+            if new_task[0] > new_task[1]:
+                warnings.warn("Provided lower bound was higher than upper bound. Swapping the bounds.")
+                new_task = sorted(new_task)
             self.task = new_task
 
         return self.env.reset(options={"low": self.task[0], "high": self.task[1]})

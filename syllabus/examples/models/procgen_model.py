@@ -1,8 +1,13 @@
+from typing import Callable
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import gymnasium as gym
 
+from stable_baselines3.common.torch_layers import MlpExtractor
+from stable_baselines3.common.policies import ActorCriticPolicy
 
 def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
@@ -153,8 +158,10 @@ class Policy(nn.Module):
 
         self.base = base(obs_shape[0], **base_kwargs)
         self.dist = Categorical(self.base.output_size, num_actions)
-        self.latent_dim_pi = 256
+        self.critic_linear = init_(nn.Linear(base_kwargs.get("hidden_size"), 1))
+
         self.latent_dim_vf = 256
+        self.latent_dim_pi = 256
 
     @property
     def is_recurrent(self):
@@ -164,6 +171,16 @@ class Policy(nn.Module):
     def recurrent_hidden_state_size(self):
         """Size of rnn_hx."""
         return self.base.recurrent_hidden_state_size
+
+    def forward_critic(self, features):
+        values, _ = self.base(features)
+        return values
+
+    def forward_actor(self, features):
+        value, actor_features = self.base(features)
+        dist = self.dist(actor_features)
+        dist = dist.sample().float()
+        return dist
 
     def forward(self, inputs):
         value, actor_features, rnn_hxs = self.base(inputs, None, None)
@@ -238,8 +255,6 @@ class MLPBase(NNBase):
             init_tanh_(nn.Linear(num_inputs, hidden_size)), nn.Tanh(),
             init_tanh_(nn.Linear(hidden_size, hidden_size)), nn.Tanh())
 
-        self.critic_linear = init_(nn.Linear(hidden_size, 1))
-
         self.train()
 
     def forward(self, inputs):
@@ -248,7 +263,7 @@ class MLPBase(NNBase):
         hidden_critic = self.critic(x)
         hidden_actor = self.actor(x)
 
-        return self.critic_linear(hidden_critic), hidden_actor
+        return hidden_critic, hidden_actor
 
 
 class BasicBlock(nn.Module):
@@ -281,9 +296,9 @@ class BasicBlock(nn.Module):
 
 class ResNetBase(NNBase):
     """
-    Residual Network 
+    Residual Network
     """
-    def __init__(self, num_inputs, recurrent=False, hidden_size=256, channels=[16, 32, 32]):
+    def __init__(self, num_inputs=16, recurrent=False, hidden_size=256, channels=[16, 32, 32]):
         super(ResNetBase, self).__init__(recurrent, num_inputs, hidden_size)
 
         self.layer1 = self._make_layer(num_inputs, channels[0])
@@ -294,7 +309,6 @@ class ResNetBase(NNBase):
         self.relu = nn.ReLU()
 
         self.fc = init_relu_(nn.Linear(2048, hidden_size))
-        self.critic_linear = init_(nn.Linear(hidden_size, 1))
 
         apply_init_(self.modules())
 
@@ -317,11 +331,9 @@ class ResNetBase(NNBase):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-
         x = self.relu(self.flatten(x))
         x = self.relu(self.fc(x))
-
-        return self.critic_linear(x), x
+        return x
 
 
 class SmallNetBase(NNBase):
@@ -338,7 +350,6 @@ class SmallNetBase(NNBase):
         self.relu = nn.ReLU()
 
         self.fc = init_relu_(nn.Linear(2048, hidden_size))
-        self.critic_linear = init_(nn.Linear(hidden_size, 1))
 
         apply_init_(self.modules())
 
@@ -346,30 +357,31 @@ class SmallNetBase(NNBase):
 
     def forward(self, inputs):
         x = inputs
-
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.flatten(x)
         x = self.relu(self.fc(x))
-
-        return self.critic_linear(x), x
+        return x
 
 
 class ProcgenAgent(Policy):
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+
         h, w, c = obs_shape
         shape = (c, h, w)
         super().__init__(shape, num_actions, arch=arch, base_kwargs=base_kwargs)
 
     def get_value(self, x):
         new_x = x.permute((0, 3, 1, 2)) / 255.0
-        value, _ = self.base(new_x)
+        features = self.base(new_x)
+        value = self.critic_linear(features)
         return value
 
     def get_action_and_value(self, x, action=None, full_log_probs=False, deterministic=False):
         new_x = x.permute((0, 3, 1, 2)) / 255.0
-        value, actor_features = self.base(new_x)
-        dist = self.dist(actor_features)
+        features = self.base(new_x)
+        value = self.critic_linear(features)
+        dist = self.dist(features)
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
@@ -381,3 +393,58 @@ class ProcgenAgent(Policy):
             return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value
+
+
+class SB3ResNetBase(ResNetBase):
+    def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
+        super().__init__(**kwargs)
+        assert features_dim > 0
+        self._observation_space = observation_space
+        self._features_dim = features_dim
+
+    @property
+    def features_dim(self) -> int:
+        return self._features_dim
+
+    def forward(self, inputs):
+        return super().forward(inputs / 255.0)
+
+
+class Sb3ProcgenAgent(ActorCriticPolicy):
+    def __init__(
+        self,
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
+        lr_schedule: Callable[[float], float],
+        *args,
+        hidden_size=256,
+        **kwargs
+    ):
+
+        self.shape = observation_space.shape
+        self.num_actions = action_space.n
+        self.hidden_size = hidden_size
+
+        super(Sb3ProcgenAgent, self).__init__(
+            observation_space,
+            action_space,
+            lr_schedule,
+            *args,
+            **kwargs
+        )
+        self.ortho_init = False
+        self.action_net.is_target_net = True
+        self.value_net.is_target_net = True
+        self.apply(self.init_weights)
+
+    def _build_mlp_extractor(self) -> None:
+        self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
+
+    def init_weights(self, m, **kwargs):
+        if hasattr(m, 'is_target_net') and m.is_target_net:
+            if m is self.action_net:
+                nn.init.orthogonal_(m.weight, gain=0.01)
+                nn.init.constant_(m.bias, 0)
+            if m is self.value_net:
+                nn.init.orthogonal_(m.weight, gain=1.0)
+                nn.init.constant_(m.bias, 0)

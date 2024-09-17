@@ -49,7 +49,6 @@ def evaluate_random_policy_gymnasium(make_env, num_episodes=100, seeds=None):
         episode_returns.append(episode_return)
 
     avg_return = sum(episode_returns) / len(episode_returns)
-    # print(f"Average Episodic Return: {avg_return}")
     return avg_return, episode_returns
 
 

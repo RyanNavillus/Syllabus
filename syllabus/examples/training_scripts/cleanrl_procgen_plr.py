@@ -154,6 +154,41 @@ def wrap_vecenv(vecenv):
     return vecenv
 
 
+def full_level_replay_evaluate(
+    env_name,
+    policy,
+    num_episodes,
+    device,
+    num_levels=1    # Not used
+):
+    policy.eval()
+
+    eval_envs = ProcgenEnv(
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
+    )
+    eval_envs = VecExtractDictObs(eval_envs, "rgb")
+    eval_envs = wrap_vecenv(eval_envs)
+
+    eval_obs, _ = eval_envs.reset()
+    eval_episode_rewards = [-1] * num_episodes
+
+    while -1 in eval_episode_rewards:
+        with torch.no_grad():
+            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+
+        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+        for i, info in enumerate(infos):
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
+                eval_episode_rewards[i] = info['episode']['r']
+
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    policy.train()
+    return mean_returns, stddev_returns, normalized_mean_returns
+
+
 def level_replay_evaluate(
     env_name,
     policy,
@@ -318,6 +353,17 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
+
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+
+    agent = ProcgenAgent(
+        envs.single_observation_space.shape,
+        envs.single_action_space.n,
+        arch="large",
+        base_kwargs={'recurrent': False, 'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)

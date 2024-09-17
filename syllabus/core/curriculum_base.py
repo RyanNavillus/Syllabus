@@ -3,9 +3,10 @@ import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 import numpy as np
-from gymnasium.spaces import Dict
-
+from gymnasium.spaces import Dict, Box
+import random
 from syllabus.task_space import TaskSpace
+from itertools import product
 from .stat_recorder import StatRecorder
 
 
@@ -14,25 +15,36 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False, warmup_strategy: str = None, warmup_samples: int = 0) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
-        TODO: Implement this in a way that works with any curriculum, maybe as a wrapper
-        :param random_start_tasks: Number of uniform random tasks to sample before using the algorithm's sample method, defaults to 0
-        TODO: Use task space for this
+        :param random_start_tasks: Number of tasks to sample randomly at the start, defaults to 0
         :param task_names: Names of the tasks in the task space, defaults to None
+        :param record_stats: Boolean to indicate if statistics should be recorded, defaults to False
+        :param warmup_strategy: Strategy for warmup, defaults to None
+        :param warmup_samples: Number of warmup samples, defaults to 0
         """
         assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
-        self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
         self.task_names = task_names if task_names is not None else lambda task, idx: idx
         self.n_updates = 0
+        self.startup_sampled_tasks = 0
+        self.warmup_strategy = warmup_strategy
+        self.warmup_tasks = warmup_samples
+        self.fix_curr_index = 0
         self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
 
-        if self.num_tasks == 0:
+        if warmup_strategy == "fix" and isinstance(self.task_space.gym_space, Box):
+            self.fix_box_space = self._initialize_fixed_grid()
+
+        if self.num_tasks is None:
+            warnings.warn("Task space is continuous. Number of warmup tasks can't be compared to the task space size.")
+        elif self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
+        elif warmup_samples > self.num_tasks:
+            warnings.warn("Number of warmup tasks is larger than task space, some tasks will be replayed during warmup.")
 
     @property
     def requires_step_updates(self) -> bool:
@@ -182,14 +194,47 @@ class Curriculum:
         Any curriculum that maintains a true probability distribution should implement this method to retrieve it.
         """
         raise NotImplementedError
+    
+    def _initialize_fixed_grid(self):
+        dims = self.task_space.gym_space.shape[0]
+        samples_per_dim = int(round(pow(self.warmup_tasks,(1 / dims))))
+        ranges = [np.linspace(self.task_space.gym_space.low[i], self.task_space.gym_space.high[i], samples_per_dim)
+                  for i in range(dims)]
+        all_points = list(product(*ranges))
+        sampled_tasks = [tuple(point) for point in all_points]
 
-    def _should_use_startup_sampling(self) -> bool:
-        return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
+        return sampled_tasks
 
-    def _startup_sample(self) -> List:
-        task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
-        task_dist[0] = 1.0
-        return task_dist
+    def _should_use_startup_sampling(self) -> bool:  
+        return self.warmup_strategy != "none" and self.startup_sampled_tasks < self.warmup_tasks
+    
+    def _startup_sample(self, k: int) -> List:
+        sampled_tasks = []
+
+        if isinstance(self.task_space.gym_space, Box):
+            if self.warmup_strategy == "fix":
+                sampled_tasks = self.fix_box_space
+                self.fix_curr_index = (self.fix_curr_index + self.warmup_tasks) % len(sampled_tasks)
+            elif self.warmup_strategy == "random":
+                sampled_tasks = [self.task_space.gym_space.sample() for _ in range(k)]
+    
+        else:
+            if self.warmup_strategy == "fix":
+                if self.fix_curr_index + k > self.num_tasks:
+                    sampled_tasks = self.tasks[self.fix_curr_index:self.num_tasks]
+                    self.fix_curr_index = self.fix_curr_index + k - self.num_tasks
+                    sampled_tasks.extend(self.tasks[0:(self.fix_curr_index)])
+                else:
+                    sampled_tasks = self.tasks[self.fix_curr_index:self.fix_curr_index + k]
+                    self.fix_curr_index += k
+
+            elif self.warmup_strategy == "random":
+                # Allows sampling with replacement, making duplicates possible if k > num_tasks.
+                indices = random.choices(range(self.num_tasks), k=k)
+                sampled_tasks = [self.tasks[idx] for idx in indices]
+                
+        self.startup_sampled_tasks += k
+        return sampled_tasks
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """Sample k tasks from the curriculum.
@@ -200,14 +245,20 @@ class Curriculum:
         # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
-            return self._startup_sample()
-
-        # Use list of indices because np.choice does not play nice with tuple tasks
-        # tasks = self.tasks
-        n_tasks = self.num_tasks
+            tasks = self._startup_sample(k)
+            # Check if the startup sampling has satisfied the request or if there's no progress (no tasks returned)
+            if len(tasks) > 0 and len(tasks) < k:  # Check if we need to add more tasks
+                additional_tasks = self.sample(k=k-len(tasks))
+                tasks.extend(additional_tasks) 
+            return tasks
+        
         task_dist = self._sample_distribution()
-        task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
-        return task_idx
+
+        # Normal sampling process
+        tasks = self.tasks
+        n_tasks = len(tasks)
+        task_idx = np.random.choice(range(n_tasks), size=k, p=task_dist)
+        return [tasks[i] for i in task_idx]
 
     def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.
