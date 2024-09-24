@@ -170,16 +170,16 @@ def level_replay_evaluate(
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
+    eval_episode_rewards = []
 
-    while -1 in eval_episode_rewards:
+    while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
 
         eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
+        for info in infos:
+            if 'episode' in info.keys():
+                eval_episode_rewards.append(info['episode']['r'])
 
     # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
