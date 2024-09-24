@@ -82,7 +82,7 @@ class RolloutStorage(object):
             self.tasks[step:end_step, env_index].copy_(torch.as_tensor(np.array(task)[:, None]))
 
         self.env_steps[env_index] += steps
-        if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps:
+        if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps + 1:
             self.ready_buffers.add(env_index)
 
     def _get_values(self, env_index):
@@ -91,19 +91,24 @@ class RolloutStorage(object):
         # Iterate by the batch size
         for step in range(0, self.num_steps, self.num_processes):
             obs = self.obs[env_index][step: step + self.num_processes]
-            # obs = [o[env_index] for o in self.obs[step: step + self.num_processes]]
             values = self.evaluator.get_value(torch.Tensor(np.stack(obs)))
-            del obs
-            # values = torch.zeros((64, 1))
+
             # Reshape values if necessary
             if len(values.shape) == 3:
-                warnings.warn(f"Value function returned a 3D tensor of shape {values.shape}. Attempting to squeeze last dimension.")
+                warnings.warn(
+                    f"Value function returned a 3D tensor of shape {values.shape}. Squeezing last dimension."
+                )
                 values = torch.squeeze(values, -1)
             if len(values.shape) == 1:
-                warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
+                warnings.warn(
+                    f"Value function returned a 1D tensor of shape {values.shape}. Unsqueezing last dimension."
+                )
                 values = torch.unsqueeze(values, -1)
-
             self.value_preds[step: step + self.num_processes, env_index] = values
+
+        next_ob = self.obs[env_index][self.num_steps]
+        next_value = self.evaluator.get_value(torch.Tensor(np.stack(np.expand_dims(next_ob, axis=0))))
+        self.value_preds[self.num_steps, env_index] = next_value
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
