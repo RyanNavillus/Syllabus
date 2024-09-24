@@ -207,6 +207,17 @@ def make_action_fn():
     return get_action
 
 
+class ProcgenEvaluator(Evaluator):
+    def __init__(self, agent, device):
+        super().__init__(agent, device=device)
+
+    def _get_action(self, state):
+        return self.agent.get_action(state)
+
+    def _get_value(self, state):
+        return self.agent.get_value(state)
+
+
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -267,7 +278,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = Evaluator(agent, get_value=agent.get_value, get_action=agent.get_action, device=device)
+            evaluator = ProcgenEvaluator(agent, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,

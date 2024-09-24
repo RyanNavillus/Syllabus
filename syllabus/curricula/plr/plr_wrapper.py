@@ -30,7 +30,8 @@ class RolloutStorage(object):
         self.evaluator = evaluator
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.obs = [[None for _ in range(self.num_processes)] for _ in range(self.buffer_steps)]
+
+        self.obs = {env_idx: [None for _ in range(self.buffer_steps)] for env_idx in range(self.num_processes)}
         self.env_steps = [0] * num_processes
         self.ready_buffers = set()
 
@@ -65,8 +66,7 @@ class RolloutStorage(object):
             self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
 
         if obs is not None:
-            for s in range(step, end_step):
-                self.obs[s][env_index] = obs[s - step]
+            self.obs[env_index][step: end_step] = obs
 
         if reward is not None:
             self.rewards[step:end_step, env_index].copy_(torch.as_tensor(reward[:, None]))
@@ -90,9 +90,11 @@ class RolloutStorage(object):
             raise UsageError("Selected strategy requires value predictions. Please provide an evaluator to PLR.")
         # Iterate by the batch size
         for step in range(0, self.num_steps, self.num_processes):
-            obs = [o[env_index] for o in self.obs[step: step + self.num_processes]]
+            obs = self.obs[env_index][step: step + self.num_processes]
+            # obs = [o[env_index] for o in self.obs[step: step + self.num_processes]]
             values = self.evaluator.get_value(torch.Tensor(np.stack(obs)))
-
+            del obs
+            # values = torch.zeros((64, 1))
             # Reshape values if necessary
             if len(values.shape) == 3:
                 warnings.warn(f"Value function returned a 3D tensor of shape {values.shape}. Attempting to squeeze last dimension.")
@@ -101,19 +103,19 @@ class RolloutStorage(object):
                 warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
                 values = torch.unsqueeze(values, -1)
 
-            self.value_preds[step: step + self.num_processes, env_index].copy_(values)
+            self.value_preds[step: step + self.num_processes, env_index] = values
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
-        self.tasks = self.tasks.roll(-self.num_steps, 0)
-        self.masks = self.masks.roll(-self.num_steps, 0)
-        self.obs[0:][env_index] = self.obs[self.num_steps: self.buffer_steps][env_index]
+        self.tasks[:, env_index] = self.tasks[:, env_index].roll(-self.num_steps, 0)
+        self.masks[:, env_index] = self.masks[:, env_index].roll(-self.num_steps, 0)
+        self.obs[env_index] = self.obs[env_index][self.num_steps:]
         if self._requires_value_buffers:
-            self.returns = self.returns.roll(-self.num_steps, 0)
-            self.rewards = self.rewards.roll(-self.num_steps, 0)
-            self.value_preds = self.value_preds.roll(-self.num_steps, 0)
+            self.returns[:, env_index] = self.returns[:, env_index].roll(-self.num_steps, 0)
+            self.rewards[:, env_index] = self.rewards[:, env_index].roll(-self.num_steps, 0)
+            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-self.num_steps, 0)
         else:
-            self.action_log_dist = self.action_log_dist.roll(-self.num_steps, 0)
+            self.action_log_dist[:, env_index] = self.action_log_dist[:, env_index].roll(-self.num_steps, 0)
 
         self.env_steps[env_index] -= self.num_steps
         self.ready_buffers.remove(env_index)
@@ -122,7 +124,7 @@ class RolloutStorage(object):
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
         self._get_values(env_index)
         gae = 0
-        for step in reversed(range(self.rewards.size(0), self.num_steps)):
+        for step in reversed(range(self.num_steps)):
             delta = (
                 self.rewards[step, env_index]
                 + gamma * self.value_preds[step + 1, env_index] * self.masks[step + 1, env_index]
@@ -189,7 +191,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 
-        self._task_sampler = TaskSampler(self.tasks, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, self._num_steps, action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
@@ -276,7 +278,7 @@ class PrioritizedLevelReplay(Curriculum):
         else:
             return list(enumerate_axes(space.nvec))
 
-    def log_metrics(self, writer, step=None):
+    def log_metrics(self, writer, step=None, log_full_dist=False):
         """
         Log the task distribution to the provided tensorboard writer.
         """

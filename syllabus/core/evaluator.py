@@ -3,22 +3,26 @@ from torch.distributions.categorical import Categorical
 
 
 class Evaluator:
-    def __init__(self, agent, get_value, get_action, device=None, preprocess_obs=None):
+    def __init__(self, agent, device=None, preprocess_obs=None):
         self.agent = agent
-        self._get_value = get_value
-        self._get_action = get_action
         self.device = device
         self.preprocess_obs = preprocess_obs
 
     def get_value(self, state):
-        assert self._get_value is not None, "get_value is not implemented"
         state = self._prepare_state(state)
-        return self._get_value(state)
+        with torch.no_grad():
+            return self._get_value(state).to("cpu")
 
     def get_action(self, state):
-        assert self._get_action is not None, "get_action is not implemented"
         state = self._prepare_state(state)
-        return self._get_action(state)
+        with torch.no_grad():
+            return self._get_action(state).to("cpu")
+
+    def _get_value(self, state):
+        raise NotImplementedError
+
+    def _get_action(self, state):
+        raise NotImplementedError
 
     def _prepare_state(self, state):
         if self.preprocess_obs is not None:
@@ -34,7 +38,7 @@ class Evaluator:
 
 class CleanRLDiscreteEvaluator(Evaluator):
     def __init__(self, agent, *args, **kwargs):
-        super().__init__(agent, self._get_value, self._get_action, *args, **kwargs)
+        super().__init__(agent, *args, **kwargs)
         self.agent = agent
 
     def _get_value(self, state):
