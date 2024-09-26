@@ -361,21 +361,21 @@ class ProcgenAgent(Policy):
         shape = (c, h, w)
         super().__init__(shape, num_actions, arch=arch, base_kwargs=base_kwargs)
 
-    def get_value(self, x):
-        new_x = x.permute((0, 3, 1, 2)) / 255.0
-        value, _ = self.base(new_x)
+    def get_value(self, inputs):
+        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
+        value, _ = self.base(new_inputs)
         return value
 
-    def get_action(self, x):
-        new_x = x.permute((0, 3, 1, 2)) / 255.0
-        _, actor_features = self.base(new_x)
+    def get_action(self, inputs):
+        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
+        _, actor_features = self.base(new_inputs)
         dist = self.dist(actor_features)
         action = dist.sample()
         return torch.squeeze(action)
 
-    def get_action_and_value(self, x, action=None, full_log_probs=False, deterministic=False):
-        new_x = x.permute((0, 3, 1, 2)) / 255.0
-        value, actor_features = self.base(new_x)
+    def get_action_and_value(self, inputs, action=None, full_log_probs=False, deterministic=False):
+        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
+        value, actor_features = self.base(new_inputs)
         dist = self.dist(actor_features)
 
         if action is None:

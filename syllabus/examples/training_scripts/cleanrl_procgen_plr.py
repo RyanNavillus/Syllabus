@@ -142,7 +142,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, n
                 curriculum.get_components(),
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
-                batch_size=10
+                batch_size=256
             )
         return env
     return thunk
@@ -208,14 +208,11 @@ def make_action_fn():
 
 
 class ProcgenEvaluator(Evaluator):
-    def __init__(self, agent, device):
-        super().__init__(agent, device=device)
+    def _get_action(self, state, lstm_state=None, done=None):
+        return self.agent.get_action(state), lstm_state, {}
 
-    def _get_action(self, state):
-        return self.agent.get_action(state)
-
-    def _get_value(self, state):
-        return self.agent.get_value(state)
+    def _get_value(self, state, lstm_state=None, done=None):
+        return self.agent.get_value(state), lstm_state, {}
 
 
 if __name__ == "__main__":
