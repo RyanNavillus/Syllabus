@@ -1,3 +1,4 @@
+import time
 import warnings
 from typing import Any, Dict, List, Tuple, Union
 
@@ -19,8 +20,9 @@ class RolloutStorage(object):
         num_steps: int,
         num_processes: int,
         requires_value_buffers: bool,
-        observation_space: gym.Space,
+        observation_space: gym.Space,   # TODO: Use np array when space is box or discrete
         action_space: gym.Space = None,
+        lstm_size: int = None,
         evaluator: Evaluator = None,
     ):
         self.num_steps = num_steps
@@ -30,9 +32,12 @@ class RolloutStorage(object):
         self.evaluator = evaluator
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
+        self.lstm_states = torch.zeros(num_steps + 1, num_processes, lstm_size) if lstm_size is not None else None
 
         self.obs = {env_idx: [None for _ in range(self.buffer_steps)] for env_idx in range(self.num_processes)}
         self.env_steps = [0] * num_processes
+        self.value_steps = torch.zeros(num_processes, dtype=torch.int)
+
         self.ready_buffers = set()
 
         if requires_value_buffers:
@@ -51,6 +56,9 @@ class RolloutStorage(object):
     def to(self, device):
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
+
+        if self.lstm_states is not None:
+            self.lstm_states = self.lstm_states.to(device)
         if self._requires_value_buffers:
             self.rewards = self.rewards.to(device)
             self.value_preds = self.value_preds.to(device)
@@ -82,52 +90,68 @@ class RolloutStorage(object):
             self.tasks[step:end_step, env_index].copy_(torch.as_tensor(np.array(task)[:, None]))
 
         self.env_steps[env_index] += steps
-        if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps + 1:
+
+        # Get value predictions if batch is ready
+        while all((self.env_steps - self.value_steps.numpy()) > 0):
+            obs = [ob_list[self.value_steps[actor]] for actor, ob_list in self.obs.items()]
+            lstm_states = dones = None
+            if self.lstm_states is not None:
+                lstm_states = self.lstm_states[self.value_steps.numpy(), np.arange(self.num_processes)]
+                dones = torch.logical_not(self.masks[self.value_steps.numpy(), np.arange(self.num_processes)])
+            values, lstm_states, extras = self.evaluator.get_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
+            self.value_preds[self.value_steps, :] = values
+            self.value_steps += 1
+
+        # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
+        if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
             self.ready_buffers.add(env_index)
 
-    def _get_values(self, env_index):
-        if self.evaluator is None:
-            raise UsageError("Selected strategy requires value predictions. Please provide an evaluator to PLR.")
-        # Iterate by the batch size
-        for step in range(0, self.num_steps, self.num_processes):
-            obs = self.obs[env_index][step: step + self.num_processes]
-            values = self.evaluator.get_value(torch.Tensor(np.stack(obs)))
+    # def _get_values(self, env_index):
+    #     if self.evaluator is None:
+    #         raise UsageError("Selected strategy requires value predictions. Please provide an evaluator to PLR.")
+    #     # Iterate by the batch size
+    #     for step in range(0, self.num_steps + 1, self.num_processes):
+    #         obs = self.obs[env_index][step: step + self.num_processes]
+    #         lstm_states = self.lstm_states[step: step + self.num_processes, env_index] if self.lstm_states is not None else None
+    #         dones = torch.logical_not(self.masks[step: step + self.num_processes, env_index])
+    #         values, lstm_states, extras = self.evaluator.get_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
 
-            # Reshape values if necessary
-            if len(values.shape) == 3:
-                warnings.warn(
-                    f"Value function returned a 3D tensor of shape {values.shape}. Squeezing last dimension."
-                )
-                values = torch.squeeze(values, -1)
-            if len(values.shape) == 1:
-                warnings.warn(
-                    f"Value function returned a 1D tensor of shape {values.shape}. Unsqueezing last dimension."
-                )
-                values = torch.unsqueeze(values, -1)
-            self.value_preds[step: step + self.num_processes, env_index] = values
-
-        next_ob = self.obs[env_index][self.num_steps]
-        next_value = self.evaluator.get_value(torch.Tensor(np.stack(np.expand_dims(next_ob, axis=0))))
-        self.value_preds[self.num_steps, env_index] = next_value
+    #         # Reshape values if necessary
+    #         if len(values.shape) == 3:
+    #             warnings.warn(
+    #                 f"Value function returned a 3D tensor of shape {values.shape}. Squeezing last dimension."
+    #             )
+    #             values = torch.squeeze(values, -1)
+    #         if len(values.shape) == 1:
+    #             warnings.warn(
+    #                 f"Value function returned a 1D tensor of shape {values.shape}. Unsqueezing last dimension."
+    #             )
+    #             values = torch.unsqueeze(values, -1)
+    #         self.value_preds[step: step + self.num_processes, env_index] = values
+    #         if self.lstm_states is not None:
+    #             self.lstm_states[step: step + self.num_processes, env_index] = lstm_states
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
         self.tasks[:, env_index] = self.tasks[:, env_index].roll(-self.num_steps, 0)
         self.masks[:, env_index] = self.masks[:, env_index].roll(-self.num_steps, 0)
         self.obs[env_index] = self.obs[env_index][self.num_steps:]
+
+        if self.lstm_states is not None:
+            self.lstm_states[:, env_index] = self.lstm_states[:, env_index].roll(-self.num_steps, 0)
         if self._requires_value_buffers:
             self.returns[:, env_index] = self.returns[:, env_index].roll(-self.num_steps, 0)
             self.rewards[:, env_index] = self.rewards[:, env_index].roll(-self.num_steps, 0)
-            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-self.num_steps, 0)
+            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-(self.num_steps + 1), 0)
         else:
             self.action_log_dist[:, env_index] = self.action_log_dist[:, env_index].roll(-self.num_steps, 0)
 
         self.env_steps[env_index] -= self.num_steps
+        self.value_steps[env_index] -= (self.num_steps + 1)
         self.ready_buffers.remove(env_index)
 
     def compute_returns(self, gamma, gae_lambda, env_index):
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
-        self._get_values(env_index)
         gae = 0
         for step in reversed(range(self.num_steps)):
             delta = (
