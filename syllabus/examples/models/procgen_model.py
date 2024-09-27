@@ -46,6 +46,19 @@ class Flatten(nn.Module):
         return x.reshape(x.size(0), -1)
 
 
+class ReLULinear(nn.Module):
+    """
+    ReLU linear layer
+    """
+    def __init__(self, in_features, out_features):
+        super(ReLULinear, self).__init__()
+        self.linear = init_relu_(nn.Linear(in_features, out_features))
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.linear(x))
+
+
 class Conv2d_tf(nn.Conv2d):
     """
     Conv2d with the padding behavior from TF
@@ -246,6 +259,7 @@ class SmallNetBase(NNBase):
 
         return self.critic_linear(x), x
 
+
 class Policy(nn.Module):
     """
     Actor-Critic module
@@ -306,7 +320,7 @@ class ProcgenAgent(Policy):
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
         h, w, c = obs_shape
         shape = (c, h, w)
-        super().__init__(shape, num_actions, arch=arch, base_kwargs=base_kwargs)
+        super().__init__(shape, num_actions, base_kwargs=base_kwargs)
 
     def get_value(self, inputs):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
@@ -346,16 +360,16 @@ class ProcgenLSTMAgent(nn.Module):
 
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.lstm = nn.LSTM(2048, 512)
-        self.relu = nn.ReLU()
-        self.actor = init_relu_(nn.Linear(512, 256))
+        self.actor = ReLULinear(512, 256)
         self.critic = init_(nn.Linear(512, 1))
         self.dist = Categorical(256, num_actions)
         self.latent_dim_pi = 256
         self.latent_dim_vf = 256
         apply_init_(self.modules())
 
-    def get_states(self, x, lstm_state, done):
-        hidden = self.base(x / 255.0)
+    def get_states(self, inputs, lstm_state, done):
+        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
+        hidden = self.base(new_inputs / 255.0)
 
         # LSTM logic
         batch_size = lstm_state[0].shape[1]
@@ -375,24 +389,21 @@ class ProcgenLSTMAgent(nn.Module):
         return new_hidden, lstm_state
 
     def get_value(self, inputs, lstm_state, done):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden, _ = self.get_states(new_inputs, lstm_state, done)
+        hidden, _ = self.get_states(inputs, lstm_state, done)
         return self.critic(hidden)
 
     def get_action(self, inputs, lstm_state, done):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden, lstm_state = self.get_states(new_inputs, lstm_state, done)
+        hidden, _ = self.get_states(inputs, lstm_state, done)
         logits = self.actor(hidden)
         probs = self.dist(logits)
         action = probs.sample()
         return torch.squeeze(action)
 
     def get_action_and_value(self, inputs, lstm_state, done, action=None, full_log_probs=False, deterministic=False):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden, lstm_state = self.get_states(new_inputs, lstm_state, done)
+        hidden, lstm_state = self.get_states(inputs, lstm_state, done)
 
         value = self.critic(hidden)
-        logits = self.relu(self.actor(hidden))
+        logits = self.actor(hidden)
         probs = self.dist(logits)
 
         if action is None:
