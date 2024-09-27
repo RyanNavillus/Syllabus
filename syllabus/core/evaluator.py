@@ -12,7 +12,7 @@ class Evaluator:
     def get_value(self, state, lstm_state=None, done=None):
         state = self._prepare_state(state)
         if lstm_state is not None:
-            lstm_state = self._prepare_lstm_state(lstm_state)
+            lstm_state, done = self._prepare_lstm(lstm_state, done)
 
         with torch.no_grad():
             value, lstm_state, extras = self._get_value(state, lstm_state=lstm_state, done=done)
@@ -21,7 +21,7 @@ class Evaluator:
     def get_action(self, state, lstm_state=None, done=None):
         state = self._prepare_state(state)
         if lstm_state is not None:
-            lstm_state = self._prepare_lstm_state(lstm_state)
+            lstm_state, done = self._prepare_lstm(lstm_state, done)
 
         with torch.no_grad():
             action, lstm_state, extras = self._get_action(state, lstm_state=lstm_state, done=done)
@@ -41,11 +41,19 @@ class Evaluator:
             state = state.to(self.device)
         return state
 
-    def _prepare_lstm_state(self, lstm_state):
-        lstm_state = torch.Tensor(lstm_state)
+    def _prepare_lstm(self, lstm_state, done):
+        lstm_state = (
+            torch.Tensor(lstm_state[0]),
+            torch.Tensor(lstm_state[1]),
+        )
+        done = torch.Tensor(done)
         if self.device is not None:
-            lstm_state = lstm_state.to(self.device)
-        return lstm_state
+            lstm_state = (
+                lstm_state[0].to(self.device),
+                lstm_state[1].to(self.device),
+            )
+            done = done.to(self.device)
+        return lstm_state, done
 
     def get_action_value(self, state, lstm_state=None):
         return self.get_action(state, lstm_state=lstm_state), self.get_value(state, lstm_state=lstm_state)
@@ -71,3 +79,17 @@ class CleanRLDiscreteEvaluator(Evaluator):
         logits = self.agent.actor(hidden)
         probs = Categorical(logits=logits)
         return probs.sample(), lstm_state, {}
+
+
+class CleanRLDiscreteLSTMEvaluator(Evaluator):
+    def __init__(self, agent, *args, **kwargs):
+        super().__init__(agent, *args, **kwargs)
+        self.agent = agent
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        return self.agent.get_value(state, lstm_state, done), lstm_state, {}
+
+    def _get_action(self, state, lstm_state=None, done=None):
+        assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        return self.agent.get_action(state, lstm_state, done), lstm_state, {}
