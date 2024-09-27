@@ -1,5 +1,8 @@
+import warnings
 import torch
 from torch.distributions.categorical import Categorical
+
+from syllabus.core.utils import UsageError
 
 
 # TODO: Document this class
@@ -16,7 +19,7 @@ class Evaluator:
 
         with torch.no_grad():
             value, lstm_state, extras = self._get_value(state, lstm_state=lstm_state, done=done)
-            return value.to("cpu"), lstm_state, extras
+            return value.to("cpu"), extras
 
     def get_action(self, state, lstm_state=None, done=None):
         state = self._prepare_state(state)
@@ -25,12 +28,23 @@ class Evaluator:
 
         with torch.no_grad():
             action, lstm_state, extras = self._get_action(state, lstm_state=lstm_state, done=done)
-            return action.to("cpu"), lstm_state, extras
+            return action.to("cpu"), extras
+
+    def get_action_and_value(self, state, lstm_state=None, done=None):
+        state = self._prepare_state(state)
+        if lstm_state is not None:
+            lstm_state, done = self._prepare_lstm(lstm_state, done)
+        with torch.no_grad():
+            action, value, extras = self._get_action_and_value(state, lstm_state=lstm_state, done=done)
+        return action.to("cpu"), value.to("cpu"), extras
 
     def _get_value(self, state, lstm_state=None, done=None):
         raise NotImplementedError
 
     def _get_action(self, state, lstm_state=None, done=None):
+        raise NotImplementedError
+
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
         raise NotImplementedError
 
     def _prepare_state(self, state):
@@ -55,41 +69,37 @@ class Evaluator:
             done = done.to(self.device)
         return lstm_state, done
 
-    def get_action_value(self, state, lstm_state=None):
-        return self.get_action(state, lstm_state=lstm_state), self.get_value(state, lstm_state=lstm_state)
-
 
 class CleanRLDiscreteEvaluator(Evaluator):
-    def __init__(self, agent, *args, **kwargs):
+    def __init__(self, agent, is_lstm=False, *args, **kwargs):
         super().__init__(agent, *args, **kwargs)
         self.agent = agent
+        self.is_lstm = is_lstm or hasattr(agent, "lstm")
 
     def _get_value(self, state, lstm_state=None, done=None):
-        if lstm_state is not None and done is not None:     # For LSTM models
-            hidden, lstm_state = self.agent.get_states(state, lstm_state, done)
-        else:   # For non-LSTM models
-            hidden = state
-        return self.agent.critic(hidden), lstm_state, {}
+        if self.is_lstm:
+            assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            assert done is not None, "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            value = self.agent.get_value(state, lstm_state, done)
+        else:
+            value = self.agent.get_value(state)
+        return value, {}
 
     def _get_action(self, state, lstm_state=None, done=None):
-        if lstm_state is not None and done is not None:     # For LSTM models
-            hidden, lstm_state = self.agent.get_states(state, lstm_state, done)
-        else:   # For non-LSTM models
-            hidden = state
-        logits = self.agent.actor(hidden)
-        probs = Categorical(logits=logits)
-        return probs.sample(), lstm_state, {}
+        if self.is_lstm:
+            assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            assert done is not None, "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            action = self.agent.get_action(state, lstm_state, done)
+        else:
+            action = self.agent.get_action(state)
+        return action, {}
 
-
-class CleanRLDiscreteLSTMEvaluator(Evaluator):
-    def __init__(self, agent, *args, **kwargs):
-        super().__init__(agent, *args, **kwargs)
-        self.agent = agent
-
-    def _get_value(self, state, lstm_state=None, done=None):
-        assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
-        return self.agent.get_value(state, lstm_state, done), lstm_state, {}
-
-    def _get_action(self, state, lstm_state=None, done=None):
-        assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
-        return self.agent.get_action(state, lstm_state, done), lstm_state, {}
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
+        if self.is_lstm:
+            assert lstm_state is not None, "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            assert done is not None, "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            action, log_probs, entropy, value, lstm_state = self.agent.get_action_and_value(state, lstm_state, done)
+            return action, value, {"log_probs": log_probs, "entropy": entropy, "lstm_state": lstm_state}
+        else:
+            action, log_probs, entropy, value = self.agent.get_action_and_value(state)
+            return action, value, {"log_probs": log_probs, "entropy": entropy}
