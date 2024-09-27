@@ -109,7 +109,7 @@ class RolloutStorage(object):
                     torch.unsqueeze(self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
                     torch.unsqueeze(self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
                 )
-                dones = torch.unsqueeze(-self.masks[self.value_steps.numpy(), np.arange(self.num_processes)], 0)
+                dones = torch.squeeze(-self.masks[self.value_steps.numpy(), np.arange(self.num_processes)], -1)
             values, lstm_states, extras = self.evaluator.get_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
             self.value_preds[self.value_steps, np.arange(self.num_processes)] = values
             self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)

@@ -181,7 +181,6 @@ def level_replay_evaluate(
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 
-    # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
@@ -260,7 +259,6 @@ if __name__ == "__main__":
     agent = ProcgenAgent(
         single_observation_space.shape,
         single_action_space.n,
-        arch="large",
         base_kwargs={'hidden_size': 256}
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
