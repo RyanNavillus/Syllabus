@@ -32,7 +32,13 @@ class RolloutStorage(object):
         self.evaluator = evaluator
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.lstm_states = torch.zeros(num_steps + 1, num_processes, lstm_size) if lstm_size is not None else None
+
+        self.lstm_states = None
+        if lstm_size is not None:
+            self.lstm_states = (
+                torch.zeros(self.buffer_steps + 1, num_processes, lstm_size),
+                torch.zeros(self.buffer_steps + 1, num_processes, lstm_size),
+            )
 
         self.obs = {env_idx: [None for _ in range(self.buffer_steps)] for env_idx in range(self.num_processes)}
         self.env_steps = [0] * num_processes
@@ -58,7 +64,10 @@ class RolloutStorage(object):
         self.tasks = self.tasks.to(device)
 
         if self.lstm_states is not None:
-            self.lstm_states = self.lstm_states.to(device)
+            self.lstm_states = (
+                self.lstm_states[0].to(device),
+                self.lstm_states[1].to(device),
+            )
         if self._requires_value_buffers:
             self.rewards = self.rewards.to(device)
             self.value_preds = self.value_preds.to(device)
@@ -93,13 +102,18 @@ class RolloutStorage(object):
 
         # Get value predictions if batch is ready
         while all((self.env_steps - self.value_steps.numpy()) > 0):
-            obs = [ob_list[self.value_steps[actor]] for actor, ob_list in self.obs.items()]
+            obs = [self.obs[env_idx][self.value_steps[env_idx]] for env_idx in range(self.num_processes)]
             lstm_states = dones = None
             if self.lstm_states is not None:
-                lstm_states = self.lstm_states[self.value_steps.numpy(), np.arange(self.num_processes)]
-                dones = torch.logical_not(self.masks[self.value_steps.numpy(), np.arange(self.num_processes)])
+                lstm_states = (
+                    torch.unsqueeze(self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
+                    torch.unsqueeze(self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
+                )
+                dones = torch.unsqueeze(-self.masks[self.value_steps.numpy(), np.arange(self.num_processes)], 0)
             values, lstm_states, extras = self.evaluator.get_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
-            self.value_preds[self.value_steps, :] = values
+            self.value_preds[self.value_steps, np.arange(self.num_processes)] = values
+            self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
+            self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
             self.value_steps += 1
 
         # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
@@ -138,7 +152,9 @@ class RolloutStorage(object):
         self.obs[env_index] = self.obs[env_index][self.num_steps:]
 
         if self.lstm_states is not None:
-            self.lstm_states[:, env_index] = self.lstm_states[:, env_index].roll(-self.num_steps, 0)
+            self.lstm_states[0][:, env_index] = self.lstm_states[0][:, env_index].roll(-self.num_steps, 0)
+            self.lstm_states[1][:, env_index] = self.lstm_states[1][:, env_index].roll(-self.num_steps, 0)
+
         if self._requires_value_buffers:
             self.returns[:, env_index] = self.returns[:, env_index].roll(-self.num_steps, 0)
             self.rewards[:, env_index] = self.rewards[:, env_index].roll(-self.num_steps, 0)
@@ -190,6 +206,7 @@ class PrioritizedLevelReplay(Curriculum):
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
+        lstm_size: int = None,
         device: str = "cpu",
         num_steps: int = 256,
         num_processes: int = 64,
@@ -227,6 +244,7 @@ class PrioritizedLevelReplay(Curriculum):
             self._task_sampler.requires_value_buffers,
             observation_space,
             action_space=action_space,
+            lstm_size=lstm_size,
             evaluator=evaluator,
         )
         self._rollouts.to(device)
