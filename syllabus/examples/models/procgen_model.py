@@ -241,7 +241,7 @@ class ProcgenAgent(nn.Module):
         super(ProcgenAgent, self).__init__()
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.critic = init_(nn.Linear(256, 1))
-        self.dist = Categorical(256, num_actions)
+        self.actor = Categorical(256, num_actions)
 
         apply_init_(self.modules())
 
@@ -253,24 +253,20 @@ class ProcgenAgent(nn.Module):
     def get_action(self, inputs):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
         hidden = self.base(new_inputs)
-        dist = self.dist(hidden)
+        dist = self.actor(hidden)
         action = dist.sample()
         return torch.squeeze(action)
 
-    def get_action_and_value(self, inputs, action=None, full_log_probs=False, deterministic=False):
+    def get_action_and_value(self, inputs, action=None, deterministic=False):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
         hidden = self.base(new_inputs)
         value = self.critic(hidden)
-        dist = self.dist(hidden)
+        dist = self.actor(hidden)
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
         action_log_probs = torch.squeeze(dist.log_probs(action))
         dist_entropy = dist.entropy()
-
-        if full_log_probs:
-            log_probs = torch.log(dist.probs)
-            return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value
 
@@ -284,15 +280,20 @@ class ProcgenLSTMAgent(nn.Module):
 
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.lstm = nn.LSTM(256, 256)
-        # TODO add actor layer back in
-        self.actor = layer_init(nn.Linear(256, num_actions), std=0.01)
         self.critic = init_(nn.Linear(256, 1))
+        self.actor = Categorical(256, num_actions)
 
         apply_init_(self.modules())
 
+        for name, param in self.lstm.named_parameters():
+            if "bias" in name:
+                nn.init.constant_(param, 0)
+            elif "weight" in name:
+                nn.init.orthogonal_(param, 1.0)
+
     def get_states(self, inputs, lstm_state, done):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden = self.base(new_inputs / 255.0)
+        hidden = self.base(new_inputs)
 
         # LSTM logic
         batch_size = lstm_state[0].shape[1]
@@ -317,25 +318,19 @@ class ProcgenLSTMAgent(nn.Module):
 
     def get_action(self, inputs, lstm_state, done):
         hidden, _ = self.get_states(inputs, lstm_state, done)
-        logits = self.actor(hidden)
-        probs = torch.distributions.categorical.Categorical(logits=logits)
-        action = probs.sample()
+        dist = self.actor(hidden)
+        action = dist.sample()
         return torch.squeeze(action)
 
-    def get_action_and_value(self, inputs, lstm_state, done, action=None, full_log_probs=False, deterministic=False):
+    def get_action_and_value(self, inputs, lstm_state, done, action=None, deterministic=False):
         hidden, lstm_state = self.get_states(inputs, lstm_state, done)
 
         value = self.critic(hidden)
-        logits = self.actor(hidden)
-        probs = torch.distributions.categorical.Categorical(logits=logits)
+        dist = self.actor(hidden)
 
         if action is None:
-            action = probs.mode() if deterministic else probs.sample()
-        action_log_probs = torch.squeeze(probs.log_prob(action))
-        dist_entropy = probs.entropy()
-
-        if full_log_probs:
-            log_probs = torch.log(probs.probs)
-            return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
+            action = dist.mode() if deterministic else dist.sample()
+        action_log_probs = torch.squeeze(dist.log_probs(action))
+        dist_entropy = dist.entropy()
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value, lstm_state
