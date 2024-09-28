@@ -23,6 +23,12 @@ init_tanh_ = lambda m: init(
 )
 
 
+def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
+    torch.nn.init.orthogonal_(layer.weight, std)
+    torch.nn.init.constant_(layer.bias, bias_const)
+    return layer
+
+
 def apply_init_(modules):
     """
     Initialize NN modules
@@ -230,37 +236,6 @@ class ResNetBase(NNBase):
         return x
 
 
-class SmallNetBase(NNBase):
-    """
-    Residual Network
-    """
-    def __init__(self, num_inputs, recurrent=False, hidden_size=256):
-        super(SmallNetBase, self).__init__(recurrent, num_inputs, hidden_size)
-
-        self.conv1 = Conv2d_tf(3, 16, kernel_size=8, stride=4)
-        self.conv2 = Conv2d_tf(16, 32, kernel_size=4, stride=2)
-
-        self.flatten = Flatten()
-        self.relu = nn.ReLU()
-
-        self.fc = init_relu_(nn.Linear(2048, hidden_size))
-        self.critic_linear = init_(nn.Linear(hidden_size, 1))
-
-        apply_init_(self.modules())
-
-        self.train()
-
-    def forward(self, inputs):
-        x = inputs
-
-        x = self.relu(self.conv1(x))
-        x = self.relu(self.conv2(x))
-        x = self.flatten(x)
-        x = self.relu(self.fc(x))
-
-        return self.critic_linear(x), x
-
-
 class ProcgenAgent(nn.Module):
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
         super(ProcgenAgent, self).__init__()
@@ -309,8 +284,9 @@ class ProcgenLSTMAgent(nn.Module):
 
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.lstm = nn.LSTM(256, 256)
+        # TODO add actor layer back in
+        self.actor = layer_init(nn.Linear(256, num_actions), std=0.01)
         self.critic = init_(nn.Linear(256, 1))
-        self.dist = Categorical(256, num_actions)
 
         apply_init_(self.modules())
 
@@ -341,7 +317,8 @@ class ProcgenLSTMAgent(nn.Module):
 
     def get_action(self, inputs, lstm_state, done):
         hidden, _ = self.get_states(inputs, lstm_state, done)
-        probs = self.dist(hidden)
+        logits = self.actor(hidden)
+        probs = torch.distributions.categorical.Categorical(logits=logits)
         action = probs.sample()
         return torch.squeeze(action)
 
@@ -349,11 +326,12 @@ class ProcgenLSTMAgent(nn.Module):
         hidden, lstm_state = self.get_states(inputs, lstm_state, done)
 
         value = self.critic(hidden)
-        probs = self.dist(hidden)
+        logits = self.actor(hidden)
+        probs = torch.distributions.categorical.Categorical(logits=logits)
 
         if action is None:
             action = probs.mode() if deterministic else probs.sample()
-        action_log_probs = torch.squeeze(probs.log_probs(action))
+        action_log_probs = torch.squeeze(probs.log_prob(action))
         dist_entropy = probs.entropy()
 
         if full_log_probs:
