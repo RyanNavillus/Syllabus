@@ -59,11 +59,15 @@ class RolloutStorage(object):
 
         self.num_steps = num_steps
 
+    @property
+    def using_lstm(self):
+        return self.lstm_states is not None
+
     def to(self, device):
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
 
-        if self.lstm_states is not None:
+        if self.using_lstm:
             self.lstm_states = (
                 self.lstm_states[0].to(device),
                 self.lstm_states[1].to(device),
@@ -104,17 +108,28 @@ class RolloutStorage(object):
         while all((self.env_steps - self.value_steps.numpy()) > 0):
             obs = [self.obs[env_idx][self.value_steps[env_idx]] for env_idx in range(self.num_processes)]
             lstm_states = dones = None
-            if self.lstm_states is not None:
+            if self.using_lstm:
                 lstm_states = (
                     torch.unsqueeze(self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
                     torch.unsqueeze(self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
                 )
                 dones = torch.squeeze(-self.masks[self.value_steps.numpy(), np.arange(self.num_processes)], -1)
-            values, lstm_states, extras = self.evaluator.get_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
+
+            try:
+                _, values, extras = self.evaluator.get_action_and_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
+            except RuntimeError as e:
+                raise UsageError("Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the agent's get_states implementation.") from e
             self.value_preds[self.value_steps, np.arange(self.num_processes)] = values
-            self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
-            self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
             self.value_steps += 1
+
+            if self.using_lstm:
+                try:
+                    lstm_states = extras["lstm_state"]
+                except KeyError as e:
+                    raise UsageError("Evaluator must return lstm_state in extras for PLR.") from e
+
+                self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
+                self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
 
         # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
         if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
@@ -151,7 +166,7 @@ class RolloutStorage(object):
         self.masks[:, env_index] = self.masks[:, env_index].roll(-self.num_steps, 0)
         self.obs[env_index] = self.obs[env_index][self.num_steps:]
 
-        if self.lstm_states is not None:
+        if self.using_lstm:
             self.lstm_states[0][:, env_index] = self.lstm_states[0][:, env_index].roll(-self.num_steps, 0)
             self.lstm_states[1][:, env_index] = self.lstm_states[1][:, env_index].roll(-self.num_steps, 0)
 

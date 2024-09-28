@@ -198,7 +198,7 @@ class ResNetBase(NNBase):
         self.layer1 = self._make_layer(num_inputs, channels[0])
         self.layer2 = self._make_layer(channels[0], channels[1])
         self.layer3 = self._make_layer(channels[1], channels[2])
-
+        self.fc = init_relu_(nn.Linear(2048, hidden_size))
         self.flatten = Flatten()
         self.relu = nn.ReLU()
 
@@ -225,6 +225,7 @@ class ResNetBase(NNBase):
         x = self.layer3(x)
 
         x = self.relu(self.flatten(x))
+        x = self.relu(self.fc(x))
 
         return x
 
@@ -260,84 +261,32 @@ class SmallNetBase(NNBase):
         return self.critic_linear(x), x
 
 
-class Policy(nn.Module):
-    """
-    Actor-Critic module
-    """
-    def __init__(self, obs_shape, num_actions, base_kwargs=None):
-        super(Policy, self).__init__()
-
-        if base_kwargs is None:
-            base_kwargs = {}
-
-        self.base = ResNetBase(obs_shape[0], **base_kwargs)
-        self.dist = Categorical(self.base.output_size, num_actions)
-        self.latent_dim_pi = 256
-        self.latent_dim_vf = 256
-
-    @property
-    def is_recurrent(self):
-        return self.base.is_recurrent
-
-    @property
-    def recurrent_hidden_state_size(self):
-        """Size of rnn_hx."""
-        return self.base.recurrent_hidden_state_size
-
-    def forward(self, inputs):
-        value, actor_features, rnn_hxs = self.base(inputs, None, None)
-        dist = self.dist(actor_features)
-        return dist.sample(), value
-
-    def act(self, inputs, deterministic=False):
-        value, actor_features = self.base(inputs)
-        dist = self.dist(actor_features)
-
-        if deterministic:
-            action = dist.mode()
-        else:
-            action = dist.sample()
-
-        action_log_dist = dist.logits
-
-        return value, action, action_log_dist
-
-    def get_value(self, inputs):
-        value, _, _ = self.base(inputs)
-        return value
-
-    def evaluate_actions(self, inputs, rnn_hxs, masks, action):
-        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
-        dist = self.dist(actor_features)
-
-        action_log_probs = dist.log_probs(action)
-        dist_entropy = dist.entropy().mean()
-
-        return value, action_log_probs, dist_entropy, rnn_hxs
-
-
-class ProcgenAgent(Policy):
+class ProcgenAgent(nn.Module):
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
-        h, w, c = obs_shape
-        shape = (c, h, w)
-        super().__init__(shape, num_actions, base_kwargs=base_kwargs)
+        super(ProcgenAgent, self).__init__()
+        self.base = ResNetBase(obs_shape[2], **base_kwargs)
+        self.critic = init_(nn.Linear(256, 1))
+        self.dist = Categorical(256, num_actions)
+
+        apply_init_(self.modules())
 
     def get_value(self, inputs):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        value, _ = self.base(new_inputs)
-        return value
+        hidden = self.base(new_inputs)
+        return self.critic(hidden)
 
     def get_action(self, inputs):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        _, actor_features = self.base(new_inputs)
-        dist = self.dist(actor_features)
+        hidden = self.base(new_inputs)
+        dist = self.dist(hidden)
         action = dist.sample()
         return torch.squeeze(action)
 
     def get_action_and_value(self, inputs, action=None, full_log_probs=False, deterministic=False):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        value, actor_features = self.base(new_inputs)
-        dist = self.dist(actor_features)
+        hidden = self.base(new_inputs)
+        value = self.critic(hidden)
+        dist = self.dist(hidden)
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
@@ -359,12 +308,10 @@ class ProcgenLSTMAgent(nn.Module):
             base_kwargs = {}
 
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
-        self.lstm = nn.LSTM(2048, 512)
-        self.actor = ReLULinear(512, 256)
-        self.critic = init_(nn.Linear(512, 1))
+        self.lstm = nn.LSTM(256, 256)
+        self.critic = init_(nn.Linear(256, 1))
         self.dist = Categorical(256, num_actions)
-        self.latent_dim_pi = 256
-        self.latent_dim_vf = 256
+
         apply_init_(self.modules())
 
     def get_states(self, inputs, lstm_state, done):
@@ -394,8 +341,7 @@ class ProcgenLSTMAgent(nn.Module):
 
     def get_action(self, inputs, lstm_state, done):
         hidden, _ = self.get_states(inputs, lstm_state, done)
-        logits = self.actor(hidden)
-        probs = self.dist(logits)
+        probs = self.dist(hidden)
         action = probs.sample()
         return torch.squeeze(action)
 
@@ -403,8 +349,7 @@ class ProcgenLSTMAgent(nn.Module):
         hidden, lstm_state = self.get_states(inputs, lstm_state, done)
 
         value = self.critic(hidden)
-        logits = self.actor(hidden)
-        probs = self.dist(logits)
+        probs = self.dist(hidden)
 
         if action is None:
             action = probs.mode() if deterministic else probs.sample()

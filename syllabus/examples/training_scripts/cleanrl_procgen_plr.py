@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import Evaluator
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -206,14 +206,6 @@ def make_action_fn():
     return get_action
 
 
-class ProcgenEvaluator(Evaluator):
-    def _get_action(self, state, lstm_state=None, done=None):
-        return self.agent.get_action(state), lstm_state, {}
-
-    def _get_value(self, state, lstm_state=None, done=None):
-        return self.agent.get_value(state), lstm_state, {}
-
-
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -273,7 +265,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = ProcgenEvaluator(agent, device=device)
+            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
