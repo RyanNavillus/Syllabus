@@ -43,9 +43,11 @@ def apply_init_(modules):
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LSTM):
-            nn.init.orthogonal_(m.weight, 1.0)
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
+            for name, param in m.named_parameters():
+                if "bias" in name:
+                    nn.init.constant_(param, 0)
+                elif "weight" in name:
+                    nn.init.orthogonal_(param, 1.0)
 
 
 class Flatten(nn.Module):
@@ -289,7 +291,7 @@ class ProcgenLSTMAgent(nn.Module):
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.lstm = nn.LSTM(256, 256)
         self.critic = init_(nn.Linear(256, 1))
-        self.actor = layer_init(nn.Linear(128, num_actions), std=0.01)
+        self.actor = layer_init(nn.Linear(256, num_actions), std=0.01)
 
         apply_init_(self.modules())
 
@@ -332,7 +334,7 @@ class ProcgenLSTMAgent(nn.Module):
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
-        action_log_probs = torch.squeeze(dist.log_probs(action))
+        action_log_probs = torch.squeeze(dist.log_prob(action))
         dist_entropy = dist.entropy()
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value, lstm_state
