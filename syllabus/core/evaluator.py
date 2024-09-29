@@ -19,7 +19,7 @@ class Evaluator:
 
         with torch.no_grad():
             value, lstm_state, extras = self._get_value(state, lstm_state=lstm_state, done=done)
-            return value.to("cpu"), extras
+        return value.to("cpu"), extras
 
     def get_action(self, state, lstm_state=None, done=None):
         state = self._prepare_state(state)
@@ -28,12 +28,13 @@ class Evaluator:
 
         with torch.no_grad():
             action, lstm_state, extras = self._get_action(state, lstm_state=lstm_state, done=done)
-            return action.to("cpu"), extras
+        return action.to("cpu"), extras
 
     def get_action_and_value(self, state, lstm_state=None, done=None):
         state = self._prepare_state(state)
         if lstm_state is not None:
             lstm_state, done = self._prepare_lstm(lstm_state, done)
+
         with torch.no_grad():
             action, value, extras = self._get_action_and_value(state, lstm_state=lstm_state, done=done)
         return action.to("cpu"), value.to("cpu"), extras
