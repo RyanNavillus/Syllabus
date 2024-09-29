@@ -289,7 +289,7 @@ class ProcgenLSTMAgent(nn.Module):
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.lstm = nn.LSTM(256, 256)
         self.critic = init_(nn.Linear(256, 1))
-        self.actor = Categorical(256, num_actions)
+        self.actor = layer_init(nn.Linear(128, num_actions), std=0.01)
 
         apply_init_(self.modules())
 
@@ -320,7 +320,7 @@ class ProcgenLSTMAgent(nn.Module):
 
     def get_action(self, inputs, lstm_state, done):
         hidden, _ = self.get_states(inputs, lstm_state, done)
-        dist = self.actor(hidden)
+        dist = torch.distributions.categorical.Categorical(logits=self.actor(hidden))
         action = dist.sample()
         return torch.squeeze(action)
 
@@ -328,7 +328,7 @@ class ProcgenLSTMAgent(nn.Module):
         hidden, lstm_state = self.get_states(inputs, lstm_state, done)
 
         value = self.critic(hidden)
-        dist = self.actor(hidden)
+        dist = torch.distributions.categorical.Categorical(logits=self.actor(hidden))
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
