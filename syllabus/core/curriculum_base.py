@@ -5,6 +5,7 @@ from typing import Any, Callable, List, Tuple, Union
 import numpy as np
 from gymnasium.spaces import Dict, Box
 import random
+from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import TaskSpace
 
 
@@ -21,7 +22,8 @@ class Curriculum:
         TODO: Use task space for this
         :param task_names: Names of the tasks in the task space, defaults to None
         """
-        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
+        assert isinstance(
+            task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
         self.completed_tasks = 0
         self.task_names = task_names
@@ -92,7 +94,8 @@ class Curriculum:
         :param info: Extra information from the environment
         :raises NotImplementedError:
         """
-        raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+        raise NotImplementedError(
+            "This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
     def update_on_step_batch(self, step_results: List[typing.Tuple[int, int, int, int, int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.
@@ -179,19 +182,20 @@ class Curriculum:
         """
         raise NotImplementedError
 
-    def _should_use_startup_sampling(self) -> bool:  
+    def _should_use_startup_sampling(self) -> bool:
         return self.warmup_strategy != "none" and self.startup_sampled_tasks < self.warmup_tasks
-    
+
     def _startup_sample(self, k: int) -> List:
         sampled_tasks = []
 
         if isinstance(self.task_space.gym_space, Box):
             if self.warmup_strategy == "fix":
-                dims = self.task_space.gym_space.shape[0]  
-                samples_per_dim = int(round(pow(k, 1/dims)))  
+                dims = self.task_space.gym_space.shape[0]
+                samples_per_dim = int(round(pow(k, 1/dims)))
 
-                ranges = [np.linspace(self.task_space.gym_space.low[i], self.task_space.gym_space.high[i], samples_per_dim) for i in range(dims)]
-                
+                ranges = [np.linspace(self.task_space.gym_space.low[i],
+                                      self.task_space.gym_space.high[i], samples_per_dim) for i in range(dims)]
+
                 # Create a grid of samples across the dimensions
                 grid = np.meshgrid(*ranges, indexing='ij')
                 total_samples = samples_per_dim ** dims
@@ -209,7 +213,7 @@ class Curriculum:
 
             elif self.warmup_strategy == "random":
                 sampled_tasks = [self.task_space.gym_space.sample() for _ in range(k)]
-                
+
         else:
             if self.warmup_strategy == "fix":
                 if self.fix_curr_index + k > self.num_tasks:
@@ -224,7 +228,7 @@ class Curriculum:
                 # Allows sampling with replacement, making duplicates possible if k > num_tasks.
                 indices = random.choices(range(self.num_tasks), k=k)
                 sampled_tasks = [self.tasks[idx] for idx in indices]
-                
+
         self.startup_sampled_tasks += k
         return sampled_tasks
 
@@ -241,9 +245,9 @@ class Curriculum:
             # Check if the startup sampling has satisfied the request or if there's no progress (no tasks returned)
             if len(tasks) > 0 and len(tasks) < k:  # Check if we need to add more tasks
                 additional_tasks = self.sample(k=k-len(tasks))
-                tasks.extend(additional_tasks) 
+                tasks.extend(additional_tasks)
             return tasks
-        
+
         task_dist = self._sample_distribution()
 
         # Normal sampling process
@@ -274,3 +278,10 @@ class Curriculum:
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
+
+    def add_evaluator(self, evaluator: Evaluator) -> None:
+        """Add an evaluator to the curriculum.
+        Can be used to break dependency cycle if evaluator needs to be defined after the environment is created.
+        :param evaluator: Evaluator object
+        """
+        warnings.warn("This curriculum does not use an evaluator. Ignoring the call to add_evaluator.")

@@ -9,21 +9,22 @@ import gymnasium as gym
 from stable_baselines3.common.torch_layers import MlpExtractor
 from stable_baselines3.common.policies import ActorCriticPolicy
 
+
 def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
     bias_init(module.bias.data)
     return module
 
 
-init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
+def init_(m): return init(m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
 
 
-init_relu_ = lambda m: init(
+def init_relu_(m): return init(
     m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), nn.init.calculate_gain('relu')
 )
 
 
-init_tanh_ = lambda m: init(
+def init_tanh_(m): return init(
     m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2)
 )
 
@@ -47,6 +48,7 @@ class Flatten(nn.Module):
     """
     Flatten a tensor
     """
+
     def forward(self, x):
         return x.reshape(x.size(0), -1)
 
@@ -55,6 +57,7 @@ class Conv2d_tf(nn.Conv2d):
     """
     Conv2d with the padding behavior from TF
     """
+
     def __init__(self, *args, **kwargs):
         super(Conv2d_tf, self).__init__(*args, **kwargs)
         self.padding = kwargs.get("padding", "SAME")
@@ -102,6 +105,7 @@ class FixedCategorical(torch.distributions.Categorical):
     """
     Categorical distribution object
     """
+
     def sample(self):
         return super().sample().unsqueeze(-1)
 
@@ -122,10 +126,11 @@ class Categorical(nn.Module):
     """
     Categorical distribution (NN module)
     """
+
     def __init__(self, num_inputs, num_outputs):
         super(Categorical, self).__init__()
 
-        init_ = lambda m: init(
+        def init_(m): return init(
             m,
             nn.init.orthogonal_,
             lambda x: nn.init.constant_(x, 0),
@@ -142,6 +147,7 @@ class Policy(nn.Module):
     """
     Actor-Critic module
     """
+
     def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
         super(Policy, self).__init__()
 
@@ -218,6 +224,7 @@ class NNBase(nn.Module):
     """
     Actor-Critic network (base class)
     """
+
     def __init__(self, recurrent, recurrent_input_size, hidden_size):
         super(NNBase, self).__init__()
 
@@ -241,6 +248,7 @@ class MLPBase(NNBase):
     """
     Multi-Layer Perceptron
     """
+
     def __init__(self, num_inputs, recurrent=False, hidden_size=64):
         super(MLPBase, self).__init__(recurrent, num_inputs, hidden_size)
 
@@ -270,12 +278,13 @@ class BasicBlock(nn.Module):
     """
     Residual Network Block
     """
+
     def __init__(self, n_channels, stride=1):
         super(BasicBlock, self).__init__()
 
-        self.conv1 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1,1))
+        self.conv1 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1, 1))
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1,1))
+        self.conv2 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1, 1))
         self.stride = stride
 
         apply_init_(self.modules())
@@ -298,6 +307,7 @@ class ResNetBase(NNBase):
     """
     Residual Network
     """
+
     def __init__(self, num_inputs=16, recurrent=False, hidden_size=256, channels=[16, 32, 32]):
         super(ResNetBase, self).__init__(recurrent, num_inputs, hidden_size)
 
@@ -340,6 +350,7 @@ class SmallNetBase(NNBase):
     """
     Residual Network
     """
+
     def __init__(self, num_inputs, recurrent=False, hidden_size=256):
         super(SmallNetBase, self).__init__(recurrent, num_inputs, hidden_size)
 
@@ -440,7 +451,7 @@ class Sb3ProcgenAgent(ActorCriticPolicy):
     def _build_mlp_extractor(self) -> None:
         self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
 
-    def init_weights(self, m, **kwargs):
+    def init_weights(self, m, gain=1.0):
         if hasattr(m, 'is_target_net') and m.is_target_net:
             if m is self.action_net:
                 nn.init.orthogonal_(m.weight, gain=0.01)

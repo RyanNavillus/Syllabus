@@ -241,3 +241,17 @@ class CleanRLDiscreteEvaluator(Evaluator):
             done is not None
         ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
         return True
+
+
+class SB3DiscreteEvaluator(Evaluator):
+    def _get_action(self, state, lstm_state=None, done=None):
+        action, lstm_state = self.agent.predict(state)
+        return action, {"lstm_state": lstm_state}
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        value = self.agent.policy.predict_values(state)
+        return value, {}
+
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
+        action, value, _ = self.agent.policy.forward(state)
+        return action, value, {}

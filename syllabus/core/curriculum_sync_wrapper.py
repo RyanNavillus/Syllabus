@@ -14,6 +14,7 @@ from syllabus.core import Curriculum, decorate_all_functions
 class CurriculumWrapper:
     """Wrapper class for adding multiprocessing synchronization to a curriculum.
     """
+
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
         if hasattr(curriculum, "unwrapped") and curriculum.unwrapped is not None:
@@ -260,6 +261,13 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     def get_components(self):
         return self._components
 
+    def __getattr__(self, name):
+        try:
+            return getattr(self.curriculum, name)
+        except AttributeError as e:
+            raise AttributeError(
+                f"Attribute {name} not found in {self.curriculum.__class__.__name__} or MultiProcessingCurriculumWrapper") from e
+
 
 def remote_call(func):
     """
@@ -313,6 +321,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
     for convenience.
     # TODO: Implement the Curriculum methods explicitly
     """
+
     def __init__(self, curriculum, actor_name="curriculum") -> None:
         super().__init__(curriculum)
         self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
