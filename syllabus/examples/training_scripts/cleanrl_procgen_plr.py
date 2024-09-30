@@ -129,7 +129,8 @@ PROCGEN_RETURN_BOUNDS = {
 
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
@@ -195,7 +196,7 @@ def make_value_fn(agent):
 
 def make_action_value_fn(agent):
     def get_action_value(obs):
-        obs = np.array(obs[None,:])
+        obs = np.array(obs[None, :])
         with torch.no_grad():
             action, logprob, _, value = agent.get_action_and_value(torch.Tensor(obs).to(device))
         return action.cpu().numpy(), value
@@ -263,7 +264,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                task_sampler_kwargs_dict={"strategy": "value_l1", "replay_schedule": "fixed"},
                 get_value=make_value_fn(agent),
                 robust_plr=True,
                 eval_envs=plr_eval_env,
