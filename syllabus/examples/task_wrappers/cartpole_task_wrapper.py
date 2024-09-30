@@ -18,7 +18,7 @@ class CartPoleTaskWrapper(TaskWrapper):
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")
             self.task = new_task
-            task = (3 * new_task / 50.0) - 0.3
+            task = (3 * new_task / 50.0) - 0.3  # [-0.3, 0.3]
 
         return self.env.reset(options={"low": -abs(task), "high": abs(task)})
 

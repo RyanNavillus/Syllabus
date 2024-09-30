@@ -10,15 +10,15 @@ def init(module, weight_init, bias_init, gain=1):
     return module
 
 
-init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
+def init_(m): return init(m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
 
 
-init_relu_ = lambda m: init(
+def init_relu_(m): return init(
     m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), nn.init.calculate_gain('relu')
 )
 
 
-init_tanh_ = lambda m: init(
+def init_tanh_(m): return init(
     m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2)
 )
 
@@ -54,33 +54,22 @@ class Flatten(nn.Module):
     """
     Flatten a tensor
     """
+
     def forward(self, x):
         return x.reshape(x.size(0), -1)
-
-
-class ReLULinear(nn.Module):
-    """
-    ReLU linear layer
-    """
-    def __init__(self, in_features, out_features):
-        super(ReLULinear, self).__init__()
-        self.linear = init_relu_(nn.Linear(in_features, out_features))
-        self.relu = nn.ReLU()
-
-    def forward(self, x):
-        return self.relu(self.linear(x))
 
 
 class Conv2d_tf(nn.Conv2d):
     """
     Conv2d with the padding behavior from TF
     """
+
     def __init__(self, *args, **kwargs):
         super(Conv2d_tf, self).__init__(*args, **kwargs)
         self.padding = kwargs.get("padding", "SAME")
 
-    def _compute_padding(self, input, dim):
-        input_size = input.size(dim + 2)
+    def _compute_padding(self, inputs, dim):
+        input_size = inputs.size(dim + 2)
         filter_size = self.weight.size(dim + 2)
         effective_filter_size = (filter_size - 1) * self.dilation[dim] + 1
         out_size = (input_size + self.stride[dim] - 1) // self.stride[dim]
@@ -122,6 +111,7 @@ class FixedCategorical(torch.distributions.Categorical):
     """
     Categorical distribution object
     """
+
     def sample(self):
         return super().sample().unsqueeze(-1)
 
@@ -142,14 +132,17 @@ class Categorical(nn.Module):
     """
     Categorical distribution (NN module)
     """
+
     def __init__(self, num_inputs, num_outputs):
         super(Categorical, self).__init__()
 
-        init_ = lambda m: init(
-            m,
-            nn.init.orthogonal_,
-            lambda x: nn.init.constant_(x, 0),
-            gain=0.01)
+        def init_(m):
+            return init(
+                m,
+                nn.init.orthogonal_,
+                lambda x: nn.init.constant_(x, 0),
+                gain=0.01
+            )
 
         self.linear = init_(nn.Linear(num_inputs, num_outputs))
 
@@ -162,6 +155,7 @@ class NNBase(nn.Module):
     """
     Actor-Critic network (base class)
     """
+
     def __init__(self, hidden_size):
         super(NNBase, self).__init__()
 
@@ -176,12 +170,13 @@ class BasicBlock(nn.Module):
     """
     Residual Network Block
     """
+
     def __init__(self, n_channels, stride=1):
         super(BasicBlock, self).__init__()
 
-        self.conv1 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1,1))
+        self.conv1 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1, 1))
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1,1))
+        self.conv2 = Conv2d_tf(n_channels, n_channels, kernel_size=3, stride=1, padding=(1, 1))
         self.stride = stride
 
         apply_init_(self.modules())
@@ -204,6 +199,7 @@ class ResNetBase(NNBase):
     """
     Residual Network
     """
+
     def __init__(self, num_inputs, hidden_size=256, channels=[16, 32, 32]):
         super(ResNetBase, self).__init__(hidden_size)
 
@@ -288,10 +284,12 @@ class ProcgenLSTMAgent(nn.Module):
         if base_kwargs is None:
             base_kwargs = {}
 
+        hidden_size = base_kwargs.get("hidden_size", 256)
+
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
-        self.lstm = nn.LSTM(256, 256)
-        self.critic = init_(nn.Linear(256, 1))
-        self.actor = layer_init(nn.Linear(256, num_actions), std=0.01)
+        self.lstm = nn.LSTM(hidden_size, hidden_size)
+        self.critic = init_(nn.Linear(hidden_size, 1))
+        self.actor = layer_init(nn.Linear(hidden_size, num_actions), std=0.01)
 
         apply_init_(self.modules())
 

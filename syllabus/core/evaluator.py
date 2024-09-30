@@ -178,7 +178,7 @@ class Evaluator:
             done (Any): The done flag.
 
         Returns:
-            Tuple[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]: The prepared LSTM state and done flag.
+            Tuple[LSTMState, torch.Tensor]: The prepared LSTM state and done flag.
         """
         lstm_state = (
             torch.Tensor(lstm_state[0]),
@@ -195,19 +195,14 @@ class Evaluator:
 
 
 class CleanRLDiscreteEvaluator(Evaluator):
-    def __init__(self, agent, is_lstm=False, *args, **kwargs):
+    def __init__(self, agent, *args, is_lstm=False, **kwargs):
         super().__init__(agent, *args, **kwargs)
         self.agent = agent
         self.is_lstm = is_lstm or hasattr(agent, "lstm")
 
     def _get_value(self, state, lstm_state=None, done=None):
         if self.is_lstm:
-            assert (
-                lstm_state is not None
-            ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
-            assert (
-                done is not None
-            ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            self._check_inputs(lstm_state, done)
             value = self.agent.get_value(state, lstm_state, done)
         else:
             value = self.agent.get_value(state)
@@ -215,12 +210,7 @@ class CleanRLDiscreteEvaluator(Evaluator):
 
     def _get_action(self, state, lstm_state=None, done=None):
         if self.is_lstm:
-            assert (
-                lstm_state is not None
-            ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
-            assert (
-                done is not None
-            ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            self._check_inputs(lstm_state, done)
             action = self.agent.get_action(state, lstm_state, done)
         else:
             action = self.agent.get_action(state)
@@ -228,12 +218,7 @@ class CleanRLDiscreteEvaluator(Evaluator):
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         if self.is_lstm:
-            assert (
-                lstm_state is not None
-            ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
-            assert (
-                done is not None
-            ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            self._check_inputs(lstm_state, done)
             action, log_probs, entropy, value, lstm_state = (
                 self.agent.get_action_and_value(state, lstm_state, done)
             )
@@ -247,3 +232,12 @@ class CleanRLDiscreteEvaluator(Evaluator):
             action, log_probs, entropy, value = self.agent.get_action_and_value(
                 state)
             return action, value, {"log_probs": log_probs, "entropy": entropy}
+
+    def _check_inputs(self, lstm_state, done):
+        assert (
+            lstm_state is not None
+        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        assert (
+            done is not None
+        ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        return True
