@@ -13,7 +13,7 @@ from distutils.util import strtobool
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
-import procgen  # noqa: F401
+import procgen  # type: ignore # noqa: F401
 from procgen import ProcgenEnv
 import torch
 import torch.nn as nn
@@ -22,7 +22,8 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -127,18 +128,22 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-        if curriculum is not None:
+
+        if task_wrapper or curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
+
+        if curriculum is not None:
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
+                batch_size=256
             )
         return env
     return thunk
@@ -177,7 +182,6 @@ def level_replay_evaluate(
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 
-    # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
@@ -244,6 +248,22 @@ if __name__ == "__main__":
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
+    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
+    sample_envs = wrap_vecenv(sample_envs)
+    single_action_space = sample_envs.single_action_space
+    single_observation_space = sample_envs.single_observation_space
+    sample_envs.close()
+
+    # Agent setup
+    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+    agent = ProcgenAgent(
+        single_observation_space.shape,
+        single_action_space.n,
+        base_kwargs={'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+
     # Curriculum setup
     curriculum = None
     if args.curriculum:
@@ -257,6 +277,7 @@ if __name__ == "__main__":
 
             plr_eval_env = make_env(args.env_id, args.seed, num_levels=200)()
             plr_eval_env = ProcgenTaskWrapper(plr_eval_env, args.env_id, seed=args.seed)
+            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -269,13 +290,22 @@ if __name__ == "__main__":
                 robust_plr=True,
                 eval_envs=plr_eval_env,
                 action_value_fn=make_action_value_fn(agent),
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                evaluator=evaluator,
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
+        elif args.curriculum_method == "bdr":
+            print("Using batched domain randomization.")
+            curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            curriculum = LearningProgressCurriculum(sample_env.task_space)
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
+            )
+            eval_envs = wrap_vecenv(eval_envs)
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []

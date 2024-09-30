@@ -1,3 +1,4 @@
+import time
 import warnings
 from typing import Any, Dict, List, Tuple, Union
 
@@ -7,6 +8,7 @@ import torch
 from gymnasium.spaces import Discrete, MultiDiscrete
 
 from syllabus.core import Curriculum, UsageError, enumerate_axes
+from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import TaskSpace
 
 from .task_sampler import TaskSampler
@@ -18,19 +20,31 @@ class RolloutStorage(object):
         num_steps: int,
         num_processes: int,
         requires_value_buffers: bool,
-        observation_space: gym.Space,
+        observation_space: gym.Space,   # TODO: Use np array when space is box or discrete
         action_space: gym.Space = None,
-        get_value=None,
+        lstm_size: int = None,
+        evaluator: Evaluator = None,
     ):
         self.num_steps = num_steps
-        self.buffer_steps = num_steps * 4  # Hack to prevent overflow from lagging updates.
+        # Hack to prevent overflow from lagging updates.
+        self.buffer_steps = num_steps * 4
         self.num_processes = num_processes
         self._requires_value_buffers = requires_value_buffers
-        self._get_value = get_value
+        self.evaluator = evaluator
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
-        self.obs = [[[0] for _ in range(self.num_processes)]] * self.buffer_steps
+
+        self.lstm_states = None
+        if lstm_size is not None:
+            self.lstm_states = (
+                torch.zeros(self.buffer_steps + 1, num_processes, lstm_size),
+                torch.zeros(self.buffer_steps + 1, num_processes, lstm_size),
+            )
+
+        self.obs = {env_idx: [None for _ in range(self.buffer_steps)] for env_idx in range(self.num_processes)}
         self.env_steps = [0] * num_processes
+        self.value_steps = torch.zeros(num_processes, dtype=torch.int)
+
         self.ready_buffers = set()
 
         if requires_value_buffers:
@@ -46,9 +60,19 @@ class RolloutStorage(object):
 
         self.num_steps = num_steps
 
+    @property
+    def using_lstm(self):
+        return self.lstm_states is not None
+
     def to(self, device):
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
+
+        if self.using_lstm:
+            self.lstm_states = (
+                self.lstm_states[0].to(device),
+                self.lstm_states[1].to(device),
+            )
         if self._requires_value_buffers:
             self.rewards = self.rewards.to(device)
             self.value_preds = self.value_preds.to(device)
@@ -56,7 +80,7 @@ class RolloutStorage(object):
         else:
             self.action_log_dist = self.action_log_dist.to(device)
 
-    def insert_at_index(self, env_index, mask=None, action_log_dist=None, obs=None, reward=None, task=None, steps=1):
+    def insert_at_index(self, env_index, mask=None, obs=None, reward=None, task=None, steps=1):
         step = self.env_steps[env_index]
         end_step = step + steps
 
@@ -64,64 +88,88 @@ class RolloutStorage(object):
             self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
 
         if obs is not None:
-            for s in range(step, end_step):
-                self.obs[s][env_index] = obs[s - step]
+            self.obs[env_index][step: end_step] = obs
 
         if reward is not None:
             self.rewards[step:end_step, env_index].copy_(torch.as_tensor(reward[:, None]))
 
-        if action_log_dist is not None:
-            self.action_log_dist[step:end_step, env_index].copy_(torch.as_tensor(action_log_dist[:, None]))
+        # if action_log_dist is not None:
+        #     self.action_log_dist[step:end_step, env_index].copy_(torch.as_tensor(action_log_dist[:, None]))
 
         if task is not None:
             try:
                 int(task[0])
             except TypeError:
-                assert isinstance(task, int), f"Provided task must be an integer, got {task[0]} with type {type(task[0])} instead."
+                assert isinstance(
+                    task, int), f"Provided task must be an integer, got {task[0]} with type {type(task[0])} instead."
             self.tasks[step:end_step, env_index].copy_(torch.as_tensor(np.array(task)[:, None]))
 
         self.env_steps[env_index] += steps
-        if env_index not in self.ready_buffers and self.env_steps[env_index] >= self.num_steps:
+
+        # Get value predictions if batch is ready
+        value_steps = self.value_steps.numpy()
+        while all((self.env_steps - value_steps) > 0):
+
+            obs = [self.obs[env_idx][self.value_steps[env_idx]] for env_idx in range(self.num_processes)]
+            lstm_states = dones = None
+            if self.using_lstm:
+                lstm_states = (
+                    torch.unsqueeze(self.lstm_states[0][value_steps, np.arange(self.num_processes)], 0),
+                    torch.unsqueeze(self.lstm_states[1][value_steps, np.arange(self.num_processes)], 0),
+                )
+                dones = torch.squeeze(-self.masks[value_steps, np.arange(self.num_processes)], -1)
+
+            try:
+                _, values, extras = self.evaluator.get_action_and_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
+            except RuntimeError as e:
+                raise UsageError(
+                    "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the agent's get_states implementation."
+                ) from e
+            self.value_preds[self.value_steps, np.arange(self.num_processes)] = values
+
+            if self.using_lstm:
+                try:
+                    lstm_states = extras["lstm_state"]
+                except KeyError as e:
+                    raise UsageError("Evaluator must return lstm_state in extras for PLR.") from e
+
+                self.lstm_states[0][value_steps, np.arange(
+                    self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
+                self.lstm_states[1][value_steps, np.arange(
+                    self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
+
+            self.value_steps += 1
+            value_steps = self.value_steps.numpy()
+
+        # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
+        if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
             self.ready_buffers.add(env_index)
-
-    def _get_values(self, env_index):
-        if self._get_value is None:
-            raise UsageError("Selected strategy requires value predictions. Please provide get_value function.")
-        for step in range(0, self.num_steps, self.num_processes):
-            obs = self.obs[step: step + self.num_processes][env_index]
-            values = self._get_value(obs)
-
-            # Reshape values if necessary
-            if len(values.shape) == 3:
-                warnings.warn(f"Value function returned a 3D tensor of shape {values.shape}. Attempting to squeeze last dimension.")
-                values = torch.squeeze(values, -1)
-            if len(values.shape) == 1:
-                warnings.warn(f"Value function returned a 1D tensor of shape {values.shape}. Attempting to unsqueeze last dimension.")
-                values = torch.unsqueeze(values, -1)
-
-            self.value_preds[step: step + self.num_processes, env_index].copy_(values)
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
-        self.tasks = self.tasks.roll(-self.num_steps, 0)
-        self.masks = self.masks.roll(-self.num_steps, 0)
-        self.obs[0:][env_index] = self.obs[self.num_steps: self.buffer_steps][env_index]
+        self.tasks[:, env_index] = self.tasks[:, env_index].roll(-self.num_steps, 0)
+        self.masks[:, env_index] = self.masks[:, env_index].roll(-self.num_steps, 0)
+        self.obs[env_index] = self.obs[env_index][self.num_steps:]
+
+        if self.using_lstm:
+            self.lstm_states[0][:, env_index] = self.lstm_states[0][:, env_index].roll(-self.num_steps, 0)
+            self.lstm_states[1][:, env_index] = self.lstm_states[1][:, env_index].roll(-self.num_steps, 0)
 
         if self._requires_value_buffers:
-            self.returns = self.returns.roll(-self.num_steps, 0)
-            self.rewards = self.rewards.roll(-self.num_steps, 0)
-            self.value_preds = self.value_preds.roll(-self.num_steps, 0)
+            self.returns[:, env_index] = self.returns[:, env_index].roll(-self.num_steps, 0)
+            self.rewards[:, env_index] = self.rewards[:, env_index].roll(-self.num_steps, 0)
+            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-(self.num_steps + 1), 0)
         else:
-            self.action_log_dist = self.action_log_dist.roll(-self.num_steps, 0)
+            self.action_log_dist[:, env_index] = self.action_log_dist[:, env_index].roll(-self.num_steps, 0)
 
         self.env_steps[env_index] -= self.num_steps
+        self.value_steps[env_index] -= (self.num_steps + 1)
         self.ready_buffers.remove(env_index)
 
     def compute_returns(self, gamma, gae_lambda, env_index):
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
-        self._get_values(env_index)
         gae = 0
-        for step in reversed(range(self.rewards.size(0), self.num_steps)):
+        for step in reversed(range(self.num_steps)):
             delta = (
                 self.rewards[step, env_index]
                 + gamma * self.value_preds[step + 1, env_index] * self.masks[step + 1, env_index]
@@ -129,10 +177,6 @@ class RolloutStorage(object):
             )
             gae = delta + gamma * gae_lambda * self.masks[step + 1, env_index] * gae
             self.returns[step, env_index] = gae + self.value_preds[step, env_index]
-
-
-def null(x):
-    return None
 
 
 class PrioritizedLevelReplay(Curriculum):
@@ -165,6 +209,7 @@ class PrioritizedLevelReplay(Curriculum):
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
+        lstm_size: int = None,
         device: str = "cpu",
         num_steps: int = 256,
         num_processes: int = 64,
@@ -174,8 +219,9 @@ class PrioritizedLevelReplay(Curriculum):
         get_value=null,
         get_action_log_dist=null,
         robust_plr: bool = False,  # Option to use RobustPLR
-        eval_envs = None,
-        action_value_fn = None,
+        eval_envs=None,
+        action_value_fn=None,
+        evaluator: Evaluator = None,
         **curriculum_kwargs,
     ):
         # Preprocess curriculum intialization args
@@ -188,7 +234,8 @@ class PrioritizedLevelReplay(Curriculum):
                 f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
-            warnings.warn(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+            warnings.warn(
+                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
@@ -200,13 +247,13 @@ class PrioritizedLevelReplay(Curriculum):
         self._gamma = gamma
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
-        self._get_action_log_dist = get_action_log_dist
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._robust_plr = robust_plr
         self._eval_envs = eval_envs
         self.action_value_fn = action_value_fn
 
-        self._task_sampler = TaskSampler(self.tasks, task_space=task_space, action_space=action_space, robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn = action_value_fn, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, self._num_steps, task_space=task_space, action_space=action_space,
+                                         robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn=action_value_fn, **task_sampler_kwargs_dict)
 
         self._rollouts = RolloutStorage(
             self._num_steps,
@@ -214,12 +261,10 @@ class PrioritizedLevelReplay(Curriculum):
             self._task_sampler.requires_value_buffers,
             observation_space,
             action_space=action_space,
-            get_value=get_value if get_value is not None else null,
+            lstm_size=lstm_size,
+            evaluator=evaluator,
         )
         self._rollouts.to(device)
-
-    def set_value_fn(self, value_fn):
-        self._rollouts._get_value = value_fn
 
     def _sample_distribution(self) -> List[float]:
         """
@@ -239,14 +284,16 @@ class PrioritizedLevelReplay(Curriculum):
         """
         assert env_id is not None, "env_id must be provided for PLR updates."
         if env_id >= self._num_processes:
-            warnings.warn(f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
+            warnings.warn(
+                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
             env_id = env_id % self._num_processes
+
+        assert env_id not in self._rollouts.ready_buffers
 
         # Update rollouts
         self._rollouts.insert_at_index(
             env_id,
             mask=np.array([not (term or trunc)]),
-            action_log_dist=self._get_action_log_dist(obs),
             reward=np.array([rew]),
             obs=np.array([obs]),
         )
@@ -262,15 +309,17 @@ class PrioritizedLevelReplay(Curriculum):
         Update the curriculum with a batch of step results from the environment.
         """
         assert env_id is not None, "env_id must be provided for PLR updates."
+        assert env_id not in self._rollouts.ready_buffers
+
         if env_id >= self._num_processes:
-            warnings.warn(f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
+            warnings.warn(
+                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
             env_id = env_id % self._num_processes
 
-        tasks, obs, rews, terms, truncs, infos = step_results
+        tasks, obs, rews, terms, truncs, _ = step_results
         self._rollouts.insert_at_index(
             env_id,
             mask=np.logical_not(np.logical_or(terms, truncs)),
-            action_log_dist=self._get_action_log_dist(obs),
             reward=rews,
             obs=obs,
             steps=len(rews),
@@ -289,20 +338,18 @@ class PrioritizedLevelReplay(Curriculum):
         self._task_sampler.after_update()
 
     def _enumerate_tasks(self, space):
-        assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
+        assert isinstance(space, (Discrete, MultiDiscrete)
+                          ), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
         if isinstance(space, Discrete):
             return list(range(space.n))
         else:
             return list(enumerate_axes(space.nvec))
 
-    def log_metrics(self, writer, step=None):
+    def log_metrics(self, writer, step=None, log_full_dist=False):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        # super().log_metrics(writer, step)
+        super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
         writer.add_scalar("curriculum/score", metrics["score"], step)
-        # for task in list(self.task_space.tasks)[:10]:
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)

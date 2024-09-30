@@ -5,11 +5,11 @@ import numpy as np
 from gymnasium.spaces import Box
 from syllabus.core import Curriculum
 
+
 class AnnealingBoxCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = True
     REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
-
 
     def __init__(
         self,

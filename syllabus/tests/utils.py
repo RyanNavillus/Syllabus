@@ -8,14 +8,23 @@ import numpy as np
 import ray
 import torch
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
+from pettingzoo.utils.env import ParallelEnv
 
-from syllabus.core import MultiProcessingSyncWrapper, RaySyncWrapper, ReinitTaskWrapper
+from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper, PettingZooReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import TaskSpace
-from syllabus.tests import SyncTestEnv
+from syllabus.tests import SyncTestEnv, PettingZooSyncTestEnv
 
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
+    env = make_env()
+    if isinstance(env, ParallelEnv):
+        return evaluate_random_policy_pettingzoo(make_env, seeds=seeds, num_episodes=num_episodes)
+    else:
+        return evaluate_random_policy_gymnasium(make_env, seeds=seeds, num_episodes=num_episodes)
+
+
+def evaluate_random_policy_gymnasium(make_env, num_episodes=100, seeds=None):
     env = make_env(seed=seeds[0] if seeds else None)
 
     # Seed environment
@@ -44,7 +53,64 @@ def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
     return avg_return, episode_returns
 
 
-def run_episode(env, new_task=None, curriculum=None, env_id=0):
+def evaluate_random_policy_pettingzoo(make_env, num_episodes=100, seeds=None):
+    env = make_env(seed=seeds[0] if seeds else None)
+
+    # Seed environment
+    for agent in env.possible_agents:
+        env.action_space(agent).seed(0)
+        env.observation_space(agent).seed(0)
+
+    episode_returns = []
+
+    for i in range(num_episodes):
+        episode_return = 0
+        if seeds:
+            _ = env.reset(new_task=seeds[i])
+            for agent in env.possible_agents:
+                env.action_space(agent).seed(0)
+                env.observation_space(agent).seed(0)
+        else:
+            _ = env.reset()
+        term = trunc = {agent: False for agent in env.agents}
+        while not (all(term.values()) or all(trunc.values())):
+            actions = {agent: env.action_space(agent).sample() for agent in env.agents}
+            _, rew, term, trunc, _ = env.step(actions)
+            episode_return += sum(rew.values())
+        episode_returns.append(episode_return)
+
+    avg_return = sum(episode_returns) / len(episode_returns)
+    # print(f"Average Episodic Return: {avg_return}")
+    return avg_return, episode_returns
+
+
+def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
+    """Run a single episode of the environment."""
+    if new_task is not None:
+        obs = env.reset(new_task=new_task)
+    else:
+        obs = env.reset()
+    term = trunc = False
+    ep_rew = {agent: 0 for agent in env.agents}
+    steps = 0
+    while env.agents:
+        action = {agent: env.action_space(agent).sample() for agent in env.agents}
+        obs, rews, term, trunc, info = env.step(action)
+        steps += 1
+        if curriculum and curriculum.requires_step_updates:
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rews.values()),
+                                      list(term.values()), list(trunc.values()), info, env_id=env_id)
+            task_completion = max([i["task_completion"] for i in info.values()]) if len(
+                env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
+            curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
+        for agent, rew in rews.items():
+            ep_rew[agent] += rew
+    if curriculum and curriculum.requires_episode_updates:
+        curriculum.update_on_episode(ep_rew, steps, env.task_space.encode(env.task), env_id=env_id)
+    return ep_rew
+
+
+def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
     """Run a single episode of the environment."""
     if new_task is not None:
         obs = env.reset(new_task=new_task)
@@ -64,6 +130,13 @@ def run_episode(env, new_task=None, curriculum=None, env_id=0):
     if curriculum and curriculum.requires_episode_updates:
         curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), env_id=env_id)
     return ep_rew
+
+
+def run_episode(env, new_task=None, curriculum=None, env_id=0):
+    if isinstance(env, ParallelEnv):
+        return run_pettingzoo_episode(env, new_task, curriculum, env_id=env_id)
+    else:
+        return run_gymnasium_episode(env, new_task, curriculum, env_id=env_id)
 
 
 def run_set_length(env, curriculum=None, episodes=None, steps=None, env_id=0, env_outputs=None):
@@ -107,14 +180,16 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
     for _ in range(num_episodes):
         if curriculum:
             task = env.task_space.decode(curriculum.sample()[0])
-            ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum, env_id=env_id))
+            rews = run_episode(env, new_task=task, curriculum=curriculum, env_id=env_id)
         else:
-            ep_rews.append(run_episode(env))
+            rews = run_episode(env)
+        ep_rews.append(rews)
     env.close()
 
 
 def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step,
+                 buffer_size=buffer_size, batch_size=1) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env, env_id=env_id))
@@ -123,7 +198,8 @@ def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync
 
 @ray.remote
 def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray",
+                 update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
@@ -132,8 +208,10 @@ def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, u
 
 def run_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
     start = time.time()
-    for _ in range(num_envs):
-        run_episodes(env_fn, env_args, env_kwargs, curriculum=curriculum, num_episodes=num_episodes)
+    for num_eps in range(num_episodes):
+        # Interleave episodes for each environment
+        for env_idx in range(num_envs):
+            run_episodes(env_fn, env_args, env_kwargs, curriculum=curriculum, num_episodes=1, env_id=env_idx)
     end = time.time()
     native_speed = end - start
     return native_speed
@@ -144,7 +222,8 @@ def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None,
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
+        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes,
+                update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
@@ -197,13 +276,26 @@ def get_action_value(obs):
     return action, value
 
 
+def get_test_actions(x):
+    return torch.IntTensor(np.array([0] * len(x)))
+
+
 # Sync Test Environment
-def create_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_gymnasium_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
         env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+def create_pettingzoo_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    env = PettingZooSyncTestEnv(*env_args, **env_kwargs)
+    if type == "queue":
+        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
@@ -221,13 +313,8 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
 # Nethack Tests
 def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
-    try:
-        from nle.env.tasks import NetHackScore
-
-        from syllabus.examples.task_wrappers.nethack_wrappers import \
-            NethackTaskWrapper
-    except ImportError:
-        warnings.warn("Unable to import nle.")
+    from nle.env.tasks import NetHackScore
+    from syllabus.examples.task_wrappers.nethack_wrappers import NethackTaskWrapper
 
     env = NetHackScore(*env_args, **env_kwargs)
     env = GymV21CompatibilityV0(env=env)
@@ -283,4 +370,51 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     elif type == "ray":
         env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Pistonball Tests
+def create_pistonball_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        from pettingzoo.butterfly import pistonball_v6  # noqa: F401
+        from syllabus.examples.task_wrappers import PistonballTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import pistonball from pettingzoo.")
+
+    env = pistonball_v6.parallel_env()
+
+    def create_env(task):
+        return pistonball_v6.parallel_env(n_pistons=task)
+
+    env = PistonballTaskWrapper(env)
+    if type == "queue":
+        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    return env
+
+
+# Simple Tag Tests
+def create_simpletag_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+    try:
+        from pettingzoo.mpe import simple_tag_v3  # noqa: F401
+        # from syllabus.examples.task_wrappers import SimpleTagTaskWrapper
+    except ImportError:
+        warnings.warn("Unable to import simple tag from pettingzoo.")
+
+    def create_env(task):
+        good, adversary, obstacle = task
+        return simple_tag_v3.parallel_env(num_good=good, num_adversaries=adversary, num_obstacles=obstacle, continuous_actions=False)
+
+    task_space = TaskSpace(gym.spaces.MultiDiscrete([1, 1, 1]), [[4], [4], [4]])
+    env = simple_tag_v3.parallel_env()
+    env = PettingZooReinitTaskWrapper(env, create_env, task_space)
+
+    # Set largest posiible task
+    env.reset(new_task=(4, 4, 4))
+
+    if type == "queue":
+        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+    elif type == "ray":
+        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env

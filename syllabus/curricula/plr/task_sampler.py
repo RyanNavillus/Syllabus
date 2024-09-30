@@ -35,10 +35,12 @@ class TaskSampler:
         eval_envs (List[gym.Env]): List of evaluation environments
         action_value_fn (callable): A function that takes an observation as input and returns an action and value.
     """
+
     def __init__(
         self,
         tasks: list,
-        task_space: TaskSpace,
+        num_steps: int,
+        task_space: TaskSpace = None,
         action_space: gym.spaces.Space = None,
         num_actors: int = 1,
         strategy: str = "value_l1",
@@ -58,16 +60,17 @@ class TaskSampler:
         staleness_temperature: float = 1.0,
 
         robust_plr: bool = False,
-        eval_envs = None,
+        eval_envs=None,
         action_value_fn=None,
         get_value=None,
-        observation_space = None,
+        observation_space=None,
 
     ):
         self.task_space = task_space
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
+        self.num_steps = num_steps
 
         self.strategy = strategy
         self.replay_schedule = replay_schedule
@@ -216,15 +219,15 @@ class TaskSampler:
         if not self.requires_value_buffers:
             policy_logits = rollouts.action_log_dist
         done = ~(rollouts.masks > 0)
-        total_steps, num_actors = rollouts.tasks.shape[:2]
+        num_actors = rollouts.tasks.shape[1]
 
         actors = [actor_index] if actor_index is not None else range(num_actors)
         for actor_index in actors:
-            done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
+            done_steps = done[:, actor_index].nonzero()[:self.num_steps, 0]
             start_t = 0
 
             for t in done_steps:
-                if not start_t < total_steps:
+                if not start_t < self.num_steps:
                     break
 
                 if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
@@ -251,9 +254,9 @@ class TaskSampler:
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
 
                 start_t = t.item()
-            if start_t < total_steps:
+            if start_t < self.num_steps:
                 # If there is only 1 step, we can't calculate the one-step td error
-                if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
+                if self.strategy == "one_step_td_error" and start_t == self.num_steps - 1:
                     continue
                 # TODO: Check this too
                 task_idx_t = tasks[start_t, actor_index].item()
@@ -334,7 +337,8 @@ class TaskSampler:
             task_encoded = self.task_space.encode(task)
 
             mask = torch.FloatTensor([0.0] if term or trunc else [1.0])
-            self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor([rew]), tasks=torch.Tensor([task_encoded]))
+            self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor([
+                                         rew]), tasks=torch.Tensor([task_encoded]))
 
             # Check if the episode is done
             if term or trunc:

@@ -60,10 +60,10 @@ class NethackTaskWrapper(TaskWrapper):
                 NetHackScore,
                 NetHackStaircase,
                 NetHackStaircasePet,
-                NetHackOracle,
                 NetHackGold,
                 NetHackEat,
                 NetHackScout,
+                NetHackOracle
             ]
 
         # Add in custom nethack tasks
@@ -107,14 +107,17 @@ class NethackTaskWrapper(TaskWrapper):
         calling the final reset.
         """
         # Change task if new one is provided
-        new_task = np.random.choice(self.task_list)
+        if new_task is None:
+            new_task = kwargs.get("options", None)
+
         if new_task is not None:
             self.change_task(new_task)
 
         self.done = False
         self.episode_return = 0
 
-        return self.observation(self.env.reset(**kwargs))
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
 
     def change_task(self, new_task: int):
         """
@@ -181,7 +184,7 @@ class NethackTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
+        obs, rew, term, trunc, info = self.env.step(action)
         # self.episode_return += rew
         self.done = term or trunc
         info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
