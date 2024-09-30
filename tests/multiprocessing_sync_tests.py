@@ -2,7 +2,7 @@
 from syllabus.tests import SyncTestCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 
-from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_synctest_env
+from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_gymnasium_synctest_env
 
 # Setup global variables
 N_ENVS = 128
@@ -23,14 +23,19 @@ def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES):
 
 
 def generate_environment(num_episodes=N_EPISODES):
-    return create_synctest_env(env_args=(num_episodes,))
+    return create_gymnasium_synctest_env(env_args=(num_episodes,))
 
 
 def test_single_process():
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
+<<<<<<< HEAD
     run_single_process(
         create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+=======
+    native_speed = run_single_process(
+        create_gymnasium_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+>>>>>>> 913ce103a74ac76c79916b4b8922fcf4494c08a0
     )
     evaluate_curriculum(test_curriculum, num_envs=N_ENVS)
 
@@ -39,8 +44,13 @@ def test_queue_multiprocess():
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
     test_curriculum = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
+<<<<<<< HEAD
     run_native_multiprocess(
         create_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+=======
+    native_syllabus_speed = run_native_multiprocess(
+        create_gymnasium_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+>>>>>>> 913ce103a74ac76c79916b4b8922fcf4494c08a0
     )
     evaluate_curriculum(test_curriculum.curriculum)
 
@@ -49,18 +59,16 @@ def test_ray_multiprocess(ray_session):
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
     test_curriculum = make_ray_curriculum(test_curriculum)
+<<<<<<< HEAD
     run_ray_multiprocess(create_synctest_env, env_args=(N_EPISODES,), num_envs=N_ENVS, num_episodes=N_EPISODES)
+=======
+    ray_syllabus_speed = run_ray_multiprocess(create_gymnasium_synctest_env, env_args=(N_EPISODES,), num_envs=N_ENVS, num_episodes=N_EPISODES)
+>>>>>>> 913ce103a74ac76c79916b4b8922fcf4494c08a0
     # TODO: Implement Ray checks
     # evaluate_curriculum(test_curriculum)
 
 
 if __name__ == "__main__":
-    print("")
-    print("*" * 80)
-    print("Testing curriculum synchronization")
-    print("*" * 80)
-    print("")
-
     test_single_process()
     test_queue_multiprocess()
     test_ray_multiprocess()

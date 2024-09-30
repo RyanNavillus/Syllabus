@@ -1,8 +1,7 @@
 import math
 import random
 import warnings
-from collections import defaultdict
-from typing import List
+from typing import Any, List
 
 import numpy as np
 from gymnasium.spaces import Discrete, MultiDiscrete
@@ -22,13 +21,50 @@ class LearningProgressCurriculum(Curriculum):
     REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, *args, ema_alpha=0.1, **kwargs):
+    def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.eval_envs = eval_envs
+        self.get_action = get_action
         self.ema_alpha = ema_alpha
+        self.eval_interval = eval_interval
+        self.eval_interval_steps = eval_interval_steps
+        assert self.eval_interval is None or self.eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
+        self.completed_episodes = 0
+        self.completed_steps = 0
 
         assert isinstance(self.task_space.gym_space, (Discrete, MultiDiscrete))
         self._p_fast = np.zeros(self.num_tasks)
         self._p_slow = np.zeros(self.num_tasks)
+
+        self._evaluate_all_tasks()
+
+    def _evaluate_all_tasks(self, eval_eps=1):
+        print("EVALUATE")
+        task_progresses = np.zeros(self.task_space.num_tasks)
+        for task_idx, task in enumerate(self.task_space.tasks):
+            obss, _ = self.eval_envs.reset(options=task)
+            ep_counter = 0
+            progress = 0.0
+            while ep_counter < eval_eps:
+                actions = self.get_action(obss)
+                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
+                dones = tuple(a | b for a, b in zip(terminateds, truncateds))
+                for i, done in enumerate(dones):
+                    if done:
+                        if isinstance(infos, list):
+                            task_progress = infos[i]["final_info"]['task_completion']
+                        elif isinstance(infos, dict):
+                            task_progress = infos["final_info"][i]['task_completion']
+                        progress += task_progress
+                        ep_counter += 1
+            task_progresses[task_idx] = progress
+        task_success_rates = np.divide(task_progresses, float(eval_eps))
+
+        # Update task scores
+        self._p_fast = (task_progresses * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
+        self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+
+        return task_success_rates
 
     def update_task_progress(self, task: int, progress: float, env_id: int = None):
         """
@@ -41,12 +77,21 @@ class LearningProgressCurriculum(Curriculum):
         self._p_fast[task] = (progress * self.ema_alpha) + (self._p_fast[task] * (1.0 - self.ema_alpha))
         self._p_slow[task] = (self._p_fast[task] * self.ema_alpha) + (self._p_slow[task] * (1.0 - self.ema_alpha))
 
-    def _learning_progress(self, task: int, reweight: bool = True) -> float:
+    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+        self.completed_episodes += 1
+        self.completed_steps += episode_length
+        if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
+            self._evaluate_all_tasks()
+        if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:
+            self._evaluate_all_tasks()
+            self.completed_steps = 0
+
+    def _learning_progress(self, reweight: bool = True) -> float:
         """
         Compute the learning progress metric for the given task.
         """
-        slow = self._reweight(self._p_slow[task]) if reweight else self._p_slow[task]
-        fast = self._reweight(self._p_fast[task]) if reweight else self._p_fast[task]
+        slow = self._reweight(self._p_slow) if reweight else self._p_slow
+        fast = self._reweight(self._p_fast) if reweight else self._p_fast
         return abs(fast - slow)
 
     def _reweight(self, p: np.ndarray, p_theta: float = 0.1) -> float:
@@ -66,7 +111,7 @@ class LearningProgressCurriculum(Curriculum):
 
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
-        task_lps = self._learning_progress(np.asarray(self.tasks))
+        task_lps = self._learning_progress()
         posidxs = [i for i, lp in enumerate(task_lps) if lp > 0]
         zeroout = len(posidxs) > 0
 
@@ -82,14 +127,7 @@ class LearningProgressCurriculum(Curriculum):
         else:
             # If all tasks have 0 progress, return uniform distribution
             task_dist = subprobs
-
         return task_dist
-
-    def on_step(self, obs, rew, term, trunc, info) -> None:
-        """
-        Update the curriculum with the current step results from the environment.
-        """
-        pass
 
 
 if __name__ == "__main__":
