@@ -28,6 +28,7 @@ class ProcgenTaskWrapper(TaskWrapper):
     """
     This wrapper allows you to change the task of an NLE environment.
     """
+
     def __init__(self, env: gym.Env, env_id, seed=0):
         super().__init__(env)
         self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(0, 200)))

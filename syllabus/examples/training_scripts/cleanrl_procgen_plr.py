@@ -13,7 +13,7 @@ from distutils.util import strtobool
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
-import procgen  # type: ignore # noqa: F401
+import procgen  # noqa: F401
 from procgen import ProcgenEnv
 import torch
 import torch.nn as nn
@@ -22,8 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -128,21 +127,17 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-
-        if task_wrapper or curriculum is not None:
-            env = ProcgenTaskWrapper(env, env_id, seed=seed)
-
         if curriculum is not None:
+            env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env,
                 curriculum.get_components(),
-                update_on_step=curriculum.requires_step_updates,
+                update_on_step=False,
                 task_space=env.task_space,
-                batch_size=256
             )
         return env
     return thunk
@@ -153,6 +148,41 @@ def wrap_vecenv(vecenv):
     vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
+
+
+def full_level_replay_evaluate(
+    env_name,
+    policy,
+    num_episodes,
+    device,
+    num_levels=1    # Not used
+):
+    policy.eval()
+
+    eval_envs = ProcgenEnv(
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=1, start_level=0, distribution_mode="easy", paint_vel_info=False
+    )
+    eval_envs = VecExtractDictObs(eval_envs, "rgb")
+    eval_envs = wrap_vecenv(eval_envs)
+
+    eval_obs, _ = eval_envs.reset()
+    eval_episode_rewards = [-1] * num_episodes
+
+    while -1 in eval_episode_rewards:
+        with torch.no_grad():
+            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+
+        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+        for i, info in enumerate(infos):
+            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
+                eval_episode_rewards[i] = info['episode']['r']
+
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    policy.train()
+    return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def level_replay_evaluate(
@@ -181,6 +211,7 @@ def level_replay_evaluate(
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 
+    # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
@@ -195,15 +226,6 @@ def make_value_fn():
         with torch.no_grad():
             return agent.get_value(torch.Tensor(obs).to(device))
     return get_value
-
-
-def make_action_fn():
-    def get_action(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            action, _, _, _ = agent.get_action_and_value(torch.Tensor(obs).to(device))
-            return action.to("cpu").numpy()
-    return get_action
 
 
 if __name__ == "__main__":
@@ -224,7 +246,7 @@ if __name__ == "__main__":
         )
         # wandb.run.log_code("./syllabus/examples")
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
+    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -239,22 +261,6 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     print("Device:", device)
 
-    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
-    sample_envs = wrap_vecenv(sample_envs)
-    single_action_space = sample_envs.single_action_space
-    single_observation_space = sample_envs.single_observation_space
-    sample_envs.close()
-
-    # Agent setup
-    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        single_observation_space.shape,
-        single_action_space.n,
-        base_kwargs={'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-
     # Curriculum setup
     curriculum = None
     if args.curriculum:
@@ -265,7 +271,6 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -274,30 +279,23 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
-                evaluator=evaluator,
+                get_value=make_value_fn(),
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
-        elif args.curriculum_method == "bdr":
-            print("Using batched domain randomization.")
-            curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
-            )
-            eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgressCurriculum(sample_env.task_space)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
             stopping = []
-            for i in range(0, 199, 10):
-                curricula.append(list(range(i, i+10)))
-                stopping.append("steps>=500000")
-                curricula.append(list(range(i + 10)))
-                stopping.append("steps>=500000")
+            for i in range(199):
+                curricula.append(i + 1)
+                stopping.append("steps>=50000")
+                curricula.append(list(range(i + 1)))
+                stopping.append("steps>=50000")
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
@@ -318,6 +316,17 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
+
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+
+    agent = ProcgenAgent(
+        envs.single_observation_space.shape,
+        envs.single_action_space.n,
+        arch="large",
+        base_kwargs={'recurrent': False, 'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -472,7 +481,13 @@ if __name__ == "__main__":
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
+        full_mean_eval_returns, full_stddev_eval_returns, full_normalized_mean_eval_returns = full_level_replay_evaluate(
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+        )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+        )
+        full_mean_train_returns, full_stddev_train_returns, full_normalized_mean_train_returns = full_level_replay_evaluate(
             args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
@@ -492,10 +507,16 @@ if __name__ == "__main__":
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_mean_episode_return", full_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_normalized_mean_eval_return", full_normalized_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/full_stddev_eval_return", full_stddev_eval_returns, global_step)
 
         writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
         writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
+        writer.add_scalar("train_eval/full_mean_episode_return", full_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/full_normalized_mean_train_return", full_normalized_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/full_stddev_train_return", full_stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
 

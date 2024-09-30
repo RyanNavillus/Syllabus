@@ -17,7 +17,7 @@ class SimpleBoxCurriculum(Curriculum):
     def __init__(self,
                  *curriculum_args,
                  steps: int = 5,
-                 success_threshold: float = 0.75,
+                 success_threshold: float = 0.25,
                  required_successes: int = 10,
                  **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
@@ -60,14 +60,8 @@ class SimpleBoxCurriculum(Curriculum):
         """
         Sample k tasks from the curriculum.
         """
+        if self._should_use_startup_sampling():
+            return self._startup_sample(k)
+        
         return [self.max_range for _ in range(k)]
-
-    def log_metrics(self, writer, step=None):
-        print("Logging", flush=True)
-        try:
-            import wandb
-            writer.log({"range_min": self.max_range[0]}, step=step)
-            writer.log({"range_max": self.max_range[1]}, step=step)
-
-        except ImportError:
-            pass
+        

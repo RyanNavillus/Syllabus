@@ -313,6 +313,8 @@ class TaskSampler:
                 self.staleness_temperature,
                 self.task_staleness,
             )
+            if np.isclose(np.sum(staleness_weights), 0):
+                staleness_weights = np.ones_like(staleness_weights, dtype=float) / len(staleness_weights)
             staleness_weights = staleness_weights * (1 - self.unseen_task_weights)
             z = np.sum(staleness_weights)
             if z > 0:

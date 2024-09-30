@@ -87,6 +87,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
+        info["task"] = self.task_space.encode(self.get_task())
         self.episode_length += 1
         self.episode_return += rew
         self.task_progress = info.get("task_completion", 0.0)

@@ -1,7 +1,13 @@
+from typing import Callable
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import gymnasium as gym
+
+from stable_baselines3.common.torch_layers import MlpExtractor
+from stable_baselines3.common.policies import ActorCriticPolicy
 
 
 def init(module, weight_init, bias_init, gain=1):
@@ -23,12 +29,6 @@ def init_tanh_(m): return init(
 )
 
 
-def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
-    torch.nn.init.orthogonal_(layer.weight, std)
-    torch.nn.init.constant_(layer.bias, bias_const)
-    return layer
-
-
 def apply_init_(modules):
     """
     Initialize NN modules
@@ -42,12 +42,6 @@ def apply_init_(modules):
             nn.init.constant_(m.weight, 1)
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.LSTM):
-            for name, param in m.named_parameters():
-                if "bias" in name:
-                    nn.init.constant_(param, 0)
-                elif "weight" in name:
-                    nn.init.orthogonal_(param, 1.0)
 
 
 class Flatten(nn.Module):
@@ -68,8 +62,8 @@ class Conv2d_tf(nn.Conv2d):
         super(Conv2d_tf, self).__init__(*args, **kwargs)
         self.padding = kwargs.get("padding", "SAME")
 
-    def _compute_padding(self, inputs, dim):
-        input_size = inputs.size(dim + 2)
+    def _compute_padding(self, input, dim):
+        input_size = input.size(dim + 2)
         filter_size = self.weight.size(dim + 2)
         effective_filter_size = (filter_size - 1) * self.dilation[dim] + 1
         out_size = (input_size + self.stride[dim] - 1) // self.stride[dim]
@@ -136,13 +130,11 @@ class Categorical(nn.Module):
     def __init__(self, num_inputs, num_outputs):
         super(Categorical, self).__init__()
 
-        def init_(m):
-            return init(
-                m,
-                nn.init.orthogonal_,
-                lambda x: nn.init.constant_(x, 0),
-                gain=0.01
-            )
+        def init_(m): return init(
+            m,
+            nn.init.orthogonal_,
+            lambda x: nn.init.constant_(x, 0),
+            gain=0.01)
 
         self.linear = init_(nn.Linear(num_inputs, num_outputs))
 
@@ -151,19 +143,135 @@ class Categorical(nn.Module):
         return FixedCategorical(logits=x)
 
 
+class Policy(nn.Module):
+    """
+    Actor-Critic module
+    """
+
+    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+        super(Policy, self).__init__()
+
+        if base_kwargs is None:
+            base_kwargs = {}
+
+        if len(obs_shape) == 3:
+            if arch == 'small':
+                base = SmallNetBase
+            else:
+                base = ResNetBase
+        elif len(obs_shape) == 1:
+            base = MLPBase
+
+        self.base = base(obs_shape[0], **base_kwargs)
+        self.dist = Categorical(self.base.output_size, num_actions)
+        self.critic_linear = init_(nn.Linear(base_kwargs.get("hidden_size"), 1))
+
+        self.latent_dim_vf = 256
+        self.latent_dim_pi = 256
+
+    @property
+    def is_recurrent(self):
+        return self.base.is_recurrent
+
+    @property
+    def recurrent_hidden_state_size(self):
+        """Size of rnn_hx."""
+        return self.base.recurrent_hidden_state_size
+
+    def forward_critic(self, features):
+        values, _ = self.base(features)
+        return values
+
+    def forward_actor(self, features):
+        value, actor_features = self.base(features)
+        dist = self.dist(actor_features)
+        dist = dist.sample().float()
+        return dist
+
+    def forward(self, inputs):
+        value, actor_features, rnn_hxs = self.base(inputs, None, None)
+        dist = self.dist(actor_features)
+        return dist.sample(), value
+
+    def act(self, inputs, deterministic=False):
+        value, actor_features = self.base(inputs)
+        dist = self.dist(actor_features)
+
+        if deterministic:
+            action = dist.mode()
+        else:
+            action = dist.sample()
+
+        action_log_dist = dist.logits
+
+        return value, action, action_log_dist
+
+    def get_value(self, inputs):
+        value, _, _ = self.base(inputs)
+        return value
+
+    def evaluate_actions(self, inputs, rnn_hxs, masks, action):
+        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        dist = self.dist(actor_features)
+
+        action_log_probs = dist.log_probs(action)
+        dist_entropy = dist.entropy().mean()
+
+        return value, action_log_probs, dist_entropy, rnn_hxs
+
+
 class NNBase(nn.Module):
     """
     Actor-Critic network (base class)
     """
 
-    def __init__(self, hidden_size):
+    def __init__(self, recurrent, recurrent_input_size, hidden_size):
         super(NNBase, self).__init__()
 
         self._hidden_size = hidden_size
+        self._recurrent = recurrent
+
+    @property
+    def is_recurrent(self):
+        return self._recurrent
+
+    @property
+    def recurrent_hidden_state_size(self):
+        return 1
 
     @property
     def output_size(self):
         return self._hidden_size
+
+
+class MLPBase(NNBase):
+    """
+    Multi-Layer Perceptron
+    """
+
+    def __init__(self, num_inputs, recurrent=False, hidden_size=64):
+        super(MLPBase, self).__init__(recurrent, num_inputs, hidden_size)
+
+        if recurrent:
+            num_inputs = hidden_size
+
+        self.actor = nn.Sequential(
+            init_tanh_(nn.Linear(num_inputs, hidden_size)), nn.Tanh(),
+            init_tanh_(nn.Linear(hidden_size, hidden_size)), nn.Tanh())
+
+        self.critic = nn.Sequential(
+            init_tanh_(nn.Linear(num_inputs, hidden_size)), nn.Tanh(),
+            init_tanh_(nn.Linear(hidden_size, hidden_size)), nn.Tanh())
+
+        self.train()
+
+    def forward(self, inputs):
+        x = inputs
+
+        hidden_critic = self.critic(x)
+        hidden_actor = self.actor(x)
+
+        return hidden_critic, hidden_actor
 
 
 class BasicBlock(nn.Module):
@@ -200,15 +308,17 @@ class ResNetBase(NNBase):
     Residual Network
     """
 
-    def __init__(self, num_inputs, hidden_size=256, channels=[16, 32, 32]):
-        super(ResNetBase, self).__init__(hidden_size)
+    def __init__(self, num_inputs=16, recurrent=False, hidden_size=256, channels=[16, 32, 32]):
+        super(ResNetBase, self).__init__(recurrent, num_inputs, hidden_size)
 
         self.layer1 = self._make_layer(num_inputs, channels[0])
         self.layer2 = self._make_layer(channels[0], channels[1])
         self.layer3 = self._make_layer(channels[1], channels[2])
-        self.fc = init_relu_(nn.Linear(2048, hidden_size))
+
         self.flatten = Flatten()
         self.relu = nn.ReLU()
+
+        self.fc = init_relu_(nn.Linear(2048, hidden_size))
 
         apply_init_(self.modules())
 
@@ -231,108 +341,121 @@ class ResNetBase(NNBase):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-
         x = self.relu(self.flatten(x))
         x = self.relu(self.fc(x))
-
         return x
 
 
-class ProcgenAgent(nn.Module):
-    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
-        super(ProcgenAgent, self).__init__()
+class SmallNetBase(NNBase):
+    """
+    Residual Network
+    """
 
-        if base_kwargs is None:
-            base_kwargs = {}
+    def __init__(self, num_inputs, recurrent=False, hidden_size=256):
+        super(SmallNetBase, self).__init__(recurrent, num_inputs, hidden_size)
 
-        self.base = ResNetBase(obs_shape[2], **base_kwargs)
-        self.critic = init_(nn.Linear(256, 1))
-        self.actor = Categorical(256, num_actions)
+        self.conv1 = Conv2d_tf(3, 16, kernel_size=8, stride=4)
+        self.conv2 = Conv2d_tf(16, 32, kernel_size=4, stride=2)
+
+        self.flatten = Flatten()
+        self.relu = nn.ReLU()
+
+        self.fc = init_relu_(nn.Linear(2048, hidden_size))
 
         apply_init_(self.modules())
 
-    def get_value(self, inputs):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden = self.base(new_inputs)
-        return self.critic(hidden)
+        self.train()
 
-    def get_action(self, inputs):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden = self.base(new_inputs)
-        dist = self.actor(hidden)
-        action = dist.sample()
-        return torch.squeeze(action)
+    def forward(self, inputs):
+        x = inputs
+        x = self.relu(self.conv1(x))
+        x = self.relu(self.conv2(x))
+        x = self.flatten(x)
+        x = self.relu(self.fc(x))
+        return x
 
-    def get_action_and_value(self, inputs, action=None, deterministic=False):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden = self.base(new_inputs)
-        value = self.critic(hidden)
-        dist = self.actor(hidden)
+
+class ProcgenAgent(Policy):
+    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+
+        h, w, c = obs_shape
+        shape = (c, h, w)
+        super().__init__(shape, num_actions, arch=arch, base_kwargs=base_kwargs)
+
+    def get_value(self, x):
+        new_x = x.permute((0, 3, 1, 2)) / 255.0
+        features = self.base(new_x)
+        value = self.critic_linear(features)
+        return value
+
+    def get_action_and_value(self, x, action=None, full_log_probs=False, deterministic=False):
+        new_x = x.permute((0, 3, 1, 2)) / 255.0
+        features = self.base(new_x)
+        value = self.critic_linear(features)
+        dist = self.dist(features)
 
         if action is None:
             action = dist.mode() if deterministic else dist.sample()
         action_log_probs = torch.squeeze(dist.log_probs(action))
         dist_entropy = dist.entropy()
 
+        if full_log_probs:
+            log_probs = torch.log(dist.probs)
+            return torch.squeeze(action), action_log_probs, dist_entropy, value, log_probs
+
         return torch.squeeze(action), action_log_probs, dist_entropy, value
 
 
-class ProcgenLSTMAgent(nn.Module):
-    def __init__(self, obs_shape, num_actions, base_kwargs=None):
-        super(ProcgenLSTMAgent, self).__init__()
+class SB3ResNetBase(ResNetBase):
+    def __init__(self, observation_space, features_dim: int = 0, **kwargs) -> None:
+        super().__init__(**kwargs)
+        assert features_dim > 0
+        self._observation_space = observation_space
+        self._features_dim = features_dim
 
-        if base_kwargs is None:
-            base_kwargs = {}
+    @property
+    def features_dim(self) -> int:
+        return self._features_dim
 
-        hidden_size = base_kwargs.get("hidden_size", 256)
+    def forward(self, inputs):
+        return super().forward(inputs / 255.0)
 
-        self.base = ResNetBase(obs_shape[2], **base_kwargs)
-        self.lstm = nn.LSTM(hidden_size, hidden_size)
-        self.critic = init_(nn.Linear(hidden_size, 1))
-        self.actor = layer_init(nn.Linear(hidden_size, num_actions), std=0.01)
 
-        apply_init_(self.modules())
+class Sb3ProcgenAgent(ActorCriticPolicy):
+    def __init__(
+        self,
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
+        lr_schedule: Callable[[float], float],
+        *args,
+        hidden_size=256,
+        **kwargs
+    ):
 
-    def get_states(self, inputs, lstm_state, done):
-        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
-        hidden = self.base(new_inputs)
+        self.shape = observation_space.shape
+        self.num_actions = action_space.n
+        self.hidden_size = hidden_size
 
-        # LSTM logic
-        batch_size = lstm_state[0].shape[1]
-        hidden = hidden.reshape((-1, batch_size, self.lstm.input_size))
-        done = done.reshape((-1, batch_size))
-        new_hidden = []
-        for h, d in zip(hidden, done):
-            h, lstm_state = self.lstm(
-                h.unsqueeze(0),
-                (
-                    (1.0 - d).view(1, -1, 1) * lstm_state[0],
-                    (1.0 - d).view(1, -1, 1) * lstm_state[1],
-                ),
-            )
-            new_hidden += [h]
-        new_hidden = torch.flatten(torch.cat(new_hidden), 0, 1)
-        return new_hidden, lstm_state
+        super(Sb3ProcgenAgent, self).__init__(
+            observation_space,
+            action_space,
+            lr_schedule,
+            *args,
+            **kwargs
+        )
+        self.ortho_init = False
+        self.action_net.is_target_net = True
+        self.value_net.is_target_net = True
+        self.apply(self.init_weights)
 
-    def get_value(self, inputs, lstm_state, done):
-        hidden, _ = self.get_states(inputs, lstm_state, done)
-        return self.critic(hidden)
+    def _build_mlp_extractor(self) -> None:
+        self.mlp_extractor = MlpExtractor(self.hidden_size, [], None)
 
-    def get_action(self, inputs, lstm_state, done):
-        hidden, _ = self.get_states(inputs, lstm_state, done)
-        dist = torch.distributions.categorical.Categorical(logits=self.actor(hidden))
-        action = dist.sample()
-        return torch.squeeze(action)
-
-    def get_action_and_value(self, inputs, lstm_state, done, action=None, deterministic=False):
-        hidden, lstm_state = self.get_states(inputs, lstm_state, done)
-
-        value = self.critic(hidden)
-        dist = torch.distributions.categorical.Categorical(logits=self.actor(hidden))
-
-        if action is None:
-            action = dist.mode() if deterministic else dist.sample()
-        action_log_probs = torch.squeeze(dist.log_prob(action))
-        dist_entropy = dist.entropy()
-
-        return torch.squeeze(action), action_log_probs, dist_entropy, value, lstm_state
+    def init_weights(self, m, gain=1.0):
+        if hasattr(m, 'is_target_net') and m.is_target_net:
+            if m is self.action_net:
+                nn.init.orthogonal_(m.weight, gain=0.01)
+                nn.init.constant_(m.bias, 0)
+            if m is self.value_net:
+                nn.init.orthogonal_(m.weight, gain=1.0)
+                nn.init.constant_(m.bias, 0)

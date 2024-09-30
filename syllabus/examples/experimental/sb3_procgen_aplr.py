@@ -11,6 +11,7 @@ import numpy as np
 import procgen  # noqa: F401
 import torch
 import wandb
+import stable_baselines3
 from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from stable_baselines3 import PPO
@@ -18,9 +19,11 @@ from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor, VecNormalize
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization
+from syllabus.curricula.plr.plr_wrapper import PrioritizedLevelReplay
 from syllabus.examples.models import SB3ResNetBase, Sb3ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor as SyllabusVecMonitor, VecNormalize as SyllabusVecNormalize, VecExtractDictObs as SyllabusVecExtractDictObs
+from syllabus.core import SB3DiscreteEvaluator
 
 from torch.utils.tensorboard import SummaryWriter
 from wandb.integration.sb3 import WandbCallback
@@ -124,9 +127,11 @@ PROCGEN_RETURN_BOUNDS = {
     "bossfight": (0.5, 13),
 }
 
+
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
             components = curriculum.get_components()  # This must be safe to call here
@@ -134,7 +139,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = MultiProcessingSyncWrapper(
                 env=env,
                 components=components,
-                update_on_step=False,
+                update_on_step=True,
                 task_space=env.task_space,
             )
         return env
@@ -155,15 +160,15 @@ def level_replay_evaluate_sb3(env_name, model, num_episodes, num_levels=0):
     eval_envs = SyllabusVecMonitor(venv=eval_envs, filename=None, keep_buf=100)
     eval_envs = SyllabusVecNormalize(venv=eval_envs, ob=False, ret=True)
     eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
+    eval_episode_rewards = []
 
-    while -1 in eval_episode_rewards:
+    while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
             eval_action, _states = model.predict(eval_obs, deterministic=False)
         eval_obs, _, _, _, infos = eval_envs.step(eval_action)
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
+        for info in infos:
+            if 'episode' in info.keys():
+                eval_episode_rewards.append(info['episode']['r'])
 
     model.policy.set_training_mode(True)
     mean_returns = np.mean(eval_episode_rewards)
@@ -185,37 +190,18 @@ class CustomCallback(BaseCallback):
 
     :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
     """
-    def __init__(self, curriculum, model, verbose=0):
+
+    def __init__(self, curriculum, model, num_envs=64, verbose=0):
         super().__init__(verbose)
         self.curriculum = curriculum
         self.model = model
-
-    def _on_step(self) -> bool:
-        if self.curriculum is not None and type(self.curriculum.curriculum) is CentralizedPrioritizedLevelReplay:
-            self.update_locals(self.locals)
-            tasks = [i["task"] for i in self.locals["infos"]]
-            obs = self.locals['new_obs']
-            obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.model.device)
-            with torch.no_grad():
-                new_value = self.model.policy.predict_values(obs_tensor)
-            update = {
-                "update_type": "on_demand",
-                "metrics": {
-                    "value": self.locals["values"],
-                    "next_value": new_value,
-                    "rew": self.locals["rewards"],
-                    "dones": self.locals["dones"],
-                    "tasks": tasks,
-                },
-            }
-            self.curriculum.update(update)
-            del obs_tensor
-            del obs
-        return True
+        self.num_envs = num_envs
 
     def _on_rollout_end(self) -> None:
-        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=0)
-        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_sb3(args.env_id, self.model, args.num_eval_episodes, num_levels=200)
+        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate_sb3(
+            args.env_id, self.model, self.num_envs, num_levels=0)
+        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate_sb3(
+            args.env_id, self.model, self.num_envs, num_levels=200)
         writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, self.num_timesteps)
         writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, self.num_timesteps)
         writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, self.num_timesteps)
@@ -224,6 +210,9 @@ class CustomCallback(BaseCallback):
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, self.num_timesteps)
         if self.curriculum is not None:
             self.curriculum.log_metrics(writer, step=self.num_timesteps)
+
+    def _on_step(self) -> bool:
+        return True
 
 
 if __name__ == "__main__":
@@ -268,13 +257,14 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            curriculum = CentralizedPrioritizedLevelReplay(
+            curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
+                sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -283,7 +273,6 @@ if __name__ == "__main__":
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
         del sample_env
-
 
     # env setup
     print("Creating env")
@@ -321,7 +310,11 @@ if __name__ == "__main__":
         }
     )
 
-    plr_callback = CustomCallback(curriculum, model, venv)
+    if curriculum is not None:
+        evaluator = SB3DiscreteEvaluator(model, device=device, preprocess_obs=lambda x: x.permute(0, 3, 1, 2))
+        curriculum.add_evaluator(evaluator)
+
+    plr_callback = CustomCallback(curriculum, model, args.num_envs)
 
     if args.track:
         wandb_callback = WandbCallback(
@@ -331,7 +324,8 @@ if __name__ == "__main__":
         callback = CallbackList([wandb_callback, plr_callback])
     else:
         callback = plr_callback
-
+    print(stable_baselines3.__file__)
+    print("Training model", model)
     model.learn(
         25000000,
         callback=callback,
