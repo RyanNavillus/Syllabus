@@ -1,6 +1,7 @@
 # docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppopy
 
 import argparse
+from collections import deque
 import os
 import random
 import time
@@ -11,14 +12,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-# Syllabus imports
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import SimpleBoxCurriculum
-from syllabus.examples.task_wrappers import CartPoleTaskWrapper
-from syllabus.task_space import TaskSpace
-from torch.distributions.categorical import Categorical
+from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
+
+from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula.plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
+from syllabus.examples.models import ProcgenAgent
+from syllabus.examples.task_wrappers import ProcgenTaskWrapper
+from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
+from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
 
 
 def parse_args():
@@ -75,7 +79,16 @@ def parse_args():
     parser.add_argument("--max-grad-norm", type=float, default=0.5,
         help="the maximum norm for the gradient clipping")
     parser.add_argument("--target-kl", type=float, default=None,
-        help="the target KL divergence threshold")
+                        help="the target KL divergence threshold")
+
+    # Curriculum arguments
+    parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="if toggled, this experiment will use curriculum learning")
+    parser.add_argument("--curriculum-method", type=str, default="plr",
+                        help="curriculum method to use")
+    parser.add_argument("--num-eval-episodes", type=int, default=10,
+                        help="the number of episodes to evaluate the agent on after each policy update.")
+
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
@@ -83,22 +96,27 @@ def parse_args():
     return args
 
 
-def make_env(env_id, seed, idx, capture_video, run_name, task_queue, update_queue):
+def make_env(env_id, task_wrapper=False, curriculum=None):
     def thunk():
-        env = gym.make(env_id)
+        env = gym.make(f"{env_id}")
+        # env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
-        if capture_video:
-            if idx == 0:
-                env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-        # env.seed(seed)
-        env.action_space.seed(seed)
-        env.observation_space.seed(seed)
-        env = CartPoleTaskWrapper(env)
-        env = MultiProcessingSyncWrapper(env, task_queue, update_queue,
-                                         task_space=TaskSpace(gym.spaces.Box(-0.3, 0.3, shape=(2,))),
-                                         update_on_step=False)
-        return env
 
+        if task_wrapper or curriculum is not None:
+            env = CartPoleTaskWrapper(env)
+
+        if curriculum is not None:
+            env = MultiProcessingSyncWrapper(
+                env,
+                curriculum.get_components(),
+                update_on_step=curriculum.requires_step_updates,
+                task_space=env.task_space,
+                batch_size=10
+            )
+        env.action_space.seed(0)
+        env.observation_space.seed(0)
+        env.task_space.seed(0)
+        return env
     return thunk
 
 
@@ -109,21 +127,21 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 
 
 class Agent(nn.Module):
-    def __init__(self, envs):
+    def __init__(self, observation_shape, n_actions):
         super().__init__()
         self.critic = nn.Sequential(
-            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
+            layer_init(nn.Linear(np.array(observation_shape).prod(), 64)),
             nn.Tanh(),
             layer_init(nn.Linear(64, 64)),
             nn.Tanh(),
             layer_init(nn.Linear(64, 1), std=1.0),
         )
         self.actor = nn.Sequential(
-            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
+            layer_init(nn.Linear(np.array(observation_shape).prod(), 64)),
             nn.Tanh(),
             layer_init(nn.Linear(64, 64)),
             nn.Tanh(),
-            layer_init(nn.Linear(64, envs.single_action_space.n), std=0.01),
+            layer_init(nn.Linear(64, n_actions), std=0.01),
         )
 
     def get_value(self, x):
@@ -131,10 +149,27 @@ class Agent(nn.Module):
 
     def get_action_and_value(self, x, action=None):
         logits = self.actor(x)
-        probs = Categorical(logits=logits)
+        probs = torch.distributions.Categorical(logits=logits)
         if action is None:
             action = probs.sample()
         return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+
+
+def make_value_fn():
+    def get_value(obs):
+        obs = np.array(obs)
+        with torch.no_grad():
+            return agent.get_value(torch.Tensor(obs).to(device))
+    return get_value
+
+
+def make_action_fn():
+    def get_action(obs):
+        obs = np.array(obs)
+        with torch.no_grad():
+            action, _, _, _ = agent.get_action_and_value(torch.Tensor(obs).to(device))
+            return action.to("cpu").numpy()
+    return get_action
 
 
 if __name__ == "__main__":
@@ -165,18 +200,84 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    print("Device:", device)
 
-    # curriculum setup
-    curriculum = SimpleBoxCurriculum(TaskSpace(gym.spaces.Box(-0.3, 0.3, shape=(2,))))
-    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
+    single_action_space = sample_envs.single_action_space
+    single_observation_space = sample_envs.single_observation_space
+    sample_envs.close()
+
+    # Agent setup
+    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+    agent = Agent(
+        single_observation_space.shape,
+        single_action_space.n,
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+
+    # Curriculum setup
+    curriculum = None
+    if args.curriculum:
+        sample_env = make_env(args.env_id, task_wrapper=True)()
+
+        # Intialize Curriculum Method
+        if args.curriculum_method == "plr":
+            print("Using prioritized level replay.")
+            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            curriculum = PrioritizedLevelReplay(
+                sample_env.task_space,
+                sample_env.observation_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                evaluator=evaluator,
+            )
+        elif args.curriculum_method == "centralplr":
+            print("Using centralized prioritized level replay.")
+            curriculum = CentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
+            )
+        elif args.curriculum_method == "dr":
+            print("Using domain randomization.")
+            curriculum = DomainRandomization(sample_env.task_space)
+        elif args.curriculum_method == "bdr":
+            print("Using batched domain randomization.")
+            curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
+        elif args.curriculum_method == "lp":
+            print("Using learning progress.")
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, task_wrapper=True) for _ in range(8)]
+            )
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+        elif args.curriculum_method == "sq":
+            print("Using sequential curriculum.")
+            curricula = []
+            stopping = []
+            for i in range(0, 199, 10):
+                curricula.append(list(range(i, i+10)))
+                stopping.append("steps>=500000")
+                curricula.append(list(range(i + 10)))
+                stopping.append("steps>=500000")
+            curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
+        else:
+            raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
+        curriculum = make_multiprocessing_curriculum(curriculum)
+        del sample_env
 
     # env setup
     envs = gym.vector.AsyncVectorEnv(
-        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, update_queue) for i in range(args.num_envs)]
+        [make_env(args.env_id, curriculum=curriculum) for i in range(args.num_envs)]
     )
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
-    agent = Agent(envs).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # ALGO Logic: Storage setup
@@ -190,10 +291,12 @@ if __name__ == "__main__":
     # TRY NOT TO MODIFY: start the game
     global_step = 0
     start_time = time.time()
-    next_obs, _ = envs.reset()
+    next_obs, _ = envs.reset(seed=args.seed)
     next_obs = torch.Tensor(next_obs).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
     num_updates = args.total_timesteps // args.batch_size
+    episode_rewards = deque(maxlen=10)
+    completed_episodes = 0
 
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
@@ -219,14 +322,38 @@ if __name__ == "__main__":
             done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
+            completed_episodes += sum(done)
+            # print(infos)
 
             if "final_info" in infos:
                 for info in infos["final_info"]:
                     if info and "episode" in info:
-                        print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
-                        writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                        ep_return = info['episode']['r'][0]
+                        episode_rewards.append(ep_return)
+                        print(f"global_step={global_step}, episodic_return={ep_return}")
+                        writer.add_scalar("charts/episodic_return", ep_return, global_step)
                         writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
-                        curriculum.log_metrics(writer, step=global_step)
+                        if curriculum is not None:
+                            curriculum.log_metrics(writer, global_step)
+                        break
+
+            # Syllabus curriculum update
+            if args.curriculum and args.curriculum_method == "centralplr":
+                with torch.no_grad():
+                    next_value = agent.get_value(next_obs)
+                tasks = envs.get_attr("task")
+
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": value,
+                        "next_value": next_value,
+                        "rew": reward,
+                        "dones": done,
+                        "tasks": tasks,
+                    },
+                }
+                curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
