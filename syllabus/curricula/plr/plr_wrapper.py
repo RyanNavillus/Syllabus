@@ -81,6 +81,7 @@ class RolloutStorage(object):
             self.action_log_dist = self.action_log_dist.to(device)
 
     def insert_at_index(self, env_index, mask=None, obs=None, reward=None, task=None, steps=1):
+        assert steps < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
         step = self.env_steps[env_index]
         end_step = step + steps
 
@@ -110,7 +111,8 @@ class RolloutStorage(object):
         value_steps = self.value_steps.numpy()
         while all((self.env_steps - value_steps) > 0):
 
-            obs = [self.obs[env_idx][self.value_steps[env_idx]] for env_idx in range(self.num_processes)]
+            obs = [self.obs[env_idx][value_steps[env_idx]] for env_idx in range(self.num_processes)]
+
             lstm_states = dones = None
             if self.using_lstm:
                 lstm_states = (
@@ -123,9 +125,12 @@ class RolloutStorage(object):
                 _, values, extras = self.evaluator.get_action_and_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
             except RuntimeError as e:
                 raise UsageError(
-                    "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the agent's get_states implementation."
+                    "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the evaluator's get_action_and_value implementation."
                 ) from e
-            self.value_preds[self.value_steps, np.arange(self.num_processes)] = values
+
+            self.value_preds[value_steps, np.arange(self.num_processes)] = values
+            self.value_steps += 1   # Increase index to store lstm_states and next iteration
+            value_steps = self.value_steps.numpy()
 
             if self.using_lstm:
                 try:
@@ -133,13 +138,11 @@ class RolloutStorage(object):
                 except KeyError as e:
                     raise UsageError("Evaluator must return lstm_state in extras for PLR.") from e
 
+                # Place new lstm_states in next step
                 self.lstm_states[0][value_steps, np.arange(
                     self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
                 self.lstm_states[1][value_steps, np.arange(
                     self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
-
-            self.value_steps += 1
-            value_steps = self.value_steps.numpy()
 
         # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
         if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
@@ -158,12 +161,12 @@ class RolloutStorage(object):
         if self._requires_value_buffers:
             self.returns[:, env_index] = self.returns[:, env_index].roll(-self.num_steps, 0)
             self.rewards[:, env_index] = self.rewards[:, env_index].roll(-self.num_steps, 0)
-            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-(self.num_steps + 1), 0)
+            self.value_preds[:, env_index] = self.value_preds[:, env_index].roll(-(self.num_steps), 0)
         else:
             self.action_log_dist[:, env_index] = self.action_log_dist[:, env_index].roll(-self.num_steps, 0)
 
         self.env_steps[env_index] -= self.num_steps
-        self.value_steps[env_index] -= (self.num_steps + 1)
+        self.value_steps[env_index] -= self.num_steps
         self.ready_buffers.remove(env_index)
 
     def compute_returns(self, gamma, gae_lambda, env_index):
