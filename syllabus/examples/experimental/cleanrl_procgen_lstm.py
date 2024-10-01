@@ -130,7 +130,8 @@ PROCGEN_RETURN_BOUNDS = {
 
 def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
 
         if task_wrapper or curriculum is not None:
@@ -296,7 +297,8 @@ if __name__ == "__main__":
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
+                                                    sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -364,7 +366,8 @@ if __name__ == "__main__":
 
             # ALGO LOGIC: action logic
             with torch.no_grad():
-                action, logprob, _, value, next_lstm_state = agent.get_action_and_value(next_obs, next_lstm_state, next_done)
+                action, logprob, _, value, next_lstm_state = agent.get_action_and_value(
+                    next_obs, next_lstm_state, next_done)
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
