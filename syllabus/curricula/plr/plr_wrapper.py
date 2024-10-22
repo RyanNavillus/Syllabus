@@ -110,7 +110,6 @@ class RolloutStorage(object):
         # Get value predictions if batch is ready
         value_steps = self.value_steps.numpy()
         while all((self.env_steps - value_steps) > 0):
-
             obs = [self.obs[env_idx][value_steps[env_idx]] for env_idx in range(self.num_processes)]
 
             lstm_states = dones = None
@@ -119,8 +118,9 @@ class RolloutStorage(object):
                     torch.unsqueeze(self.lstm_states[0][value_steps, np.arange(self.num_processes)], 0),
                     torch.unsqueeze(self.lstm_states[1][value_steps, np.arange(self.num_processes)], 0),
                 )
-                dones = torch.squeeze(-self.masks[value_steps, np.arange(self.num_processes)], -1)
+                dones = torch.squeeze(1 - self.masks[value_steps, np.arange(self.num_processes)], -1)
 
+            # Get value predictions and check for common usage errors
             try:
                 _, values, extras = self.evaluator.get_action_and_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
             except RuntimeError as e:
@@ -133,6 +133,7 @@ class RolloutStorage(object):
             value_steps = self.value_steps.numpy()
 
             if self.using_lstm:
+                # Extract lstm_states from extras, raise error if missing
                 try:
                     lstm_states = extras["lstm_state"]
                 except KeyError as e:

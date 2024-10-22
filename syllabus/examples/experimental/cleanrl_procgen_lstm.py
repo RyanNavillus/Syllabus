@@ -15,6 +15,7 @@ import gymnasium as gym
 import numpy as np
 import procgen  # type: ignore # noqa: F401
 from procgen import ProcgenEnv
+from syllabus.curricula.plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -143,7 +144,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, n
                 curriculum.get_components(),
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
-                batch_size=256
+                batch_size=256,
             )
         return env
     return thunk
@@ -285,6 +286,15 @@ if __name__ == "__main__":
                 evaluator=evaluator,
                 lstm_size=256,
             )
+        elif args.curriculum_method == "centralplr":
+            curriculum = CentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
+            )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
@@ -387,6 +397,24 @@ if __name__ == "__main__":
                     if curriculum is not None:
                         curriculum.log_metrics(writer, global_step)
                     break
+
+            # Syllabus curriculum update
+            if args.curriculum and args.curriculum_method == "centralplr":
+                with torch.no_grad():
+                    next_value = agent.get_value(next_obs, next_lstm_state, next_done)
+                tasks = envs.get_attr("task")
+
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": value,
+                        "next_value": next_value,
+                        "rew": reward,
+                        "dones": next_done,
+                        "tasks": tasks,
+                    },
+                }
+                curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
