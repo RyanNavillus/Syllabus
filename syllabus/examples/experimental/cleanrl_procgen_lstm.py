@@ -182,8 +182,8 @@ def level_replay_evaluate(
                 torch.Tensor(eval_obs).to(device), next_lstm_state, torch.Tensor(np.logical_or(terms, truncs)).to(device), deterministic=False
             )
 
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
+        eval_obs, _, truncs, terms, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        for i, info in enumerate(eval_infos):
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 

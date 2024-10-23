@@ -26,7 +26,8 @@ class RolloutStorage(object):
         evaluator: Evaluator = None,
     ):
         self.num_steps = num_steps
-        self.buffer_steps = num_steps * 4  # Hack to prevent overflow from lagging updates.
+        # Hack to prevent overflow from lagging updates.
+        self.buffer_steps = num_steps * 4
         self.num_processes = num_processes
         self._requires_value_buffers = requires_value_buffers
         self.evaluator = evaluator
@@ -99,28 +100,32 @@ class RolloutStorage(object):
             try:
                 int(task[0])
             except TypeError:
-                assert isinstance(task, int), f"Provided task must be an integer, got {task[0]} with type {type(task[0])} instead."
+                assert isinstance(
+                    task, int), f"Provided task must be an integer, got {task[0]} with type {type(task[0])} instead."
             self.tasks[step:end_step, env_index].copy_(torch.as_tensor(np.array(task)[:, None]))
 
         self.env_steps[env_index] += steps
 
         # Get value predictions if batch is ready
-        while all((self.env_steps - self.value_steps.numpy()) > 0):
+        value_steps = self.value_steps.numpy()
+        while all((self.env_steps - value_steps) > 0):
+
             obs = [self.obs[env_idx][self.value_steps[env_idx]] for env_idx in range(self.num_processes)]
             lstm_states = dones = None
             if self.using_lstm:
                 lstm_states = (
-                    torch.unsqueeze(self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
-                    torch.unsqueeze(self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)], 0),
+                    torch.unsqueeze(self.lstm_states[0][value_steps, np.arange(self.num_processes)], 0),
+                    torch.unsqueeze(self.lstm_states[1][value_steps, np.arange(self.num_processes)], 0),
                 )
-                dones = torch.squeeze(-self.masks[self.value_steps.numpy(), np.arange(self.num_processes)], -1)
+                dones = torch.squeeze(-self.masks[value_steps, np.arange(self.num_processes)], -1)
 
             try:
                 _, values, extras = self.evaluator.get_action_and_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
             except RuntimeError as e:
-                raise UsageError("Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the agent's get_states implementation.") from e
+                raise UsageError(
+                    "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the agent's get_states implementation."
+                ) from e
             self.value_preds[self.value_steps, np.arange(self.num_processes)] = values
-            self.value_steps += 1
 
             if self.using_lstm:
                 try:
@@ -128,37 +133,17 @@ class RolloutStorage(object):
                 except KeyError as e:
                     raise UsageError("Evaluator must return lstm_state in extras for PLR.") from e
 
-                self.lstm_states[0][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
-                self.lstm_states[1][self.value_steps.numpy(), np.arange(self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
+                self.lstm_states[0][value_steps, np.arange(
+                    self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
+                self.lstm_states[1][value_steps, np.arange(
+                    self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
+
+            self.value_steps += 1
+            value_steps = self.value_steps.numpy()
 
         # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
         if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
             self.ready_buffers.add(env_index)
-
-    # def _get_values(self, env_index):
-    #     if self.evaluator is None:
-    #         raise UsageError("Selected strategy requires value predictions. Please provide an evaluator to PLR.")
-    #     # Iterate by the batch size
-    #     for step in range(0, self.num_steps + 1, self.num_processes):
-    #         obs = self.obs[env_index][step: step + self.num_processes]
-    #         lstm_states = self.lstm_states[step: step + self.num_processes, env_index] if self.lstm_states is not None else None
-    #         dones = torch.logical_not(self.masks[step: step + self.num_processes, env_index])
-    #         values, lstm_states, extras = self.evaluator.get_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
-
-    #         # Reshape values if necessary
-    #         if len(values.shape) == 3:
-    #             warnings.warn(
-    #                 f"Value function returned a 3D tensor of shape {values.shape}. Squeezing last dimension."
-    #             )
-    #             values = torch.squeeze(values, -1)
-    #         if len(values.shape) == 1:
-    #             warnings.warn(
-    #                 f"Value function returned a 1D tensor of shape {values.shape}. Unsqueezing last dimension."
-    #             )
-    #             values = torch.unsqueeze(values, -1)
-    #         self.value_preds[step: step + self.num_processes, env_index] = values
-    #         if self.lstm_states is not None:
-    #             self.lstm_states[step: step + self.num_processes, env_index] = lstm_states
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
@@ -241,18 +226,21 @@ class PrioritizedLevelReplay(Curriculum):
                 f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
-            warnings.warn(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+            warnings.warn(
+                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
-        self._num_steps = num_steps  # Number of steps stored in rollouts and used to update task sampler
+        # Number of steps stored in rollouts and used to update task sampler
+        self._num_steps = num_steps
         self._num_processes = num_processes  # Number of parallel environments
         self._gamma = gamma
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 
-        self._task_sampler = TaskSampler(self.tasks, self._num_steps, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, self._num_steps,
+                                         action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
@@ -282,7 +270,8 @@ class PrioritizedLevelReplay(Curriculum):
         """
         assert env_id is not None, "env_id must be provided for PLR updates."
         if env_id >= self._num_processes:
-            warnings.warn(f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
+            warnings.warn(
+                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
             env_id = env_id % self._num_processes
 
         assert env_id not in self._rollouts.ready_buffers
@@ -309,10 +298,11 @@ class PrioritizedLevelReplay(Curriculum):
         assert env_id not in self._rollouts.ready_buffers
 
         if env_id >= self._num_processes:
-            warnings.warn(f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
+            warnings.warn(
+                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
             env_id = env_id % self._num_processes
 
-        tasks, obs, rews, terms, truncs, infos = step_results
+        tasks, obs, rews, terms, truncs, _ = step_results
         self._rollouts.insert_at_index(
             env_id,
             mask=np.logical_not(np.logical_or(terms, truncs)),
@@ -334,7 +324,8 @@ class PrioritizedLevelReplay(Curriculum):
         self._task_sampler.after_update()
 
     def _enumerate_tasks(self, space):
-        assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
+        assert isinstance(space, (Discrete, MultiDiscrete)
+                          ), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
         if isinstance(space, Discrete):
             return list(range(space.n))
         else:
@@ -344,10 +335,7 @@ class PrioritizedLevelReplay(Curriculum):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        # super().log_metrics(writer, step)
+        super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
         writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
         writer.add_scalar("curriculum/score", metrics["score"], step)
-        # for task in list(self.task_space.tasks)[:10]:
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
-        #     writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
