@@ -1,6 +1,6 @@
 import warnings
 from typing import Any, Dict, List, Tuple, Union
-
+import wandb
 import gymnasium as gym
 import torch
 from gymnasium.spaces import Discrete, MultiDiscrete
@@ -52,6 +52,7 @@ class RolloutStorage(object):
             assert (value_preds is not None and rewards is not None), "Selected strategy requires value_preds and rewards"
             if len(rewards.shape) == 3:
                 rewards = rewards.squeeze(2)
+
             self.value_preds[self.step].copy_(torch.as_tensor(value_preds))
             self.rewards[self.step].copy_(torch.as_tensor(rewards)[:, None])
             self.masks[self.step + 1].copy_(torch.as_tensor(masks)[:, None])
@@ -123,7 +124,8 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
                 f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
-            warnings.warn(f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+            warnings.warn(
+                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
@@ -133,7 +135,8 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-        self._task_sampler = TaskSampler(self.tasks, self._num_steps, action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, self._num_steps,
+                                         action_space=action_space, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
@@ -147,7 +150,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
 
     def _validate_metrics(self, metrics: Dict):
         try:
-            masks = torch.Tensor(1 - metrics["dones"])
+            masks = torch.Tensor(1 - metrics["dones"].int())
             tasks = metrics["tasks"]
             tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
@@ -220,7 +223,8 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             return [self._task_sampler.sample() for _ in range(k)]
 
     def _enumerate_tasks(self, space):
-        assert isinstance(space, Discrete) or isinstance(space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
+        assert isinstance(space, Discrete) or isinstance(
+            space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
         if isinstance(space, Discrete):
             return list(range(space.n))
         else:
@@ -232,8 +236,17 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         """
         super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
-        writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
-        writer.add_scalar("curriculum/score", metrics["score"], step)
-        for task in list(self.task_space.tasks)[:10]:
-            writer.add_scalar(f"curriculum/task_{task - 1}_score", metrics["task_scores"][task - 1], step)
-            writer.add_scalar(f"curriculum/task_{task - 1}_staleness", metrics["task_staleness"][task - 1], step)
+        if writer == wandb:
+            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "step": step})
+            writer.log({"curriculum/score": metrics["score"], "step": step})
+            for idx in range(self.num_tasks)[:10]:
+                name = self.task_names(self.tasks[idx], idx)
+                writer.log({f"curriculum/{name}_score": metrics["task_scores"][idx], "step": step})
+                writer.log({f"curriculum/{name}_staleness": metrics["task_staleness"][idx], "step": step})
+        else:
+            writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
+            writer.add_scalar("curriculum/score", metrics["score"], step)
+            for idx in range(self.num_tasks)[:10]:
+                name = self.task_names(self.tasks[idx], idx)
+                writer.add_scalar(f"curriculum/{name}_score", metrics["task_scores"][idx], step)
+                writer.add_scalar(f"curriculum/{name}_staleness", metrics["task_staleness"][idx], step)

@@ -1,3 +1,5 @@
+import copy
+from collections import defaultdict
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
@@ -25,9 +27,19 @@ class Evaluator:
             device (Optional[torch.device]): The device to run the evaluation on.
             preprocess_obs (Optional[Any]): A function to preprocess observations.
         """
-        self.agent = agent
+        self._agent_reference = agent
+        self.agent = None
         self.device = device
         self.preprocess_obs = preprocess_obs
+
+    def _update_agent(self):
+        """
+        Update the agent with a copy of the agent reference.
+        This is necessary if you are using a model with different training and evaluation modes
+        because the evaluator may need to run in eval mode while the agent is training.
+        """
+        # Do not make a copy by default
+        self.agent = self._agent_reference
 
     def get_value(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
@@ -43,14 +55,16 @@ class Evaluator:
         Returns:
             Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
         """
+        self._update_agent()
         state = self._prepare_state(state)
         if lstm_state is not None:
             lstm_state, done = self._prepare_lstm(lstm_state, done)
-
+        self._set_eval_mode()
         with torch.no_grad():
             value, lstm_state, extras = self._get_value(
                 state, lstm_state=lstm_state, done=done
             )
+        self._set_train_mode()
         return value.to("cpu"), extras
 
     def get_action(
@@ -67,14 +81,17 @@ class Evaluator:
         Returns:
             Tuple[torch.Tensor, Dict[str, Any]]: The action and additional information.
         """
+        self._update_agent()
         state = self._prepare_state(state)
         if lstm_state is not None:
             lstm_state, done = self._prepare_lstm(lstm_state, done)
 
+        self._set_eval_mode()
         with torch.no_grad():
             action, lstm_state, extras = self._get_action(
                 state, lstm_state=lstm_state, done=done
             )
+        self._set_train_mode()
         return action.to("cpu"), extras
 
     def get_action_and_value(
@@ -91,14 +108,17 @@ class Evaluator:
         Returns:
             Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]: The action, value, and additional information.
         """
+        self._update_agent()
         state = self._prepare_state(state)
         if lstm_state is not None:
             lstm_state, done = self._prepare_lstm(lstm_state, done)
 
+        self._set_eval_mode()
         with torch.no_grad():
             action, value, extras = self._get_action_and_value(
                 state, lstm_state=lstm_state, done=done
             )
+        self._set_train_mode()
         return action.to("cpu"), value.to("cpu"), extras
 
     def _get_action(
@@ -160,11 +180,6 @@ class Evaluator:
         Returns:
             torch.Tensor: The prepared state.
         """
-        if self.preprocess_obs is not None:
-            state = self.preprocess_obs(state)
-        state = torch.Tensor(state)
-        if self.device is not None:
-            state = state.to(self.device)
         return state
 
     def _prepare_lstm(
@@ -193,11 +208,22 @@ class Evaluator:
             done = done.to(self.device)
         return lstm_state, done
 
+    def _set_eval_mode(self):
+        """
+        Set the policy to evaluation mode.
+        """
+        pass
+
+    def _set_train_mode(self):
+        """
+        Set the policy to training mode.
+        """
+        pass
+
 
 class CleanRLDiscreteEvaluator(Evaluator):
     def __init__(self, agent, *args, is_lstm=False, **kwargs):
         super().__init__(agent, *args, **kwargs)
-        self.agent = agent
         self.is_lstm = is_lstm or hasattr(agent, "lstm")
 
     def _get_value(self, state, lstm_state=None, done=None):
@@ -233,6 +259,23 @@ class CleanRLDiscreteEvaluator(Evaluator):
                 state)
             return action, value, {"log_probs": log_probs, "entropy": entropy}
 
+    def _prepare_state(self, state: Array) -> torch.Tensor:
+        """
+        Prepare the state for evaluation.
+
+        Args:
+            state (Array): The current state.
+
+        Returns:
+            torch.Tensor: The prepared state.
+        """
+        state = torch.Tensor(np.stack(state))
+        if self.preprocess_obs is not None:
+            state = self.preprocess_obs(state)
+        if self.device is not None:
+            state = state.to(self.device)
+        return state
+
     def _check_inputs(self, lstm_state, done):
         assert (
             lstm_state is not None
@@ -241,3 +284,59 @@ class CleanRLDiscreteEvaluator(Evaluator):
             done is not None
         ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
         return True
+
+
+class MoolibEvaluator(Evaluator):
+    def __init__(self, agent, *args, **kwargs):
+        super().__init__(agent, *args, **kwargs)
+        # Make cpu copy of model
+        original_device = "cuda"
+        agent.to(self.device)
+        self.agent = copy.deepcopy(agent)
+        agent.to(original_device)
+
+    def _update_agent(self):
+        self.agent.load_state_dict(self._agent_reference.state_dict())
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state)
+        value = output["baseline"].reshape(-1, 1)
+        return value, {}
+
+    def _get_action(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state)
+        action = output["action"]
+        return action, {}
+
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state)
+        action = output["action"]
+        value = output["baseline"].reshape(-1, 1)
+        return (action, value, {"lstm_state": lstm_state})
+
+    def _check_inputs(self, lstm_state, done):
+        assert (
+            lstm_state is not None
+        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        return True
+
+    def _prepare_state(self, state) -> torch.Tensor:
+        full_dict = defaultdict(list)
+        for obs_dict in state:
+            for k, v in obs_dict.items():
+                full_dict[k].append(v)
+        tensor_dict = {key: torch.unsqueeze(torch.Tensor(np.stack(val_list)), 0).to(self.device)
+                       for key, val_list in full_dict.items()}
+        return tensor_dict
+
+    def _set_eval_mode(self):
+        self.agent.eval()
+
+    def _set_train_mode(self):
+        self.agent.train()

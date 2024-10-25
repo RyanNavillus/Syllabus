@@ -6,13 +6,10 @@ from typing import Any, Dict, List, Tuple
 import cv2
 import gymnasium as gym
 import numpy as np
-# import render_utils
-from gymnasium.utils.step_api_compatibility import step_api_compatibility
+import render_utils
 from nle import nethack
 from nle.env import base
-from nle.env.tasks import (NetHackChallenge, NetHackEat, NetHackGold,
-                           NetHackOracle, NetHackScore, NetHackScout,
-                           NetHackStaircase, NetHackStaircasePet)
+from nle.env.tasks import NetHackChallenge, NetHackEat, NetHackGold, NetHackScore, NetHackScout, NetHackStaircase, NetHackStaircasePet
 from numba import njit
 from PIL import Image, ImageDraw, ImageFont
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
@@ -35,6 +32,7 @@ class NethackTaskWrapper(TaskWrapper):
     but does so in a safe way. Specifically, we ensure that the instance variables needed for each
     task are available and reset at the start of the episode regardless of which task is active.
     """
+
     def __init__(
         self,
         env: gym.Env,
@@ -63,7 +61,6 @@ class NethackTaskWrapper(TaskWrapper):
                 NetHackGold,
                 NetHackEat,
                 NetHackScout,
-                NetHackOracle
             ]
 
         # Add in custom nethack tasks
@@ -73,8 +70,7 @@ class NethackTaskWrapper(TaskWrapper):
                 task_list.append(task)
 
         self.task_list = task_list
-        gym_space = gym.spaces.Discrete(len(self.task_list))
-        self.task_space = TaskSpace(gym_space, task_list)
+        self.task_space = TaskSpace(len(task_list), task_list)
 
         # Add goal space to observation
         # self.observation_space = copy.deepcopy(self.env.observation_space)
@@ -117,6 +113,9 @@ class NethackTaskWrapper(TaskWrapper):
         self.episode_return = 0
 
         obs, info = self.env.reset(**kwargs)
+        obs["prev_action"] = 0
+        obs["tty_cursor"] = self.task_space.encode(self.task)
+
         return self.observation(obs), info
 
     def change_task(self, new_task: int):
@@ -188,6 +187,8 @@ class NethackTaskWrapper(TaskWrapper):
         # self.episode_return += rew
         self.done = term or trunc
         info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
+        obs["prev_action"] = action
+        obs["tty_cursor"] = self.task_space.encode(self.task)
         return self.observation(obs), rew, term, trunc, info
 
 
@@ -247,7 +248,7 @@ def _tile_characters_to_image(
             h_pixel = h * char_height
             w_pixel = w * char_width
             out_image[
-                :, h_pixel : h_pixel + char_height, w_pixel : w_pixel + char_width
+                :, h_pixel: h_pixel + char_height, w_pixel: w_pixel + char_width
             ] = char_array[char, color]
 
 

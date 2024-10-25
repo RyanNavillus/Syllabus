@@ -6,7 +6,7 @@ import ray
 from gymnasium.utils.step_api_compatibility import step_api_compatibility
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
 
-from syllabus.core import Curriculum, MultiProcessingComponents, MultiProcessingComponents
+from syllabus.core import Curriculum, MultiProcessingComponents
 from syllabus.core.task_interface import PettingZooTaskWrapper, TaskEnv, TaskWrapper
 from syllabus.task_space import TaskSpace
 
@@ -28,7 +28,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
-        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
+        assert isinstance(
+            task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
         self.components = components
@@ -183,7 +184,8 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
                  task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
-        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
+        assert isinstance(
+            task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
         self.components = components
@@ -330,12 +332,14 @@ class RaySyncWrapper(gym.Wrapper):
     on parallel processes created using ray. Meant to be used with a
     RayLearningProgressCurriculum running on the main process.
     """
+
     def __init__(self,
                  env,
                  update_on_step: bool = True,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
+        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(
+            env, PettingZooTaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.update_on_step = update_on_step    # Disable to improve performance
@@ -415,12 +419,14 @@ class PettingZooRaySyncWrapper(BaseParallelWrapper):
     on parallel processes created using ray. Meant to be used with a
     RayLearningProgressCurriculum running on the main process.
     """
+
     def __init__(self,
                  env,
                  update_on_step: bool = True,
                  task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
-        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(env, PettingZooTaskWrapper), "Env must implement the task API"
+        assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(
+            env, PettingZooTaskWrapper), "Env must implement the task API"
         super().__init__(env)
         self.env = env
         self.update_on_step = update_on_step    # Disable to improve performance

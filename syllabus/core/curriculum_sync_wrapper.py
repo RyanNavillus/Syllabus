@@ -14,6 +14,7 @@ from syllabus.core import Curriculum, decorate_all_functions
 class CurriculumWrapper:
     """Wrapper class for adding multiprocessing synchronization to a curriculum.
     """
+
     def __init__(self, curriculum: Curriculum) -> None:
         self.curriculum = curriculum
         if hasattr(curriculum, "unwrapped") and curriculum.unwrapped is not None:
@@ -313,6 +314,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
     for convenience.
     # TODO: Implement the Curriculum methods explicitly
     """
+
     def __init__(self, curriculum, actor_name="curriculum") -> None:
         super().__init__(curriculum)
         self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)

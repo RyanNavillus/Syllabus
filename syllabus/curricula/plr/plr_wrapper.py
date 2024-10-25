@@ -1,4 +1,5 @@
 import time
+import wandb
 import warnings
 from typing import Any, Dict, List, Tuple, Union
 
@@ -21,16 +22,21 @@ class RolloutStorage(object):
         num_processes: int,
         requires_value_buffers: bool,
         observation_space: gym.Space,   # TODO: Use np array when space is box or discrete
+        num_minibatches: int = 1,
         action_space: gym.Space = None,
         lstm_size: int = None,
         evaluator: Evaluator = None,
+        device: str = "cpu",
     ):
         self.num_steps = num_steps
         # Hack to prevent overflow from lagging updates.
         self.buffer_steps = num_steps * 4
         self.num_processes = num_processes
+        self.num_minibatches = num_minibatches
         self._requires_value_buffers = requires_value_buffers
         self.evaluator = evaluator
+        self.device = device
+
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
 
@@ -59,12 +65,14 @@ class RolloutStorage(object):
             self.action_log_dist = torch.zeros(self.buffer_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
+        self.to(self.device)
 
     @property
     def using_lstm(self):
         return self.lstm_states is not None
 
     def to(self, device):
+        self.device = device
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
 
@@ -110,26 +118,42 @@ class RolloutStorage(object):
         # Get value predictions if batch is ready
         value_steps = self.value_steps.numpy()
         while all((self.env_steps - value_steps) > 0):
-            obs = [self.obs[env_idx][value_steps[env_idx]] for env_idx in range(self.num_processes)]
+            self.get_value_predictions()
 
+        # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
+        if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
+            self.ready_buffers.add(env_index)
+
+    def get_value_predictions(self):
+        value_steps = self.value_steps.numpy()
+        try:
+            process_chunks = np.split(np.arange(self.num_processes), self.num_minibatches)
+        except ValueError as e:
+            raise UsageError(
+                f"Number of processes {self.num_processes} must be divisible by the number of minibatches {self.num_minibatches}."
+            ) from e
+
+        for processes in process_chunks:
+            obs = [self.obs[env_idx][value_steps[env_idx]] for env_idx in processes]
             lstm_states = dones = None
             if self.using_lstm:
                 lstm_states = (
-                    torch.unsqueeze(self.lstm_states[0][value_steps, np.arange(self.num_processes)], 0),
-                    torch.unsqueeze(self.lstm_states[1][value_steps, np.arange(self.num_processes)], 0),
+                    torch.unsqueeze(self.lstm_states[0][value_steps[processes], processes], 0),
+                    torch.unsqueeze(self.lstm_states[1][value_steps[processes], processes], 0),
                 )
-                dones = torch.squeeze(1 - self.masks[value_steps, np.arange(self.num_processes)], -1)
+                dones = torch.squeeze(1 - self.masks[value_steps[processes], processes], -1).int()
 
             # Get value predictions and check for common usage errors
             try:
-                _, values, extras = self.evaluator.get_action_and_value(torch.Tensor(np.stack(obs)), lstm_states, dones)
+                _, values, extras = self.evaluator.get_action_and_value(obs, lstm_states, dones)
+
             except RuntimeError as e:
                 raise UsageError(
                     "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the evaluator's get_action_and_value implementation."
                 ) from e
 
-            self.value_preds[value_steps, np.arange(self.num_processes)] = values
-            self.value_steps += 1   # Increase index to store lstm_states and next iteration
+            self.value_preds[value_steps[processes], processes] = values.to(self.device)
+            self.value_steps[processes] += 1   # Increase index to store lstm_states and next iteration
             value_steps = self.value_steps.numpy()
 
             if self.using_lstm:
@@ -140,14 +164,8 @@ class RolloutStorage(object):
                     raise UsageError("Evaluator must return lstm_state in extras for PLR.") from e
 
                 # Place new lstm_states in next step
-                self.lstm_states[0][value_steps, np.arange(
-                    self.num_processes)] = lstm_states[0].to(self.lstm_states[0].device)
-                self.lstm_states[1][value_steps, np.arange(
-                    self.num_processes)] = lstm_states[1].to(self.lstm_states[1].device)
-
-        # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
-        if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
-            self.ready_buffers.add(env_index)
+                self.lstm_states[0][value_steps[processes], processes] = lstm_states[0].to(self.lstm_states[0].device)
+                self.lstm_states[1][value_steps[processes], processes] = lstm_states[1].to(self.lstm_states[1].device)
 
     def after_update(self, env_index):
         # After consuming the first num_steps of data, remove them and shift the remaining data in the buffer
@@ -214,6 +232,7 @@ class PrioritizedLevelReplay(Curriculum):
         device: str = "cpu",
         num_steps: int = 256,
         num_processes: int = 64,
+        num_minibatches: int = 1,
         gamma: float = 0.999,
         gae_lambda: float = 0.95,
         suppress_usage_warnings=False,
@@ -250,9 +269,11 @@ class PrioritizedLevelReplay(Curriculum):
             self._num_processes,
             self._task_sampler.requires_value_buffers,
             observation_space,
+            num_minibatches=num_minibatches,
             action_space=action_space,
             lstm_size=lstm_size,
             evaluator=evaluator,
+            device=device,
         )
         self._rollouts.to(device)
 
@@ -341,5 +362,9 @@ class PrioritizedLevelReplay(Curriculum):
         """
         super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
-        writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
-        writer.add_scalar("curriculum/score", metrics["score"], step)
+        if writer == wandb:
+            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"]}, step=step)
+            writer.log({"curriculum/score": metrics["score"]}, step=step)
+        else:
+            writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
+            writer.add_scalar("curriculum/score", metrics["score"], step)

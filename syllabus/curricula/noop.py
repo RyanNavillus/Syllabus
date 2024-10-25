@@ -21,7 +21,7 @@ class NoopCurriculum(Curriculum):
         """
         return [self.default_task for _ in range(k)]
 
-    def update_task_progress(self, task, success_prob, env_id: int = None) -> None:
+    def update_task_progress(self, task, progress, env_id: int = None) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.

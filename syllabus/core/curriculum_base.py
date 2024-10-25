@@ -23,7 +23,8 @@ class Curriculum:
         TODO: Use task space for this
         :param task_names: Names of the tasks in the task space, defaults to None
         """
-        assert isinstance(task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
+        assert isinstance(
+            task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         self.task_space = task_space
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
@@ -64,7 +65,7 @@ class Curriculum:
 
         :return: List of tasks if task space is enumerable, TODO: empty list otherwise?
         """
-        return list(self.task_space.tasks)
+        return self.task_space._task_list
 
     def add_task(self, task: typing.Any) -> None:
         # TODO
@@ -89,7 +90,8 @@ class Curriculum:
         :param info: Extra information from the environment
         :raises NotImplementedError:
         """
-        raise NotImplementedError("This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
+        raise NotImplementedError(
+            "This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
     def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.

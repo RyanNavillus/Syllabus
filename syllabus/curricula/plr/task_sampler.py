@@ -24,6 +24,7 @@ class TaskSampler:
         staleness_transform (str): Transform to apply to task staleness. One of "constant", "max", "eps_greedy", "rank", "power", "softmax".
         staleness_temperature (float): Temperature for staleness transform. Increasing temperature makes the sampling distribution more uniform.
     """
+
     def __init__(
         self,
         tasks: list,
@@ -247,35 +248,29 @@ class TaskSampler:
             sample_weights = np.ones_like(sample_weights, dtype=float) / len(sample_weights)
 
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
-        task = self.tasks[task_idx]
 
         self._update_staleness(task_idx)
 
-        return task
+        return task_idx
 
     def _sample_unseen_level(self):
         sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
-        task = self.tasks[task_idx]
-
         self._update_staleness(task_idx)
 
-        return task
+        return task_idx
 
     def sample(self, strategy=None):
         if not strategy:
             strategy = self.strategy
 
         if strategy == "random":
-            task_idx = np.random.choice(range((self.num_tasks)))
-            task = self.tasks[task_idx]
-            return task
+            return np.random.choice(range((self.num_tasks)))
 
         if strategy == "sequential":
             task_idx = self.next_task_index
             self.next_task_index = (self.next_task_index + 1) % self.num_tasks
-            task = self.tasks[task_idx]
-            return task
+            return task_idx
 
         num_unseen = (self.unseen_task_weights > 0).sum()
         proportion_seen = (self.num_tasks - num_unseen) / self.num_tasks
@@ -295,7 +290,8 @@ class TaskSampler:
             else:
                 return self._sample_unseen_level()
         else:
-            raise NotImplementedError(f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
+            raise NotImplementedError(
+                f"Unsupported replay schedule: {self.replay_schedule}. Must be 'fixed' or 'proportionate'.")
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)

@@ -280,11 +280,13 @@ if __name__ == "__main__":
                 sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
+                num_minibatches=1,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
                 lstm_size=256,
+                record_stats=True,
             )
         elif args.curriculum_method == "centralplr":
             curriculum = CentralizedPrioritizedLevelReplay(
@@ -293,7 +295,9 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                record_stats=True,
+
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
