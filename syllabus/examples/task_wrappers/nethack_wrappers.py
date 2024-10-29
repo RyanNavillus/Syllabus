@@ -473,9 +473,9 @@ class NethackSeedWrapper(TaskWrapper):
         self.episode_return = 0
 
         obs, info = self.env.reset(**kwargs)
-        # obs["prev_action"] = 0
-        # encoded_task = self.task_space.encode(self.task)
-        # obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
+        obs["prev_action"] = 0
+        encoded_task = self.task_space.encode(self.task)
+        obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
 
         return self.observation(obs), info
 
@@ -499,9 +499,9 @@ class NethackSeedWrapper(TaskWrapper):
         Step through environment and update task completion.
         """
         obs, rew, term, trunc, info = self.env.step(action)
-        # obs["prev_action"] = action
-        # encoded_task = self.task_space.encode(self.task)
-        # obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
+        obs["prev_action"] = action
+        encoded_task = self.task_space.encode(self.task)
+        obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
         return self.observation(obs), rew, term, trunc, info
 
 
