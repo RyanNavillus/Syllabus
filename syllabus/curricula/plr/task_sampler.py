@@ -168,6 +168,38 @@ class TaskSampler:
     def requires_value_buffers(self):
         return self.strategy in ["gae", "value_l1", "one_step_td_error"]
 
+    def _update_with_scores(self, rollouts):
+        tasks = rollouts.tasks
+        scores = rollouts.scores
+        done = ~(rollouts.masks > 0)
+        num_actors = rollouts.tasks.shape[1]
+
+        for actor_index in range(num_actors):
+            done_steps = done[:, actor_index].nonzero()[:self.num_steps, 0]
+            start_t = 0
+
+            for t in done_steps:
+                if not start_t < self.num_steps:
+                    break
+
+                if (t == 0):  # if t is 0, then this done step caused a full update of previous last cycle
+                    continue
+
+                task_idx_t = tasks[start_t, actor_index].item()
+
+                score = scores[start_t, actor_index].item()
+                num_steps = len(rollouts.tasks[start_t:t, actor_index])
+                self.update_task_score(actor_index, task_idx_t, score, num_steps)
+
+                start_t = t.item()
+            if start_t < self.num_steps:
+                task_idx_t = tasks[start_t, actor_index].item()
+
+                score = scores[start_t, actor_index].item()
+                self._last_score = score
+                num_steps = len(rollouts.tasks[start_t:, actor_index])
+                self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
+
     def _update_with_rollouts(self, rollouts, score_function, actor_index=None):
         tasks = rollouts.tasks
         if not self.requires_value_buffers:

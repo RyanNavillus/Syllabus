@@ -25,6 +25,7 @@ from torch.utils.tensorboard import SummaryWriter
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLDiscreteEvaluator
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula.plr.simple_central_plr_wrapper import SimpleCentralizedPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenLSTMAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -299,6 +300,14 @@ if __name__ == "__main__":
                 record_stats=True,
 
             )
+        elif args.curriculum_method == "simpleplr":
+            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                record_stats=True,
+            )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
@@ -350,6 +359,7 @@ if __name__ == "__main__":
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
     values = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    tasks = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
     # TRY NOT TO MODIFY: start the game
     global_step = 0
@@ -391,6 +401,7 @@ if __name__ == "__main__":
             next_done = np.logical_or(terminations, truncations)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
+            tasks[step] = torch.Tensor(envs.get_attr("task"))
 
             for item in infos:
                 if "episode" in item.keys():
@@ -406,7 +417,7 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs, next_lstm_state, next_done)
-                tasks = envs.get_attr("task")
+                current_tasks = envs.get_attr("task")
 
                 update = {
                     "update_type": "on_demand",
@@ -415,7 +426,7 @@ if __name__ == "__main__":
                         "next_value": next_value,
                         "rew": reward,
                         "dones": next_done,
-                        "tasks": tasks,
+                        "tasks": current_tasks,
                     },
                 }
                 curriculum.update(update)
@@ -448,6 +459,7 @@ if __name__ == "__main__":
         b_advantages = advantages.reshape(-1)
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
+        b_tasks = tasks.reshape(-1)
 
         # Optimizing the policy and value network
         assert args.num_envs % args.num_minibatches == 0
@@ -500,6 +512,23 @@ if __name__ == "__main__":
                     v_loss = 0.5 * v_loss_max.mean()
                 else:
                     v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
+
+                # Syllabus curriculum update
+                if args.curriculum and args.curriculum_method == "simpleplr":
+                    current_tasks = tasks[:, mbenvinds]
+                    current_dones = dones[:, mbenvinds]
+                    scores = (b_returns[mb_inds].cpu() - newvalue.cpu()).abs().view(args.num_steps, envsperbatch).cpu()
+
+                    update = {
+                        "update_type": "on_demand",
+                        "metrics": {
+                            "scores": scores,
+                            "dones": current_dones,
+                            "tasks": current_tasks,
+                            "actors": mbenvinds
+                        },
+                    }
+                    curriculum.update(update)
 
                 entropy_loss = entropy.mean()
                 loss = pg_loss - args.ent_coef * entropy_loss + v_loss * args.vf_coef
