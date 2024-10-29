@@ -68,49 +68,49 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
         return progress_remaining * initial_value
     return func
 
+if __name__ == "__main__":
+    run = wandb.init(
+        project="sb3",
+        entity="ryansullivan",
+        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+        save_code=True,  # optional
+    )
 
-run = wandb.init(
-    project="sb3",
-    entity="ryansullivan",
-    sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-    save_code=True,  # optional
-)
 
+    sample_env = gym.make("procgen-bigfish-v0")
+    sample_env = ProcgenTaskWrapper(sample_env)
+    curriculum = CentralizedPrioritizedLevelReplay(sample_env.task_space, num_processes=64, num_steps=256)
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+    venv = DummyVecEnv(
+        [
+            make_env(task_queue, update_queue, num_levels=0)
+            for i in range(64)
+        ]
+    )
+    venv = wrap_vecenv(venv)
 
-sample_env = gym.make("procgen-bigfish-v0")
-sample_env = ProcgenTaskWrapper(sample_env)
-curriculum = CentralizedPrioritizedLevelReplay(sample_env.task_space, num_processes=64, num_steps=256)
-curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
-venv = DummyVecEnv(
-    [
-        make_env(task_queue, update_queue, num_levels=0)
-        for i in range(64)
-    ]
-)
-venv = wrap_vecenv(venv)
+    model = PPO(
+        "CnnPolicy",
+        venv,
+        verbose=1,
+        n_steps=256,
+        learning_rate=linear_schedule(0.0005),
+        gamma=0.999,
+        gae_lambda=0.95,
+        n_epochs=3,
+        clip_range_vf=0.2,
+        ent_coef=0.01,
+        batch_size=256 * 64,
+        tensorboard_log="runs/testing"
+    )
 
-model = PPO(
-    "CnnPolicy",
-    venv,
-    verbose=1,
-    n_steps=256,
-    learning_rate=linear_schedule(0.0005),
-    gamma=0.999,
-    gae_lambda=0.95,
-    n_epochs=3,
-    clip_range_vf=0.2,
-    ent_coef=0.01,
-    batch_size=256 * 64,
-    tensorboard_log="runs/testing"
-)
-
-wandb_callback = WandbCallback(
-    model_save_path=f"models/{run.id}",
-    verbose=2,
-)
-plr_callback = CustomCallback(curriculum)
-callback = CallbackList([wandb_callback, plr_callback])
-model.learn(
-    25000000,
-    callback=callback,
-)
+    wandb_callback = WandbCallback(
+        model_save_path=f"models/{run.id}",
+        verbose=2,
+    )
+    plr_callback = CustomCallback(curriculum)
+    callback = CallbackList([wandb_callback, plr_callback])
+    model.learn(
+        25000000,
+        callback=callback,
+    )

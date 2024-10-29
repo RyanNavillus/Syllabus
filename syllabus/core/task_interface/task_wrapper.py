@@ -13,7 +13,7 @@ class TaskWrapper(gym.Wrapper):
         self.task_space = None
         self.task = None    # TODO: Would making this a property protect from accidental overriding?
 
-    def reset(self, *args, **kwargs):
+    def reset(self, **kwargs):
         new_task = kwargs.pop("new_task", None)
         if new_task is not None:
             self.change_task(new_task)
@@ -35,9 +35,6 @@ class TaskWrapper(gym.Wrapper):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         raise NotImplementedError
-
-    def add_task(self, task):
-        raise NotImplementedError("This environment does not support adding tasks.")
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """

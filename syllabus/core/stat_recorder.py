@@ -124,8 +124,8 @@ class StatRecorder:
             for idx in tasks_to_log:
                 if self.episode_returns[idx].n > 0:
                     name = self.task_names(list(self.task_space.tasks)[idx], idx)
-                    logs.append((f"stats_per_task/{name}_episode_return", self.episode_returns[idx].std(), step))
-                    logs.append((f"stats_per_task/{name}_episode_length", self.episode_returns[idx].mean(), step))
+                    logs.append((f"tasks/{name}_episode_return", self.episode_returns[idx].mean(), step))
+                    logs.append((f"tasks/{name}_episode_length", self.episode_lengths[idx].mean(), step))
             for name, prob, step in logs:
                 if writer == wandb:
                     writer.log({name: prob}, step=step)

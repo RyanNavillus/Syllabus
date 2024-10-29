@@ -1,3 +1,4 @@
+from random import randint
 import numpy as np
 from syllabus.tests import evaluate_random_policy
 from pettingzoo.utils.env import ParallelEnv
@@ -48,9 +49,11 @@ def compare_episodes_gymnasium(make_env, task1, task2, verbose=0):
 
     # Set tasks
     env1 = make_env()
-    env1.reset(new_task=task1)
+    env1.seed(seed=task1)
+    env1.reset()
     env2 = make_env()
-    env2.reset(new_task=task2)
+    env2.seed(seed=task2)
+    env2.reset()
 
     # Seed spaces
     env1.action_space.seed(0)
@@ -76,13 +79,15 @@ def compare_episodes_gymnasium(make_env, task1, task2, verbose=0):
         # Check observations
         if not compare_obs(obs1, obs2):
             if num_obs_failed == 0:
-                print_if_verbose(verbose, f"Step {step}: Obs are not the same: {obs1} != {obs2}. This message will not print for future steps.")
+                print_if_verbose(
+                    verbose, f"Step {step}: Obs are not the same: {obs1} != {obs2}. This message will not print for future steps.")
             num_obs_failed += 1
 
         # Check rewards
         if rew1 != rew2:
             if num_rews_failed == 0:
-                print_if_verbose(verbose, f"Step {step}: Rewards are not the same: {rew1} != {rew2}. This message will not print for future steps.")
+                print_if_verbose(
+                    verbose, f"Step {step}: Rewards are not the same: {rew1} != {rew2}. This message will not print for future steps.")
             num_rews_failed += 1
 
         # Check terms
@@ -106,9 +111,11 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
 
     # Set tasks
     env1 = make_env()
-    env1.reset(new_task=task1)
+    env1.seed(seed=task1)
+    env1.reset()
     env2 = make_env()
-    env2.reset(new_task=task2)
+    env2.seed(seed=task2)
+    env2.reset()
 
     # Seed spaces
     for agent in env1.possible_agents:
@@ -140,7 +147,8 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
             obs2_agent = obs2[agent]
             if not compare_obs(obs1_agent, obs2_agent):
                 if num_obs_failed == 0:
-                    print_if_verbose(verbose, f"Step {step}: Obs are not the same for agent {agent}: {obs1_agent} != {obs2_agent}. This message will not print for future steps.")
+                    print_if_verbose(
+                        verbose, f"Step {step}: Obs are not the same for agent {agent}: {obs1_agent} != {obs2_agent}. This message will not print for future steps.")
                 num_obs_failed += 1
 
         # Check rewards
@@ -150,7 +158,8 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
 
             if rew1_agent != rew2_agent:
                 if num_rews_failed == 0:
-                    print_if_verbose(verbose, f"Step {step}: Rewards are not the same for agent {agent}: {rew1_agent} != {rew2_agent}. This message will not print for future steps.")
+                    print_if_verbose(
+                        verbose, f"Step {step}: Rewards are not the same for agent {agent}: {rew1_agent} != {rew2_agent}. This message will not print for future steps.")
                 num_rews_failed += 1
 
         # Check terms
@@ -158,7 +167,8 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
             term1_agent = term1[agent]
             term2_agent = term2[agent]
             if term1_agent != term2_agent:
-                print_if_verbose(verbose, f"Step {step}: Terms are not the same for agent {agent}: {term1_agent} != {term2_agent}. Stopping test.")
+                print_if_verbose(
+                    verbose, f"Step {step}: Terms are not the same for agent {agent}: {term1_agent} != {term2_agent}. Stopping test.")
                 return False
 
         # Check truncs
@@ -166,7 +176,8 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
             trunc1_agent = trunc1[agent]
             trunc2_agent = trunc2[agent]
             if trunc1_agent != trunc2_agent:
-                print_if_verbose(verbose, f"Step {step}: Truncs are not the same for agent {agent}: {trunc1_agent} != {trunc2_agent}. Stopping test.")
+                print_if_verbose(
+                    verbose, f"Step {step}: Truncs are not the same for agent {agent}: {trunc1_agent} != {trunc2_agent}. Stopping test.")
                 return False
 
         step += 1
@@ -176,7 +187,8 @@ def compare_episodes_pettingzoo(make_env, task1, task2, verbose=0):
 def test_determinism(make_env, num_episodes=10, verbose=0):
     # TODO: Use the task space to sampele seeds/tasks
     test_env = make_env()
-    assert hasattr(test_env, "task_space"), "Environment does not have a task space. make_env must return a TaskEnv or use a TaskWrapper."
+    assert hasattr(
+        test_env, "task_space"), "Environment does not have a task space. make_env must return a TaskEnv or use a TaskWrapper."
     task_space = test_env.task_space
 
     print_if_verbose(verbose, "Runnning determinism tests...")
@@ -184,7 +196,7 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
     # Test full episode returns
     print_if_verbose(verbose, "\nTesting average episodic returns...")
 
-    seeds = [task_space.sample() for _ in range(num_episodes)]
+    seeds = [i for i in range(num_episodes)]
     return1, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=seeds)
     return2, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=seeds)
     full_return_test = return1 == return2
@@ -195,7 +207,8 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
 
     # Test individual episode returns
     print_if_verbose(verbose, "\nTesting individual episode rewards...")
-    avg_returns, returns = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=[task_space.sample()] * num_episodes)
+    avg_returns, returns = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=[
+                                                  randint(0, 1000000)] * num_episodes)
     return_test = all([ret == avg_returns for ret in returns])
     if return_test:
         print_if_verbose(verbose, "PASSED: Episodes returns are deterministic!")
@@ -203,9 +216,9 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
         print_if_verbose(verbose, f"FAILED: Episodes returns are not deterministic! {avg_returns} != {returns}")
 
     print_if_verbose(verbose, "\nTesting different seeds...")
-    task1 = task2 = task_space.sample()
+    task1 = task2 = randint(0, 1000000)
     while task1 == task2:
-        task2 = task_space.sample()
+        task2 = randint(0, 1000000)
     return1, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=[task1] * num_episodes)
     return2, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=[task2] * num_episodes)
 
@@ -213,21 +226,24 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
     if test3:
         print_if_verbose(verbose, "PASSED: Random policy returns with different seeds are different.")
     else:
-        print_if_verbose(verbose, f"FAILED: Random policy returns with different seeds are the same. {return1} == {return2}")
+        print_if_verbose(
+            verbose, f"FAILED: Random policy returns with different seeds are the same. {return1} == {return2}")
 
     print_if_verbose(verbose, "\nTesting actions, rewards, and observations seeds...")
-    task1 = task2 = task_space.sample()
+    task1 = task2 = randint(0, 1000000)
     step_tests_same = compare_episodes(make_env, task1, task2, verbose=verbose)
     while task1 == task2:
-        task2 = task_space.sample()
+        task2 = randint(0, 1000000)
     step_tests_different = compare_episodes(make_env, task1, task2, verbose=0)
 
     if step_tests_same and not step_tests_different:
         print_if_verbose(verbose, "PASSED: Environment returns on individual steps are deterministic with respect to seed.")
     elif step_tests_different:
-        print_if_verbose(verbose, "FAILED: Environment returns on individual steps are deterministic even with different seeds.")
+        print_if_verbose(
+            verbose, "FAILED: Environment returns on individual steps are deterministic even with different seeds.")
     else:
-        print_if_verbose(verbose, "FAILED: Environment returns on individual steps are not deterministic with the same seed.")
+        print_if_verbose(
+            verbose, "FAILED: Environment returns on individual steps are not deterministic with the same seed.")
 
     return {
         "avg_episodic_returns": full_return_test,

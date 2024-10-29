@@ -36,7 +36,8 @@ def evaluate_random_policy_gymnasium(make_env, num_episodes=100, seeds=None):
     for i in range(num_episodes):
         episode_return = 0
         if seeds:
-            _ = env.reset(new_task=seeds[i])
+            env.seed(seed=seeds[i])
+            env.reset()
             env.action_space.seed(0)
             env.observation_space.seed(0)
         else:
@@ -66,7 +67,8 @@ def evaluate_random_policy_pettingzoo(make_env, num_episodes=100, seeds=None):
     for i in range(num_episodes):
         episode_return = 0
         if seeds:
-            _ = env.reset(new_task=seeds[i])
+            env.seed(seed=seeds[i])
+            env.reset()
             for agent in env.possible_agents:
                 env.action_space(agent).seed(0)
                 env.observation_space(agent).seed(0)
@@ -98,8 +100,10 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
         obs, rews, term, trunc, info = env.step(action)
         steps += 1
         if curriculum and curriculum.requires_step_updates:
-            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rews.values()), list(term.values()), list(trunc.values()), info, env_id=env_id)
-            task_completion = max([i["task_completion"] for i in info.values()]) if len(env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rews.values()),
+                                      list(term.values()), list(trunc.values()), info, env_id=env_id)
+            task_completion = max([i["task_completion"] for i in info.values()]) if len(
+                env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
             curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
         for agent, rew in rews.items():
             ep_rew[agent] += rew
@@ -186,7 +190,8 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
 
 
 def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step, buffer_size=buffer_size, batch_size=1) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step,
+                 buffer_size=buffer_size, batch_size=1) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env, env_id=env_id))
@@ -195,7 +200,8 @@ def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync
 
 @ray.remote
 def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray", update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray",
+                 update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
@@ -218,7 +224,8 @@ def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None,
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes, update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
+        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes,
+                update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)

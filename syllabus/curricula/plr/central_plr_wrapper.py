@@ -37,6 +37,10 @@ class RolloutStorage(object):
         self.num_steps = num_steps
         self.step = 0
 
+        # Logging
+        self.final_return_mean = 0.0
+        self.first_value_mean = 0.0
+
     def to(self, device):
         self.masks = self.masks.to(device)
         self.tasks = self.tasks.to(device)
