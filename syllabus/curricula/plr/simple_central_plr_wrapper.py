@@ -22,6 +22,7 @@ class RolloutStorage(object):
         self.scores = torch.zeros(num_steps, num_processes)
 
         self.num_processes = num_processes
+        self.actor_steps = torch.zeros(num_processes, dtype=torch.int)
         self.actors = set()
 
     def to(self, device):
@@ -30,13 +31,18 @@ class RolloutStorage(object):
         self.scores = self.scores.to(device)
 
     def insert(self, tasks, masks, scores, actors):
-        self.tasks[:, actors] = tasks.int().cpu()
-        self.masks[:, actors] = masks.cpu()
-        self.scores[:, actors] = scores.cpu()
+        steps = tasks.shape[0]
+        for step in range(steps):
+            self.tasks[self.actor_steps[actors] + step, actors] = tasks.int().cpu()[step]
+            self.masks[self.actor_steps[actors] + step, actors] = masks.cpu()[step]
+            self.scores[self.actor_steps[actors] + step, actors] = scores.cpu()[step]
+        self.actor_steps[actors] += steps
         self.actors.update(actors)
 
     def after_update(self):
         self.masks[0].copy_(self.masks[-1])
+        self.actor_steps = torch.zeros(self.num_processes, dtype=torch.int)
+
         self.actors = set()
 
     def ready(self):
