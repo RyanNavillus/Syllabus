@@ -260,6 +260,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._gamma = gamma
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
+        self.evaluator = evaluator
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 
         self._task_sampler = TaskSampler(self.tasks, self._num_steps,
