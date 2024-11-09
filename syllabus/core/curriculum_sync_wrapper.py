@@ -255,8 +255,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
                 writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
             else:
-                writer.log({"curriculum/updates_in_queue": self.get_components()._update_count[0]}, step=step)
-                writer.log({"curriculum/tasks_in_queue": self.get_components()._task_count[0]}, step=step)
+                print("logging", self.get_components()._update_count[0], self.get_components()._task_count[0])
+                writer.log({"curriculum/updates_in_queue": self.get_components()._update_count[0], "global_step": step})
+                writer.log({"curriculum/tasks_in_queue": self.get_components()._task_count[0], "global_step": step})
 
     def add_task(self, task):
         super().add_task(task)
