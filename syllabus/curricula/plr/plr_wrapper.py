@@ -23,6 +23,7 @@ class RolloutStorage(object):
         requires_value_buffers: bool,
         observation_space: gym.Space,   # TODO: Use np array when space is box or discrete
         num_minibatches: int = 1,
+        buffer_size: int = 4,
         action_space: gym.Space = None,
         lstm_size: int = None,
         evaluator: Evaluator = None,
@@ -30,7 +31,7 @@ class RolloutStorage(object):
     ):
         self.num_steps = num_steps
         # Hack to prevent overflow from lagging updates.
-        self.buffer_steps = num_steps * 4
+        self.buffer_steps = num_steps * buffer_size
         self.num_processes = num_processes
         self.num_minibatches = num_minibatches
         self._requires_value_buffers = requires_value_buffers
@@ -92,7 +93,7 @@ class RolloutStorage(object):
         assert steps < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
         step = self.env_steps[env_index]
         end_step = step + steps
-
+        assert end_step < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
         if mask is not None:
             self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
 
@@ -233,6 +234,7 @@ class PrioritizedLevelReplay(Curriculum):
         num_steps: int = 256,
         num_processes: int = 64,
         num_minibatches: int = 1,
+        buffer_size: int = 4,
         gamma: float = 0.999,
         gae_lambda: float = 0.95,
         suppress_usage_warnings=False,
@@ -260,6 +262,7 @@ class PrioritizedLevelReplay(Curriculum):
         self._gamma = gamma
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
+        self.evaluator = evaluator
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
 
         self._task_sampler = TaskSampler(self.tasks, self._num_steps,
@@ -270,6 +273,7 @@ class PrioritizedLevelReplay(Curriculum):
             self._task_sampler.requires_value_buffers,
             observation_space,
             num_minibatches=num_minibatches,
+            buffer_size=buffer_size,
             action_space=action_space,
             lstm_size=lstm_size,
             evaluator=evaluator,
@@ -297,6 +301,7 @@ class PrioritizedLevelReplay(Curriculum):
         if env_id >= self._num_processes:
             warnings.warn(
                 f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
+            # warnings.warn("f")
             env_id = env_id % self._num_processes
 
         assert env_id not in self._rollouts.ready_buffers
@@ -363,8 +368,8 @@ class PrioritizedLevelReplay(Curriculum):
         super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
         if writer == wandb:
-            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"]}, step=step)
-            writer.log({"curriculum/score": metrics["score"]}, step=step)
+            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "global_step": step})
+            writer.log({"curriculum/score": metrics["score"], "global_step": step})
         else:
             writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
             writer.add_scalar("curriculum/score", metrics["score"], step)

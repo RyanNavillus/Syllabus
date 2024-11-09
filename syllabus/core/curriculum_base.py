@@ -228,7 +228,7 @@ class Curriculum:
                 log_data.append((f"curriculum/{name}_prob", prob, step))
             for name, prob, step in log_data:
                 if writer == wandb:
-                    writer.log({name: prob}, step=step)
+                    writer.log({name: prob, "global_step": step})
                 else:
                     writer.add_scalar(name, prob, step)
         except ImportError:

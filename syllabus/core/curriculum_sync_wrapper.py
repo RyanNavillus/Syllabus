@@ -84,7 +84,7 @@ class MultiProcessingComponents:
         self._env_count = ShareableList([0])
         self._task_count = ShareableList([0])
         self._update_count = ShareableList([0])
-        self._debug = False
+        self._debug = True
         self._verbose = False
 
     def get_id(self):
@@ -249,10 +249,14 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if isinstance(writer, SummaryWriter):
-            if self.get_components()._debug:
+        if self.get_components()._debug:
+            if isinstance(writer, SummaryWriter):
                 writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
                 writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
+            else:
+                print("logging", self.get_components()._update_count[0], self.get_components()._task_count[0])
+                writer.log({"curriculum/updates_in_queue": self.get_components()._update_count[0], "global_step": step})
+                writer.log({"curriculum/tasks_in_queue": self.get_components()._task_count[0], "global_step": step})
 
     def add_task(self, task):
         super().add_task(task)
@@ -281,7 +285,7 @@ def remote_call(func):
     return wrapper
 
 
-def make_multiprocessing_curriculum(curriculum, **kwargs):
+def make_multiprocessing_curriculum(curriculum, start=True, **kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
@@ -289,7 +293,8 @@ def make_multiprocessing_curriculum(curriculum, **kwargs):
     update_queue = SimpleQueue()
 
     mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
-    mp_curriculum.start()
+    if start:
+        mp_curriculum.start()
     return mp_curriculum
 
 
