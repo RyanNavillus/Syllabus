@@ -84,7 +84,7 @@ class MultiProcessingComponents:
         self._env_count = ShareableList([0])
         self._task_count = ShareableList([0])
         self._update_count = ShareableList([0])
-        self._debug = True
+        self._debug = False
         self._verbose = False
 
     def get_id(self):
