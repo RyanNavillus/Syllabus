@@ -1,7 +1,6 @@
 import gymnasium as gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
-from typing import Tuple
 from syllabus.task_space import TaskSpace
 
 
@@ -21,6 +20,8 @@ class TaskWrapper(gym.Wrapper):
             self.task = new_task
 
         obs, info = self.env.reset(**kwargs)
+        info["task_completion"] = 0.0
+        info["task"] = self.task
         return self.observation(obs), info
 
     def change_task(self, new_task):
@@ -72,6 +73,7 @@ class TaskWrapper(gym.Wrapper):
         # Determine completion status of the current task
         self.task_completion = self._task_completion(obs, rew, term, trunc, info)
         info["task_completion"] = self.task_completion
+        info["task"] = self.task
 
         return self.observation(obs), rew, term, trunc, info
 
@@ -105,7 +107,11 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
         if new_task is not None:
             self.change_task(new_task)
             self.task = new_task
-        return self.observation(self.env.reset(*args, **kwargs))
+        obs, info = self.env.reset(*args, **kwargs)
+        for agent in info.keys():
+            info[agent]["task_completion"] = 0.0
+            info[agent]["task_id"] = self.task
+        return self.observation(obs), info
 
     def change_task(self, new_task):
         """
@@ -122,6 +128,13 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
 
     def step(self, action):
         obs, rew, term, trunc, info = self.env.step(action)
+        # Determine completion status of the current task
+        self.task_completion = self._task_completion(obs, rew, term, trunc, info)
+        for agent in self.env.possible_agents:
+            if agent not in info:
+                info[agent] = {}
+            info[agent]["task_completion"] = self.task_completion
+            info[agent]["task_id"] = self.task
         return obs, rew, term, trunc, info
 
     def observation(self, observation):
@@ -155,5 +168,4 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
         Returns a boolean or float value indicating binary completion or scalar degree of completion.
         # TODO: Support PettingZoo environments
         """
-        # return 1.0 if term or trunc else 0.0
-        return info
+        return 0.0

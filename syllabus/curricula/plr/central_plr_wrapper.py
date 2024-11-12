@@ -19,9 +19,10 @@ class RolloutStorage(object):
         requires_value_buffers: bool,
         action_space: gym.Space = None,
     ):
+        self.num_processes = num_processes
         self._requires_value_buffers = requires_value_buffers
         self.tasks = torch.zeros(num_steps, num_processes, 1, dtype=torch.int)
-        self.masks = torch.ones(num_steps + 1, num_processes, 1)
+        self.masks = torch.ones(num_steps + 1, num_processes, 1, dtype=torch.int)
 
         if requires_value_buffers:
             self.returns = torch.zeros(num_steps + 1, num_processes, 1)
@@ -35,11 +36,23 @@ class RolloutStorage(object):
             self.action_log_dist = torch.zeros(num_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
-        self.step = 0
+        self.env_steps = torch.zeros(num_processes, dtype=torch.int)
+        self.env_to_idx = {}
+        self.max_idx = 0
 
         # Logging
         self.final_return_mean = 0.0
         self.first_value_mean = 0.0
+
+    def get_idxs(self, env_ids):
+        """ Map the environment ids to indices in the buffer. """
+        idxs = []
+        for env_id in env_ids:
+            if env_id not in self.env_to_idx:
+                self.env_to_idx[env_id] = self.max_idx
+                self.max_idx += 1
+            idxs.append(self.env_to_idx[env_id])
+        return idxs
 
     def to(self, device):
         self.masks = self.masks.to(device)
@@ -51,37 +64,51 @@ class RolloutStorage(object):
         else:
             self.action_log_dist = self.action_log_dist.to(device)
 
-    def insert(self, masks, action_log_dist=None, value_preds=None, rewards=None, tasks=None):
+    def insert(self, masks, action_log_dist=None, value_preds=None, rewards=None, tasks=None, next_values=None, env_ids=None):
+        # Convert env_ids to indices in the buffer
+        if env_ids is None:
+            env_ids = list(range(self.num_processes))
+        env_idxs = self.get_idxs(env_ids)
+
         if self._requires_value_buffers:
             assert (value_preds is not None and rewards is not None), "Selected strategy requires value_preds and rewards"
             if len(rewards.shape) == 3:
                 rewards = rewards.squeeze(2)
-
-            self.value_preds[self.step].copy_(torch.as_tensor(value_preds))
-            self.rewards[self.step].copy_(torch.as_tensor(rewards)[:, None])
-            self.masks[self.step + 1].copy_(torch.as_tensor(masks)[:, None])
+            self.value_preds[self.env_steps[env_idxs], env_idxs] = torch.as_tensor(
+                value_preds).reshape((len(env_idxs), 1)).cpu()
+            if next_values is not None:
+                self.value_preds[self.env_steps[env_idxs] + 1,
+                                 env_idxs] = torch.as_tensor(next_values).reshape((len(env_idxs), 1)).cpu()
+            self.rewards[self.env_steps[env_idxs], env_idxs] = torch.as_tensor(
+                rewards).reshape((len(env_idxs), 1)).cpu()
+            self.masks[self.env_steps[env_idxs] + 1,
+                       env_idxs] = torch.IntTensor(masks.cpu()).reshape((len(env_idxs), 1))
         else:
-            self.action_log_dist[self.step].copy_(action_log_dist)
+            self.action_log_dist[self.env_steps[env_idxs],
+                                 env_idxs] = action_log_dist.reshape((len(env_idxs), -1)).cpu()
+
         if tasks is not None:
             assert isinstance(tasks[0], int), "Provided task must be an integer"
-            self.tasks[self.step].copy_(torch.as_tensor(tasks)[:, None])
-        self.step = (self.step + 1) % self.num_steps
+            self.tasks[self.env_steps[env_idxs], env_idxs] = torch.IntTensor(tasks).reshape((len(env_idxs), 1))
+        self.env_steps[env_idxs] = (self.env_steps[env_idxs] + 1) % (self.num_steps + 1)
 
     def after_update(self):
-        self.masks[0].copy_(self.masks[-1])
+        env_idxs = (self.env_steps == self.num_steps).nonzero()
+        self.env_steps[env_idxs] = (self.env_steps[env_idxs] + 1) % (self.num_steps + 1)
+        self.masks[0, env_idxs].copy_(self.masks[-1, env_idxs])
 
-    def compute_returns(self, next_value, gamma, gae_lambda):
+    def compute_returns(self, gamma, gae_lambda):
+        env_idxs = (self.env_steps == self.num_steps).nonzero()
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
-        self.value_preds[-1] = next_value
         gae = 0
         for step in reversed(range(self.rewards.size(0))):
             delta = (
-                self.rewards[step]
-                + gamma * self.value_preds[step + 1] * self.masks[step + 1]
-                - self.value_preds[step]
+                self.rewards[step, env_idxs]
+                + gamma * self.value_preds[step + 1, env_idxs] * self.masks[step + 1, env_idxs]
+                - self.value_preds[step, env_idxs]
             )
-            gae = delta + gamma * gae_lambda * self.masks[step + 1] * gae
-            self.returns[step] = gae + self.value_preds[step]
+            gae = delta + gamma * gae_lambda * self.masks[step + 1, env_idxs] * gae
+            self.returns[step, env_idxs] = gae + self.value_preds[step, env_idxs]
 
 
 class CentralizedPrioritizedLevelReplay(Curriculum):
@@ -187,14 +214,18 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
                     f"'next_value' must be provided in the update every {self.num_steps} steps for the strategy {self._strategy}."
                 ) from e
 
-        return masks, tasks, value, rew, action_log_dist, next_value
+        env_ids = metrics["env_ids"] if "env_ids" in metrics else None
+        assert env_ids is None or len(
+            env_ids) <= self._num_processes, "Number of env_ids must be less than or equal to num_processes"
+
+        return masks, tasks, value, rew, action_log_dist, next_value, env_ids
 
     def update_on_demand(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """
         self.num_updates += 1
-        masks, tasks, value, rew, action_log_dist, next_value = self._validate_metrics(metrics)
+        masks, tasks, value, rew, action_log_dist, next_value, env_ids = self._validate_metrics(metrics)
 
         # Update rollouts
         self._rollouts.insert(
@@ -203,12 +234,20 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             value_preds=value,
             rewards=rew,
             tasks=tasks,
+            env_ids=env_ids,
+            next_values=next_value,
         )
 
         # Update task sampler
-        if self._rollouts.step == 0:
+        if any(self._rollouts.env_steps == self._rollouts.num_steps):
+            env_idxs = (self._rollouts.env_steps == self._rollouts.num_steps).nonzero()
             if self._task_sampler.requires_value_buffers:
-                self._rollouts.compute_returns(next_value, self._gamma, self._gae_lambda)
+                self._rollouts.compute_returns(self._gamma, self._gae_lambda)
+            for idx in env_idxs:
+                self._task_sampler.update_with_rollouts(
+                    self._rollouts,
+                    actor_id=idx,
+                )
             self._task_sampler.update_with_rollouts(self._rollouts)
             self._rollouts.after_update()
             self._task_sampler.after_update()
@@ -241,12 +280,12 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         super().log_metrics(writer, step)
         metrics = self._task_sampler.metrics()
         if writer == wandb:
-            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "step": step})
-            writer.log({"curriculum/score": metrics["score"], "step": step})
-            for idx in range(self.num_tasks)[:10]:
+            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "global_step": step})
+            writer.log({"curriculum/score": metrics["score"], "global_step": step})
+            for idx in range(self.num_tasks)[:5]:
                 name = self.task_names(self.tasks[idx], idx)
-                writer.log({f"curriculum/{name}_score": metrics["task_scores"][idx], "step": step})
-                writer.log({f"curriculum/{name}_staleness": metrics["task_staleness"][idx], "step": step})
+                writer.log({f"curriculum/{name}_score": metrics["task_scores"][idx], "global_step": step})
+                writer.log({f"curriculum/{name}_staleness": metrics["task_staleness"][idx], "global_step": step})
         else:
             writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
             writer.add_scalar("curriculum/score", metrics["score"], step)

@@ -219,9 +219,9 @@ class Curriculum:
         try:
             import wandb
             task_dist = self._sample_distribution()
-            if len(task_dist) > 10 and not log_full_dist:
-                warnings.warn("Only logging stats for 10 tasks.")
-                task_dist = task_dist[:10]
+            if len(task_dist) > 5 and not log_full_dist:
+                warnings.warn("Only logging stats for 5 tasks.")
+                task_dist = task_dist[:5]
             log_data = []
             for idx, prob in enumerate(task_dist):
                 name = self.task_names(self.tasks[idx], idx)
