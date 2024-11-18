@@ -135,7 +135,7 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
             env = MultiProcessingSyncWrapper(
                 env,
-                curriculum.get_components(),
+                curriculum.components,
                 update_on_step=False,
                 task_space=env.task_space,
             )

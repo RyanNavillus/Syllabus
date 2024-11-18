@@ -4,11 +4,14 @@ from functools import wraps
 from multiprocessing.shared_memory import ShareableList
 from typing import List, Tuple
 
+import signal
 import ray
-from torch.multiprocessing import Lock, SimpleQueue
+from torch.multiprocessing import Lock, Queue
+from queue import Empty
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import Curriculum, decorate_all_functions
+from syllabus.core.utils import UsageError
 
 
 class CurriculumWrapper:
@@ -77,15 +80,13 @@ class CurriculumWrapper:
 
 
 class MultiProcessingComponents:
-    def __init__(self, task_queue, update_queue):
-        self.task_queue = task_queue
-        self.update_queue = update_queue
+    def __init__(self, maxsize=1000000, timeout=60):
+        self.task_queue = Queue(maxsize=maxsize)
+        self.update_queue = Queue(maxsize=maxsize)
         self._instance_lock = Lock()
         self._env_count = ShareableList([0])
-        self._task_count = ShareableList([0])
-        self._update_count = ShareableList([0])
-        self._debug = False
-        self._verbose = False
+        self._debug = True
+        self.timeout = timeout
 
     def get_id(self):
         with self._instance_lock:
@@ -94,56 +95,55 @@ class MultiProcessingComponents:
         return instance_id
 
     def put_task(self, task):
-        self.task_queue.put(task)
-        if self._debug:
-            with self._instance_lock:
-                self._task_count[0] += 1
-                task_count = self._task_count[0]
-            if self._verbose:
-                print(f"Task added to queue. Task count: {task_count}")
+        try:
+            self.task_queue.put(task, timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
 
     def get_task(self):
-        task = self.task_queue.get()
-        if self._debug:
-            with self._instance_lock:
-                self._task_count[0] -= 1
-                task_count = self._task_count[0]
-            if self._verbose:
-                print(f"Task removed from queue. Task count: {task_count}")
+        try:
+            task = self.task_queue.get(timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
         return task
 
     def put_update(self, update):
-        self.update_queue.put(update)
-        if self._debug:
-            with self._instance_lock:
-                self._update_count[0] += 1
-                update_count = self._update_count[0]
-            if self._verbose:
-                print(f"Update added to queue. Update count: {update_count}")
+        try:
+            self.update_queue.put(update, timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
     def get_update(self):
-        update = self.update_queue.get()
-        if self._debug:
-            with self._instance_lock:
-                self._update_count[0] -= 1
-                update_count = self._update_count[0]
-            if self._verbose:
-                print(f"Update removed from queue. Update count: {update_count}")
+        try:
+            update = self.update_queue.get(timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
         return update
+
+    def close(self):
+        self._env_count.shm.close()
+        self.task_queue.close()
+        self.update_queue.close()
+
+    def log_metrics(self, writer, step=None):
+        if isinstance(writer, SummaryWriter):
+            writer.add_scalar("curriculum/updates_in_queue", self.update_queue.qsize(), step)
+            writer.add_scalar("curriculum/tasks_in_queue", self.task_queue.qsize(), step)
+        else:
+            writer.log({"curriculum/updates_in_queue": self.update_queue.qsize(), "global_step": step})
+            writer.log({"curriculum/tasks_in_queue": self.task_queue.qsize(), "global_step": step})
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
     def __init__(
         self,
         curriculum: Curriculum,
-        task_queue: SimpleQueue,
-        update_queue: SimpleQueue,
-        sequential_start: bool = True
+        sequential_start: bool = True,
+        max_queue_size: int = 1000000,
+        timeout: int = 60,
     ):
         super().__init__(curriculum)
-        self.task_queue = task_queue
-        self.update_queue = update_queue
         self.sequential_start = sequential_start
 
         self.update_thread = None
@@ -151,7 +151,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.added_tasks = []
         self.num_assigned_tasks = 0
 
-        self._components = MultiProcessingComponents(task_queue, update_queue)
+        self.components = MultiProcessingComponents(maxsize=max_queue_size, timeout=timeout)
 
     def start(self):
         """
@@ -159,6 +159,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
+        signal.signal(signal.SIGINT, self._sigint_handler)
         self.update_thread.start()
 
     def stop(self):
@@ -168,21 +169,16 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         # Process final few updates
         start = time.time()
         end = time.time()
-        while end - start < 3 and not self.update_queue.empty():
+        while end - start < 3 and not self.components.update_queue.empty():
             time.sleep(0.5)
             end = time.time()
 
         self.should_update = False
         self.update_thread.join()
-        components = self.get_components()
-        components._env_count.shm.close()
-        components._env_count.shm.unlink()
-        components._update_count.shm.close()
-        components._update_count.shm.unlink()
-        components._task_count.shm.close()
-        components._task_count.shm.unlink()
-        # components.task_queue.close()
-        # components.update_queue.close()
+        self.components.close()
+
+    def _sigint_handler(self, sig, frame):
+        self.stop()
 
     def _update_queues(self):
         """
@@ -192,9 +188,9 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         # Update curriculum with environment results:
         while self.should_update:
             requested_tasks = 0
-            while not self.update_queue.empty():
+            while not self.components.update_queue.empty():
 
-                batch_updates = self.get_components().get_update()  # Blocks until update is available
+                batch_updates = self.components.get_update()  # Blocks until update is available
 
                 if isinstance(batch_updates, dict):
                     batch_updates = [batch_updates]
@@ -214,8 +210,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                         "next_task": task,
                         "sample_id": self.num_assigned_tasks + i,
                     }
-
-                    self.get_components().put_task(message)
+                    self.components.put_task(message)
                 self.num_assigned_tasks += requested_tasks
                 time.sleep(0)
             else:
@@ -223,21 +218,11 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
 
     def log_metrics(self, writer, step=None):
         super().log_metrics(writer, step=step)
-        if self.get_components()._debug:
-            if isinstance(writer, SummaryWriter):
-                writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
-                writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
-            else:
-                print("logging", self.get_components()._update_count[0], self.get_components()._task_count[0])
-                writer.log({"curriculum/updates_in_queue": self.get_components()._update_count[0], "global_step": step})
-                writer.log({"curriculum/tasks_in_queue": self.get_components()._task_count[0], "global_step": step})
+        self.components.log_metrics(writer, step=step)
 
     def add_task(self, task):
         super().add_task(task)
         self.added_tasks.append(task)
-
-    def get_components(self):
-        return self._components
 
 
 def remote_call(func):
@@ -263,10 +248,7 @@ def make_multiprocessing_curriculum(curriculum, start=True, **kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
-    task_queue = SimpleQueue()
-    update_queue = SimpleQueue()
-
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
+    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, **kwargs)
     if start:
         mp_curriculum.start()
     return mp_curriculum

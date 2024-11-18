@@ -139,7 +139,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, n
         if curriculum is not None:
             env = MultiProcessingSyncWrapper(
                 env,
-                curriculum.get_components(),
+                curriculum.components,
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
                 batch_size=256
@@ -265,7 +265,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            evaluator = CleanRLDiscreteEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -275,6 +275,7 @@ if __name__ == "__main__":
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
+                device="cuda"
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
