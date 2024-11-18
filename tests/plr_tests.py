@@ -1,7 +1,7 @@
 """ Test curriculum synchronization across multiple processes. """
 import time
 import random
-from multiprocessing import SimpleQueue, Process
+from multiprocessing import Process
 
 import ray
 

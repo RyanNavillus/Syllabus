@@ -146,7 +146,7 @@ class RolloutStorage(object):
 
             # Get value predictions and check for common usage errors
             try:
-                _, values, extras = self.evaluator.get_action_and_value(obs, lstm_states, dones)
+                values, lstm_states, extras = self.evaluator.get_value(obs, lstm_states, dones)
 
             except RuntimeError as e:
                 raise UsageError(
@@ -158,11 +158,7 @@ class RolloutStorage(object):
             value_steps = self.value_steps.numpy()
 
             if self.using_lstm:
-                # Extract lstm_states from extras, raise error if missing
-                try:
-                    lstm_states = extras["lstm_state"]
-                except KeyError as e:
-                    raise UsageError("Evaluator must return lstm_state in extras for PLR.") from e
+                assert lstm_states is not None, "Evaluator must return lstm_state in extras for PLR."
 
                 # Place new lstm_states in next step
                 self.lstm_states[0][value_steps[processes], processes] = lstm_states[0].to(self.lstm_states[0].device)

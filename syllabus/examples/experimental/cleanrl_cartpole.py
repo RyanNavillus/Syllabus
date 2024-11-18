@@ -108,7 +108,7 @@ def make_env(env_id, task_wrapper=False, curriculum=None):
         if curriculum is not None:
             env = MultiProcessingSyncWrapper(
                 env,
-                curriculum.get_components(),
+                curriculum.components,
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
                 batch_size=10

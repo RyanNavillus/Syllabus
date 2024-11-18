@@ -142,7 +142,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, n
         if curriculum is not None:
             env = MultiProcessingSyncWrapper(
                 env,
-                curriculum.get_components(),
+                curriculum.components,
                 update_on_step=curriculum.requires_step_updates,
                 task_space=env.task_space,
                 batch_size=256,
@@ -197,23 +197,6 @@ def level_replay_evaluate(
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
     policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
-
-
-def make_value_fn():
-    def get_value(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            return agent.get_value(torch.Tensor(obs).to(device))
-    return get_value
-
-
-def make_action_fn():
-    def get_action(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            action, _, _, _ = agent.get_action_and_value(torch.Tensor(obs).to(device))
-            return action.to("cpu").numpy()
-    return get_action
 
 
 if __name__ == "__main__":
@@ -416,7 +399,7 @@ if __name__ == "__main__":
             # Syllabus curriculum update
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
-                    next_value = agent.get_value(next_obs, next_lstm_state, next_done)
+                    next_value, _ = agent.get_value(next_obs, next_lstm_state, next_done)
                 current_tasks = envs.get_attr("task")
 
                 update = {
@@ -433,7 +416,7 @@ if __name__ == "__main__":
 
         # bootstrap value if not done
         with torch.no_grad():
-            next_value = agent.get_value(
+            next_value, _ = agent.get_value(
                 next_obs,
                 next_lstm_state,
                 next_done,
