@@ -371,7 +371,7 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
-                        curriculum.log_metrics(writer, global_step)
+                        curriculum.log_metrics(writer, [], step=global_step)
                     break
 
         # bootstrap value if not done

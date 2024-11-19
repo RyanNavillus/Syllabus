@@ -78,5 +78,5 @@ class MultitaskWrapper(CurriculumWrapper):
         else:
             raise NotImplementedError("Multivariate task space must be Tuple or Dict.")    
 
-    def log_metrics(self, writer, step=None):
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
         raise NotImplementedError("Multitask curriculum does not support logging metrics.")

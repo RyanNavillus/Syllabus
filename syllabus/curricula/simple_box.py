@@ -61,12 +61,8 @@ class SimpleBoxCurriculum(Curriculum):
         """
         return [self.max_range for _ in range(k)]
 
-    def log_metrics(self, writer, step=None):
-        print("Logging", flush=True)
-        try:
-            import wandb
-            writer.log({"range_min": self.max_range[0]}, step=step)
-            writer.log({"range_max": self.max_range[1]}, step=step)
-
-        except ImportError:
-            pass
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+        logs = [] if logs is None else logs
+        logs.append(("range_min", self.max_range[0], step))
+        logs.append(("range_max", self.max_range[1], step))
+        return super().log_metrics(writer, logs, step, log_full_dist)

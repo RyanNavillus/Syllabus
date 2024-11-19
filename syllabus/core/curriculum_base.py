@@ -202,30 +202,44 @@ class Curriculum:
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return task_idx
 
-    def log_metrics(self, writer, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
         """Log the task distribution to the provided tensorboard writer.
 
         :param writer: Tensorboard summary writer.
+        :param logs: Cumulative list of logs to write
+        :param step: Global step number
+        :param log_full_dist: Whether to log the full distribution or just the first 5 tasks
+        :return: Updated logs list
         """
+        logs = [] if logs is None else logs
+        if self.stat_recorder is not None:
+            logs += self.stat_recorder.get_metrics(step=step, log_full_dist=log_full_dist)
+
         try:
             import wandb
+            use_wandb = writer == wandb
+        except ImportError:
+            use_wandb = False
+
+        try:
             task_dist = self._sample_distribution()
-            if len(task_dist) > 5 and not log_full_dist:
-                warnings.warn("Only logging stats for 5 tasks.")
-                task_dist = task_dist[:5]
-            log_data = []
+            if len(self.tasks) > 10 and not log_full_dist:
+                warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.")
+                task_dist = task_dist[:1]
+
+            # Add basic logs
             for idx, prob in enumerate(task_dist):
                 name = self.task_names(self.tasks[idx], idx)
-                log_data.append((f"curriculum/{name}_prob", prob, step))
-            for name, prob, step in log_data:
-                if writer == wandb:
-                    writer.log({name: prob, "global_step": step})
+                logs.append((f"curriculum/{name}_prob", prob, step))
+
+            # Write logs
+            for name, prob, log_step in logs:
+                if use_wandb:
+                    writer.log({name: prob, "global_step": log_step})
                 else:
-                    writer.add_scalar(name, prob, step)
-        except ImportError:
-            warnings.warn("Wandb is not installed. Skipping logging.")
-        except wandb.errors.Error:
+                    writer.add_scalar(name, prob, log_step)
+        except Exception as e:
             # No need to crash over logging :)
-            warnings.warn("Failed to log curriculum stats to wandb.")
-        if self.stat_recorder is not None:
-            self.stat_recorder.log_metrics(writer, step=step)
+            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error {e}")
+
+        return logs

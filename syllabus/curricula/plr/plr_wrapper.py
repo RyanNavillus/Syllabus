@@ -355,15 +355,12 @@ class PrioritizedLevelReplay(Curriculum):
         else:
             return list(enumerate_axes(space.nvec))
 
-    def log_metrics(self, writer, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        super().log_metrics(writer, step)
+        logs = [] if logs is None else logs
         metrics = self._task_sampler.metrics()
-        if writer == wandb:
-            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "global_step": step})
-            writer.log({"curriculum/score": metrics["score"], "global_step": step})
-        else:
-            writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
-            writer.add_scalar("curriculum/score", metrics["score"], step)
+        logs.append(("curriculum/proportion_seen", metrics["proportion_seen"], step))
+        logs.append(("curriculum/score", metrics["score"], step))
+        return super().log_metrics(writer, logs, step=step, log_full_dist=log_full_dist)

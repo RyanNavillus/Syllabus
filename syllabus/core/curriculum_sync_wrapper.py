@@ -53,8 +53,8 @@ class CurriculumWrapper:
     def update_on_step(self, task, obs, reward, term, trunc, info, progress):
         self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress)
 
-    def log_metrics(self, writer, step=None):
-        self.curriculum.log_metrics(writer, step=step)
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+        return self.curriculum.log_metrics(writer, logs, step=step, log_full_dist=log_full_dist)
 
     def update_on_step_batch(self, step_results, env_id=None):
         self.curriculum.update_on_step_batch(step_results, env_id=env_id)
@@ -119,13 +119,11 @@ class MultiProcessingComponents:
         self.task_queue.close()
         self.update_queue.close()
 
-    def log_metrics(self, writer, step=None):
-        if isinstance(writer, SummaryWriter):
-            writer.add_scalar("curriculum/updates_in_queue", self.update_queue.qsize(), step)
-            writer.add_scalar("curriculum/tasks_in_queue", self.task_queue.qsize(), step)
-        else:
-            writer.log({"curriculum/updates_in_queue": self.update_queue.qsize(), "global_step": step})
-            writer.log({"curriculum/tasks_in_queue": self.task_queue.qsize(), "global_step": step})
+    def get_metrics(self, step=None, log_full_dist=False):
+        logs = []
+        logs.append("curriculum/updates_in_queue", self.update_queue.qsize(), step)
+        logs.append("curriculum/tasks_in_queue", self.task_queue.qsize(), step)
+        return logs
 
 
 class MultiProcessingCurriculumWrapper(CurriculumWrapper):
@@ -209,9 +207,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             else:
                 time.sleep(0.01)
 
-    def log_metrics(self, writer, step=None):
-        super().log_metrics(writer, step=step)
-        self.components.log_metrics(writer, step=step)
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+        logs = [] if logs is None else logs
+        logs += self.components.get_metrics(step=step, log_full_dist=log_full_dist)
+        return super().log_metrics(writer, logs, step=step, log_full_dist=log_full_dist)
 
 
 def remote_call(func):

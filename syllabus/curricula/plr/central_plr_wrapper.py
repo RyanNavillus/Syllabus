@@ -272,23 +272,16 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         else:
             return list(enumerate_axes(space.nvec))
 
-    def log_metrics(self, writer, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        super().log_metrics(writer, step)
+        logs = [] if logs is None else logs
         metrics = self._task_sampler.metrics()
-        if writer == wandb:
-            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "global_step": step})
-            writer.log({"curriculum/score": metrics["score"], "global_step": step})
-            for idx in range(self.num_tasks)[:5]:
-                name = self.task_names(self.tasks[idx], idx)
-                writer.log({f"curriculum/{name}_score": metrics["task_scores"][idx], "global_step": step})
-                writer.log({f"curriculum/{name}_staleness": metrics["task_staleness"][idx], "global_step": step})
-        else:
-            writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
-            writer.add_scalar("curriculum/score", metrics["score"], step)
-            for idx in range(self.num_tasks)[:10]:
-                name = self.task_names(self.tasks[idx], idx)
-                writer.add_scalar(f"curriculum/{name}_score", metrics["task_scores"][idx], step)
-                writer.add_scalar(f"curriculum/{name}_staleness", metrics["task_staleness"][idx], step)
+        logs.append(("curriculum/proportion_seen", metrics["proportion_seen"], step))
+        logs.append(("curriculum/score", metrics["score"], step))
+        for idx in range(self.num_tasks)[:5]:
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_score", metrics["task_scores"][idx], step))
+            logs.append((f"curriculum/{name}_staleness", metrics["task_staleness"][idx], step))
+        return super().log_metrics(writer, step)

@@ -201,16 +201,12 @@ class SequentialCurriculum(Curriculum):
     def _sample_distribution(self) -> List[float]:
         return self.current_curriculum._sample_distribution()
 
-    def log_metrics(self, writer, step=None, log_full_dist=False):
-        if self.stat_recorder is not None:
-            self.stat_recorder.log_metrics(writer, step, log_full_dist)
-        self.current_curriculum.log_metrics(writer, step, log_full_dist)
-
-        log_data = []
-        log_data.append(("curriculum/current_stage", self._curriculum_index, step))
-        log_data.append(("curriculum/steps", self.n_steps, step))
-        log_data.append(("curriculum/episodes", self.n_episodes, step))
-        log_data.append(("curriculum/episode_returns", self._get_episode_return(), step))
+    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+        logs = [] if logs is None else logs
+        logs.append(("curriculum/current_stage", self._curriculum_index, step))
+        logs.append(("curriculum/steps", self.n_steps, step))
+        logs.append(("curriculum/episodes", self.n_episodes, step))
+        logs.append(("curriculum/episode_returns", self._get_episode_return(), step))
 
         # Set probability for tasks from other stages to 0
         current_tasks = set(self.current_curriculum.task_space.tasks)
@@ -218,13 +214,7 @@ class SequentialCurriculum(Curriculum):
         noncurrent_tasks = all_tasks - current_tasks
         for task in noncurrent_tasks:
             name = self.task_names(task, self.task_space.encode(task))
-            log_data.append((f"curriculum/{name}_prob", 0, step))
-        for name, prob, step in log_data:
-            try:
-                import wandb
-            except ImportError:
-                pass
-            if writer == wandb:
-                writer.log({name: prob}, step=step)
-            else:
-                writer.add_scalar(name, prob, step)
+            logs.append((f"curriculum/{name}_prob", 0, step))
+
+        # Current curriculum will pass data to the writer for us
+        return self.current_curriculum.log_metrics(writer, logs, step, log_full_dist)

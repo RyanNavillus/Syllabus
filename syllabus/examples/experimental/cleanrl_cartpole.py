@@ -335,7 +335,7 @@ if __name__ == "__main__":
                         writer.add_scalar("charts/episodic_return", ep_return, global_step)
                         writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
                         if curriculum is not None:
-                            curriculum.log_metrics(writer, global_step)
+                            curriculum.log_metrics(writer, [], step=global_step)
                         break
 
             # Syllabus curriculum update

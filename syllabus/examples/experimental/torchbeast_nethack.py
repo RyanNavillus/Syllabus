@@ -719,8 +719,8 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
     timer = timeit.default_timer
     recent_sps = [1.0] * 5
     try:
-        if flags.curriculum:
-            curriculum.log_metrics(step)
+        # if flags.curriculum:
+        #     curriculum.log_metrics(step)
         last_checkpoint_time = timer()
         while step < flags.total_steps:
             start_step = step
@@ -800,8 +800,8 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
             #     pfasts = [f"{pfast:.4f}" for pfast in pfasts]
             #     log_args.append(pfasts)
             logging.info(log_str, *log_args)
-            if flags.curriculum:
-                curriculum.log_metrics(step)
+            # if flags.curriculum:
+            #     curriculum.log_metrics(step)
 
             # Stop training if sps remains 0 for too long
             if total_loss != float("inf"):
