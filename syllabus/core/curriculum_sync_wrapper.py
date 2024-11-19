@@ -53,8 +53,8 @@ class CurriculumWrapper:
     def update_on_step(self, task, obs, reward, term, trunc, info, progress):
         self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress)
 
-    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
-        return self.curriculum.log_metrics(writer, logs, step=step, log_full_dist=log_full_dist)
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        return self.curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
     def update_on_step_batch(self, step_results, env_id=None):
         self.curriculum.update_on_step_batch(step_results, env_id=env_id)
@@ -119,10 +119,10 @@ class MultiProcessingComponents:
         self.task_queue.close()
         self.update_queue.close()
 
-    def get_metrics(self, step=None, log_full_dist=False):
+    def get_metrics(self, log_n_tasks=1):
         logs = []
-        logs.append("curriculum/updates_in_queue", self.update_queue.qsize(), step)
-        logs.append("curriculum/tasks_in_queue", self.task_queue.qsize(), step)
+        logs.append(("curriculum/updates_in_queue", self.update_queue.qsize()))
+        logs.append(("curriculum/tasks_in_queue", self.task_queue.qsize()))
         return logs
 
 
@@ -207,10 +207,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
             else:
                 time.sleep(0.01)
 
-    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         logs = [] if logs is None else logs
-        logs += self.components.get_metrics(step=step, log_full_dist=log_full_dist)
-        return super().log_metrics(writer, logs, step=step, log_full_dist=log_full_dist)
+        logs += self.components.get_metrics(log_n_tasks=log_n_tasks)
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
 
 def remote_call(func):

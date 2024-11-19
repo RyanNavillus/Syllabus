@@ -61,8 +61,8 @@ class SimpleBoxCurriculum(Curriculum):
         """
         return [self.max_range for _ in range(k)]
 
-    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         logs = [] if logs is None else logs
-        logs.append(("range_min", self.max_range[0], step))
-        logs.append(("range_max", self.max_range[1], step))
-        return super().log_metrics(writer, logs, step, log_full_dist)
+        logs.append(("range_min", self.max_range[0]))
+        logs.append(("range_max", self.max_range[1]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)

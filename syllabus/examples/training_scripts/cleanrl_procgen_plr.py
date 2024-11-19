@@ -275,7 +275,8 @@ if __name__ == "__main__":
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
-                device="cuda"
+                device="cuda",
+                record_stats=True,
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -371,7 +372,7 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
-                        curriculum.log_metrics(writer, [], step=global_step)
+                        curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                     break
 
         # bootstrap value if not done

@@ -201,12 +201,12 @@ class SequentialCurriculum(Curriculum):
     def _sample_distribution(self) -> List[float]:
         return self.current_curriculum._sample_distribution()
 
-    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         logs = [] if logs is None else logs
-        logs.append(("curriculum/current_stage", self._curriculum_index, step))
-        logs.append(("curriculum/steps", self.n_steps, step))
-        logs.append(("curriculum/episodes", self.n_episodes, step))
-        logs.append(("curriculum/episode_returns", self._get_episode_return(), step))
+        logs.append(("curriculum/current_stage", self._curriculum_index))
+        logs.append(("curriculum/steps", self.n_steps))
+        logs.append(("curriculum/episodes", self.n_episodes))
+        logs.append(("curriculum/episode_returns", self._get_episode_return()))
 
         # Set probability for tasks from other stages to 0
         current_tasks = set(self.current_curriculum.task_space.tasks)
@@ -214,7 +214,7 @@ class SequentialCurriculum(Curriculum):
         noncurrent_tasks = all_tasks - current_tasks
         for task in noncurrent_tasks:
             name = self.task_names(task, self.task_space.encode(task))
-            logs.append((f"curriculum/{name}_prob", 0, step))
+            logs.append((f"curriculum/{name}_prob", 0))
 
         # Current curriculum will pass data to the writer for us
-        return self.current_curriculum.log_metrics(writer, logs, step, log_full_dist)
+        return self.current_curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)

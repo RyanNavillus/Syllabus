@@ -109,22 +109,22 @@ class StatRecorder:
         self.episode_returns[episode_task] += episode_return
         self.episode_lengths[episode_task] += episode_length
 
-    def get_metrics(self, step=None, log_full_dist=False):
+    def get_metrics(self, log_n_tasks=1):
         """Log the statistics of the first 5 tasks to the provided tensorboard writer.
 
         :param writer: Tensorboard summary writer.
         """
         tasks_to_log = self.tasks
-        if len(self.tasks) > 10 and not log_full_dist:
+        if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
             warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.")
-            tasks_to_log = self.tasks[:1]
+            tasks_to_log = self.tasks[:log_n_tasks]
 
         logs = []
         for idx in tasks_to_log:
             if self.episode_returns[idx].n > 0:
                 name = self.task_names(list(self.task_space.tasks)[idx], idx)
-                logs.append((f"tasks/{name}_episode_return", self.episode_returns[idx].mean(), step))
-                logs.append((f"tasks/{name}_episode_length", self.episode_lengths[idx].mean(), step))
+                logs.append((f"tasks/{name}_episode_return", self.episode_returns[idx].mean()))
+                logs.append((f"tasks/{name}_episode_length", self.episode_lengths[idx].mean()))
         return logs
 
     def normalize(self, reward, task):

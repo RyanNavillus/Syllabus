@@ -202,18 +202,18 @@ class Curriculum:
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return task_idx
 
-    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """Log the task distribution to the provided tensorboard writer.
 
         :param writer: Tensorboard summary writer.
         :param logs: Cumulative list of logs to write
         :param step: Global step number
-        :param log_full_dist: Whether to log the full distribution or just the first 5 tasks
+        :param log_n_tasks: Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.
         :return: Updated logs list
         """
         logs = [] if logs is None else logs
         if self.stat_recorder is not None:
-            logs += self.stat_recorder.get_metrics(step=step, log_full_dist=log_full_dist)
+            logs += self.stat_recorder.get_metrics(log_n_tasks=log_n_tasks)
 
         try:
             import wandb
@@ -223,21 +223,21 @@ class Curriculum:
 
         try:
             task_dist = self._sample_distribution()
-            if len(self.tasks) > 10 and not log_full_dist:
+            if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
                 warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.")
-                task_dist = task_dist[:1]
+                task_dist = task_dist[:log_n_tasks]
 
             # Add basic logs
             for idx, prob in enumerate(task_dist):
                 name = self.task_names(self.tasks[idx], idx)
-                logs.append((f"curriculum/{name}_prob", prob, step))
+                logs.append((f"curriculum/{name}_prob", prob))
 
             # Write logs
-            for name, prob, log_step in logs:
+            for name, prob in logs:
                 if use_wandb:
-                    writer.log({name: prob, "global_step": log_step})
+                    writer.log({name: prob, "global_step": step})
                 else:
-                    writer.add_scalar(name, prob, log_step)
+                    writer.add_scalar(name, prob, step)
         except Exception as e:
             # No need to crash over logging :)
             warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error {e}")

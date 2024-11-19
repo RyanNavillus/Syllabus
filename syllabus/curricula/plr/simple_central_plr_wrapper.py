@@ -149,16 +149,22 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
         else:
             return list(enumerate_axes(space.nvec))
 
-    def log_metrics(self, writer, logs, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """
         Log the task distribution to the provided tensorboard writer.
         """
         logs = [] if logs is None else logs
         metrics = self._task_sampler.metrics()
-        logs.append({"curriculum/proportion_seen": metrics["proportion_seen"], "step": step})
-        logs.append({"curriculum/score": metrics["score"], "step": step})
-        for idx in range(self.num_tasks)[:10]:
+        logs.append(("curriculum/proportion_seen", metrics["proportion_seen"]))
+        logs.append(("curriculum/score", metrics["score"]))
+
+        tasks = range(self.num_tasks)
+        if self.num_tasks > log_n_tasks and log_n_tasks != -1:
+            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.")
+            tasks = tasks[:log_n_tasks]
+
+        for idx in tasks:
             name = self.task_names(self.tasks[idx], idx)
-            logs.append({f"curriculum/{name}_score": metrics["task_scores"][idx], "step": step})
-            logs.append({f"curriculum/{name}_staleness": metrics["task_staleness"][idx], "step": step})
-        return super().log_metrics(writer, logs, step=step, log_full_dist=log_full_dist)
+            logs.append((f"curriculum/{name}_staleness", metrics["task_staleness"][idx]))
+            logs.append((f"curriculum/{name}_score", metrics["task_scores"][idx]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
