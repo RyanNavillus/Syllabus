@@ -215,7 +215,6 @@ class PrioritizedLevelReplay(Curriculum):
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
     REQUIRES_STEP_UPDATES = True
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
@@ -289,7 +288,7 @@ class PrioritizedLevelReplay(Curriculum):
         else:
             return [self._task_sampler.sample() for _ in range(k)]
 
-    def update_on_step(self, task, obs, rew, term, trunc, info, env_id: int = None) -> None:
+    def update_on_step(self, task, obs, rew, term, trunc, info, progress, env_id: int = None) -> None:
         """
         Update the curriculum with the current step results from the environment.
         """
@@ -314,9 +313,7 @@ class PrioritizedLevelReplay(Curriculum):
         if env_id in self._rollouts.ready_buffers:
             self._update_sampler(env_id)
 
-    def update_on_step_batch(
-        self, step_results: List[Tuple[int, Any, int, bool, bool, Dict]], env_id: int = None
-    ) -> None:
+    def update_on_step_batch(self, step_results, env_id = None) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
@@ -328,7 +325,8 @@ class PrioritizedLevelReplay(Curriculum):
                 f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
             env_id = env_id % self._num_processes
 
-        tasks, obs, rews, terms, truncs, _ = step_results
+
+        tasks, obs, rews, terms, truncs, _, _ = step_results
         self._rollouts.insert_at_index(
             env_id,
             mask=np.logical_not(np.logical_or(terms, truncs)),

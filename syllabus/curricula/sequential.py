@@ -12,7 +12,6 @@ from syllabus.task_space import TaskSpace
 
 class SequentialCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
@@ -163,24 +162,23 @@ class SequentialCurriculum(Curriculum):
         self.check_stopping_conditions()
         return recoded_tasks
 
-    def update_on_episode(self, episode_return, episode_len, episode_task, env_id=None):
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None):
         self.n_episodes += 1
         self.total_episodes += 1
-        self.n_steps += episode_len
-        self.total_steps += episode_len
+        self.n_steps += length
+        self.total_steps += length
         self.episode_returns.append(episode_return)
         if self.stat_recorder is not None:
-            self.stat_recorder.record(episode_return, episode_len, episode_task)
+            self.stat_recorder.record(episode_return, length, task)
 
         # Update current curriculum
-        if self.current_curriculum.requires_episode_updates:
-            self.current_curriculum.update_on_episode(episode_return, episode_len, episode_task, env_id)
+        self.current_curriculum.update_on_episode(episode_return, length, task, progress, env_id)
 
         self.check_stopping_conditions()
 
-    def update_on_step(self, task, obs, rew, term, trunc, info, env_id=None):
+    def update_on_step(self, task, obs, rew, term, trunc, info, progress, env_id=None):
         if self.current_curriculum.requires_step_updates:
-            self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, env_id)
+            self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, progress, env_id)
 
     def update_on_step_batch(self, step_results, env_id=None):
         if self.current_curriculum.requires_step_updates:

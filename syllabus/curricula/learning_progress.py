@@ -1,7 +1,7 @@
 import math
 import random
 import warnings
-from typing import Any, List
+from typing import Any, List, Union
 
 import numpy as np
 from gymnasium.spaces import Discrete, MultiDiscrete
@@ -18,7 +18,6 @@ class LearningProgressCurriculum(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
@@ -66,7 +65,7 @@ class LearningProgressCurriculum(Curriculum):
 
         return task_success_rates
 
-    def update_task_progress(self, task: int, progress: float, env_id: int = None):
+    def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
@@ -77,9 +76,9 @@ class LearningProgressCurriculum(Curriculum):
         self._p_fast[task] = (progress * self.ema_alpha) + (self._p_fast[task] * (1.0 - self.ema_alpha))
         self._p_slow[task] = (self._p_fast[task] * self.ema_alpha) + (self._p_slow[task] * (1.0 - self.ema_alpha))
 
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
-        self.completed_steps += episode_length
+        self.completed_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
             self._evaluate_all_tasks()
         if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:

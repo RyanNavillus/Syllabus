@@ -32,9 +32,6 @@ class TaskEnv(gym.Env):
         """
         raise NotImplementedError
 
-    def add_task(self, task):
-        raise NotImplementedError("This environment does not support adding tasks.")
-
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """
         Implement this function to indicate whether the selected task has been completed.
@@ -106,9 +103,6 @@ class PettingZooTaskEnv(pettingzoo.ParallelEnv):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         raise NotImplementedError
-
-    def add_task(self, task):
-        raise NotImplementedError("This environment does not support adding tasks.")
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """

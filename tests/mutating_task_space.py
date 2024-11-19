@@ -86,8 +86,6 @@ def run_episodes(curriculum=None, update_on_step=True):
             task = curriculum.sample()[0]
             ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum, update_on_step=update_on_step))
             curriculum._complete_task(task, success_prob=random.random())
-            if curriculum.task_space.num_tasks < 7:
-                curriculum.add_task("")
         else:
             ep_rews.append(run_episode(env))
 
@@ -97,8 +95,6 @@ def run_episodes_queue(task_queue, update_queue, update_on_step=True):
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
-        if env.task_space.num_tasks < 7:
-            env.add_task("")
 
 
 
@@ -108,8 +104,6 @@ def run_episodes_ray_syllabus(update_on_step=True):
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
-        if env.task_space.num_tasks < 7:
-            env.add_task("")
 
 
 @ray.remote

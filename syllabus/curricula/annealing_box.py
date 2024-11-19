@@ -6,8 +6,7 @@ from gymnasium.spaces import Box
 from syllabus.core import Curriculum
 
 class AnnealingBoxCurriculum(Curriculum):
-    REQUIRES_STEP_UPDATES = True
-    REQUIRES_EPISODE_UPDATES = False
+    REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
 
@@ -36,12 +35,12 @@ class AnnealingBoxCurriculum(Curriculum):
         assert all(x > 0 for x in self.total_steps), "All elements of total_steps must be greater than 0."
 
         self.current_step = 0
-
-    def update_on_step(self, *args, **kwargs) -> None:
+    
+    def update_on_episode(self, episode_return, length, task, progress, env_id = None) -> None:
         """
-        Update the curriculum based on the current training timestep.
+        Update the curriculum with episode results from the environment.
         """
-        self.current_step += 1
+        self.current_step += length
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """

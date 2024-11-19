@@ -77,11 +77,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         next_task = self.task_space.decode(message["next_task"])
         self._latest_task = next_task
 
-        # Add any new tasks
-        if "added_tasks" in message:
-            added_tasks = message["added_tasks"]
-            for add_task in added_tasks:
-                self.env.add_task(add_task)
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
         return obs, info
@@ -111,50 +106,25 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
         # Episode update
         if term or trunc:
-            # Task progress
-            task_update = {
-                "update_type": "task_progress",
-                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "env_id": self.instance_id,
-                "request_sample": False,
-            }
             episode_update = {
                 "update_type": "episode",
-                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task)),
+                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task), self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True
             }
-            self.components.put_update([task_update, episode_update])
+            self.components.put_update([episode_update])
 
         info["task"] = self.task_space.encode(self.get_task())
 
         return obs, rew, term, trunc, info
 
     def _package_step_updates(self):
-        step_batch = {
+        return [{
             "update_type": "step_batch",
-            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step], self._task_progresses[:self._batch_step]],),
             "env_id": self.instance_id,
             "request_sample": False
-        }
-        update = [step_batch]
-
-        if self.update_on_progress:
-            task_batch = {
-                "update_type": "task_progress_batch",
-                "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
-                "env_id": self.instance_id,
-                "request_sample": False
-            }
-            update.append(task_batch)
-        return update
-
-    def add_task(self, task):
-        update = {
-            "update_type": "add_task",
-            "metrics": task
-        }
-        self.update_queue.put(update)
+        }]
 
     def get_task(self):
         # Allow user to reject task
@@ -231,18 +201,12 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         next_task = self.task_space.decode(message["next_task"])
         self._latest_task = next_task
 
-        # Add any new tasks
-        if "added_tasks" in message:
-            added_tasks = message["added_tasks"]
-            for add_task in added_tasks:
-                self.env.add_task(add_task)
-
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
-    def step(self, action):
-        obs, rews, terms, truncs, infos = self.env.step(action)
+    def step(self, actions):
+        obs, rews, terms, truncs, infos = self.env.step(actions)
         self.episode_length += 1
         for agent in rews.keys():
             self.episode_returns[agent] += rews[agent]
@@ -306,13 +270,6 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
             }
             update.append(task_batch)
         return update
-
-    def add_task(self, task):
-        update = {
-            "update_type": "add_task",
-            "metrics": task
-        }
-        self.update_queue.put(update)
 
     def get_task(self):
         # Allow user to reject task
@@ -404,9 +361,6 @@ class RaySyncWrapper(gym.Wrapper):
         """
         self.env.change_task(new_task)
 
-    def add_task(self, task):
-        self.curriculum.add_task.remote(task)
-
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
         if env_attr:
@@ -490,9 +444,6 @@ class PettingZooRaySyncWrapper(BaseParallelWrapper):
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
         self.env.change_task(new_task)
-
-    def add_task(self, task):
-        self.curriculum.add_task.remote(task)
 
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)

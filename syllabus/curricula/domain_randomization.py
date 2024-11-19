@@ -8,7 +8,6 @@ class DomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def _sample_distribution(self) -> List[float]:
@@ -18,15 +17,11 @@ class DomainRandomization(Curriculum):
         # Uniform distribution
         return [1.0 / self.num_tasks for _ in range(self.num_tasks)]
 
-    def add_task(self, task: Any) -> None:
-        self.task_space.add_task(task)
-
 
 class BatchedDomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, batch_size: int, task_space, warmup_batches: int = 5, **kwargs):
@@ -58,16 +53,15 @@ class BatchedDomainRandomization(Curriculum):
             tasks = [self.current_task[0] for _ in range(k)]
         return tasks
 
-    def update_on_episode(self, episode_returns, episode_length, episode_task, env_id: int = None) -> None:
-        super().update_on_episode(episode_returns, episode_length, episode_task, env_id=env_id)
-        self._batch_steps += episode_length
+    def update_on_episode(self, episode_return, length, task, progress, env_id: int = None) -> None:
+        super().update_on_episode(episode_return, length, task, progress, env_id=env_id)
+        self._batch_steps += length
 
 
 class SyncedBatchedDomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(self, batch_size: int, task_space, warmup_batches: int = 1, uniform_chance: float = 0.05, **kwargs):

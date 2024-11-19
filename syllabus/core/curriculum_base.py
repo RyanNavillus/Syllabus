@@ -1,9 +1,7 @@
-import typing
 import warnings
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union, Dict
 
 import numpy as np
-from gymnasium.spaces import Dict
 
 from syllabus.task_space import TaskSpace
 from .stat_recorder import StatRecorder
@@ -13,6 +11,8 @@ from .stat_recorder import StatRecorder
 class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
         """Initialize the base Curriculum
@@ -44,14 +44,6 @@ class Curriculum:
         return self.__class__.REQUIRES_STEP_UPDATES
 
     @property
-    def requires_episode_updates(self) -> bool:
-        """Returns whether the curriculum requires episode updates from the environment.
-
-        :return: True if the curriculum requires episode updates, False otherwise
-        """
-        return self.__class__.REQUIRES_EPISODE_UPDATES
-
-    @property
     def num_tasks(self) -> int:
         """Counts the number of tasks in the task space.
 
@@ -67,20 +59,16 @@ class Curriculum:
         """
         return self.task_space._task_list
 
-    def add_task(self, task: typing.Any) -> None:
-        # TODO
-        raise NotImplementedError("This curriculum does not support adding tasks after initialization.")
-
-    def update_task_progress(self, task: typing.Any, progress: Tuple[float, bool], env_id: int = None) -> None:
-        """Update the curriculum with a task and its progress.
+    def update_task_progress(self, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
+        """Update the curriculum with a task and its progress. This is used for binary tasks that can be completed mid-episode.
 
         :param task: Task for which progress is being updated.
         :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
+        :param env_id: Environment identifier
         """
-
         self.completed_tasks += 1
 
-    def update_on_step(self, task: typing.Any, obs: typing.Any, rew: float, term: bool, trunc: bool, info: dict, env_id: int = None) -> None:
+    def update_on_step(self, task: Any, obs: Any, rew: float, term: bool, trunc: bool, info: dict, progress: Union[float, bool], env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
         :param obs: Observation from teh environment
@@ -88,43 +76,52 @@ class Curriculum:
         :param term: True if the episode ended on this step, False otherwise
         :param trunc: True if the episode was truncated on this step, False otherwise
         :param info: Extra information from the environment
+        :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
+        :param env_id: Environment identifier
         :raises NotImplementedError:
         """
         raise NotImplementedError(
             "This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.")
 
-    def update_on_step_batch(self, step_results: List[typing.Tuple[Any, Any, int, int, int, int]], env_id: int = None) -> None:
+    def update_on_step_batch(self, step_results: Tuple[List[Any], List[Any], List[int], List[bool], List[bool], List[Dict], List[int]], env_id: int = None) -> None:
         """Update the curriculum with a batch of step results from the environment.
 
         This method can be overridden to provide a more efficient implementation. It is used
         as a convenience function and to optimize the multiprocessing message passing throughput.
 
         :param step_results: List of step results
+        :param env_id: Environment identifier
         """
-        tasks, obs, rews, terms, truncs, infos = tuple(step_results)
-        for i in range(len(obs)):
-            self.update_on_step(tasks[i], obs[i], rews[i], terms[i], truncs[i], infos[i], env_id=env_id)
+        tasks, obs, rews, terms, truncs, infos, progresses = tuple(step_results)
+        for t, o, r, te, tr, i, p in zip(tasks, obs, rews, terms, truncs, infos, progresses):
+            self.update_on_step(t, o, r, te, tr, i, p, env_id=env_id)
 
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         """Update the curriculum with episode results from the environment.
 
         :param episode_return: Episodic return
-        :param trajectory: trajectory of (s, a, r, s, ...), defaults to None
+        :param length: Length of the episode
+        :param task: Task for which the episode was completed
+        :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
+        :param env_id: Environment identifier
         :raises NotImplementedError:
         """
         if self.stat_recorder is not None:
-            self.stat_recorder.record(episode_return, episode_length, episode_task, env_id)
+            self.stat_recorder.record(episode_return, length, task, env_id)
 
     def normalize(self, reward, task):
         """
         Normalize reward by task.
+
+        :param reward: Reward to normalize
+        :param task: Task for which the reward was received
+        :return: Normalized reward
         """
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
     def update_on_demand(self, metrics: Dict):
         """Update the curriculum with arbitrary inputs.
-
 
         :param metrics: Arbitrary dictionary of information. Can be used to provide gradient/error based
                         updates from the training process.
@@ -133,12 +130,12 @@ class Curriculum:
         raise NotImplementedError
 
     # TODO: Move to curriculum sync wrapper?
-    def update(self, update_data: typing.Dict[str, tuple]):
+    def update(self, update_data: Dict[str, tuple]):
         """Update the curriculum with the specified update type.
         TODO: Change method header to not use dictionary, use enums?
 
         :param update_data: Dictionary
-        :type update_data: Dictionary with "update_type" key which maps to one of ["step", "step_batch", "episode", "on_demand", "task_progress", "add_task", "noop"] and "args" with a tuple of the appropriate arguments for the given "update_type".
+        :type update_data: Dictionary with "update_type" key which maps to one of ["step", "step_batch", "episode", "on_demand", "task_progress", "noop"] and "args" with a tuple of the appropriate arguments for the given "update_type".
         :raises NotImplementedError:
         """
 
@@ -157,12 +154,6 @@ class Curriculum:
             self.update_on_demand(args)
         elif update_type == "task_progress":
             self.update_task_progress(*args, env_id=env_id)
-        elif update_type == "task_progress_batch":
-            tasks, progresses = args
-            for task, progress in zip(tasks, progresses):
-                self.update_task_progress(task, progress, env_id=env_id)
-        elif update_type == "add_task":
-            self.add_task(args)
         elif update_type == "noop":
             # Used to request tasks from the synchronization layer
             pass

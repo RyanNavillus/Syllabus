@@ -125,15 +125,6 @@ class TaskSpace():
         """Convert the task to an efficient encoding to speed up multiprocessing."""
         return self._encoder(task)
 
-    def add_task(self, task):
-        """Add a task to the task space. Only implemented for discrete spaces."""
-        if task not in self._task_set:
-            self._task_set.add(task)
-            # TODO: Increment task space size
-            self.gym_space = self.increase_space()
-            # TODO: Optimize adding tasks
-            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._task_set)
-
     def _sum_axes(list_or_size: Union[list, int]):
         if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
             return list_or_size

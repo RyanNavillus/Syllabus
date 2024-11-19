@@ -9,7 +9,6 @@ class SyncTestCurriculum(SequentialCurriculum):
     Base class and API for defining curricula to interface with Gym environments.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, num_envs, num_episodes, *curriculum_args, **curriculum_kwargs):
@@ -25,11 +24,11 @@ class SyncTestCurriculum(SequentialCurriculum):
         self.total_dones = 0
         self.metadata = {}
 
-    def update_on_episode(self, episode_return, episode_len, episode_task, env_id: int = None) -> None:
-        super().update_on_episode(episode_return, episode_len, episode_task, env_id)
+    def update_on_episode(self, episode_return, length, task, progress, env_id= None) -> None:
+        super().update_on_episode(episode_return, length, task, progress, env_id)
         self.total_reward += episode_return
         self.total_dones += 1
-        self.task_counts[episode_task] += 1
+        self.task_counts[task] += 1
 
     def get_stats(self):
         return {

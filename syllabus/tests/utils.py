@@ -100,15 +100,15 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
         obs, rews, term, trunc, info = env.step(action)
         steps += 1
         if curriculum and curriculum.requires_step_updates:
-            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rews.values()),
-                                      list(term.values()), list(trunc.values()), info, env_id=env_id)
             task_completion = max([i["task_completion"] for i in info.values()]) if len(
                 env.agents) > 0 and "task_completion" in info[env.agents[0]] else 0.0
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, list(rews.values()),
+                                      list(term.values()), list(trunc.values()), info, task_completion, env_id=env_id)
             curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
         for agent, rew in rews.items():
             ep_rew[agent] += rew
-    if curriculum and curriculum.requires_episode_updates:
-        curriculum.update_on_episode(ep_rew, steps, env.task_space.encode(env.task), env_id=env_id)
+    if curriculum:
+        curriculum.update_on_episode(ep_rew, steps, env.task_space.encode(env.task), 0.0, env_id=env_id)
     return ep_rew
 
 
@@ -125,12 +125,12 @@ def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.requires_step_updates:
-            curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, env_id=env_id)
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, info["task_completion"], env_id=env_id)
             curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
         ep_len += 1
-    if curriculum and curriculum.requires_episode_updates:
-        curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), env_id=env_id)
+    if curriculum:
+        curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), 0.0, env_id=env_id)
     return ep_rew
 
 
@@ -167,8 +167,8 @@ def run_set_length(env, curriculum=None, episodes=None, steps=None, env_id=0, en
             ep_rew += rew
             ep_len += 1
             n_steps += 1
-        if (term or trunc) and curriculum and curriculum.requires_episode_updates:
-            curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), env_id=env_id)
+        if (term or trunc) and curriculum:
+            curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), 0.0, env_id=env_id)
         n_episodes += 1
         obs = env.reset(new_task=curriculum.sample()[0] if curriculum else None)
 

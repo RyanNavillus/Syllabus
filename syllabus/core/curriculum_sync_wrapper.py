@@ -41,10 +41,6 @@ class CurriculumWrapper:
     def requires_step_updates(self):
         return self.curriculum.requires_step_updates
 
-    @property
-    def requires_episode_updates(self):
-        return self.curriculum.requires_episode_updates
-
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
 
@@ -54,26 +50,23 @@ class CurriculumWrapper:
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
 
-    def update_on_step(self, task, step, reward, term, trunc):
-        self.curriculum.update_on_step(task, step, reward, term, trunc)
+    def update_on_step(self, task, obs, reward, term, trunc, info, progress):
+        self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress)
 
     def log_metrics(self, writer, step=None):
         self.curriculum.log_metrics(writer, step=step)
 
-    def update_on_step_batch(self, step_results):
-        self.curriculum.update_on_step_batch(step_results)
+    def update_on_step_batch(self, step_results, env_id=None):
+        self.curriculum.update_on_step_batch(step_results, env_id=env_id)
 
-    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
-        self.curriculum.update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None):
+        self.curriculum.update_on_episode(episode_return, length, task, progress, env_id=env_id)
 
     def update(self, metrics):
         self.curriculum.update(metrics)
 
     def update_batch(self, metrics):
         self.curriculum.update_batch(metrics)
-
-    def add_task(self, task):
-        self.curriculum.add_task(task)
 
     def normalize(self, rewards, task):
         return self.curriculum.normalize(rewards, task)
@@ -220,10 +213,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         super().log_metrics(writer, step=step)
         self.components.log_metrics(writer, step=step)
 
-    def add_task(self, task):
-        super().add_task(task)
-        self.added_tasks.append(task)
-
 
 def remote_call(func):
     """
@@ -288,12 +277,8 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results, env_id = None) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
-
-    def add_task(self, task):
-        super().add_task(task)
-        self.added_tasks.append(task)
 
 
 def make_ray_curriculum(curriculum, actor_name="curriculum", **kwargs):
