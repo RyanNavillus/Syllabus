@@ -8,9 +8,10 @@ import numpy as np
 import torch
 from gymnasium.spaces import Discrete, MultiDiscrete
 
-from syllabus.core import Curriculum, UsageError, enumerate_axes
+from syllabus.core import Curriculum
 from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import TaskSpace
+from syllabus.utils import UsageError, enumerate_axes
 
 from .task_sampler import TaskSampler
 

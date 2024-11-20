@@ -1,7 +1,6 @@
 import gymnasium as gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
-from syllabus.task_space import TaskSpace
 
 
 class TaskWrapper(gym.Wrapper):

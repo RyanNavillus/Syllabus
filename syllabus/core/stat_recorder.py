@@ -113,6 +113,7 @@ class StatRecorder:
         """Log the statistics of the first 5 tasks to the provided tensorboard writer.
 
         :param writer: Tensorboard summary writer.
+        :param log_n_tasks: Number of tasks to log statistics for. Use -1 to log all tasks.
         """
         tasks_to_log = self.tasks
         if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
@@ -130,6 +131,9 @@ class StatRecorder:
     def normalize(self, reward, task):
         """
         Normalize reward by task.
+
+        :param reward: Reward to normalize
+        :param task: Task to normalize reward by
         """
         task_return_stats = self.episode_returns[task]
         reward_std = task_return_stats.std()
@@ -141,11 +145,13 @@ class StatRecorder:
     def save_statistics(self, output_path):
         """
         Write task-specific statistics to file.
+
+        :param output_path: Path to save the statistics file.
         """
         def convert_numpy(obj):
             if isinstance(obj, np.generic):
                 return obj.item()  # Use .item() to convert numpy types to native Python types
             raise TypeError
-        stats = json.dumps(self.stats, default=convert_numpy)
-        with open(os.path.join(output_path, 'task_specific_stats.json'), "w") as file:
+        stats = json.dumps(self.episode_returns, default=convert_numpy)
+        with open(os.path.join(output_path, 'task_specific_stats.json'), "w", encoding="utf-8") as file:
             file.write(stats)

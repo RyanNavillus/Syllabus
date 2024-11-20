@@ -10,8 +10,8 @@ from torch.multiprocessing import Lock, Queue
 from queue import Empty
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import Curriculum, decorate_all_functions
-from syllabus.core.utils import UsageError
+from syllabus.core import Curriculum
+from syllabus.utils import UsageError, decorate_all_functions
 
 
 class CurriculumWrapper:

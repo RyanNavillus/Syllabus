@@ -5,7 +5,8 @@ import gymnasium as gym
 import torch
 from gymnasium.spaces import Discrete, MultiDiscrete
 
-from syllabus.core import Curriculum, enumerate_axes
+from syllabus.core import Curriculum
+from syllabus.utils import enumerate_axes
 from syllabus.task_space import TaskSpace
 
 from .task_sampler import TaskSampler
