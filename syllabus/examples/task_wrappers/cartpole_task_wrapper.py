@@ -1,19 +1,19 @@
 from gymnasium.spaces import Box, Discrete
 
 from syllabus.core import TaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import BoxTaskSpace, DiscreteTaskSpace
 
 
 class CartPoleTaskWrapper(TaskWrapper):
     def __init__(self, env):
         super().__init__(env)
-        self.task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)))
-        self.task_space = TaskSpace(Discrete(10))
+        # self.task_space = BoxTaskSpace(Box(-0.3, 0.3, shape=(2,)))
+        self.task_space = DiscreteTaskSpace(10)
 
         self.task = (-0.02, 0.02)
         self.total_reward = 0
 
-    def reset(self, *args, **kwargs):
+    def reset(self, **kwargs):
         self.total_reward = 0
         if "new_task" in kwargs:
             new_task = kwargs.pop("new_task")

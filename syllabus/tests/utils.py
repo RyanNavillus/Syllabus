@@ -12,7 +12,7 @@ from pettingzoo.utils.env import ParallelEnv
 
 from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper, PettingZooReinitTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 from syllabus.tests import SyncTestEnv, PettingZooSyncTestEnv
 
 
@@ -125,7 +125,8 @@ def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.requires_step_updates:
-            curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term, trunc, info, info["task_completion"], env_id=env_id)
+            curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term,
+                                      trunc, info, info["task_completion"], env_id=env_id)
             curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
         ep_len += 1
@@ -360,7 +361,7 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     def create_env(task):
         return gym.make(task)
 
-    task_space = TaskSpace(gym.spaces.Discrete(len(env_list)), env_list)
+    task_space = DiscreteTaskSpace(gym.spaces.Discrete(len(env_list)), env_list)
     env = ReinitTaskWrapper(env, create_env, task_space=task_space)
     if type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
@@ -402,7 +403,7 @@ def create_simpletag_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs)
         good, adversary, obstacle = task
         return simple_tag_v3.parallel_env(num_good=good, num_adversaries=adversary, num_obstacles=obstacle, continuous_actions=False)
 
-    task_space = TaskSpace(gym.spaces.MultiDiscrete([1, 1, 1]), [[4], [4], [4]])
+    task_space = MultiDiscreteTaskSpace(gym.spaces.MultiDiscrete([1, 1, 1]), [[4], [4], [4]])
     env = simple_tag_v3.parallel_env()
     env = PettingZooReinitTaskWrapper(env, create_env, task_space)
 

@@ -4,11 +4,10 @@ import warnings
 from typing import Any, List, Union
 
 import numpy as np
-from gymnasium.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 
 class LearningProgressCurriculum(Curriculum):
@@ -31,7 +30,9 @@ class LearningProgressCurriculum(Curriculum):
         self.completed_episodes = 0
         self.completed_steps = 0
 
-        assert isinstance(self.task_space.gym_space, (Discrete, MultiDiscrete))
+        assert isinstance(
+            self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
+        ), f"LearningProgressCurriculum only supports Discrete and MultiDiscrete task spaces. Got {self.task_space.__class__.__name__}."
         self._p_fast = np.zeros(self.num_tasks)
         self._p_slow = np.zeros(self.num_tasks)
 
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     tasks = range(20)
     histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
 
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+    curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
     for i in range(len(histories[0][0])):
         for task in tasks:
             curriculum.update_task_progress(task, histories[task][0][i])
@@ -170,7 +171,7 @@ if __name__ == "__main__":
 
     tasks = [0]
     histories = {task: generate_history(n=200, center=75, curve=0.1) for task in tasks}
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+    curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
     lp_raw = []
     lp_reweight = []
     p_fast = []
@@ -218,7 +219,7 @@ if __name__ == "__main__":
 
         # Z-score plot
         tasks = [i for i in range(50)]
-        curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+        curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
         histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
         for i in range(len(histories[0][0])):
             for task in tasks:

@@ -3,11 +3,10 @@ from typing import Any, Dict, List, Tuple, Union
 import wandb
 import gymnasium as gym
 import torch
-from gymnasium.spaces import Discrete, MultiDiscrete
 
 from syllabus.core import Curriculum
-from syllabus.utils import enumerate_axes
-from syllabus.task_space import TaskSpace
+from syllabus.utils import UsageError, enumerate_axes
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 from .task_sampler import TaskSampler
 
@@ -133,7 +132,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
 
     def __init__(
         self,
-        task_space: TaskSpace,
+        task_space: Union[DiscreteTaskSpace, MultiDiscreteTaskSpace],
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
@@ -150,9 +149,9 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             task_sampler_kwargs_dict = {}
 
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
-        if not isinstance(task_space.gym_space, Discrete) and not isinstance(task_space.gym_space, MultiDiscrete):
-            raise ValueError(
-                f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
+        if not isinstance(task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)):
+            raise UsageError(
+                f"Task space must be discrete or multi-discrete, got {task_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(
@@ -264,14 +263,6 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             return self._startup_sample()
         else:
             return [self._task_sampler.sample() for _ in range(k)]
-
-    def _enumerate_tasks(self, space):
-        assert isinstance(space, Discrete) or isinstance(
-            space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
-        if isinstance(space, Discrete):
-            return list(range(space.n))
-        else:
-            return list(enumerate_axes(space.nvec))
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """

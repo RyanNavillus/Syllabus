@@ -3,11 +3,9 @@ import warnings
 from collections import deque
 from typing import Any, Callable, List, Union
 
-from torch.utils.tensorboard import SummaryWriter
-
 from syllabus.core import Curriculum
 from syllabus.curricula import DomainRandomization, NoopCurriculum
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import TaskSpace, DiscreteTaskSpace
 
 
 class SequentialCurriculum(Curriculum):
@@ -17,7 +15,8 @@ class SequentialCurriculum(Curriculum):
     def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
-        assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
+        assert len(stopping_conditions) == len(curriculum_list) - \
+            1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
             warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
 
@@ -45,7 +44,7 @@ class SequentialCurriculum(Curriculum):
             elif isinstance(item, TaskSpace):
                 parsed_list.append(DomainRandomization(item, task_names=self.task_names))
             elif isinstance(item, list):
-                task_space = TaskSpace(len(item), item)
+                task_space = DiscreteTaskSpace(len(item), item)
                 parsed_list.append(DomainRandomization(task_space, task_names=self.task_names))
             elif self.task_space.contains(item):
                 parsed_list.append(NoopCurriculum(item, self.task_space, task_names=self.task_names))

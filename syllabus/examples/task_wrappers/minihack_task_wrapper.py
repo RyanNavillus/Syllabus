@@ -1,14 +1,14 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import gymnasium as gym
-from gymnasium import spaces
 from syllabus.core import TaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace
 
 
 class MinihackTaskWrapper(TaskWrapper):
     """
     This wrapper simply changes the seed of a Minigrid environment.
     """
+
     def __init__(self, env: gym.Env):
         super().__init__(env)
         self.env = env
@@ -17,7 +17,7 @@ class MinihackTaskWrapper(TaskWrapper):
 
         # Task completion metrics
         self.episode_return = 0
-        self.task_space = TaskSpace(spaces.Discrete(1000), list(range(1000)))
+        self.task_space = DiscreteTaskSpace(1000)
 
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided

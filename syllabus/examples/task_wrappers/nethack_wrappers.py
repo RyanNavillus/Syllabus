@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
 from syllabus.core import TaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace
 
 
 class NetHackSeed(NetHackScore):
@@ -284,7 +284,7 @@ class NethackTaskWrapper(TaskWrapper):
                 task_list.append(task)
 
         self.task_list = task_list
-        self.task_space = TaskSpace(len(task_list), task_list)
+        self.task_space = DiscreteTaskSpace(len(task_list), task_list)
 
         # Add goal space to observation
         # self.observation_space = copy.deepcopy(self.env.observation_space)
@@ -436,7 +436,7 @@ class NethackSeedWrapper(TaskWrapper):
         self.env = env
         self.task = NetHackScore
 
-        self.task_space = TaskSpace(num_seeds, list(range(num_seeds)))
+        self.task_space = DiscreteTaskSpace(num_seeds)
 
         # Task completion metrics
         self.episode_return = 0

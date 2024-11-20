@@ -3,22 +3,23 @@ from pettingzoo.utils.env import ParallelEnv
 from gymnasium import spaces
 from pettingzoo.butterfly import pistonball_v6
 from syllabus.core import PettingZooTaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace
 
 
 class PistonballTaskWrapper(PettingZooTaskWrapper):
     """
     This wrapper simply changes the seed of a Minigrid environment.
     """
+
     def __init__(self, env: ParallelEnv):
         super().__init__(env)
         self.env = env
-        self.env.unwrapped.task: str = 1
+        self.env.unwrapped.task = 1
         self.task = None
 
         # Task completion metrics
         self.episode_return = 0
-        self.task_space = TaskSpace(spaces.Discrete(11), list(range(11)))   # 0.1 - 1.0 friction
+        self.task_space = DiscreteTaskSpace(11)   # 0.1 - 1.0 friction
 
     def reset(self, new_task: int = None, **kwargs):
         # Change task if new one is provided

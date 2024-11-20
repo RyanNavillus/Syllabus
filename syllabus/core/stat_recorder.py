@@ -89,7 +89,7 @@ class StatRecorder:
         assert isinstance(self.task_space.gym_space,
                           Discrete), f"Only Discrete task spaces are supported. Got {type(task_space.gym_space)}"
 
-        self.tasks = self.task_space.get_tasks()
+        self.tasks = self.task_space.tasks
         self.num_tasks = self.task_space.num_tasks
 
         self.episode_returns = {task: StatMean() for task in self.tasks}

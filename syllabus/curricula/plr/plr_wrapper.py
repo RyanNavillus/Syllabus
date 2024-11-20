@@ -6,11 +6,10 @@ from typing import Any, Dict, List, Tuple, Union
 import gymnasium as gym
 import numpy as np
 import torch
-from gymnasium.spaces import Discrete, MultiDiscrete
 
 from syllabus.core import Curriculum
 from syllabus.core.evaluator import Evaluator
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 from syllabus.utils import UsageError, enumerate_axes
 
 from .task_sampler import TaskSampler
@@ -220,7 +219,7 @@ class PrioritizedLevelReplay(Curriculum):
 
     def __init__(
         self,
-        task_space: TaskSpace,
+        task_space: Union[DiscreteTaskSpace, MultiDiscreteTaskSpace],
         observation_space: gym.Space,
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
@@ -242,9 +241,9 @@ class PrioritizedLevelReplay(Curriculum):
             task_sampler_kwargs_dict = {}
 
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
-        if not isinstance(task_space.gym_space, Discrete) and not isinstance(task_space.gym_space, MultiDiscrete):
+        if not isinstance(task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)):
             raise ValueError(
-                f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
+                f"Task space must be discrete or multi-discrete, got {task_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(
@@ -314,7 +313,7 @@ class PrioritizedLevelReplay(Curriculum):
         if env_id in self._rollouts.ready_buffers:
             self._update_sampler(env_id)
 
-    def update_on_step_batch(self, step_results, env_id = None) -> None:
+    def update_on_step_batch(self, step_results, env_id=None) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
@@ -325,7 +324,6 @@ class PrioritizedLevelReplay(Curriculum):
             warnings.warn(
                 f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
             env_id = env_id % self._num_processes
-
 
         tasks, obs, rews, terms, truncs, _, _ = step_results
         self._rollouts.insert_at_index(
@@ -347,14 +345,6 @@ class PrioritizedLevelReplay(Curriculum):
         self._task_sampler.update_with_rollouts(self._rollouts, env_id)
         self._rollouts.after_update(env_id)
         self._task_sampler.after_update()
-
-    def _enumerate_tasks(self, space):
-        assert isinstance(space, (Discrete, MultiDiscrete)
-                          ), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
-        if isinstance(space, Discrete):
-            return list(range(space.n))
-        else:
-            return list(enumerate_axes(space.nvec))
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """

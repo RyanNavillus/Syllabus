@@ -1,7 +1,6 @@
 import gymnasium as gym
-import numpy as np
 from syllabus.core import TaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace
 
 
 PROCGEN_RETURN_BOUNDS = {
@@ -28,9 +27,10 @@ class ProcgenTaskWrapper(TaskWrapper):
     """
     This wrapper allows you to change the task of an NLE environment.
     """
+
     def __init__(self, env: gym.Env, env_id, seed=0):
         super().__init__(env)
-        self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(0, 200)))
+        self.task_space = DiscreteTaskSpace(200)
         self.env_id = env_id
         self.task = seed
         self.seed(seed)
