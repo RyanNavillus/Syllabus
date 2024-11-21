@@ -117,7 +117,7 @@ class StatRecorder:
         """
         tasks_to_log = self.tasks
         if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
-            warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.")
+            warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
             tasks_to_log = self.tasks[:log_n_tasks]
 
         logs = []

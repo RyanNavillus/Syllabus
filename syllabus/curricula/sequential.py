@@ -18,7 +18,8 @@ class SequentialCurriculum(Curriculum):
         assert len(stopping_conditions) == len(curriculum_list) - \
             1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
-            warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
+            warnings.warn(
+                "Your sequential curriculum only containes one element. Consider using that element directly instead.", stacklevel=2)
 
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)

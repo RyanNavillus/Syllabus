@@ -33,7 +33,7 @@ class Curriculum:
         self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
 
         if self.num_tasks == 0:
-            warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.")
+            warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.", stacklevel=2)
 
     @property
     def requires_step_updates(self) -> bool:
@@ -224,7 +224,7 @@ class Curriculum:
         try:
             task_dist = self._sample_distribution()
             if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
-                warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.")
+                warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
                 task_dist = task_dist[:log_n_tasks]
 
             # Add basic logs
@@ -240,6 +240,6 @@ class Curriculum:
                     writer.add_scalar(name, prob, step)
         except Exception as e:
             # No need to crash over logging :)
-            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error {e}")
+            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error {e}", stacklevel=2)
 
         return logs

@@ -155,7 +155,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(
-                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.", stacklevel=2)
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
@@ -275,7 +275,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
 
         tasks = range(self.num_tasks)
         if self.num_tasks > log_n_tasks and log_n_tasks != -1:
-            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.")
+            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.", stacklevel=2)
             tasks = tasks[:log_n_tasks]
 
         for idx in tasks:

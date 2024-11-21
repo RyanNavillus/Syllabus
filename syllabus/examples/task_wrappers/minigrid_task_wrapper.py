@@ -16,7 +16,7 @@ class MinigridTaskWrapper(TaskWrapper):
         try:
             from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
         except ImportError:
-            warnings.warn("Unable to import gym_minigrid.")
+            warnings.warn("Unable to import gym_minigrid.", stacklevel=2)
 
         self.observation_space = gym.spaces.Box(
             low=0,

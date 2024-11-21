@@ -334,7 +334,7 @@ def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
         from syllabus.examples.task_wrappers.procgen_task_wrapper import \
             ProcgenTaskWrapper
     except ImportError:
-        warnings.warn("Unable to import procgen.")
+        warnings.warn("Unable to import procgen.", stacklevel=2)
 
     env = openai_gym.make("procgen-bigfish-v0", *env_args, **env_kwargs)
     env = GymV21CompatibilityV0(env=env)
@@ -355,7 +355,7 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
         from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
         from gym_minigrid.register import env_list
     except ImportError:
-        warnings.warn("Unable to import gym_minigrid.")
+        warnings.warn("Unable to import gym_minigrid.", stacklevel=2)
     env = gym.make("MiniGrid-DoorKey-5x5-v0", **env_kwargs)
 
     def create_env(task):
@@ -376,7 +376,7 @@ def create_pistonball_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs
         from pettingzoo.butterfly import pistonball_v6  # noqa: F401
         from syllabus.examples.task_wrappers import PistonballTaskWrapper
     except ImportError:
-        warnings.warn("Unable to import pistonball from pettingzoo.")
+        warnings.warn("Unable to import pistonball from pettingzoo.", stacklevel=2)
 
     env = pistonball_v6.parallel_env()
 
@@ -397,7 +397,7 @@ def create_simpletag_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs)
         from pettingzoo.mpe import simple_tag_v3  # noqa: F401
         # from syllabus.examples.task_wrappers import SimpleTagTaskWrapper
     except ImportError:
-        warnings.warn("Unable to import simple tag from pettingzoo.")
+        warnings.warn("Unable to import simple tag from pettingzoo.", stacklevel=2)
 
     def create_env(task):
         good, adversary, obstacle = task

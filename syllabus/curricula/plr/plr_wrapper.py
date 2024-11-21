@@ -247,7 +247,7 @@ class PrioritizedLevelReplay(Curriculum):
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(
-                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.", stacklevel=2)
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
@@ -295,8 +295,7 @@ class PrioritizedLevelReplay(Curriculum):
         assert env_id is not None, "env_id must be provided for PLR updates."
         if env_id >= self._num_processes:
             warnings.warn(
-                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
-            # warnings.warn("f")
+                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.", stacklevel=2)
             env_id = env_id % self._num_processes
 
         assert env_id not in self._rollouts.ready_buffers
@@ -322,7 +321,7 @@ class PrioritizedLevelReplay(Curriculum):
 
         if env_id >= self._num_processes:
             warnings.warn(
-                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.")
+                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.", stacklevel=2)
             env_id = env_id % self._num_processes
 
         tasks, obs, rews, terms, truncs, _, _ = step_results
