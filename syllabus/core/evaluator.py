@@ -231,11 +231,11 @@ class Evaluator:
 
 
 class DummyEvaluator(Evaluator):
-    def __init__(self, agent, action_space, *args, **kwargs):
+    def __init__(self, action_space, *args, **kwargs):
         self.action_space = action_space
         self.action_shape = action_space.sample().shape
         kwargs.pop("copy_agent", None)
-        super().__init__(agent, *args, copy_agent=False, **kwargs)
+        super().__init__(None, *args, copy_agent=False, **kwargs)
 
     def _get_state_shape(self, state):
         if isinstance(state, (torch.Tensor, np.ndarray)):

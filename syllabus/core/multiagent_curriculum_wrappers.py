@@ -20,19 +20,22 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
             agent_index = self.possible_agents.index(agent)
             maybe_joint_obs = obs if self.joint_policy else obs[agent]
             env_id = env_id if self.joint_policy else (env_id * self.num_agents) + agent_index
-            self.curriculum.update_on_step(task, maybe_joint_obs, reward[i], term[i], trunc[i], info[agent], progress[agent], env_id=env_id)
+            agent_progress = progress[agent] if isinstance(progress, dict) else progress
+            self.curriculum.update_on_step(
+                task, maybe_joint_obs, reward[i], term[i], trunc[i], info[agent], agent_progress, env_id=env_id)
 
     def update_on_step_batch(self, step_results, env_id: int = None) -> None:
         tasks, obs, rews, terms, truncs, infos, progresses = step_results
         for t, o, r, te, tr, i, p in zip(tasks, obs, rews, terms, truncs, infos, progresses):
             self.update_on_step(t, o, r, te, tr, i, p, env_id=env_id)
 
-    def update_on_episode(self, episode_return, length, task, progress, env_id = None) -> None:
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """
         for i, agent in enumerate(episode_return.keys()):
-            self.curriculum.update_on_episode(episode_return[agent], length, task, progress, env_id=(env_id * self.num_agents) + i)
+            self.curriculum.update_on_episode(
+                episode_return[agent], length, task, progress, env_id=(env_id * self.num_agents) + i)
 
     def update_batch(self, metrics):
         for update in metrics:

@@ -24,7 +24,7 @@ cartpole_env = create_cartpole_env()
 eval_envs = gym.vector.SyncVectorEnv(
     [create_nethack_env for _ in range(8)]
 )
-evaluator = DummyEvaluator(None, nethack_env.action_space)
+evaluator = DummyEvaluator(nethack_env.action_space)
 
 curricula = [
     (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
