@@ -302,6 +302,42 @@ def get_test_actions(x):
 
 
 # Sync Test Environment
+class ExtractDictObservation(gym.ObservationWrapper, gym.utils.RecordConstructorArgs):
+    """Extract space from Dict observation space by the key."""
+
+    def __init__(self, env: gym.Env, filter_key: str = None):
+        gym.utils.RecordConstructorArgs.__init__(self, filter_key=filter_key)
+        gym.ObservationWrapper.__init__(self, env)
+
+        wrapped_observation_space = env.observation_space
+        if not isinstance(wrapped_observation_space, gym.spaces.Dict):
+            raise ValueError(
+                f"FilterObservationWrapper is only usable with dict observations, "
+                f"environment observation space is {type(wrapped_observation_space)}"
+            )
+
+        self.observation_space = wrapped_observation_space.spaces[filter_key]
+        self._env = env
+        self.filter_key = filter_key
+
+    def observation(self, observation):
+        filter_observation = self._filter_observation(observation)
+        return filter_observation
+
+    def _filter_observation(self, observation):
+        try:
+            return observation[self.filter_key]
+        except KeyError as e:
+            raise KeyError(
+                f"Key {self.filter_key} not found in observation. "
+                f"Available keys are {observation.keys()}"
+            ) from e
+
+    def reset(self, **kwargs):
+        obs, info = self._env.reset(**kwargs)
+        return self.observation(obs), info
+
+
 def create_gymnasium_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
@@ -336,7 +372,7 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False
 
 
 # Nethack Tests
-def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
+def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     from nle.env.tasks import NetHackScore
     from syllabus.examples.task_wrappers.nethack_wrappers import NethackTaskWrapper
 
@@ -345,19 +381,20 @@ def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False,
         env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = NethackTaskWrapper(env)
+        env = ExtractDictObservation(env, filter_key="blstats")
 
-        if type == "queue":
+        if sync_type == "queue":
             env = MultiProcessingSyncWrapper(
                 env, *args, task_space=env.task_space, **kwargs
             )
-        elif type == "ray":
+        elif sync_type == "ray":
             env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
         return env
     return thunk if wrap else thunk()
 
 
 # Procgen Tests
-def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
+def create_procgen_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     try:
         import procgen
 
@@ -372,18 +409,18 @@ def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False,
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = ProcgenTaskWrapper(env, "bigfish")
 
-        if type == "queue":
+        if sync_type == "queue":
             env = MultiProcessingSyncWrapper(
                 env, *args, task_space=env.task_space, **kwargs
             )
-        elif type == "ray":
+        elif sync_type == "ray":
             env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
         return env
     return thunk if wrap else thunk()
 
 
 # Minigrid Tests
-def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_minigrid_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from gym_minigrid.envs import DoorKeyEnv  # noqa: F401
         from gym_minigrid.register import env_list
@@ -396,15 +433,15 @@ def create_minigrid_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
 
     task_space = DiscreteTaskSpace(gym.spaces.Discrete(len(env_list)), env_list)
     env = ReinitTaskWrapper(env, create_env, task_space=task_space)
-    if type == "queue":
+    if sync_type == "queue":
         env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    elif type == "ray":
+    elif sync_type == "ray":
         env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
 # Pistonball Tests
-def create_pistonball_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from pettingzoo.butterfly import pistonball_v6  # noqa: F401
         from syllabus.examples.task_wrappers import PistonballTaskWrapper
@@ -417,15 +454,15 @@ def create_pistonball_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs
         return pistonball_v6.parallel_env(n_pistons=task)
 
     env = PistonballTaskWrapper(env)
-    if type == "queue":
+    if sync_type == "queue":
         env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    elif type == "ray":
+    elif sync_type == "ray":
         env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env
 
 
 # Simple Tag Tests
-def create_simpletag_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_simpletag_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from pettingzoo.mpe import simple_tag_v3  # noqa: F401
         # from syllabus.examples.task_wrappers import SimpleTagTaskWrapper
@@ -443,8 +480,8 @@ def create_simpletag_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs)
     # Set largest posiible task
     env.reset(new_task=(4, 4, 4))
 
-    if type == "queue":
+    if sync_type == "queue":
         env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    elif type == "ray":
+    elif sync_type == "ray":
         env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
     return env

@@ -4,6 +4,7 @@ import pytest
 from nle.env.tasks import NetHackScore, NetHackScout, NetHackStaircase
 
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
+from syllabus.core.evaluator import DummyEvaluator
 from syllabus.curricula import (AnnealingBoxCurriculum,
                                 CentralizedPrioritizedLevelReplay,
                                 DomainRandomization,
@@ -23,13 +24,16 @@ cartpole_env = create_cartpole_env()
 eval_envs = gym.vector.SyncVectorEnv(
     [create_nethack_env for _ in range(8)]
 )
+evaluator = DummyEvaluator(None, nethack_env.action_space)
+
 curricula = [
     (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
     (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
     (LearningProgressCurriculum, create_nethack_env, (eval_envs, get_test_actions, nethack_env.task_space,), {}),
-    (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
+    (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,),
+     {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
     (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
-        "get_value": get_test_values,
+        "evaluator": evaluator,
         "device": "cpu",
         "num_processes": N_ENVS,
         "num_steps": 2048
@@ -40,7 +44,8 @@ curricula = [
         'end_values': [-0.3, 0.3],
         'total_steps': [10]
     }),
-    (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(nethack_env.task_space, nethack_env.observation_space, get_value=get_test_values, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
+    (SequentialCurriculum, create_nethack_env, ([CentralizedPrioritizedLevelReplay(nethack_env.task_space, device="cpu", suppress_usage_warnings=True, num_processes=N_ENVS), PrioritizedLevelReplay(
+        nethack_env.task_space, nethack_env.observation_space, evaluator=evaluator, device="cpu", num_processes=N_ENVS, num_steps=2048), NetHackScore, [NetHackScout, NetHackStaircase]], ["steps>1000", "episodes>=50", "tasks>20"], nethack_env.task_space), {}),
 ]
 
 test_names = [curriculum_args[0].__name__ for curriculum_args in curricula]
@@ -64,7 +69,8 @@ def test_multiprocessing_sync_queue_multi_process(curriculum, env_fn, args, kwar
     test_curriculum = curriculum(*args, **kwargs)
     test_curriculum = make_multiprocessing_curriculum(test_curriculum)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
-    native_syllabus_speed = run_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+    native_syllabus_speed = run_native_multiprocess(
+        env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
 

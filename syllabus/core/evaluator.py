@@ -237,14 +237,29 @@ class DummyEvaluator(Evaluator):
         kwargs.pop("copy_agent", None)
         super().__init__(agent, *args, copy_agent=False, **kwargs)
 
+    def _get_state_shape(self, state):
+        if isinstance(state, (torch.Tensor, np.ndarray)):
+            state_shape = state.shape[0]
+        elif isinstance(state, (list, tuple)):
+            state_shape = len(state)
+        else:
+            state_shape = 1
+        return state_shape
+
     def _get_value(self, state, lstm_state=None, done=None):
-        return torch.zeros((state.shape[0], 1)), {}
+        state_shape = self._get_state_shape(state)
+        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        return torch.zeros((state_shape, 1)), lstm_state, {}
 
     def _get_action(self, state, lstm_state=None, done=None):
-        return torch.zeros((state.shape[0], self.action_shape)), {}
+        state_shape = self._get_state_shape(state)
+        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        return torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
-        return torch.zeros((state.shape[0], 1)), torch.zeros((state.shape[0], self.action_shape)), {}
+        state_shape = self._get_state_shape(state)
+        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
 
 class CleanRLDiscreteEvaluator(Evaluator):

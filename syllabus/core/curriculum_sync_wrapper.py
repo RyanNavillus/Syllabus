@@ -121,7 +121,10 @@ class MultiProcessingComponents:
     def close(self):
         if self._env_count is not None:
             self._env_count.shm.close()
-            self._env_count.shm.unlink()
+            try:
+                self._env_count.shm.unlink()
+            except FileNotFoundError:
+                pass    # Already unlinked
             self.task_queue.close()
             self.update_queue.close()
             self._env_count = None
