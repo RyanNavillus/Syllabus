@@ -14,7 +14,6 @@ if __name__ == "__main__":
     pistonball_env = create_pistonball_env()
     # default_task = simpletag_env.task_space.encode((4, 4, 4))
     default_task = pistonball_env.task_space.encode(1)
-    print(pistonball_env.possible_agents)
     evaluator = DummyEvaluator(pistonball_env.action_space("piston_0"))
 
     curricula = [
@@ -42,10 +41,26 @@ if __name__ == "__main__":
         native_speed = run_single_process(env_fn, curriculum=test_curriculum, num_envs=2, num_episodes=N_EPISODES)
         print(f"PASSED: Single process test (2 envs) passed: {native_speed:.2f}s")
 
+        # Test single process speed
+        print("\nRUNNING: Single process test (2 envs)...")
+        test_curriculum = curriculum(*args, **kwargs)
+        test_curriculum = MultiagentSharedCurriculumWrapper(
+            test_curriculum, sample_env.possible_agents, joint_policy=True)
+        native_speed = run_single_process(env_fn, curriculum=test_curriculum, num_envs=2, num_episodes=N_EPISODES)
+        print(f"PASSED: Single process test (2 envs) passed: {native_speed:.2f}s")
+
         # Test multiprocess process speed without Syllabus
         print("\nRUNNING: Python native multiprocess test (2 envs)...")
         test_curriculum = curriculum(*args, **kwargs)
         test_curriculum = MultiagentSharedCurriculumWrapper(test_curriculum, sample_env.possible_agents)
+        native_speed = run_native_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
+        print(f"PASSED: Python native multiprocess test (2 envs) passed: {native_speed:.2f}s")
+
+        # Test multiprocess process speed without Syllabus
+        print("\nRUNNING: Python native multiprocess test (2 envs)...")
+        test_curriculum = curriculum(*args, **kwargs)
+        test_curriculum = MultiagentSharedCurriculumWrapper(
+            test_curriculum, sample_env.possible_agents, joint_policy=True)
         native_speed = run_native_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python native multiprocess test (2 envs) passed: {native_speed:.2f}s")
 
@@ -58,9 +73,12 @@ if __name__ == "__main__":
             env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python native multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
-        # # Test Ray multiprocess speed with Syllabus
-        # test_curriculum = curriculum(*args, **kwargs)
-        # test_curriculum = make_ray_curriculum(test_curriculum)
-        # print("\nRUNNING: Ray multiprocess test with Syllabus...")
-        # ray_syllabus_speed = test_ray_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
-        # print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")
+        # Test Queue multiprocess speed with Syllabus
+        test_curriculum = curriculum(*args, **kwargs)
+        test_curriculum = MultiagentSharedCurriculumWrapper(
+            test_curriculum, sample_env.possible_agents, joint_policy=True)
+        test_curriculum = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
+        print("\nRUNNING: Python native multiprocess test with Syllabus...")
+        native_syllabus_speed = run_native_multiprocess(
+            env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+        print(f"PASSED: Python native multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")

@@ -456,10 +456,6 @@ def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **k
         warnings.warn("Unable to import pistonball from pettingzoo.", stacklevel=2)
 
     env = pistonball_v6.parallel_env()
-
-    def create_env(task):
-        return pistonball_v6.parallel_env(n_pistons=task)
-
     env = PistonballTaskWrapper(env)
     if sync_type == "queue":
         env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)

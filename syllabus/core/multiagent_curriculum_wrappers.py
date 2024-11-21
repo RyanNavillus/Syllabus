@@ -19,10 +19,10 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
         for i, agent in enumerate(obs.keys()):
             agent_index = self.possible_agents.index(agent)
             maybe_joint_obs = obs if self.joint_policy else obs[agent]
-            env_id = env_id if self.joint_policy else (env_id * self.num_agents) + agent_index
+            env_index = env_id if self.joint_policy else (env_id * self.num_agents) + agent_index
             agent_progress = progress[agent] if isinstance(progress, dict) else progress
             self.curriculum.update_on_step(
-                task, maybe_joint_obs, reward[i], term[i], trunc[i], info[agent], agent_progress, env_id=env_id)
+                task, maybe_joint_obs, reward[i], term[i], trunc[i], info[agent], agent_progress, env_id=env_index)
 
     def update_on_step_batch(self, step_results, env_id: int = None) -> None:
         tasks, obs, rews, terms, truncs, infos, progresses = step_results

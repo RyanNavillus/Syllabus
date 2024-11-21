@@ -64,6 +64,8 @@ class RolloutStorage(object):
             self.action_log_dist = torch.zeros(self.buffer_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
+        self.env_to_idx = {}
+        self.max_idx = 0
         self.to(self.device)
 
     @property
@@ -87,13 +89,20 @@ class RolloutStorage(object):
         else:
             self.action_log_dist = self.action_log_dist.to(device)
 
-    def insert_at_index(self, env_index, mask=None, obs=None, reward=None, task=None, steps=1):
+    def get_index(self, env_index):
+        """ Map the environment ids to indices in the buffer. """
+        if env_index not in self.env_to_idx:
+            self.env_to_idx[env_index] = self.max_idx
+            self.max_idx += 1
+        return self.env_to_idx[env_index]
+
+    def insert_at_index(self, env_index, mask, obs=None, reward=None, task=None, steps=1):
         assert steps < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
+        env_index = self.get_index(env_index)
         step = self.env_steps[env_index]
         end_step = step + steps
         assert end_step < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
-        if mask is not None:
-            self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
+        self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
 
         if obs is not None:
             self.obs[env_index][step: end_step] = obs
@@ -291,11 +300,6 @@ class PrioritizedLevelReplay(Curriculum):
         Update the curriculum with the current step results from the environment.
         """
         assert env_id is not None, "env_id must be provided for PLR updates."
-        if env_id >= self._num_processes:
-            warnings.warn(
-                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.", stacklevel=2)
-            env_id = env_id % self._num_processes
-
         assert env_id not in self._rollouts.ready_buffers
 
         # Update rollouts
