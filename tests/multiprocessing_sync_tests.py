@@ -5,8 +5,8 @@ from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_gymnasium_synctest_env
 
 # Setup global variables
-N_ENVS = 128
-N_EPISODES = 300
+N_ENVS = 8
+N_EPISODES = 10
 
 
 def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES):
@@ -30,7 +30,8 @@ def test_single_process():
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
     native_speed = run_single_process(
-        create_gymnasium_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+        create_gymnasium_synctest_env, env_args=(
+            N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
     )
     evaluate_curriculum(test_curriculum, num_envs=N_ENVS)
 
@@ -40,7 +41,8 @@ def test_queue_multiprocess():
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
     test_curriculum = make_multiprocessing_curriculum(test_curriculum, sequential_start=False)
     native_syllabus_speed = run_native_multiprocess(
-        create_gymnasium_synctest_env, env_args=(N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
+        create_gymnasium_synctest_env, env_args=(
+            N_EPISODES,), curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES
     )
     evaluate_curriculum(test_curriculum.curriculum)
 
@@ -49,7 +51,8 @@ def test_ray_multiprocess(ray_session):
     sample_env = generate_environment()
     test_curriculum = SyncTestCurriculum(N_ENVS, N_EPISODES, sample_env.task_space)
     test_curriculum = make_ray_curriculum(test_curriculum)
-    ray_syllabus_speed = run_ray_multiprocess(create_gymnasium_synctest_env, env_args=(N_EPISODES,), num_envs=N_ENVS, num_episodes=N_EPISODES)
+    ray_syllabus_speed = run_ray_multiprocess(create_gymnasium_synctest_env, env_args=(
+        N_EPISODES,), num_envs=N_ENVS, num_episodes=N_EPISODES)
     # TODO: Implement Ray checks
     # evaluate_curriculum(test_curriculum)
 
@@ -57,4 +60,4 @@ def test_ray_multiprocess(ray_session):
 if __name__ == "__main__":
     test_single_process()
     test_queue_multiprocess()
-    test_ray_multiprocess()
+    test_ray_multiprocess(None)

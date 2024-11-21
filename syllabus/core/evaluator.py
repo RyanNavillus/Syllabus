@@ -52,7 +52,6 @@ class Evaluator:
             # Copy most recent parameters from agent reference
             self.agent.load_state_dict(self._agent_reference.state_dict())
 
-
     def get_value(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
@@ -224,13 +223,28 @@ class Evaluator:
         """
         Set the policy to evaluation mode.
         """
-        pass
 
     def _set_train_mode(self):
         """
         Set the policy to training mode.
         """
-        pass
+
+
+class DummyEvaluator(Evaluator):
+    def __init__(self, agent, action_space, *args, **kwargs):
+        self.action_space = action_space
+        self.action_shape = action_space.sample().shape
+        kwargs.pop("copy_agent", None)
+        super().__init__(agent, *args, copy_agent=False, **kwargs)
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        return torch.zeros((state.shape[0], 1)), {}
+
+    def _get_action(self, state, lstm_state=None, done=None):
+        return torch.zeros((state.shape[0], self.action_shape)), {}
+
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
+        return torch.zeros((state.shape[0], 1)), torch.zeros((state.shape[0], self.action_shape)), {}
 
 
 class CleanRLDiscreteEvaluator(Evaluator):

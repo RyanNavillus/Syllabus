@@ -25,7 +25,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
                  update_on_progress: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
-                 task_space: TaskSpace = None,
+                 task_space: TaskSpace = None,  # TODO: Nonoptional
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(

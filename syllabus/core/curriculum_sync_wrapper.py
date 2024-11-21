@@ -91,33 +91,42 @@ class MultiProcessingComponents:
         try:
             self.task_queue.put(task, timeout=self.timeout)
         except Empty as e:
-            raise UsageError(f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
+            raise UsageError(
+                f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
 
     def get_task(self):
         try:
             task = self.task_queue.get(timeout=self.timeout)
         except Empty as e:
-            raise UsageError(f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
+            raise UsageError(
+                f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
         return task
 
     def put_update(self, update):
         try:
             self.update_queue.put(update, timeout=self.timeout)
         except Empty as e:
-            raise UsageError(f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
+            raise UsageError(
+                f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
     def get_update(self):
         try:
             update = self.update_queue.get(timeout=self.timeout)
         except Empty as e:
-            raise UsageError(f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
+            raise UsageError(
+                f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
         return update
 
     def close(self):
-        self._env_count.shm.close()
-        self.task_queue.close()
-        self.update_queue.close()
+        if self._env_count is not None:
+            self._env_count.shm.close()
+            self._env_count.shm.unlink()
+            self.task_queue.close()
+            self.update_queue.close()
+            self._env_count = None
+            del self.task_queue
+            del self.update_queue
 
     def get_metrics(self, log_n_tasks=1):
         logs = []
@@ -157,13 +166,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         """
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
-        # Process final few updates
-        start = time.time()
-        end = time.time()
-        while end - start < 3 and not self.components.update_queue.empty():
-            time.sleep(0.5)
-            end = time.time()
-
         self.should_update = False
         self.update_thread.join()
         self.components.close()
@@ -180,7 +182,6 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         while self.should_update:
             requested_tasks = 0
             while not self.components.update_queue.empty():
-
                 batch_updates = self.components.get_update()  # Blocks until update is available
 
                 if isinstance(batch_updates, dict):
@@ -211,6 +212,10 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         logs = [] if logs is None else logs
         logs += self.components.get_metrics(log_n_tasks=log_n_tasks)
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
+
+    def __del__(self):
+        self.stop()
+        del self
 
 
 def remote_call(func):
@@ -276,7 +281,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    def update_on_step_batch(self, step_results, env_id = None) -> None:
+    def update_on_step_batch(self, step_results, env_id=None) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
 
 

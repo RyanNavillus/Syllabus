@@ -225,7 +225,7 @@ def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None,
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes,
+        args = (env_fn, env_args, env_kwargs, curriculum.components, True, num_episodes,
                 update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
     else:
         target = run_episodes
@@ -269,6 +269,30 @@ def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, nu
     return ray_speed
 
 
+def run_native_vecenv(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=None):
+    if update_on_step is None:
+        update_on_step = curriculum.requires_step_updates if curriculum else False
+    sample_env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    sample_env.reset()
+    envs = gym.vector.AsyncVectorEnv(
+        [env_fn(curriculum.components, env_args=env_args, type="queue" if curriculum else None, env_kwargs=env_kwargs, wrap=True, update_on_step=update_on_step)
+         for _ in range(num_envs)]
+    )
+    envs.reset()
+
+    eval_episode_rewards = []
+    while len(eval_episode_rewards) < num_episodes:
+        with torch.no_grad():
+            eval_action = np.array([sample_env.action_space.sample() for _ in range(num_envs)])
+        _, _, _, _, infos = envs.step(eval_action)
+
+        if "final_info" in infos:
+            for info in infos["final_info"]:
+                if info and "episode" in info:
+                    eval_episode_rewards.append(info['episode']['r'])
+    envs.close()
+
+
 def get_test_values(x):
     return torch.unsqueeze(torch.Tensor(np.array([0] * len(x))), -1)
 
@@ -297,37 +321,43 @@ def create_pettingzoo_synctest_env(*args, type=None, env_args=(), env_kwargs={},
 
 
 # Cartpole Tests
-def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
-    env = gym.make("CartPole-v1", **env_kwargs)
-    env = CartPoleTaskWrapper(env)
+def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
+    def thunk():
+        env = gym.make("CartPole-v1", **env_kwargs)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = CartPoleTaskWrapper(env)
 
-    if type == "queue":
-        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    elif type == "ray":
-        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    return env
+        if type == "queue":
+            env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        elif type == "ray":
+            env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        return env
+    return thunk if wrap else thunk()
 
 
 # Nethack Tests
-def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_nethack_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     from nle.env.tasks import NetHackScore
     from syllabus.examples.task_wrappers.nethack_wrappers import NethackTaskWrapper
 
-    env = NetHackScore(*env_args, **env_kwargs)
-    env = GymV21CompatibilityV0(env=env)
-    env = NethackTaskWrapper(env)
+    def thunk():
+        env = NetHackScore(*env_args, **env_kwargs)
+        env = GymV21CompatibilityV0(env=env)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = NethackTaskWrapper(env)
 
-    if type == "queue":
-        env = MultiProcessingSyncWrapper(
-            env, *args, task_space=env.task_space, **kwargs
-        )
-    elif type == "ray":
-        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    return env
+        if type == "queue":
+            env = MultiProcessingSyncWrapper(
+                env, *args, task_space=env.task_space, **kwargs
+            )
+        elif type == "ray":
+            env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        return env
+    return thunk if wrap else thunk()
 
 
 # Procgen Tests
-def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     try:
         import procgen
 
@@ -336,17 +366,20 @@ def create_procgen_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     except ImportError:
         warnings.warn("Unable to import procgen.", stacklevel=2)
 
-    env = openai_gym.make("procgen-bigfish-v0", *env_args, **env_kwargs)
-    env = GymV21CompatibilityV0(env=env)
-    env = ProcgenTaskWrapper(env, "bigfish")
+    def thunk():
+        env = openai_gym.make("procgen-bigfish-v0", *env_args, **env_kwargs)
+        env = GymV21CompatibilityV0(env=env)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = ProcgenTaskWrapper(env, "bigfish")
 
-    if type == "queue":
-        env = MultiProcessingSyncWrapper(
-            env, *args, task_space=env.task_space, **kwargs
-        )
-    elif type == "ray":
-        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
-    return env
+        if type == "queue":
+            env = MultiProcessingSyncWrapper(
+                env, *args, task_space=env.task_space, **kwargs
+            )
+        elif type == "ray":
+            env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        return env
+    return thunk if wrap else thunk()
 
 
 # Minigrid Tests

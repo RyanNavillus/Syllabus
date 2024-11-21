@@ -24,7 +24,7 @@ class SyncTestCurriculum(SequentialCurriculum):
         self.total_dones = 0
         self.metadata = {}
 
-    def update_on_episode(self, episode_return, length, task, progress, env_id= None) -> None:
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None) -> None:
         super().update_on_episode(episode_return, length, task, progress, env_id)
         self.total_reward += episode_return
         self.total_dones += 1
