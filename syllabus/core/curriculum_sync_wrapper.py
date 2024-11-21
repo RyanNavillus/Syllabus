@@ -1,14 +1,12 @@
+import signal
 import threading
 import time
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
-from typing import List, Tuple
+from queue import Empty
 
-import signal
 import ray
 from torch.multiprocessing import Lock, Queue
-from queue import Empty
-from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import Curriculum
 from syllabus.utils import UsageError, decorate_all_functions

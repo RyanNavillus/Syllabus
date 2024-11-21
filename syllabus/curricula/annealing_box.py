@@ -1,14 +1,14 @@
-import typing
-from typing import Any, List, Union, Sequence, SupportsFloat, SupportsInt, Tuple
-import numpy as np
+from typing import Any, List, SupportsFloat, SupportsInt, Tuple, Union
 
+import numpy as np
 from gymnasium.spaces import Box
+
 from syllabus.core import Curriculum
+
 
 class AnnealingBoxCurriculum(Curriculum):
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
-
 
     def __init__(
         self,
@@ -35,8 +35,8 @@ class AnnealingBoxCurriculum(Curriculum):
         assert all(x > 0 for x in self.total_steps), "All elements of total_steps must be greater than 0."
 
         self.current_step = 0
-    
-    def update_on_episode(self, episode_return, length, task, progress, env_id = None) -> None:
+
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None) -> None:
         """
         Update the curriculum with episode results from the environment.
         """

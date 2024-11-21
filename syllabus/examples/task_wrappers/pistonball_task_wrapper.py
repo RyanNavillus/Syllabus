@@ -1,7 +1,7 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
-from pettingzoo.utils.env import ParallelEnv
-from gymnasium import spaces
 from pettingzoo.butterfly import pistonball_v6
+from pettingzoo.utils.env import ParallelEnv
+
 from syllabus.core import PettingZooTaskWrapper
 from syllabus.task_space import DiscreteTaskSpace
 

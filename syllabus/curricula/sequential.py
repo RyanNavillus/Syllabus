@@ -5,7 +5,7 @@ from typing import Any, Callable, List, Union
 
 from syllabus.core import Curriculum
 from syllabus.curricula import DomainRandomization, NoopCurriculum
-from syllabus.task_space import TaskSpace, DiscreteTaskSpace
+from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 
 
 class SequentialCurriculum(Curriculum):

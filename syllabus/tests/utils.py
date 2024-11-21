@@ -7,13 +7,17 @@ import gymnasium as gym
 import numpy as np
 import ray
 import torch
-from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from pettingzoo.utils.env import ParallelEnv
+from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
-from syllabus.core import MultiProcessingSyncWrapper, PettingZooMultiProcessingSyncWrapper, RaySyncWrapper, PettingZooRaySyncWrapper, ReinitTaskWrapper, PettingZooReinitTaskWrapper
+from syllabus.core import (MultiProcessingSyncWrapper,
+                           PettingZooMultiProcessingSyncWrapper,
+                           PettingZooRaySyncWrapper,
+                           PettingZooReinitTaskWrapper, RaySyncWrapper,
+                           ReinitTaskWrapper)
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
-from syllabus.tests import SyncTestEnv, PettingZooSyncTestEnv
+from syllabus.tests import PettingZooSyncTestEnv, SyncTestEnv
 
 
 def evaluate_random_policy(make_env, num_episodes=100, seeds=None):
@@ -374,7 +378,9 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False
 # Nethack Tests
 def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     from nle.env.tasks import NetHackScore
-    from syllabus.examples.task_wrappers.nethack_wrappers import NethackTaskWrapper
+
+    from syllabus.examples.task_wrappers.nethack_wrappers import \
+        NethackTaskWrapper
 
     def thunk():
         env = NetHackScore(*env_args, **env_kwargs)
@@ -444,6 +450,7 @@ def create_minigrid_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwa
 def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from pettingzoo.butterfly import pistonball_v6  # noqa: F401
+
         from syllabus.examples.task_wrappers import PistonballTaskWrapper
     except ImportError:
         warnings.warn("Unable to import pistonball from pettingzoo.", stacklevel=2)
@@ -465,6 +472,7 @@ def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **k
 def create_simpletag_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     try:
         from pettingzoo.mpe import simple_tag_v3  # noqa: F401
+
         # from syllabus.examples.task_wrappers import SimpleTagTaskWrapper
     except ImportError:
         warnings.warn("Unable to import simple tag from pettingzoo.", stacklevel=2)

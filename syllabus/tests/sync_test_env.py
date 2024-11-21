@@ -1,8 +1,10 @@
 import warnings
-import gymnasium as gym
-from syllabus.core import TaskEnv, PettingZooTaskEnv
-from syllabus.task_space import DiscreteTaskSpace
 from copy import copy
+
+import gymnasium as gym
+
+from syllabus.core import PettingZooTaskEnv, TaskEnv
+from syllabus.task_space import DiscreteTaskSpace
 
 
 class SyncTestEnv(TaskEnv):

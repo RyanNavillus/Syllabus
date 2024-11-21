@@ -1,4 +1,3 @@
-import typing
 from typing import Any, List, Union
 
 from syllabus.curricula import SequentialCurriculum

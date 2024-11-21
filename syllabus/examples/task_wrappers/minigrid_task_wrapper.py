@@ -1,7 +1,9 @@
 """ Task wrapper that can select a new MiniGrid task on reset. """
 import warnings
+
 import gymnasium as gym
 import numpy as np
+
 from syllabus.core import TaskWrapper
 from syllabus.task_space import DiscreteTaskSpace
 

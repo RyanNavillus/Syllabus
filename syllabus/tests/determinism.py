@@ -1,7 +1,9 @@
 from random import randint
+
 import numpy as np
-from syllabus.tests import evaluate_random_policy
 from pettingzoo.utils.env import ParallelEnv
+
+from syllabus.tests import evaluate_random_policy
 
 
 def print_if_verbose(verbose, *args, **kwargs):

@@ -1,10 +1,11 @@
 import itertools
-from typing import Any, List, Union
 import typing
 import warnings
+from typing import Any, List, Union
 
 import numpy as np
 from gymnasium.spaces import Box, Discrete, MultiDiscrete, Space
+
 from syllabus.utils import UsageError
 
 

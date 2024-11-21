@@ -1,13 +1,15 @@
 import dataclasses
+import json
 import math
 import os
-import json
 import warnings
+from collections import deque
+
 import numpy as np
 import torch
-from syllabus.task_space import TaskSpace
 from gymnasium.spaces import Discrete
-from collections import deque, defaultdict
+
+from syllabus.task_space import TaskSpace
 
 
 @dataclasses.dataclass

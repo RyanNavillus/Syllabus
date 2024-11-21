@@ -1,7 +1,5 @@
-import time
-import wandb
 import warnings
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, List, Union
 
 import gymnasium as gym
 import numpy as np
@@ -10,7 +8,7 @@ import torch
 from syllabus.core import Curriculum
 from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
-from syllabus.utils import UsageError, enumerate_axes
+from syllabus.utils import UsageError
 
 from .task_sampler import TaskSampler
 

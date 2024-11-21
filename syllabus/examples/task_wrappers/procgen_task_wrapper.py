@@ -1,7 +1,7 @@
 import gymnasium as gym
+
 from syllabus.core import TaskWrapper
 from syllabus.task_space import DiscreteTaskSpace
-
 
 PROCGEN_RETURN_BOUNDS = {
     "coinrun": (5, 10),

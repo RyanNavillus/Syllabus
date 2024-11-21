@@ -1,17 +1,17 @@
 import warnings
 from typing import Any, Dict, List, Tuple, Union
-import wandb
+
 import gymnasium as gym
 import torch
 
 from syllabus.core import Curriculum
-from syllabus.utils import UsageError, enumerate_axes
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
+from syllabus.utils import UsageError
 
 from .task_sampler import TaskSampler
 
 
-class RolloutStorage(object):
+class RolloutStorage():
     def __init__(
         self,
         num_steps: int,

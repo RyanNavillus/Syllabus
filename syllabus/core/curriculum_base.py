@@ -1,9 +1,10 @@
 import warnings
-from typing import Any, Callable, List, Tuple, Union, Dict
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import numpy as np
 
 from syllabus.task_space import TaskSpace
+
 from .stat_recorder import StatRecorder
 
 

@@ -5,6 +5,7 @@ from typing import List
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
+
 from syllabus.task_space import DiscreteTaskSpace
 
 from .task_wrapper import TaskWrapper

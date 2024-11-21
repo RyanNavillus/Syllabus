@@ -1,5 +1,6 @@
 import gymnasium as gym
 import numpy as np
+
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, TupleTaskSpace, BoxTaskSpace
 from syllabus.utils import UsageError
 

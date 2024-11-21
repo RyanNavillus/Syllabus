@@ -129,7 +129,8 @@ PROCGEN_RETURN_BOUNDS = {
 
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
