@@ -12,7 +12,7 @@ from syllabus.core.task_interface import PettingZooTaskWrapper, TaskEnv, TaskWra
 from syllabus.task_space import TaskSpace
 
 
-class MultiProcessingSyncWrapper(gym.Wrapper):
+class GymnasiumSyncWrapper(gym.Wrapper):
     """
     This wrapper is used to set the task on reset for a Gym environments running
     on parallel processes created using multiprocessing.Process. Meant to be used
@@ -21,19 +21,19 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
 
     def __init__(self,
                  env,
+                 task_space: TaskSpace,
                  components: MultiProcessingComponents,
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
-                 task_space: TaskSpace = None,  # TODO: Nonoptional
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(
             task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
+        self.task_space = task_space
         self.components = components
         self._latest_task = None
-        self.task_space = task_space
         self.update_on_step = components.requires_step_updates
         self.batch_size = batch_size
         self.global_task_completion = global_task_completion
@@ -134,7 +134,7 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
             return env_attr
 
 
-class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
+class PettingZooSyncWrapper(BaseParallelWrapper):
     """
     This wrapper is used to set the task on reset for a Gym environments running
     on parallel processes created using multiprocessing.Process. Meant to be used
@@ -143,20 +143,20 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
 
     def __init__(self,
                  env,
+                 task_space: TaskSpace,
                  components: MultiProcessingComponents,
                  update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
-                 task_space: TaskSpace = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(
             task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         super().__init__(env)
         self.env = env
+        self.task_space = task_space
         self.components = components
         self._latest_task = None
-        self.task_space = task_space
         self.update_on_step = update_on_step
         self.batch_size = batch_size
         self.global_task_completion = global_task_completion
@@ -277,7 +277,7 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
             return env_attr
 
 
-class RaySyncWrapper(gym.Wrapper):
+class RayGymnasiumSyncWrapper(gym.Wrapper):
     """
     This wrapper is used to set the task on reset for a Gym environments running
     on parallel processes created using ray. Meant to be used with a
@@ -361,7 +361,7 @@ class RaySyncWrapper(gym.Wrapper):
             return env_attr
 
 
-class PettingZooRaySyncWrapper(BaseParallelWrapper):
+class RayPettingZooSyncWrapper(BaseParallelWrapper):
     """
     This wrapper is used to set the task on reset for a Gym environments running
     on parallel processes created using ray. Meant to be used with a
@@ -370,8 +370,8 @@ class PettingZooRaySyncWrapper(BaseParallelWrapper):
 
     def __init__(self,
                  env,
+                 task_space: TaskSpace,
                  update_on_step: bool = True,
-                 task_space: gym.Space = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         assert isinstance(env, TaskWrapper) or isinstance(env, TaskEnv) or isinstance(
             env, PettingZooTaskWrapper), "Env must implement the task API"

@@ -138,7 +138,7 @@ class MultiProcessingComponents:
         return logs
 
 
-class MultiProcessingCurriculumWrapper(CurriculumWrapper):
+class CurriculumSyncWrapper(CurriculumWrapper):
     def __init__(
         self,
         curriculum: Curriculum,
@@ -274,14 +274,14 @@ def make_multiprocessing_curriculum(curriculum, start=True, **kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, **kwargs)
+    mp_curriculum = CurriculumSyncWrapper(curriculum, **kwargs)
     if start:
         mp_curriculum.start()
     return mp_curriculum
 
 
 @ray.remote
-class RayWrapper(CurriculumWrapper):
+class RayCurriculumWrapper(CurriculumWrapper):
     def __init__(self, curriculum: Curriculum) -> None:
         super().__init__(curriculum)
 
@@ -291,7 +291,7 @@ class RayWrapper(CurriculumWrapper):
 
 
 @decorate_all_functions(remote_call)
-class RayCurriculumWrapper(CurriculumWrapper):
+class RayCurriculumSyncWrapper(CurriculumWrapper):
     """
     Subclass of LearningProgress Curriculum that uses Ray to share tasks and receive feedback
     from the environment. The only change is the @ray.remote decorator on the class.
@@ -304,7 +304,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
 
     def __init__(self, curriculum, actor_name="curriculum") -> None:
         super().__init__(curriculum)
-        self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
+        self.curriculum = RayCurriculumWrapper.options(name=actor_name).remote(curriculum)
         self.unwrapped = None
         self.task_space = curriculum.task_space
         self.added_tasks = []
@@ -322,4 +322,4 @@ def make_ray_curriculum(curriculum, actor_name="curriculum", **kwargs):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
-    return RayCurriculumWrapper(curriculum, actor_name=actor_name, **kwargs)
+    return RayCurriculumSyncWrapper(curriculum, actor_name=actor_name, **kwargs)

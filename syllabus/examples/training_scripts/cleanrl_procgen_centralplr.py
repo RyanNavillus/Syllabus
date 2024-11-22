@@ -21,7 +21,7 @@ import torch.optim as optim
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -134,11 +134,11 @@ def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
-            env = MultiProcessingSyncWrapper(
+            env = GymnasiumSyncWrapper(
                 env,
+                env.task_space,
                 curriculum.components,
                 update_on_step=False,
-                task_space=env.task_space,
             )
         return env
     return thunk

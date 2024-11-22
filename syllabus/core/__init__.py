@@ -3,15 +3,10 @@ from .task_interface import TaskWrapper, SubclassTaskWrapper, ReinitTaskWrapper,
 
 # Curriculum Code
 from .curriculum_base import Curriculum
-from .curriculum_sync_wrapper import (CurriculumWrapper,
-                                      MultiProcessingComponents,
-                                      MultiProcessingCurriculumWrapper,
-                                      MultiProcessingComponents,
-                                      RayCurriculumWrapper,
-                                      make_multiprocessing_curriculum,
-                                      make_ray_curriculum)
+from .curriculum_sync_wrapper import (CurriculumWrapper, MultiProcessingComponents, CurriculumSyncWrapper,
+                                      RayCurriculumSyncWrapper, make_multiprocessing_curriculum, make_ray_curriculum)
 
-from .environment_sync_wrapper import MultiProcessingSyncWrapper, RaySyncWrapper, PettingZooMultiProcessingSyncWrapper, PettingZooRaySyncWrapper
+from .environment_sync_wrapper import GymnasiumSyncWrapper, RayGymnasiumSyncWrapper, PettingZooSyncWrapper, RayPettingZooSyncWrapper
 from .multivariate_curriculum_wrapper import MultitaskWrapper
 from .multiagent_curriculum_wrappers import MultiagentSharedCurriculumWrapper, MultiagentIndependentCurriculumWrapper
 from .stat_recorder import StatRecorder

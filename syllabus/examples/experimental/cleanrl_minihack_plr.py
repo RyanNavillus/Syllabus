@@ -7,14 +7,14 @@ import time
 from distutils.util import strtobool
 
 import gym
-#import minigrid
+# import minigrid
 import minihack
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from gym.envs.registration import register
-from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
+from syllabus.core import (GymnasiumSyncWrapper, TaskWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import CentralizedPrioritizedLevelReplay
 from syllabus.examples import MinihackTaskWrapper
@@ -93,13 +93,9 @@ def make_env(env_id, seed, idx, capture_video, run_name, task_queue, update_queu
         if capture_video:
             if idx == 0:
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-        env = MultiProcessingSyncWrapper(env,
-                                         task_queue,
-                                         update_queue,
-                                         update_on_step=False,
-                                         default_task=0,
-                                         task_space=gym.spaces.Discrete(1))
-        #env.seed(seed)
+        env = GymnasiumSyncWrapper(env, env.task_space, task_queue, update_queue,
+                                   update_on_step=False, default_task=0)
+        # env.seed(seed)
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
         return env
@@ -192,7 +188,8 @@ if __name__ == "__main__":
 
     # env setup
     envs = gym.vector.AsyncVectorEnv(
-        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, update_queue) for i in range(args.num_envs)]
+        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name, task_queue, update_queue)
+         for i in range(args.num_envs)]
     )
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
@@ -273,7 +270,6 @@ if __name__ == "__main__":
                 delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
                 advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
             returns = advantages + values
-
 
         # flatten the batch
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)

@@ -21,7 +21,7 @@ import torch.optim as optim
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLDiscreteEvaluator, DummyEvaluator
 from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum
 from syllabus.examples.models import ProcgenAgent
@@ -138,10 +138,10 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
         if curriculum_components is not None:
-            env = MultiProcessingSyncWrapper(
+            env = GymnasiumSyncWrapper(
                 env,
+                env.task_space,
                 curriculum_components,
-                task_space=env.task_space,
                 batch_size=256
             )
         return env
@@ -300,7 +300,7 @@ if __name__ == "__main__":
             curricula = []
             stopping = []
             for i in range(0, 199, 10):
-                curricula.append(list(range(i, i+10)))
+                curricula.append(list(range(i, i + 10)))
                 stopping.append("steps>=500000")
                 curricula.append(list(range(i + 10)))
                 stopping.append("steps>=500000")

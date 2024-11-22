@@ -43,7 +43,7 @@ class Evaluator:
             model_data_in_memory.seek(0)
 
             # Load the model from memory to CPU
-            self.agent = torch.load(model_data_in_memory, map_location="cpu")
+            self.agent = torch.load(model_data_in_memory, map_location=self.device)
             model_data_in_memory.close()
         else:
             self.agent = self._agent_reference

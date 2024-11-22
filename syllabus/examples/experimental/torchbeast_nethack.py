@@ -26,7 +26,7 @@ import traceback
 
 import numpy as np
 import wandb
-from syllabus.core import (MultiProcessingSyncWrapper,
+from syllabus.core import (GymnasiumSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import LearningProgressCurriculum
 from syllabus.examples import NethackTaskWrapper
@@ -142,7 +142,7 @@ def parse_args():
 logging.basicConfig(
     format=("[%(levelname)s:%(process)d %(module)s:%(lineno)d %(asctime)s] " "%(message)s"),
     level=logging.INFO,
-    #filename="monobeast.log"
+    # filename="monobeast.log"
 )
 
 
@@ -188,20 +188,20 @@ def create_env(
 ):
     if flags.curriculum:
         observation_keys = ("glyphs", "blstats", "message")
-        #observation_keys = ("glyphs", "blstats", "inv_glyphs", "inv_strs", "inv_letters", "inv_oclasses",
+        # observation_keys = ("glyphs", "blstats", "inv_glyphs", "inv_strs", "inv_letters", "inv_oclasses",
         #                    "message", "tty_chars", "tty_colors", "tty_cursor", "internal")
         if chars:
             observation_keys += ("chars",)
 
         env = gym.make(name, *args, observation_keys=observation_keys, penalty_step=0.0, **kwargs)
         env = NethackTaskWrapper(env)
-        env = MultiProcessingSyncWrapper(env,
-                                         task_queue,
-                                         complete_queue,
-                                         step_queue=step_queue,
-                                         update_on_step=True,
-                                         default_task=0,
-                                         task_space=env.task_space)
+        env = GymnasiumSyncWrapper(env,
+                                   env.task_space,
+                                   task_queue,
+                                   complete_queue,
+                                   step_queue=step_queue,
+                                   update_on_step=True,
+                                   default_task=0)
     else:
         env = gym.make(name, *args, observation_keys=observation_keys, **kwargs)
     env = ResettingEnvironment(env)
@@ -439,7 +439,7 @@ class ResettingEnvironment:
         self.gym_env = gym_env
         self.episode_return = None
         self._copy_gym_properties()
-    
+
     def _copy_gym_properties(self):
         self.action_space = self.gym_env.action_space
         self.observation_space = self.gym_env.observation_space
@@ -613,7 +613,8 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
                                                                                              random_start_tasks=0,
                                                                                              task_names=name_list)
 
-    learner_model = Net(observation_space, action_space.n, flags.use_lstm, goal=flags.curriculum).to(device=flags.device)
+    learner_model = Net(observation_space, action_space.n, flags.use_lstm,
+                        goal=flags.curriculum).to(device=flags.device)
     learner_model.load_state_dict(model.state_dict())
 
     optimizer = torch.optim.RMSprop(
@@ -730,7 +731,7 @@ def train(flags, wandb_run=None):  # pylint: disable=too-many-branches, too-many
             if timer() - last_checkpoint_time > 10 * 60:  # Save every 10 min.
                 checkpoint()
                 last_checkpoint_time = timer()
-                #wandb.gym.monitor()
+                # wandb.gym.monitor()
 
             # # Combine stats
             all_stats_dict = {}
@@ -833,10 +834,10 @@ def test(flags, num_episodes=1):
     print("savedir:" + str(flags.savedir))
     checkpointpath = flags.custompath if flags.custompath else os.path.join(flags.savedir, "latest", "model.tar")
 
-    #gym_env = create_env(flags.env, save_ttyrecs=flags.save_ttyrecs)
+    # gym_env = create_env(flags.env, save_ttyrecs=flags.save_ttyrecs)
     observation_keys = ("glyphs", "blstats")
     observation_keys = ("glyphs", "blstats", "inv_glyphs", "inv_strs", "inv_letters", "inv_oclasses",
-                            "message", "tty_chars", "tty_colors", "tty_cursor")
+                        "message", "tty_chars", "tty_colors", "tty_cursor")
     gym_env = create_env(flags.env, observation_keys=observation_keys)
     env = ResettingEnvironment(gym_env)
     model = Net(gym_env.observation_space, gym_env.action_space.n, flags.use_lstm, goal=flags.curriculum)
@@ -853,19 +854,20 @@ def test(flags, num_episodes=1):
     while len(returns) < num_episodes:
         if flags.mode == "test_render":
             if flags.item_frames or flags.reward_frames:
-                #The following lines parse the inventory and store it as an array in all_items_txt
+                # The following lines parse the inventory and store it as an array in all_items_txt
                 all_items_text = []
                 all_items_encoded = observation["inv_strs"][0][0].numpy()
                 for x in range(55):
-                    if(all_items_encoded[x][0] != 0):
-                        all_items_text.append(''.join([str((chr(elem))) for elem in all_items_encoded[x][all_items_encoded[x] != 0]]))
+                    if (all_items_encoded[x][0] != 0):
+                        all_items_text.append(''.join([str((chr(elem)))
+                                              for elem in all_items_encoded[x][all_items_encoded[x] != 0]]))
                 if observation["reward"].item() > 0 and flags.reward_frames or all_items_text != last_inv and flags.item_frames:
                     env.gym_env.render()
                     print("Reward is %d" % observation["reward"].item())
                     print(all_items_text)
                     last_inv = all_items_text
             elif flags.message:
-                #Parse and print the message
+                # Parse and print the message
                 message_encoded = observation["message"][0][0]
                 message = ""
                 for x in range(256):
@@ -1264,14 +1266,14 @@ if __name__ == "__main__":
     wandb_run = None
     if flags.exp_name:
         wandb_run = wandb.init(
-                    project="syllabus",
-                    entity="",
-                    config=flags,
-                    save_code=True,
-                    name=flags.exp_name,
-                    resume="allow",
-                    id=f"{flags.exp_name}-{flags.wandb_id}"
-                  )
+            project="syllabus",
+            entity="",
+            config=flags,
+            save_code=True,
+            name=flags.exp_name,
+            resume="allow",
+            id=f"{flags.exp_name}-{flags.wandb_id}"
+        )
     main(flags, wandb=wandb_run)
 
     if flags.profile:

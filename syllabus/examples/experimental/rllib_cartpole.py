@@ -3,7 +3,7 @@ from gymnasium.spaces import Box
 from ray import train, tune
 from ray.air.integrations.wandb import WandbLoggerCallback, setup_wandb, _clean_log, _QueueItem
 from ray.tune.registry import register_env
-from syllabus.core import RaySyncWrapper, make_ray_curriculum
+from syllabus.core import RayGymnasiumSyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum, NoopCurriculum
 from syllabus.task_space import BoxTaskSpace
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         # Wrap the environment to change tasks on reset()
         env = CartPoleTaskWrapper(env)
         # Add environment sync wrapper
-        env = RaySyncWrapper(
+        env = RayGymnasiumSyncWrapper(
             env, task_space=task_space, update_on_step=False
         )
         return env

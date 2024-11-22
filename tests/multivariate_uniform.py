@@ -1,8 +1,8 @@
 """ Test curriculum synchronization across multiple processes. """
 from nle.env.tasks import NetHackScore
 from syllabus.examples import NethackTaskWrapper
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           RaySyncWrapper,
+from syllabus.core import (GymnasiumSyncWrapper,
+                           RayGymnasiumSyncWrapper,
                            MultitaskWrapper,
                            make_multiprocessing_curriculum,
                            make_ray_curriculum)
@@ -31,19 +31,19 @@ def create_multivariate_nethack_env():
 def create_multivariate_nethack_env_queue(task_queue, update_queue, update_on_step=False):
     env = NetHackScore()
     env = MultivariateNethackTaskWrapper(env)
-    env = MultiProcessingSyncWrapper(env,
-                                     task_queue,
-                                     update_queue,
-                                     update_on_step=update_on_step,
-                                     default_task=0,
-                                     task_space=env.task_space)
+    env = GymnasiumSyncWrapper(env,
+                               env.task_space,
+                               task_queue,
+                               update_queue,
+                               update_on_step=update_on_step,
+                               default_task=0)
     return env
 
 
 def create_multivariate_nethack_env_ray(update_on_step=False):
     env = NetHackScore()
     env = MultivariateNethackTaskWrapper(env)
-    env = RaySyncWrapper(env, update_on_step=update_on_step, default_task=0, task_space=env.task_space)
+    env = RayGymnasiumSyncWrapper(env, env.task_space, update_on_step=update_on_step, default_task=0)
     return env
 
 

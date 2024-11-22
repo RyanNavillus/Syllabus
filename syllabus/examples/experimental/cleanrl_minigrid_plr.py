@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from syllabus.core import (MultiProcessingSyncWrapper, TaskWrapper,
+from syllabus.core import (GymnasiumSyncWrapper, TaskWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import CentralizedPrioritizedLevelReplay
 from syllabus.examples.models import MinigridAgent
@@ -86,7 +86,7 @@ def parse_args():
 def make_env(env_id, seed, idx, capture_video, run_name, task_queue, update_queue):
     def thunk():
         env = gym.make(env_id)
-        #env = gym.wrappers.FlattenObservation(env)
+        # env = gym.wrappers.FlattenObservation(env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = MinigridTaskWrapper(env)
         if capture_video:
@@ -94,11 +94,11 @@ def make_env(env_id, seed, idx, capture_video, run_name, task_queue, update_queu
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
         # env = MultiProcessingSyncWrapper(
         #     env,
+        #     env.task_space,
         #     task_queue,
         #     update_queue,
         #     update_on_step=False,
         #     default_task=0,
-        #     task_space=env.task_space,
         # )
         env.seed(seed)
         env.action_space.seed(seed)

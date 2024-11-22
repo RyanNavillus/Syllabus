@@ -10,10 +10,10 @@ import torch
 from pettingzoo.utils.env import ParallelEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           PettingZooMultiProcessingSyncWrapper,
-                           PettingZooRaySyncWrapper,
-                           PettingZooReinitTaskWrapper, RaySyncWrapper,
+from syllabus.core import (GymnasiumSyncWrapper,
+                           PettingZooSyncWrapper,
+                           RayPettingZooSyncWrapper,
+                           PettingZooReinitTaskWrapper, RayGymnasiumSyncWrapper,
                            ReinitTaskWrapper)
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
@@ -345,18 +345,18 @@ class ExtractDictObservation(gym.ObservationWrapper, gym.utils.RecordConstructor
 def create_gymnasium_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
-        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = GymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
     elif type == "ray":
-        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
 
 
 def create_pettingzoo_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
     env = PettingZooSyncTestEnv(*env_args, **env_kwargs)
     if type == "queue":
-        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = PettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     elif type == "ray":
-        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = RayPettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
 
 
@@ -368,9 +368,9 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False
         env = CartPoleTaskWrapper(env, discretize=False)
 
         if type == "queue":
-            env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+            env = GymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
         elif type == "ray":
-            env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+            env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
         return env
     return thunk if wrap else thunk()
 
@@ -390,11 +390,11 @@ def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=F
         env = ExtractDictObservation(env, filter_key="blstats")
 
         if sync_type == "queue":
-            env = MultiProcessingSyncWrapper(
-                env, *args, task_space=env.task_space, **kwargs
+            env = GymnasiumSyncWrapper(
+                env, env.task_space, *args, **kwargs
             )
         elif sync_type == "ray":
-            env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+            env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
         return env
     return thunk if wrap else thunk()
 
@@ -416,11 +416,11 @@ def create_procgen_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=F
         env = ProcgenTaskWrapper(env, "bigfish")
 
         if sync_type == "queue":
-            env = MultiProcessingSyncWrapper(
-                env, *args, task_space=env.task_space, **kwargs
+            env = GymnasiumSyncWrapper(
+                env, env.task_space, *args, **kwargs
             )
         elif sync_type == "ray":
-            env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+            env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
         return env
     return thunk if wrap else thunk()
 
@@ -440,9 +440,9 @@ def create_minigrid_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwa
     task_space = DiscreteTaskSpace(gym.spaces.Discrete(len(env_list)), env_list)
     env = ReinitTaskWrapper(env, create_env, task_space=task_space)
     if sync_type == "queue":
-        env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = GymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
     elif sync_type == "ray":
-        env = RaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
 
 
@@ -458,9 +458,9 @@ def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **k
     env = pistonball_v6.parallel_env()
     env = PistonballTaskWrapper(env)
     if sync_type == "queue":
-        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = PettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     elif sync_type == "ray":
-        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = RayPettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
 
 
@@ -485,7 +485,7 @@ def create_simpletag_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kw
     env.reset(new_task=(4, 4, 4))
 
     if sync_type == "queue":
-        env = PettingZooMultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = PettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     elif sync_type == "ray":
-        env = PettingZooRaySyncWrapper(env, *args, task_space=env.task_space, **kwargs)
+        env = RayPettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
