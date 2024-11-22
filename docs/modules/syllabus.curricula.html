@@ -304,6 +304,7 @@ success or failure.</p>
 <dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.sequential.</span></span><span class="sig-name descname"><span class="pre">SequentialCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopping_conditions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
+<p>Curriculum that iterates through a list of curricula based on stopping conditions.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES">
 <span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES" title="Link to this definition">¶</a></dt>
@@ -327,11 +328,11 @@ success or failure.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.log_metrics">
 <span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log the task distribution to the provided tensorboard writer.</p>
+<dd><p>Log the task distribution to the provided writer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>writer</strong> – Tensorboard summary writer.</p></li>
+<li><p><strong>writer</strong> – Tensorboard summary writer or wandb object</p></li>
 <li><p><strong>logs</strong> – Cumulative list of logs to write</p></li>
 <li><p><strong>step</strong> – Global step number</p></li>
 <li><p><strong>log_n_tasks</strong> – Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.</p></li>
@@ -456,20 +457,7 @@ as a convenience function and to optimize the multiprocessing message passing th
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics">
 <span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log the task distribution to the provided tensorboard writer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>writer</strong> – Tensorboard summary writer.</p></li>
-<li><p><strong>logs</strong> – Cumulative list of logs to write</p></li>
-<li><p><strong>step</strong> – Global step number</p></li>
-<li><p><strong>log_n_tasks</strong> – Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Updated logs list</p>
-</dd>
-</dl>
+<dd><p>Log metrics to writer.</p>
 </dd></dl>
 
 <dl class="py method">

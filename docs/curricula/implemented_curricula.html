@@ -252,22 +252,22 @@ but rarely highlighted in the literature,such as simulated annealing of difficul
 have several popular curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning
 progress curriculum introduced in Kanitscheider et al. 2021.</p>
 <section id="domain-randomization">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization" title="syllabus.curricula.domain_randomization.DomainRandomization"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code></a><a class="headerlink" href="#domain-randomization" title="Link to this heading">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code><a class="headerlink" href="#domain-randomization" title="Link to this heading">¶</a></h2>
 <p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
 </section>
 <section id="sequential-curriculum">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum" title="syllabus.curricula.sequential.SequentialCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Sequential</span> <span class="pre">Curriculum</span></code></a><a class="headerlink" href="#sequential-curriculum" title="Link to this heading">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">Sequential</span> <span class="pre">Curriculum</span></code><a class="headerlink" href="#sequential-curriculum" title="Link to this heading">¶</a></h2>
 <p>Plays a provided list of tasks in order for a prespecified number of episodes.
 It can be used to manually design curricula by providing tasks in an order that you feel will result in the best final performance.
 <em>Coming Soon</em>: functional stopping criteria instead of a fixed number of episodes.</p>
 </section>
 <section id="simple-box-curriculum">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum" title="syllabus.curricula.simple_box.SimpleBoxCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">Box</span> <span class="pre">Curriculum</span></code></a><a class="headerlink" href="#simple-box-curriculum" title="Link to this heading">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">Box</span> <span class="pre">Curriculum</span></code><a class="headerlink" href="#simple-box-curriculum" title="Link to this heading">¶</a></h2>
 <p>A simple curriculum that expands a zero-centered range from an initial range to a final range over a number of discrete steps.
 The curriculum increases the range to the next stage when a provided reward threshold is met.</p>
 </section>
 <section id="learning-progress">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum" title="syllabus.curricula.learning_progress.LearningProgressCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a><a class="headerlink" href="#learning-progress" title="Link to this heading">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code><a class="headerlink" href="#learning-progress" title="Link to this heading">¶</a></h2>
 <p>Uses a heuristic to estimate the learning progress of a task. It maintains a fast and slow exponential moving average (EMA) of the task
 completion rates for a set of discrete tasks.
 By measuring the difference between the fast and slow EMAs and reweighting it to adjust for the time delay created by the EMA, this method can
@@ -277,7 +277,7 @@ is either learning or forgetting the task. For more information you can read the
 <a class="reference external" href="https://arxiv.org/pdf/2106.14876.pdf">Multi-task curriculum learning in a complex, visual, hard-exploration domain: Minecraft (Kanitscheider et al. 2021)</a>.</p>
 </section>
 <section id="prioritized-level-replay">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay" title="syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code></a><a class="headerlink" href="#prioritized-level-replay" title="Link to this heading">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code><a class="headerlink" href="#prioritized-level-replay" title="Link to this heading">¶</a></h2>
 <p>A curriculum learning method that estimates an agent’s regret on particular environment instantiations and uses a prioritized replay buffer to
 replay levels for which the agent has high regret. This implementation is based on the open-source original implementation at
 <a class="reference external" href="https://github.com/facebookresearch/level-replay">https://github.com/facebookresearch/level-replay</a>, but has been modified to support Syllabus task spaces instead of just environment seeds.

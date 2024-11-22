@@ -287,11 +287,11 @@ a deterministic sequence of tasks, or a single constant task depending on the cu
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.log_metrics">
 <span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log the task distribution to the provided tensorboard writer.</p>
+<dd><p>Log the task distribution to the provided writer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>writer</strong> – Tensorboard summary writer.</p></li>
+<li><p><strong>writer</strong> – Tensorboard summary writer or wandb object</p></li>
 <li><p><strong>logs</strong> – Cumulative list of logs to write</p></li>
 <li><p><strong>step</strong> – Global step number</p></li>
 <li><p><strong>log_n_tasks</strong> – Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.</p></li>
