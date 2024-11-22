@@ -9,6 +9,7 @@ from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 
 
 class SequentialCurriculum(Curriculum):
+    """ Curriculum that iterates through a list of curricula based on stopping conditions. """
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
@@ -35,7 +36,7 @@ class SequentialCurriculum(Curriculum):
         self.episode_returns = deque(maxlen=return_buffer_size)
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
-        """ Parse the curriculum list to ensure that all items are curricula. 
+        """ Parse the curriculum list to ensure that all items are curricula.
         Adds Curriculum objects directly. Wraps task space items in NoopCurriculum objects.
         """
         parsed_list = []

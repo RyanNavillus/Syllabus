@@ -6,8 +6,7 @@ from syllabus.core import Curriculum
 
 
 class DomainRandomization(Curriculum):
-    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
-    """
+    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space."""
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
@@ -20,8 +19,7 @@ class DomainRandomization(Curriculum):
 
 
 class BatchedDomainRandomization(Curriculum):
-    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
-    """
+    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space."""
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
@@ -60,8 +58,7 @@ class BatchedDomainRandomization(Curriculum):
 
 
 class SyncedBatchedDomainRandomization(Curriculum):
-    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.
-    """
+    """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space."""
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = True
 
@@ -83,6 +80,7 @@ class SyncedBatchedDomainRandomization(Curriculum):
         return self.distribution
 
     def sample(self, k: int = 1) -> Any:
+        """ Sample k tasks from the curriculum."""
         tasks = None
         if self._batch_count < self.warmup_batches:
             tasks = super().sample(k=k)
@@ -101,5 +99,6 @@ class SyncedBatchedDomainRandomization(Curriculum):
         return tasks
 
     def update_batch(self):
+        """ Update the current batch."""
         self._should_update = True
         self._batch_count += 1

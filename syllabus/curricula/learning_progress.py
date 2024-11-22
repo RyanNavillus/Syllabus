@@ -103,9 +103,11 @@ class LearningProgressCurriculum(Curriculum):
         return numerator / denominator
 
     def _sigmoid(self, x: np.ndarray):
+        """ Sigmoid function for reweighting the learning progress."""
         return 1 / (1 + np.exp(-x))
 
     def _sample_distribution(self) -> List[float]:
+        """ Return sampling distribution over the task space based on the learning progress."""
         if self.num_tasks == 0:
             return []
 

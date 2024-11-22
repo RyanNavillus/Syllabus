@@ -46,6 +46,9 @@ class NoopCurriculum(Curriculum):
         pass
 
     def _sample_distribution(self, k: int = 1) -> Union[List, Any]:
+        """
+        Returns a sample distribution over the task space.
+        """
         dist = [1.0 / self.num_tasks for _ in range(self.num_tasks)]
         dist[self.default_task] = 1.0
         return dist
