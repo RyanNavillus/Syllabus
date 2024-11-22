@@ -2,10 +2,10 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Task Interface" href="syllabus.core.task_interface.html" /><link rel="prev" title="Learning Progress" href="syllabus.curricula.learning_progress.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>Task Spaces - Syllabus 0.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -246,12 +246,12 @@
         </div>
         <article role="main">
           <section id="task-spaces">
-<span id="taskspace"></span><h1>Task Spaces<a class="headerlink" href="#task-spaces" title="Link to this heading">#</a></h1>
+<span id="taskspace"></span><h1>Task Spaces<a class="headerlink" href="#task-spaces" title="Link to this heading">¶</a></h1>
 <p>Syllabus provides the TaskSpace class as a way to represent the entire space of classes
 that are playable in an environment. This is necessary for sampling tasks from the
 entire task space.</p>
 <section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
 <p>You can define a Discrete task space by providing either a Discrete gym space or an integer to the constructor:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gym.spaces</span> <span class="kn">import</span> <span class="n">Discrete</span>
 <span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">TaskSpace</span>
@@ -264,7 +264,7 @@ entire task space.</p>
 </div>
 </section>
 <section id="future-features">
-<h2>Future Features<a class="headerlink" href="#future-features" title="Link to this heading">#</a></h2>
+<h2>Future Features<a class="headerlink" href="#future-features" title="Link to this heading">¶</a></h2>
 <p>This component is currently a work in progress. Future versions will include:</p>
 <ul class="simple">
 <li><p>Mutable Task Spaces</p></li>
@@ -272,78 +272,167 @@ entire task space.</p>
 <li><p>Support for more complex task spaces (currently only Discrete, MultiDiscrete, and Box spaces are fully supported)</p></li>
 </ul>
 <section id="module-syllabus.task_space.task_space">
-<span id="syllabus-task-space-task-space-module"></span><h3>syllabus.task_space.task_space module<a class="headerlink" href="#module-syllabus.task_space.task_space" title="Link to this heading">#</a></h3>
+<span id="syllabus-task-space-task-space-module"></span><h3>syllabus.task_space.task_space module<a class="headerlink" href="#module-syllabus.task_space.task_space" title="Link to this heading">¶</a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">TaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gym_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">BoxTaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space_or_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSpace</span></code></a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.add_task">
-<span class="sig-name descname"><span class="pre">add_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.add_task" title="Link to this definition">#</a></dt>
-<dd><p>Add a task to the task space. Only implemented for discrete spaces.</p>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.contains">
+<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.contains" title="Link to this definition">¶</a></dt>
+<dd><p>Return boolean specifying if x is a valid member of this space.
+Replaces slow gymnasium implementation.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.contains">
-<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.contains" title="Link to this definition">#</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.num_tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.num_tasks" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.count_tasks">
-<span class="sig-name descname"><span class="pre">count_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gym_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.count_tasks" title="Link to this definition">#</a></dt>
-<dd><p>Return the number of discrete tasks in the task_space.
-Returns None for continuous spaces.
-Graph space not implemented.</p>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.sample" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.seed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.task_name">
+<span class="sig-name descname"><span class="pre">task_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.task_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.BoxTaskSpace.to_multidiscrete">
+<span class="sig-name descname"><span class="pre">to_multidiscrete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.BoxTaskSpace.to_multidiscrete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.DiscreteTaskSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">DiscreteTaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space_or_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.DiscreteTaskSpace" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSpace</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.DiscreteTaskSpace.num_tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.task_space.task_space.DiscreteTaskSpace.num_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.DiscreteTaskSpace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.DiscreteTaskSpace.sample" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.DiscreteTaskSpace.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.DiscreteTaskSpace.seed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.DiscreteTaskSpace.task_name">
+<span class="sig-name descname"><span class="pre">task_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.DiscreteTaskSpace.task_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.DiscreteTaskSpace.tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.task_space.task_space.DiscreteTaskSpace.tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.MultiDiscreteTaskSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">MultiDiscreteTaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space_or_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MultiDiscrete</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSpace</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.MultiDiscreteTaskSpace.num_tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.num_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.MultiDiscreteTaskSpace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.sample" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.MultiDiscreteTaskSpace.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.seed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.MultiDiscreteTaskSpace.task_name">
+<span class="sig-name descname"><span class="pre">task_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.task_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.MultiDiscreteTaskSpace.tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">TaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space_or_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.contains">
+<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.contains" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.decode">
-<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.decode" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.decode" title="Link to this definition">¶</a></dt>
 <dd><p>Convert the efficient task encoding to a task that can be used by the environment.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.encode">
-<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.encode" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.encode" title="Link to this definition">¶</a></dt>
 <dd><p>Convert the task to an efficient encoding to speed up multiprocessing.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.get_tasks">
-<span class="sig-name descname"><span class="pre">get_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gym_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.get_tasks" title="Link to this definition">#</a></dt>
-<dd><p>Return the full list of discrete tasks in the task_space.
-Return a sample of the tasks for continuous spaces if sample_interval is specified.
-Can be overridden to exclude invalid tasks within the space.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.task_space.task_space.</span></span><span class="sig-name descname"><span class="pre">TupleTaskSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_spaces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSpace</span></code></a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.increase_space">
-<span class="sig-name descname"><span class="pre">increase_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.increase_space" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.list_tasks">
-<span class="sig-name descname"><span class="pre">list_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.list_tasks" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace.contains">
+<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace.contains" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.num_tasks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.num_tasks" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace.num_tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace.num_tasks" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.sample" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace.sample" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.task_name">
-<span class="sig-name descname"><span class="pre">task_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.task_name" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace.seed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace.task_name">
+<span class="sig-name descname"><span class="pre">task_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace.task_name" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="syllabus.task_space.task_space.TaskSpace.tasks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.task_space.task_space.TaskSpace.tasks" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.task_space.task_space.TupleTaskSpace.tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#syllabus.task_space.task_space.TupleTaskSpace.tasks" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -411,19 +500,45 @@ Can be overridden to exclude invalid tasks within the space.</p>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#future-features">Future Features</a><ul>
 <li><a class="reference internal" href="#module-syllabus.task_space.task_space">syllabus.task_space.task_space module</a><ul>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.contains"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.contains()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.num_tasks"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.num_tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.sample"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.seed"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.task_name"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.task_name()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.tasks"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.BoxTaskSpace.to_multidiscrete"><code class="docutils literal notranslate"><span class="pre">BoxTaskSpace.to_multidiscrete()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.DiscreteTaskSpace"><code class="docutils literal notranslate"><span class="pre">DiscreteTaskSpace</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.DiscreteTaskSpace.num_tasks"><code class="docutils literal notranslate"><span class="pre">DiscreteTaskSpace.num_tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.DiscreteTaskSpace.sample"><code class="docutils literal notranslate"><span class="pre">DiscreteTaskSpace.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.DiscreteTaskSpace.seed"><code class="docutils literal notranslate"><span class="pre">DiscreteTaskSpace.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.DiscreteTaskSpace.task_name"><code class="docutils literal notranslate"><span class="pre">DiscreteTaskSpace.task_name()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.DiscreteTaskSpace.tasks"><code class="docutils literal notranslate"><span class="pre">DiscreteTaskSpace.tasks</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace"><code class="docutils literal notranslate"><span class="pre">MultiDiscreteTaskSpace</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.num_tasks"><code class="docutils literal notranslate"><span class="pre">MultiDiscreteTaskSpace.num_tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.sample"><code class="docutils literal notranslate"><span class="pre">MultiDiscreteTaskSpace.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.seed"><code class="docutils literal notranslate"><span class="pre">MultiDiscreteTaskSpace.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.task_name"><code class="docutils literal notranslate"><span class="pre">MultiDiscreteTaskSpace.task_name()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.MultiDiscreteTaskSpace.tasks"><code class="docutils literal notranslate"><span class="pre">MultiDiscreteTaskSpace.tasks</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace"><code class="docutils literal notranslate"><span class="pre">TaskSpace</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.add_task"><code class="docutils literal notranslate"><span class="pre">TaskSpace.add_task()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.contains"><code class="docutils literal notranslate"><span class="pre">TaskSpace.contains()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.count_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.count_tasks()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.decode"><code class="docutils literal notranslate"><span class="pre">TaskSpace.decode()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.encode"><code class="docutils literal notranslate"><span class="pre">TaskSpace.encode()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.get_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.get_tasks()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.increase_space"><code class="docutils literal notranslate"><span class="pre">TaskSpace.increase_space()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.list_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.list_tasks()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.num_tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.num_tasks</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.sample"><code class="docutils literal notranslate"><span class="pre">TaskSpace.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.task_name"><code class="docutils literal notranslate"><span class="pre">TaskSpace.task_name()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.task_space.task_space.TaskSpace.tasks"><code class="docutils literal notranslate"><span class="pre">TaskSpace.tasks</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace.contains"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace.contains()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace.num_tasks"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace.num_tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace.sample"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace.seed"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace.task_name"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace.task_name()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.task_space.task_space.TupleTaskSpace.tasks"><code class="docutils literal notranslate"><span class="pre">TupleTaskSpace.tasks</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -442,7 +557,7 @@ Can be overridden to exclude invalid tasks within the space.</p>
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=db78e746"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>

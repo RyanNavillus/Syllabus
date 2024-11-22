@@ -63,11 +63,3 @@ syllabus.core.multivariate\_curriculum\_wrapper module
    :members:
    :undoc-members:
    :show-inheritance:
-
-syllabus.core.utils module
---------------------------
-
-.. automodule:: syllabus.core.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:

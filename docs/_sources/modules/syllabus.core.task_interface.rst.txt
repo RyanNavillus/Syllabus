@@ -3,7 +3,7 @@
 Task Interface
 ==============
 
-Each environment will define tasks in a different way. A "task" might be the environment seed, an intialization argument, or an entirely different subclass. The `TaskEnv`_ and `TaskWrapper`_ provides a simple interface to change the task of an environment.
+Each environment will define tasks in a different way. A "task" might be the environment seed, an initialization argument, or an entirely different subclass. The `TaskEnv`_ and `TaskWrapper`_ provides a simple interface to change the task of an environment.
 
 A task wrapper defines allows an existing environment to change its task when `reset()` is called. It can be used to map tasks from the task space to actual environment
 configurations, or to add entirely new tasks to an environment.
@@ -34,7 +34,7 @@ syllabus.core.task_interface.environment\_task\_env module
 
 .. _TaskEnv:
 
-.. automodule:: syllabus.core.task_interface.environment_task_env
+.. automodule:: syllabus.core.task_interface.task_env
    :members:
    :undoc-members:
    :show-inheritance:

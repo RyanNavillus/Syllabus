@@ -2,10 +2,10 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Learning Progress" href="syllabus.curricula.learning_progress.html" /><link rel="prev" title="Prioritized Level Replay (PLR) Curriculum" href="syllabus.curricula.plr.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>Domain Randomization - Syllabus 0.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -246,26 +246,108 @@
         </div>
         <article role="main">
           <section id="domain-randomization">
-<h1>Domain Randomization<a class="headerlink" href="#domain-randomization" title="Link to this heading">#</a></h1>
+<h1>Domain Randomization<a class="headerlink" href="#domain-randomization" title="Link to this heading">¶</a></h1>
 <p>Domain Randomization simply uniformly samples tasks from the task space. It can be a strong baseline in environments with relatively small task spaces.</p>
 <dl class="py class" id="module-syllabus.curricula.domain_randomization">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.BatchedDomainRandomization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.domain_randomization.</span></span><span class="sig-name descname"><span class="pre">BatchedDomainRandomization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
+<p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES">
+<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_STEP_UPDATES">
+<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_STEP_UPDATES" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.BatchedDomainRandomization.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Sample k tasks from the curriculum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>k</strong> – Number of tasks to sample, defaults to 1</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Either returns a single task if k=1, or a list of k tasks</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.BatchedDomainRandomization.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.update_on_episode" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with episode results from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>episode_return</strong> – Episodic return</p></li>
+<li><p><strong>length</strong> – Length of the episode</p></li>
+<li><p><strong>task</strong> – Task for which the episode was completed</p></li>
+<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
+<li><p><strong>env_id</strong> – Environment identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.DomainRandomization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.domain_randomization.</span></span><span class="sig-name descname"><span class="pre">DomainRandomization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.domain_randomization.</span></span><span class="sig-name descname"><span class="pre">DomainRandomization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
 <p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_STEP_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_STEP_UPDATES" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_STEP_UPDATES" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.domain_randomization.</span></span><span class="sig-name descname"><span class="pre">SyncedBatchedDomainRandomization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_chance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
+<p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES">
+<span class="sig-name descname"><span class="pre">REQUIRES_CENTRAL_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_STEP_UPDATES">
+<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_STEP_UPDATES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.DomainRandomization.add_task">
-<span class="sig-name descname"><span class="pre">add_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.curricula.domain_randomization.DomainRandomization.add_task" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Sample k tasks from the curriculum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>k</strong> – Number of tasks to sample, defaults to 1</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Either returns a single task if k=1, or a list of k tasks</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.update_batch">
+<span class="sig-name descname"><span class="pre">update_batch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.update_batch" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -328,10 +410,23 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Domain Randomization</a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization"><code class="docutils literal notranslate"><span class="pre">BatchedDomainRandomization</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">BatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">BatchedDomainRandomization.REQUIRES_STEP_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.sample"><code class="docutils literal notranslate"><span class="pre">BatchedDomainRandomization.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.BatchedDomainRandomization.update_on_episode"><code class="docutils literal notranslate"><span class="pre">BatchedDomainRandomization.update_on_episode()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#syllabus.curricula.domain_randomization.DomainRandomization"><code class="docutils literal notranslate"><span class="pre">DomainRandomization</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">DomainRandomization.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">DomainRandomization.REQUIRES_STEP_UPDATES</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.DomainRandomization.add_task"><code class="docutils literal notranslate"><span class="pre">DomainRandomization.add_task()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization"><code class="docutils literal notranslate"><span class="pre">SyncedBatchedDomainRandomization</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SyncedBatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">SyncedBatchedDomainRandomization.REQUIRES_STEP_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.sample"><code class="docutils literal notranslate"><span class="pre">SyncedBatchedDomainRandomization.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.update_batch"><code class="docutils literal notranslate"><span class="pre">SyncedBatchedDomainRandomization.update_batch()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -346,7 +441,7 @@
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=db78e746"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>

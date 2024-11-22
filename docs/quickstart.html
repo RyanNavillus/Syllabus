@@ -2,10 +2,10 @@
 <html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Environment Support" href="environments.html" /><link rel="prev" title="Installation" href="installation.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>Quickstart - Syllabus 0.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -246,7 +246,7 @@
         </div>
         <article role="main">
           <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
 <p>To use Syllabus with your existing training code you need to:</p>
 <ol class="arabic simple">
 <li><p>Define a <a class="reference internal" href="modules/syllabus.task_space.html#taskspace"><span class="std std-ref">Task Spaces</span></a> for your environment.</p></li>
@@ -255,7 +255,7 @@
 <li><p>Wrap your environment with a Syllabus <a class="reference internal" href="modules/syllabus.core.task_interface.html#taskinterface"><span class="std std-ref">TaskWrapper</span></a>.</p></li>
 </ol>
 <section id="define-a-task-space">
-<h2>Define a Task Space<a class="headerlink" href="#define-a-task-space" title="Link to this heading">#</a></h2>
+<h2>Define a Task Space<a class="headerlink" href="#define-a-task-space" title="Link to this heading">¶</a></h2>
 <p>The task space represents the range of tasks that you want your curriculum to sample from.
 For example, in procgen, the task space is usually a set of 200 seeds to train on.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">TaskSpace</span>
@@ -264,7 +264,7 @@ For example, in procgen, the task space is usually a set of 200 seeds to train o
 </div>
 </section>
 <section id="creating-a-syllabus-curriculum">
-<h2>Creating a Syllabus Curriculum<a class="headerlink" href="#creating-a-syllabus-curriculum" title="Link to this heading">#</a></h2>
+<h2>Creating a Syllabus Curriculum<a class="headerlink" href="#creating-a-syllabus-curriculum" title="Link to this heading">¶</a></h2>
 <p>Either use one of the curricula built into Syllabus, or create your own by extending the Curriculum class.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.curricula</span> <span class="kn">import</span> <span class="n">DomainRandomization</span>
 <span class="n">curriculum</span> <span class="o">=</span> <span class="n">DomainRandomization</span><span class="p">(</span><span class="n">sample_env</span><span class="o">.</span><span class="n">task_space</span><span class="p">)</span>
@@ -272,7 +272,7 @@ For example, in procgen, the task space is usually a set of 200 seeds to train o
 </div>
 </section>
 <section id="synchronizing-the-curriculum">
-<h2>Synchronizing the Curriculum<a class="headerlink" href="#synchronizing-the-curriculum" title="Link to this heading">#</a></h2>
+<h2>Synchronizing the Curriculum<a class="headerlink" href="#synchronizing-the-curriculum" title="Link to this heading">¶</a></h2>
 <p>Use either the native multiprocessing or ray multiprocessing wrapper to synchronize the curriculum across environments.
 Syllabus creates a separate multiprocessing channel from your environments, so make sure to choose the same backend (either native or ray).</p>
 <div class="sphinx-tabs docutils container">
@@ -287,7 +287,7 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
 </div></div>
 </section>
 <section id="synchronizing-the-environment">
-<h2>Synchronizing the Environment<a class="headerlink" href="#synchronizing-the-environment" title="Link to this heading">#</a></h2>
+<h2>Synchronizing the Environment<a class="headerlink" href="#synchronizing-the-environment" title="Link to this heading">¶</a></h2>
 <p>Use the matching native multiprocessing or ray multiprocessing wrapper to synchronize the environments.</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Native Python Multiprocessing</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Ray Multiprocessing</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">MultiProcessingSyncWrapper</span>
@@ -301,7 +301,7 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
 </div></div>
 </section>
 <section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>For more help setting up Syllabus, check out our <a class="reference internal" href="modules/syllabus.examples.html#examples"><span class="std std-ref">examples</span></a>  of how to integrate Syllabus with various popular RL libraries.</p>
 </section>
 </section>
@@ -379,7 +379,7 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
     </aside>
   </div>
 </div><script src="_static/documentation_options.js?v=db78e746"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="_static/tabs.js?v=3030b3cb"></script>
