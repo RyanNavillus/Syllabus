@@ -22,7 +22,8 @@ if __name__ == "__main__":
     ray.init()
     sample_env = create_nethack_env()
 
-    manual_tasks = [NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold, NetHackEat, NetHackScout]
+    manual_tasks = [NetHackScore, NetHackStaircase, NetHackStaircasePet,
+                    NetHackOracle, NetHackGold, NetHackEat, NetHackScout]
     num_repeats = [N_ENVS * N_EPISODES] * len(manual_tasks)
     curriculum = SequentialCurriculum(manual_tasks, sample_env.task_space, num_repeats=num_repeats, repeat_list=False)
     print("")
@@ -34,14 +35,16 @@ if __name__ == "__main__":
     # Test single process speed
     print("RUNNING: Python single process test (4 envs)...")
     test_curriculum = deepcopy(curriculum)
-    native_speed = run_single_process(create_nethack_env, curriculum=test_curriculum, num_envs=4, num_episodes=N_EPISODES)
+    native_speed = run_single_process(create_nethack_env, curriculum=test_curriculum,
+                                      num_envs=4, num_episodes=N_EPISODES)
     print(f"PASSED: single process test passed: {native_speed:.2f}s")
 
     # Test Queue multiprocess speed with Syllabus
     test_curriculum = deepcopy(curriculum)
     test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum, N_ENVS)
     print("\nRUNNING: Python multiprocess test with Syllabus...")
-    native_syllabus_speed = run_native_multiprocess(create_nethack_env, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+    native_syllabus_speed = run_native_multiprocess(
+        create_nethack_env, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
     # Test Ray multiprocess speed with Syllabus
