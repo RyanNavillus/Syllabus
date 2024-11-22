@@ -1,4 +1,4 @@
-from typing import Any, List, SupportsFloat, SupportsInt, Tuple, Union
+from typing import Any, List, SupportsFloat, SupportsInt, Union
 
 import numpy as np
 from gymnasium.spaces import Box
@@ -6,7 +6,8 @@ from gymnasium.spaces import Box
 from syllabus.core import Curriculum
 
 
-class AnnealingBoxCurriculum(Curriculum):
+class SimulatedAnnealing(Curriculum):
+    """ Curriculum that anneals a set of values from start_values to end_values over a set number of steps."""
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
@@ -15,9 +16,15 @@ class AnnealingBoxCurriculum(Curriculum):
         *curriculum_args,
         start_values: List[SupportsFloat],
         end_values: List[SupportsFloat],
-        total_steps: Tuple[int, List[int]],
+        total_steps: Union[int, List[int]],
         **curriculum_kwargs,
     ):
+        """ Initialize the SimulatedAnnealing curriculum.
+
+        :param start_values: The initial values of the curriculum.
+        :param end_values: The final values of the curriculum.
+        :param total_steps: The total number of steps to anneal the curriculum over.
+        """
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert isinstance(
             self.task_space.gym_space, Box

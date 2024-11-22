@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from syllabus.curricula import AnnealingBoxCurriculum
+from syllabus.curricula import SimulatedAnnealing
 from syllabus.tests import create_cartpole_env
 
 
@@ -10,7 +10,7 @@ class TestAnnealingBoxCurriculum(unittest.TestCase):
 
     def test_annealing_values(self):
         cartpole_env = create_cartpole_env()
-        curriculum = AnnealingBoxCurriculum(
+        curriculum = SimulatedAnnealing(
             task_space=cartpole_env.task_space,
             start_values=[0.2, 0.5],
             end_values=[0.8, 0.9],
@@ -39,7 +39,7 @@ class TestAnnealingBoxCurriculum(unittest.TestCase):
 
     def test_negative_start_end_values(self):
         cartpole_env = create_cartpole_env()
-        curriculum = AnnealingBoxCurriculum(
+        curriculum = SimulatedAnnealing(
             task_space=cartpole_env.task_space,
             start_values=[-0.2, -0.5],
             end_values=[-0.8, -0.9],
@@ -67,7 +67,7 @@ class TestAnnealingBoxCurriculum(unittest.TestCase):
 
     def test_reverse_annealing(self):
         cartpole_env = create_cartpole_env()
-        curriculum = AnnealingBoxCurriculum(
+        curriculum = SimulatedAnnealing(
             task_space=cartpole_env.task_space,
             start_values=[0.7, 0.7],
             end_values=[0.1, -0.1],

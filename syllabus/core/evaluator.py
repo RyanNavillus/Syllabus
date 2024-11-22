@@ -58,32 +58,6 @@ class Evaluator:
             # Copy most recent parameters from agent reference
             self.agent.load_state_dict(self._agent_reference.state_dict())
 
-    def get_value(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
-    ) -> Tuple[torch.Tensor, Dict[str, Any]]:
-        """
-        Get the value of a given environment state.
-
-        Args:
-            state (Array): The current environment state.
-            lstm_state (Optional[LSTMState] ): The LSTM cell and hidden state.
-            done (Optional[Array]): The done flag.
-
-        Returns:
-            Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
-        """
-        self._update_agent()
-        state = self._prepare_state(state)
-        if lstm_state is not None:
-            lstm_state, done = self._prepare_lstm(lstm_state, done)
-        self._set_eval_mode()
-        with torch.no_grad():
-            value, lstm_state, extras = self._get_value(
-                state, lstm_state=lstm_state, done=done
-            )
-        self._set_train_mode()
-        return value, lstm_state, extras
-
     def get_action(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
@@ -110,6 +84,32 @@ class Evaluator:
             )
         self._set_train_mode()
         return action, lstm_state, extras
+
+    def get_value(
+        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+    ) -> Tuple[torch.Tensor, Dict[str, Any]]:
+        """
+        Get the value of a given environment state.
+
+        Args:
+            state (Array): The current environment state.
+            lstm_state (Optional[LSTMState] ): The LSTM cell and hidden state.
+            done (Optional[Array]): The done flag.
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
+        """
+        self._update_agent()
+        state = self._prepare_state(state)
+        if lstm_state is not None:
+            lstm_state, done = self._prepare_lstm(lstm_state, done)
+        self._set_eval_mode()
+        with torch.no_grad():
+            value, lstm_state, extras = self._get_value(
+                state, lstm_state=lstm_state, done=done
+            )
+        self._set_train_mode()
+        return value, lstm_state, extras
 
     def get_action_and_value(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
@@ -252,15 +252,15 @@ class DummyEvaluator(Evaluator):
             state_shape = 1
         return state_shape
 
-    def _get_value(self, state, lstm_state=None, done=None):
-        state_shape = self._get_state_shape(state)
-        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
-        return torch.zeros((state_shape, 1)), lstm_state, {}
-
     def _get_action(self, state, lstm_state=None, done=None):
         state_shape = self._get_state_shape(state)
         lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
         return torch.zeros((state_shape, self.action_shape)), lstm_state, {}
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        state_shape = self._get_state_shape(state)
+        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        return torch.zeros((state_shape, 1)), lstm_state, {}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         state_shape = self._get_state_shape(state)
@@ -273,15 +273,6 @@ class CleanRLDiscreteEvaluator(Evaluator):
         super().__init__(agent, *args, **kwargs)
         self.is_lstm = is_lstm or hasattr(agent, "lstm")
 
-    def _get_value(self, state, lstm_state=None, done=None):
-        if self.is_lstm:
-            self._check_inputs(lstm_state, done)
-            value, lstm_state = self.agent.get_value(state, lstm_state, done)
-        else:
-            value = self.agent.get_value(state)
-            lstm_state = None
-        return value, lstm_state, {}
-
     def _get_action(self, state, lstm_state=None, done=None):
         if self.is_lstm:
             self._check_inputs(lstm_state, done)
@@ -290,6 +281,15 @@ class CleanRLDiscreteEvaluator(Evaluator):
             action = self.agent.get_action(state)
             lstm_state = None
         return action, lstm_state, {}
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        if self.is_lstm:
+            self._check_inputs(lstm_state, done)
+            value, lstm_state = self.agent.get_value(state, lstm_state, done)
+        else:
+            value = self.agent.get_value(state)
+            lstm_state = None
+        return value, lstm_state, {}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         if self.is_lstm:
@@ -317,17 +317,16 @@ class CleanRLDiscreteEvaluator(Evaluator):
         ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
         return True
 
+    def _set_eval_mode(self):
+        self.agent.eval()
+
+    def _set_train_mode(self):
+        self.agent.train()
+
 
 class MoolibEvaluator(Evaluator):
     def __init__(self, agent, *args, **kwargs):
         super().__init__(agent, *args, **kwargs)
-
-    def _get_value(self, state, lstm_state=None, done=None):
-        self._check_inputs(lstm_state, done)
-        state["done"] = done
-        output, lstm_state = self.agent(state, lstm_state, get_action=False, get_value=True)
-        value = output["baseline"].reshape(-1, 1)
-        return value, {"lstm_state": lstm_state}
 
     def _get_action(self, state, lstm_state=None, done=None):
         self._check_inputs(lstm_state, done)
@@ -335,6 +334,13 @@ class MoolibEvaluator(Evaluator):
         output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=False)
         action = output["action"]
         return action, {"lstm_state": lstm_state}
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state, get_action=False, get_value=True)
+        value = output["baseline"].reshape(-1, 1)
+        return value, {"lstm_state": lstm_state}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         self._check_inputs(lstm_state, done)
@@ -344,12 +350,6 @@ class MoolibEvaluator(Evaluator):
         value = output["baseline"].reshape(-1, 1)
         return (action, value, {"lstm_state": lstm_state})
 
-    def _check_inputs(self, lstm_state, done):
-        assert (
-            lstm_state is not None
-        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
-        return True
-
     def _prepare_state(self, state) -> torch.Tensor:
         full_dict = defaultdict(list)
         for obs_dict in state:
@@ -358,6 +358,12 @@ class MoolibEvaluator(Evaluator):
         tensor_dict = {key: torch.unsqueeze(torch.Tensor(np.stack(val_list)), 0).to(self.device)
                        for key, val_list in full_dict.items()}
         return tensor_dict
+
+    def _check_inputs(self, lstm_state, done):
+        assert (
+            lstm_state is not None
+        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        return True
 
     def _set_eval_mode(self):
         self.agent.eval()

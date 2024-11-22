@@ -402,6 +402,19 @@ class RayPettingZooSyncWrapper(BaseParallelWrapper):
 
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
+    def change_task(self, new_task):
+        """
+        Changes the task of the existing environment to the new_task.
+
+        Each environment will implement tasks differently. The easiest system would be to call a
+        function or set an instance variable to change the task.
+
+        Some environments may need to be reset or even reinitialized to change the task.
+        If you need to reset or re-init the environment here, make sure to check
+        that it is not in the middle of an episode to avoid unexpected behavior.
+        """
+        self.env.change_task(new_task)
+
     def step(self, action):
         obs, rew, term, trunc, info = self.env.step(action)
 
@@ -425,19 +438,6 @@ class RayPettingZooSyncWrapper(BaseParallelWrapper):
                 self.step_results = []
 
         return obs, rew, term, trunc, info
-
-    def change_task(self, new_task):
-        """
-        Changes the task of the existing environment to the new_task.
-
-        Each environment will implement tasks differently. The easiest system would be to call a
-        function or set an instance variable to change the task.
-
-        Some environments may need to be reset or even reinitialized to change the task.
-        If you need to reset or re-init the environment here, make sure to check
-        that it is not in the middle of an episode to avoid unexpected behavior.
-        """
-        self.env.change_task(new_task)
 
     def __getattr__(self, attr):
         env_attr = getattr(self.env, attr, None)
