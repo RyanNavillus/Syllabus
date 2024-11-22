@@ -52,9 +52,6 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
             self.update_on_step_batch(*args, env_id=env_id)
         elif update_type == "episode":
             self.update_on_episode(*args, env_id=env_id)
-        elif update_type == "on_demand":
-            # Directly pass metrics without expanding
-            self.curriculum.update_on_demand(args)
         elif update_type == "task_progress":
             self.update_task_progress(*args, env_id=env_id)
         elif update_type == "noop":

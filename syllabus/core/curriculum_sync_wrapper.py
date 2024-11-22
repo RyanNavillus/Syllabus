@@ -4,6 +4,7 @@ import time
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
 from queue import Empty
+from typing import Dict
 
 import ray
 from torch.multiprocessing import Lock, Queue
@@ -71,7 +72,8 @@ class CurriculumWrapper:
 
 
 class MultiProcessingComponents:
-    def __init__(self, maxsize=1000000, timeout=60):
+    def __init__(self, requires_step_updates, maxsize=1000000, timeout=60):
+        self.requires_step_updates = requires_step_updates
         self.task_queue = Queue(maxsize=maxsize)
         self.update_queue = Queue(maxsize=maxsize)
         self._instance_lock = Lock()
@@ -141,7 +143,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self,
         curriculum: Curriculum,
         sequential_start: bool = True,
-        max_queue_size: int = 1000000,
+        max_queue_size: int = 100000,
         timeout: int = 60,
     ):
         super().__init__(curriculum)
@@ -152,7 +154,8 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.added_tasks = []
         self.num_assigned_tasks = 0
 
-        self.components = MultiProcessingComponents(maxsize=max_queue_size, timeout=timeout)
+        self.components = MultiProcessingComponents(
+            self.curriculum.requires_step_updates, maxsize=max_queue_size, timeout=timeout)
 
     def start(self):
         """
@@ -192,8 +195,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 for update in batch_updates:
                     if "request_sample" in update and update["request_sample"]:
                         requested_tasks += 1
-
-                self.update_batch(batch_updates)
+                    self.route_update(update)
 
             # Sample new tasks
             if requested_tasks > 0:
@@ -208,6 +210,36 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
                 time.sleep(0)
             else:
                 time.sleep(0.01)
+
+    def route_update(self, update_data: Dict[str, tuple]):
+        """Update the curriculum with the specified update type.
+        TODO: Change method header to not use dictionary, use enums?
+
+        :param update_data: Dictionary
+        :type update_data: Dictionary with "update_type" key which maps to one of ["step", "step_batch", "episode", "on_demand", "task_progress", "noop"] and "args" with a tuple of the appropriate arguments for the given "update_type".
+        :raises NotImplementedError:
+        """
+
+        update_type = update_data["update_type"]
+        args = update_data["metrics"]
+        env_id = update_data["env_id"] if "env_id" in update_data else None
+
+        if update_type == "step":
+            self.update_on_step(*args, env_id=env_id)
+        elif update_type == "step_batch":
+            self.update_on_step_batch(*args, env_id=env_id)
+        elif update_type == "episode":
+            self.update_on_episode(*args, env_id=env_id)
+        elif update_type == "on_demand":
+            # Directly pass metrics without expanding
+            self.update(args)
+        elif update_type == "task_progress":
+            self.update_task_progress(*args, env_id=env_id)
+        elif update_type == "noop":
+            # Used to request tasks from the synchronization layer
+            pass
+        else:
+            raise NotImplementedError(f"Update type {update_type} not implemented.")
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         logs = [] if logs is None else logs

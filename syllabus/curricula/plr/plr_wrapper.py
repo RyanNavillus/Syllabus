@@ -21,8 +21,10 @@ class RolloutStorage(object):
         requires_value_buffers: bool,
         observation_space: gym.Space,   # TODO: Use np array when space is box or discrete
         num_minibatches: int = 1,
-        buffer_size: int = 4,
+        buffer_size: int = 2,
         action_space: gym.Space = None,
+        gamma: float = 0.999,
+        gae_lambda: float = 0.95,
         lstm_size: int = None,
         evaluator: Evaluator = None,
         device: str = "cpu",
@@ -31,10 +33,17 @@ class RolloutStorage(object):
         # Hack to prevent overflow from lagging updates.
         self.buffer_steps = num_steps * buffer_size
         self.num_processes = num_processes
-        self.num_minibatches = num_minibatches
         self._requires_value_buffers = requires_value_buffers
+        self.num_minibatches = num_minibatches
+        self._gamma = gamma
+        self._gae_lambda = gae_lambda
         self.evaluator = evaluator
         self.device = device
+
+        if self.num_processes % self.num_minibatches != 0:
+            raise UsageError(
+                f"Number of processes {self.num_processes} must be divisible by the number of minibatches {self.num_minibatches}."
+            )
 
         self.tasks = torch.zeros(self.buffer_steps, num_processes, 1, dtype=torch.int)
         self.masks = torch.ones(self.buffer_steps + 1, num_processes, 1)
@@ -49,8 +58,6 @@ class RolloutStorage(object):
         self.obs = {env_idx: [None for _ in range(self.buffer_steps)] for env_idx in range(self.num_processes)}
         self.env_steps = [0] * num_processes
         self.value_steps = torch.zeros(num_processes, dtype=torch.int)
-
-        self.ready_buffers = set()
 
         if requires_value_buffers:
             self.returns = torch.zeros(self.buffer_steps + 1, num_processes, 1)
@@ -101,7 +108,7 @@ class RolloutStorage(object):
         env_index = self.get_index(env_index)
         step = self.env_steps[env_index]
         end_step = step + steps
-        assert end_step < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
+        assert end_step < self.buffer_steps, f"Number of insert of {steps} steps at {step} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
         self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
 
         if obs is not None:
@@ -129,17 +136,15 @@ class RolloutStorage(object):
             self.get_value_predictions()
 
         # Check if the buffer is ready to be updated. Wait until we have enough value predictions.
-        if env_index not in self.ready_buffers and self.value_steps[env_index] >= self.num_steps + 1:
-            self.ready_buffers.add(env_index)
+        if self.value_steps[env_index] >= self.num_steps + 1:
+            if self._requires_value_buffers:
+                self.compute_returns(self._gamma, self._gae_lambda, env_index)
+            return env_index
+        return None
 
     def get_value_predictions(self):
         value_steps = self.value_steps.numpy()
-        try:
-            process_chunks = np.split(np.arange(self.num_processes), self.num_minibatches)
-        except ValueError as e:
-            raise UsageError(
-                f"Number of processes {self.num_processes} must be divisible by the number of minibatches {self.num_minibatches}."
-            ) from e
+        process_chunks = np.split(np.arange(self.num_processes), self.num_minibatches)
 
         for processes in process_chunks:
             obs = [self.obs[env_idx][value_steps[env_idx]] for env_idx in processes]
@@ -153,11 +158,10 @@ class RolloutStorage(object):
 
             # Get value predictions and check for common usage errors
             try:
-                values, lstm_states, extras = self.evaluator.get_value(obs, lstm_states, dones)
-
+                values, lstm_states, _ = self.evaluator.get_value(obs, lstm_states, dones)
             except RuntimeError as e:
                 raise UsageError(
-                    "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the evaluator's get_action_and_value implementation."
+                    "Encountered an error getting values for PLR. Check that lstm_size is set correctly and that there are no errors in the evaluator's get_value implementation."
                 ) from e
 
             self.value_preds[value_steps[processes], processes] = values.to(self.device)
@@ -190,7 +194,6 @@ class RolloutStorage(object):
 
         self.env_steps[env_index] -= self.num_steps
         self.value_steps[env_index] -= self.num_steps
-        self.ready_buffers.remove(env_index)
 
     def compute_returns(self, gamma, gae_lambda, env_index):
         assert self._requires_value_buffers, "Selected strategy does not use compute_rewards."
@@ -261,8 +264,6 @@ class PrioritizedLevelReplay(Curriculum):
         # Number of steps stored in rollouts and used to update task sampler
         self._num_steps = num_steps
         self._num_processes = num_processes  # Number of parallel environments
-        self._gamma = gamma
-        self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self.evaluator = evaluator
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
@@ -277,6 +278,8 @@ class PrioritizedLevelReplay(Curriculum):
             num_minibatches=num_minibatches,
             buffer_size=buffer_size,
             action_space=action_space,
+            gamma=gamma,
+            gae_lambda=gae_lambda,
             lstm_size=lstm_size,
             evaluator=evaluator,
             device=device,
@@ -300,10 +303,9 @@ class PrioritizedLevelReplay(Curriculum):
         Update the curriculum with the current step results from the environment.
         """
         assert env_id is not None, "env_id must be provided for PLR updates."
-        assert env_id not in self._rollouts.ready_buffers
 
         # Update rollouts
-        self._rollouts.insert_at_index(
+        update_id = self._rollouts.insert_at_index(
             env_id,
             mask=np.array([not (term or trunc)]),
             reward=np.array([rew]),
@@ -311,23 +313,17 @@ class PrioritizedLevelReplay(Curriculum):
         )
 
         # Update task sampler
-        if env_id in self._rollouts.ready_buffers:
-            self._update_sampler(env_id)
+        if update_id is not None:
+            self._update_sampler(update_id)
 
     def update_on_step_batch(self, step_results, env_id=None) -> None:
         """
         Update the curriculum with a batch of step results from the environment.
         """
         assert env_id is not None, "env_id must be provided for PLR updates."
-        assert env_id not in self._rollouts.ready_buffers
-
-        if env_id >= self._num_processes:
-            warnings.warn(
-                f"Env index {env_id} is greater than the number of processes {self._num_processes}. Using index {env_id % self._num_processes} instead.", stacklevel=2)
-            env_id = env_id % self._num_processes
 
         tasks, obs, rews, terms, truncs, _, _ = step_results
-        self._rollouts.insert_at_index(
+        update_id = self._rollouts.insert_at_index(
             env_id,
             mask=np.logical_not(np.logical_or(terms, truncs)),
             reward=rews,
@@ -337,12 +333,10 @@ class PrioritizedLevelReplay(Curriculum):
         )
 
         # Update task sampler
-        if env_id in self._rollouts.ready_buffers:
-            self._update_sampler(env_id)
+        if update_id is not None:
+            self._update_sampler(update_id)
 
     def _update_sampler(self, env_id):
-        if self._task_sampler.requires_value_buffers:
-            self._rollouts.compute_returns(self._gamma, self._gae_lambda, env_id)
         self._task_sampler.update_with_rollouts(self._rollouts, env_id)
         self._rollouts.after_update(env_id)
         self._task_sampler.after_update()

@@ -1,5 +1,6 @@
 import copy
 from collections import defaultdict
+from io import BytesIO
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
@@ -35,11 +36,17 @@ class Evaluator:
         self._copy_agent = copy_agent   # Save to skip update if possible
 
         # Make cpu copy of model
-        self.agent = agent
         if copy_agent:
-            agent.to(self.device)
-            self.agent = copy.deepcopy(agent).to(self.device)
-            agent.to("cuda")
+            # Save agent in memory
+            model_data_in_memory = BytesIO()
+            torch.save(self._agent_reference, model_data_in_memory, pickle_protocol=-1)
+            model_data_in_memory.seek(0)
+
+            # Load the model from memory to CPU
+            self.agent = torch.load(model_data_in_memory, map_location="cpu")
+            model_data_in_memory.close()
+        else:
+            self.agent = self._agent_reference
 
     def _update_agent(self):
         """

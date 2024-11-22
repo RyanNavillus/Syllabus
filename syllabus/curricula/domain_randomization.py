@@ -100,6 +100,6 @@ class SyncedBatchedDomainRandomization(Curriculum):
                     tasks.append(np.random.choice(self.num_tasks))
         return tasks
 
-    def update_on_demand(self, metrics):
+    def update_batch(self):
         self._should_update = True
         self._batch_count += 1

@@ -184,9 +184,6 @@ class SequentialCurriculum(Curriculum):
         if self.current_curriculum.requires_step_updates:
             self.current_curriculum.update_on_step_batch(step_results, env_id)
 
-    def update_on_demand(self, metrics):
-        self.current_curriculum.update_on_demand(metrics)
-
     def update_task_progress(self, task, progress, env_id=None):
         self.current_curriculum.update_task_progress(task, progress, env_id)
 

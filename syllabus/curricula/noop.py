@@ -45,12 +45,6 @@ class NoopCurriculum(Curriculum):
         """
         pass
 
-    def update_on_demand(self, metrics):
-        """
-        Update the curriculum with arbitrary inputs.
-        """
-        pass
-
     def _sample_distribution(self, k: int = 1) -> Union[List, Any]:
         dist = [1.0 / self.num_tasks for _ in range(self.num_tasks)]
         dist[self.default_task] = 1.0

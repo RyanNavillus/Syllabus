@@ -365,7 +365,7 @@ def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False
     def thunk():
         env = gym.make("CartPole-v1", **env_kwargs)
         env = gym.wrappers.RecordEpisodeStatistics(env)
-        env = CartPoleTaskWrapper(env)
+        env = CartPoleTaskWrapper(env, discretize=False)
 
         if type == "queue":
             env = MultiProcessingSyncWrapper(env, *args, task_space=env.task_space, **kwargs)

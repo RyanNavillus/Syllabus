@@ -1,3 +1,4 @@
+import time
 from typing import Any, Callable, Dict
 
 import gymnasium as gym
@@ -21,8 +22,6 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
     def __init__(self,
                  env,
                  components: MultiProcessingComponents,
-                 update_on_step: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
-                 update_on_progress: bool = False,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  task_space: TaskSpace = None,  # TODO: Nonoptional
@@ -34,11 +33,8 @@ class MultiProcessingSyncWrapper(gym.Wrapper):
         self.env = env
         self.components = components
         self._latest_task = None
-        self.task_queue = components.task_queue
-        self.update_queue = components.update_queue
         self.task_space = task_space
-        self.update_on_step = update_on_step
-        self.update_on_progress = update_on_progress
+        self.update_on_step = components.requires_step_updates
         self.batch_size = batch_size
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
@@ -160,8 +156,6 @@ class PettingZooMultiProcessingSyncWrapper(BaseParallelWrapper):
         self.env = env
         self.components = components
         self._latest_task = None
-        self.task_queue = components.task_queue
-        self.update_queue = components.update_queue
         self.task_space = task_space
         self.update_on_step = update_on_step
         self.batch_size = batch_size

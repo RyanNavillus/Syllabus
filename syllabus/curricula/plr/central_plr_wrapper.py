@@ -219,7 +219,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
 
         return masks, tasks, value, rew, action_log_dist, next_value, env_ids
 
-    def update_on_demand(self, metrics: Dict):
+    def update(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """

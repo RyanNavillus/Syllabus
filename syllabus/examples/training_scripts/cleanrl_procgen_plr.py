@@ -22,8 +22,8 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator, DummyEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -128,20 +128,19 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
 
-        if task_wrapper or curriculum is not None:
+        if task_wrapper or curriculum_components is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
-        if curriculum is not None:
+        if curriculum_components is not None:
             env = MultiProcessingSyncWrapper(
                 env,
-                curriculum.components,
-                update_on_step=curriculum.requires_step_updates,
+                curriculum_components,
                 task_space=env.task_space,
                 batch_size=256
             )
@@ -285,6 +284,9 @@ if __name__ == "__main__":
         elif args.curriculum_method == "bdr":
             print("Using batched domain randomization.")
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
+        elif args.curriculum_method == "noop":
+            print("Using noop curriculum.")
+            curriculum = NoopCurriculum(0, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -306,7 +308,6 @@ if __name__ == "__main__":
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
-        del sample_env
 
     # env setup
     print("Creating env")
@@ -315,13 +316,17 @@ if __name__ == "__main__":
             make_env(
                 args.env_id,
                 args.seed + i,
-                curriculum=curriculum if args.curriculum else None,
-                num_levels=1 if args.curriculum else 0
+                curriculum_components=curriculum.components if args.curriculum else None,
+                num_levels=1 if args.curriculum else 0,
             )
             for i in range(args.num_envs)
         ]
     )
     envs = wrap_vecenv(envs)
+
+    # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
+    if args.curriculum:
+        del sample_env
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)

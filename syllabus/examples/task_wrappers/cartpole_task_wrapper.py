@@ -9,9 +9,9 @@ class CartPoleTaskWrapper(TaskWrapper):
         super().__init__(env)
         self.discretize = discretize
         if self.discretize:
-            self.task_space = BoxTaskSpace(Box(-0.3, 0.3, shape=(2,)))
-        else:
             self.task_space = DiscreteTaskSpace(10)
+        else:
+            self.task_space = BoxTaskSpace(Box(-0.3, 0.3, shape=(2,)))
 
         self.task = (-0.02, 0.02)
         self.total_reward = 0

@@ -324,6 +324,7 @@ class NethackTaskWrapper(TaskWrapper):
         # Change task if new one is provided
         if new_task is None:
             new_task = kwargs.get("options", None)
+        kwargs.pop("options", None)
 
         if new_task is not None:
             self.change_task(new_task)

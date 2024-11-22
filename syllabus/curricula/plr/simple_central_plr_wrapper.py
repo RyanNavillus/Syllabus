@@ -108,7 +108,7 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
         self.num_updates = 0  # Used to ensure proper usage
         self.num_samples = 0  # Used to ensure proper usage
 
-    def update_on_demand(self, metrics: Dict):
+    def update(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """

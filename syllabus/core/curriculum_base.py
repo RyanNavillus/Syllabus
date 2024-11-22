@@ -8,7 +8,6 @@ from syllabus.task_space import TaskSpace
 from .stat_recorder import StatRecorder
 
 
-# TODO: Move non-generic logic to Uniform class. Allow subclasses to call super for generic error handling
 class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
@@ -30,7 +29,6 @@ class Curriculum:
         self.random_start_tasks = random_start_tasks
         self.completed_tasks = 0
         self.task_names = task_names if task_names is not None else lambda task, idx: idx
-        self.n_updates = 0
         self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
 
         if self.num_tasks == 0:
@@ -121,55 +119,6 @@ class Curriculum:
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
-    def update_on_demand(self, metrics: Dict):
-        """Update the curriculum with arbitrary inputs.
-
-        :param metrics: Arbitrary dictionary of information. Can be used to provide gradient/error based
-                        updates from the training process.
-        :raises NotImplementedError:
-        """
-        raise NotImplementedError
-
-    # TODO: Move to curriculum sync wrapper?
-    def update(self, update_data: Dict[str, tuple]):
-        """Update the curriculum with the specified update type.
-        TODO: Change method header to not use dictionary, use enums?
-
-        :param update_data: Dictionary
-        :type update_data: Dictionary with "update_type" key which maps to one of ["step", "step_batch", "episode", "on_demand", "task_progress", "noop"] and "args" with a tuple of the appropriate arguments for the given "update_type".
-        :raises NotImplementedError:
-        """
-
-        update_type = update_data["update_type"]
-        args = update_data["metrics"]
-        env_id = update_data["env_id"] if "env_id" in update_data else None
-
-        if update_type == "step":
-            self.update_on_step(*args, env_id=env_id)
-        elif update_type == "step_batch":
-            self.update_on_step_batch(*args, env_id=env_id)
-        elif update_type == "episode":
-            self.update_on_episode(*args, env_id=env_id)
-        elif update_type == "on_demand":
-            # Directly pass metrics without expanding
-            self.update_on_demand(args)
-        elif update_type == "task_progress":
-            self.update_task_progress(*args, env_id=env_id)
-        elif update_type == "noop":
-            # Used to request tasks from the synchronization layer
-            pass
-        else:
-            raise NotImplementedError(f"Update type {update_type} not implemented.")
-        self.n_updates += 1
-
-    def update_batch(self, update_data: List[Dict]):
-        """Update the curriculum with batch of updates.
-
-        :param update_data: List of updates or potentially varying types
-        """
-        for update in update_data:
-            self.update(update)
-
     def _sample_distribution(self) -> List[float]:
         """Returns a sample distribution over the task space.
 
@@ -181,9 +130,7 @@ class Curriculum:
         return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
 
     def _startup_sample(self) -> List:
-        task_dist = [0.0 / self.num_tasks for _ in range(self.num_tasks)]
-        task_dist[0] = 1.0
-        return task_dist
+        return self.task_space.sample()
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """Sample k tasks from the curriculum.
