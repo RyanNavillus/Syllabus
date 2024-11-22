@@ -5,7 +5,7 @@ from nle.env.tasks import NetHackScore, NetHackScout, NetHackStaircase
 
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.core.evaluator import DummyEvaluator
-from syllabus.curricula import (AnnealingBoxCurriculum,
+from syllabus.curricula import (SimulatedAnnealing,
                                 CentralizedPrioritizedLevelReplay,
                                 DomainRandomization,
                                 LearningProgressCurriculum, NoopCurriculum,
@@ -39,7 +39,7 @@ curricula = [
         "num_steps": 2048
     }),
     (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
-    (AnnealingBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {
+    (SimulatedAnnealing, create_cartpole_env, (cartpole_env.task_space,), {
         'start_values': [-0.02, 0.02],
         'end_values': [-0.3, 0.3],
         'total_steps': [10]

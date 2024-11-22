@@ -337,6 +337,7 @@ class PrioritizedLevelReplay(Curriculum):
             self._update_sampler(update_id)
 
     def _update_sampler(self, env_id):
+        """ Update the task sampler with the current rollouts. """
         self._task_sampler.update_with_rollouts(self._rollouts, env_id)
         self._rollouts.after_update(env_id)
         self._task_sampler.after_update()

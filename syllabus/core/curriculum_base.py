@@ -56,7 +56,7 @@ class Curriculum:
 
         :return: List of tasks if task space is enumerable, TODO: empty list otherwise?
         """
-        return self.task_space._task_list
+        return self.task_space.tasks
 
     def update_task_progress(self, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         """Update the curriculum with a task and its progress. This is used for binary tasks that can be completed mid-episode.
@@ -108,17 +108,6 @@ class Curriculum:
         if self.stat_recorder is not None:
             self.stat_recorder.record(episode_return, length, task, env_id)
 
-    def normalize(self, reward, task):
-        """
-        Normalize reward by task.
-
-        :param reward: Reward to normalize
-        :param task: Task for which the reward was received
-        :return: Normalized reward
-        """
-        assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
-        return self.stat_recorder.normalize(reward, task)
-
     def _sample_distribution(self) -> List[float]:
         """Returns a sample distribution over the task space.
 
@@ -149,6 +138,17 @@ class Curriculum:
         task_dist = self._sample_distribution()
         task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
         return task_idx
+
+    def normalize(self, reward, task):
+        """
+        Normalize reward by task.
+
+        :param reward: Reward to normalize
+        :param task: Task for which the reward was received
+        :return: Normalized reward
+        """
+        assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
+        return self.stat_recorder.normalize(reward, task)
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """Log the task distribution to the provided writer.

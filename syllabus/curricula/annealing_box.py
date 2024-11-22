@@ -6,7 +6,8 @@ from gymnasium.spaces import Box
 from syllabus.core import Curriculum
 
 
-class AnnealingBoxCurriculum(Curriculum):
+class SimulatedAnnealing(Curriculum):
+    """ Curriculum that anneals a set of values from start_values to end_values over a set number of steps."""
     REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
@@ -18,6 +19,10 @@ class AnnealingBoxCurriculum(Curriculum):
         total_steps: Tuple[int, List[int]],
         **curriculum_kwargs,
     ):
+        """ Initialize the SimulatedAnnealing curriculum.
+        
+        :param start_values: The initial values of the curriculum.
+        """
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert isinstance(
             self.task_space.gym_space, Box
