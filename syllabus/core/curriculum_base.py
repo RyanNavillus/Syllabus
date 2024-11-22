@@ -151,9 +151,9 @@ class Curriculum:
         return task_idx
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
-        """Log the task distribution to the provided tensorboard writer.
+        """Log the task distribution to the provided writer.
 
-        :param writer: Tensorboard summary writer.
+        :param writer: Tensorboard summary writer or wandb object
         :param logs: Cumulative list of logs to write
         :param step: Global step number
         :param log_n_tasks: Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.
