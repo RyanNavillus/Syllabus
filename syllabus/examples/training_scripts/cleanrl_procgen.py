@@ -267,7 +267,6 @@ if __name__ == "__main__":
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
             evaluator = CleanRLDiscreteEvaluator(agent, device="cuda", copy_agent=True)
-            # evaluator = DummyEvaluator(sample_env.action_space)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
