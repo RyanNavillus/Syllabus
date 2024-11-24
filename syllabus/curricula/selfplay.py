@@ -1,33 +1,37 @@
+""" Self play curricula for training agents against copies themselves. This is an experimental API and subject to change."""
 import os
 import time
 from copy import deepcopy
-from typing import TypeVar
+from typing import List, TypeVar
 
 import joblib
 import numpy as np
 from gymnasium import spaces
 from scipy.special import softmax
 
-from syllabus.core import Curriculum  # noqa: E402
+from syllabus.core import Curriculum, AgentType  # noqa: E402
 from syllabus.task_space import TaskSpace  # noqa: E402
-
-AgentType = TypeVar("AgentType")
 
 
 class SelfPlay(Curriculum):
+    """Self play curriculum for training agents against themselves."""
     REQUIRES_STEP_UPDATES = False
     REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
+        task_space: TaskSpace,
         agent: AgentType,
         device: str,
-        storage_path=None,  # unused
-        max_agents=None,  # unused
-        seed: int = 0,
     ):
-        self.name = "SP"
+        """ Initialize the self play curriculum.
+
+        :param task_space: The task space of the environment
+        :param agent: The initial agent to play against
+        :param device: The device to run the agent on
+        """
+        super().__init__(task_space)
         self.device = device
         self.agent = deepcopy(agent).to(self.device)
         self.task_space = TaskSpace(
@@ -38,10 +42,11 @@ class SelfPlay(Curriculum):
             "n_games": 0,
         }
 
-    def update_agent(self, agent: AgentType) -> AgentType:
+    def add_agent(self, agent: AgentType) -> int:
         self.agent = deepcopy(agent).to(self.device)
+        return 0
 
-    def get_opponent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> AgentType:
         if agent_id is None:
             agent_id = 0
         assert agent_id == 0, (
@@ -50,19 +55,32 @@ class SelfPlay(Curriculum):
         )
         return self.agent
 
+    def _sample_distribution(self) -> List[float]:
+        return [1.0]
+
     def sample(self, k=1):
         return [0 for _ in range(k)]
 
-    def update_winrate(self, opponent_id: int, opponent_reward: int) -> None:
+    def update_winrate(self, agent_id: int, reward: int) -> None:
         """
-        Uses an incremental mean to update the opponent's winrate.
+        Uses an incremental mean to update an agent's winrate. This assumes that reward
+        is postive for a win and negative for a loss. Not used for sampling.
+
+        :param agent_id: Identifier of the agent
+        :param reward: Reward received by the agent
         """
-        opponent_reward = opponent_reward > 0  # converts the reward to 0 or 1
+        win = reward > 0  # converts the reward to 0 or 1
         self.history["n_games"] += 1
         old_winrate = self.history["winrate"]
         n = self.history["n_games"]
 
-        self.history["winrate"] = old_winrate + (opponent_reward - old_winrate) / n
+        self.history["winrate"] = old_winrate + (win - old_winrate) / n
+
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        """Log metrics for the curriculum."""
+        logs.append("winrate", self.history["winrate"])
+        logs.append("n_games", self.history["n_games"])
+        super().log_metrics(writer, logs, step, log_n_tasks)
 
 
 class FictitiousSelfPlay(Curriculum):
@@ -72,6 +90,7 @@ class FictitiousSelfPlay(Curriculum):
 
     def __init__(
         self,
+        task_space: TaskSpace,
         agent: AgentType,
         device: str,
         storage_path: str,
@@ -79,7 +98,7 @@ class FictitiousSelfPlay(Curriculum):
         seed: int = 0,
         max_loaded_agents: int = 1,
     ):
-        self.name = "FSP"
+        super().__init__(task_space)
         self.uid = int(time.time())
         self.device = device
         self.storage_path = storage_path
@@ -91,7 +110,7 @@ class FictitiousSelfPlay(Curriculum):
         self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
-        self.update_agent(agent)  # creates the initial opponent
+        self.add_agent(agent)  # creates the initial opponent
         self.history = {
             i: {
                 "winrate": 0,
@@ -103,7 +122,7 @@ class FictitiousSelfPlay(Curriculum):
         self.n_loaded_agents = 0
         self.max_loaded_agents = max_loaded_agents
 
-    def update_agent(self, agent):
+    def add_agent(self, agent):
         """
         Saves the current agent instance to a pickle file.
         When the `max_agents` limit is met, older agent checkpoints are overwritten.
@@ -135,7 +154,7 @@ class FictitiousSelfPlay(Curriculum):
             old_winrate + (opponent_reward - old_winrate) / n
         )
 
-    def get_opponent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> AgentType:
         """Loads an agent from the buffer of saved agents."""
         if self.loaded_agents[agent_id] is None:
             if self.n_loaded_agents >= self.max_loaded_agents:
@@ -143,16 +162,32 @@ class FictitiousSelfPlay(Curriculum):
             print(
                 "get agent",
                 agent_id,
-                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
             )
             self.loaded_agents[agent_id] = joblib.load(
-                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
             ).to(self.device)
 
         return self.loaded_agents[agent_id]
 
+    def _sample_distribution(self) -> List[float]:
+        return [1.0 / self.n_loaded_agents for _ in range(self.n_loaded_agents)] \
+            + [0.0 for _ in range(self.max_agents - self.n_loaded_agents)]
+
     def sample(self, k=1):
-        return list(np.random.randint(self.current_agent_index, size=k))
+        probs = self._sample_distribution()
+        return list(np.random.choice(
+            np.arange(self.current_agent_index),
+            p=probs,
+            size=k,
+        ))
+
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        """Log metrics for the curriculum."""
+        logs.append("winrate", self.history["winrate"])
+        logs.append("games_played", self.history["n_games"])
+        logs.append("stored_agents", self.n_loaded_agents)
+        super().log_metrics(writer, logs, step, log_n_tasks)
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):
@@ -162,6 +197,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
 
     def __init__(
         self,
+        task_space: TaskSpace,
         agent: AgentType,
         device: str,
         storage_path: str,
@@ -169,7 +205,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         seed: int = 0,
         max_loaded_agents: int = 1,
     ):
-        self.name = "PFSP"
+        super().__init__(task_space)
         self.uid = int(time.time())
         self.device = device
         self.storage_path = storage_path
@@ -180,7 +216,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
-        self.update_agent(agent)  # creates the initial opponent
+        self.add_agent(agent)  # creates the initial opponent
         self.history = {
             i: {
                 "winrate": 0,
@@ -192,7 +228,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         self.n_loaded_agents = 0
         self.max_loaded_agents = max_loaded_agents
 
-    def update_agent(self, agent) -> None:
+    def add_agent(self, agent) -> None:
         """
         Saves the current agent instance to a pickle file and update
         its priority.
@@ -201,7 +237,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         joblib.dump(
             agent,
             filename=(
-                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_"
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
@@ -224,7 +260,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             old_winrate + (opponent_reward - old_winrate) / n
         )
 
-    def get_opponent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> AgentType:
         """
         Samples an agent id from the softmax distribution induced by winrates
         then loads the selected agent from the buffer of saved agents.
@@ -235,21 +271,33 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             print(
                 "get agent",
                 agent_id,
-                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
             )
             self.loaded_agents[agent_id] = joblib.load(
-                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
             ).to(self.device)
 
         return self.loaded_agents[agent_id]
 
-    def sample(self, k=1):
+    def _sample_distribution(self) -> List[float]:
         logits = [
             self.history[agent_id]["winrate"]
             for agent_id in range(self.current_agent_index)
         ]
+        return softmax(logits)
+
+    def sample(self, k=1):
+        """ Samples k agents from the buffer of saved agents, prioritizing opponents with higher winrates."""
+        probs = self._sample_distribution()
         return list(np.random.choice(
             np.arange(self.current_agent_index),
-            p=softmax(logits),
+            p=probs,
             size=k,
         ))
+
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        """Log metrics for the curriculum."""
+        logs.append("winrate", self.history["winrate"])
+        logs.append("games_played", self.history["n_games"])
+        logs.append("stored_agents", self.n_loaded_agents)
+        super().log_metrics(writer, logs, step, log_n_tasks)

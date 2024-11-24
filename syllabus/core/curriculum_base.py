@@ -1,11 +1,14 @@
 import warnings
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, TypeVar, Union
 
 import numpy as np
 
 from syllabus.task_space import TaskSpace
 
 from .stat_recorder import StatRecorder
+
+
+AgentType = TypeVar("AgentType")
 
 
 class Curriculum:
@@ -108,14 +111,21 @@ class Curriculum:
         if self.stat_recorder is not None:
             self.stat_recorder.record(episode_return, length, task, env_id)
 
-    def get_opponent(self, agent_id: int):
-        raise NotImplementedError("This curriculum does not track opponents.")
+    def get_agent(self, agent_id: int) -> AgentType:
+        """ Load an agent from the buffer of saved agents.
 
-    def update_agent(self, agent):
+        :param agent_id: Identifier of the agent to load
+        :return: Loaded agent
+        """
         raise NotImplementedError("This curriculum does not track agents.")
 
-    def update_winrate(self, opponent_id: int, opponent_reward: int):
-        raise NotImplementedError("This curriculum does not track winrates.")
+    def add_agent(self, agent: AgentType):
+        """ Add an agent to the curriculum.
+
+        :param agent: Agent to add to the curriculum
+        :return agent_id: Identifier of the added agent
+        """
+        raise NotImplementedError("This curriculum does not track agents.")
 
     def _sample_distribution(self) -> List[float]:
         """Returns a sample distribution over the task space.
