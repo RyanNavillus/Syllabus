@@ -93,19 +93,21 @@ class MultiProcessingComponents:
         return instance_id
 
     def should_sync(self, env_id):
-        if self.max_envs is not None and env_id < self.max_envs:
-            return True
+        # Only receive step updates from self.max_envs environments
+        if self.max_envs is not None and env_id >= self.max_envs:
+            return False
+        return True
 
     def put_task(self, task):
         try:
-            self.task_queue.put(task, block=False, timeout=self.timeout)
+            self.task_queue.put(task, block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
 
     def get_task(self):
         try:
-            task = self.task_queue.get(block=False, timeout=self.timeout)
+            task = self.task_queue.get(block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
@@ -113,14 +115,14 @@ class MultiProcessingComponents:
 
     def put_update(self, update):
         try:
-            self.update_queue.put(update, block=False, timeout=self.timeout)
+            self.update_queue.put(update, block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
     def get_update(self):
-        try:
-            update = self.update_queue.get(block=False, timeout=self.timeout)
+         try:
+            update = self.update_queue.get(block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
@@ -190,9 +192,9 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         """
         # Update curriculum with environment results:
         while self.should_update:
-            if self.components.task_queue.qsize() < 10:
+            if self.components.task_queue.qsize() < 3 and self.num_assigned_tasks > 10:
                 warnings.warn(
-                    f"Task queue capacity is {self.components.task_queue.qsize()} / {self.components.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity {self.components.update_queue.qsize()} / {self.components.update_queue._maxsize} is high, consider optimizing your curriculum or reducing the number of environments.")
+                    f"Task queue capacity is {self.components.task_queue.qsize()} / {self.components.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
 
             if not self.components.update_queue.empty():
                 # while not self.components.update_queue.empty():
@@ -206,8 +208,9 @@ class CurriculumSyncWrapper(CurriculumWrapper):
                     for task in new_tasks:
                         message = {"next_task": task}
                         self.components.put_task(message)
+                        self.num_assigned_tasks += 1
                 self.route_update(update)
-                time.sleep(0.00)
+                time.sleep(0.0)
             else:
                 time.sleep(0.01)
 

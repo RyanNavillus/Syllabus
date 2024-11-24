@@ -79,7 +79,8 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         info["task"] = self.task_space.encode(self.get_task())
 
         if self.update_on_step:
-            trimmed_obs = {key: obs[key] for key in obs.keys() if key not in self.remove_keys}
+            trimmed_obs = {key: obs[key]
+                           for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
             self._obs[self._batch_step] = trimmed_obs
             self._rews[self._batch_step] = 0.0
             self._terms[self._batch_step] = False
@@ -99,7 +100,8 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         # Update curriculum with step info
         if self.update_on_step:
-            trimmed_obs = {key: obs[key] for key in obs.keys() if key not in self.remove_keys}
+            trimmed_obs = {key: obs[key]
+                           for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
             self._obs[self._batch_step] = trimmed_obs
             self._rews[self._batch_step] = rew
             self._terms[self._batch_step] = term
