@@ -99,6 +99,7 @@ class RolloutStorage(object):
     def get_index(self, env_index):
         """ Map the environment ids to indices in the buffer. """
         if env_index not in self.env_to_idx:
+            assert self.max_idx < self.num_processes, f"Number of environments {self.max_idx} exceeds num_processes {self.num_processes}."
             self.env_to_idx[env_index] = self.max_idx
             self.max_idx += 1
         return self.env_to_idx[env_index]

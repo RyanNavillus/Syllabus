@@ -1,4 +1,5 @@
 import copy
+import warnings
 from collections import defaultdict
 from io import BytesIO
 from typing import Any, Callable, Dict, Optional, Tuple, Union
@@ -37,14 +38,21 @@ class Evaluator:
 
         # Make cpu copy of model
         if copy_agent:
-            # Save agent in memory
-            model_data_in_memory = BytesIO()
-            torch.save(self._agent_reference, model_data_in_memory, pickle_protocol=-1)
-            model_data_in_memory.seek(0)
+            try:
+                # Save agent in memory
+                model_data_in_memory = BytesIO()
+                torch.save(self._agent_reference, model_data_in_memory, pickle_protocol=-1)
+                model_data_in_memory.seek(0)
 
-            # Load the model from memory to CPU
-            self.agent = torch.load(model_data_in_memory, map_location=self.device)
-            model_data_in_memory.close()
+                # Load the model from memory to CPU
+                self.agent = torch.load(model_data_in_memory, map_location=self.device)
+                model_data_in_memory.close()
+            except RuntimeError as e:
+                warnings.warn(str(e), stacklevel=2)
+                agent.to(self.device)
+                self.agent = copy.deepcopy(agent).to(self.device)
+                agent.to("cuda")
+
         else:
             self.agent = self._agent_reference
 
@@ -254,17 +262,20 @@ class DummyEvaluator(Evaluator):
 
     def _get_action(self, state, lstm_state=None, done=None):
         state_shape = self._get_state_shape(state)
-        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
+            lstm_state[1])) if lstm_state is not None else None
         return torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
     def _get_value(self, state, lstm_state=None, done=None):
         state_shape = self._get_state_shape(state)
-        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
+            lstm_state[1])) if lstm_state is not None else None
         return torch.zeros((state_shape, 1)), lstm_state, {}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         state_shape = self._get_state_shape(state)
-        lstm_state = torch.zeros_like(lstm_state) if lstm_state is not None else None
+        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
+            lstm_state[1])) if lstm_state is not None else None
         return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
 
@@ -333,14 +344,14 @@ class MoolibEvaluator(Evaluator):
         state["done"] = done
         output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=False)
         action = output["action"]
-        return action, {"lstm_state": lstm_state}
+        return action, lstm_state, {}
 
     def _get_value(self, state, lstm_state=None, done=None):
         self._check_inputs(lstm_state, done)
         state["done"] = done
         output, lstm_state = self.agent(state, lstm_state, get_action=False, get_value=True)
         value = output["baseline"].reshape(-1, 1)
-        return value, {"lstm_state": lstm_state}
+        return value, lstm_state, {}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         self._check_inputs(lstm_state, done)
@@ -348,7 +359,7 @@ class MoolibEvaluator(Evaluator):
         output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=True)
         action = output["action"]
         value = output["baseline"].reshape(-1, 1)
-        return (action, value, {"lstm_state": lstm_state})
+        return action, value, lstm_state, {}
 
     def _prepare_state(self, state) -> torch.Tensor:
         full_dict = defaultdict(list)

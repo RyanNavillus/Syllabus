@@ -430,13 +430,11 @@ class NethackSeedWrapper(TaskWrapper):
     def __init__(
         self,
         env: gym.Env,
-        seed: int = None,
+        seed: int = 0,
         num_seeds: int = 200,
     ):
         super().__init__(env)
         self.env = env
-        self.task = NetHackScore
-
         self.task_space = DiscreteTaskSpace(num_seeds)
 
         # Task completion metrics

@@ -286,7 +286,7 @@ if __name__ == "__main__":
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "noop":
             print("Using noop curriculum.")
-            curriculum = NoopCurriculum(0, sample_env.task_space)
+            curriculum = NoopCurriculum(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
