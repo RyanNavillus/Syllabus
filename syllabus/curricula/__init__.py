@@ -9,4 +9,4 @@ from .plr.plr_wrapper import PrioritizedLevelReplay
 from .plr.task_sampler import TaskSampler
 from .sequential import SequentialCurriculum
 from .simple_box import SimpleBoxCurriculum
-from .annealing_box import AnnealingBoxCurriculum
+from .annealing_box import SimulatedAnnealing

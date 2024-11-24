@@ -1,14 +1,13 @@
 import math
 import random
 import warnings
-from typing import Any, List
+from typing import Any, List, Union
 
 import numpy as np
-from gymnasium.spaces import Discrete, MultiDiscrete
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 
 class LearningProgressCurriculum(Curriculum):
@@ -18,7 +17,6 @@ class LearningProgressCurriculum(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
@@ -32,7 +30,9 @@ class LearningProgressCurriculum(Curriculum):
         self.completed_episodes = 0
         self.completed_steps = 0
 
-        assert isinstance(self.task_space.gym_space, (Discrete, MultiDiscrete))
+        assert isinstance(
+            self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
+        ), f"LearningProgressCurriculum only supports Discrete and MultiDiscrete task spaces. Got {self.task_space.__class__.__name__}."
         self._p_fast = np.zeros(self.num_tasks)
         self._p_slow = np.zeros(self.num_tasks)
 
@@ -66,7 +66,7 @@ class LearningProgressCurriculum(Curriculum):
 
         return task_success_rates
 
-    def update_task_progress(self, task: int, progress: float, env_id: int = None):
+    def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
@@ -77,9 +77,9 @@ class LearningProgressCurriculum(Curriculum):
         self._p_fast[task] = (progress * self.ema_alpha) + (self._p_fast[task] * (1.0 - self.ema_alpha))
         self._p_slow[task] = (self._p_fast[task] * self.ema_alpha) + (self._p_slow[task] * (1.0 - self.ema_alpha))
 
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
-        self.completed_steps += episode_length
+        self.completed_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
             self._evaluate_all_tasks()
         if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:
@@ -103,9 +103,11 @@ class LearningProgressCurriculum(Curriculum):
         return numerator / denominator
 
     def _sigmoid(self, x: np.ndarray):
+        """ Sigmoid function for reweighting the learning progress."""
         return 1 / (1 + np.exp(-x))
 
     def _sample_distribution(self) -> List[float]:
+        """ Return sampling distribution over the task space based on the learning progress."""
         if self.num_tasks == 0:
             return []
 
@@ -156,7 +158,7 @@ if __name__ == "__main__":
     tasks = range(20)
     histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
 
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+    curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
     for i in range(len(histories[0][0])):
         for task in tasks:
             curriculum.update_task_progress(task, histories[task][0][i])
@@ -171,7 +173,7 @@ if __name__ == "__main__":
 
     tasks = [0]
     histories = {task: generate_history(n=200, center=75, curve=0.1) for task in tasks}
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+    curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
     lp_raw = []
     lp_reweight = []
     p_fast = []
@@ -219,7 +221,7 @@ if __name__ == "__main__":
 
         # Z-score plot
         tasks = [i for i in range(50)]
-        curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+        curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
         histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
         for i in range(len(histories[0][0])):
             for task in tasks:

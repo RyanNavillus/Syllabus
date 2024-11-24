@@ -1,10 +1,10 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
 import time
-from typing import Callable, Tuple, Union, Any
+from typing import Any, Callable, Tuple, Union
 
 import gymnasium as gym
 
-from .task_wrapper import TaskWrapper, PettingZooTaskWrapper
+from .task_wrapper import PettingZooTaskWrapper, TaskWrapper
 
 
 class ReinitTaskWrapper(TaskWrapper):
@@ -15,6 +15,7 @@ class ReinitTaskWrapper(TaskWrapper):
     This is a simple, general solution to using Syllabus with tasks that need to be reinitialized, but it is inefficient.
     It's likely that you can achieve better performance by using a more specialized wrapper.
     """
+
     def __init__(self, env: gym.Env, env_fn: Callable, task_space: gym.Space = None):
         super().__init__(env)
 
@@ -49,6 +50,7 @@ class PettingZooReinitTaskWrapper(PettingZooTaskWrapper):
     This is a simple, general solution to using Syllabus with tasks that need to be reinitialized, but it is inefficient.
     It's likely that you can achieve better performance by using a more specialized wrapper.
     """
+
     def __init__(self, env: gym.Env, env_fn: Callable, task_space: gym.Space = None):
         super().__init__(env)
         self.env_fn = env_fn
@@ -96,10 +98,11 @@ if __name__ == "__main__":
 
     # Initialize NLE
     def create_env(task):
-        task_class = [NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold, NetHackEat, NetHackScout][task]
+        task_class = [NetHackScore, NetHackStaircase, NetHackStaircasePet,
+                      NetHackOracle, NetHackGold, NetHackEat, NetHackScout][task]
         return task_class()
 
-    nethack_env = NetHackScore()    
+    nethack_env = NetHackScore()
     nethack_task_env = ReinitTaskWrapper(nethack_env, create_env)
 
     start_time = time.time()

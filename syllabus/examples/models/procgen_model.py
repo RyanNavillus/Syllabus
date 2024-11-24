@@ -315,14 +315,14 @@ class ProcgenLSTMAgent(nn.Module):
         return new_hidden, lstm_state
 
     def get_value(self, inputs, lstm_state, done):
-        hidden, _ = self.get_states(inputs, lstm_state, done)
-        return self.critic(hidden)
+        hidden, lstm_state = self.get_states(inputs, lstm_state, done)
+        return self.critic(hidden), lstm_state
 
     def get_action(self, inputs, lstm_state, done):
-        hidden, _ = self.get_states(inputs, lstm_state, done)
+        hidden, lstm_state = self.get_states(inputs, lstm_state, done)
         dist = torch.distributions.categorical.Categorical(logits=self.actor(hidden))
         action = dist.sample()
-        return torch.squeeze(action)
+        return torch.squeeze(action), lstm_state
 
     def get_action_and_value(self, inputs, lstm_state, done, action=None, deterministic=False):
         hidden, lstm_state = self.get_states(inputs, lstm_state, done)

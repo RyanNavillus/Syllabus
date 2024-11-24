@@ -44,6 +44,7 @@ class FixedCategorical(torch.distributions.Categorical):
     """
     Categorical distribution object
     """
+
     def sample(self):
         return super().sample().unsqueeze(-1)
 
@@ -64,6 +65,7 @@ class Categorical(nn.Module):
     """
     Categorical distribution (NN module)
     """
+
     def __init__(self, num_inputs, num_outputs):
         super(Categorical, self).__init__()
 

@@ -21,7 +21,7 @@ import torch.optim as optim
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -129,15 +129,16 @@ PROCGEN_RETURN_BOUNDS = {
 
 def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         if curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
-            env = MultiProcessingSyncWrapper(
+            env = GymnasiumSyncWrapper(
                 env,
-                curriculum.get_components(),
+                env.task_space,
+                curriculum.components,
                 update_on_step=False,
-                task_space=env.task_space,
             )
         return env
     return thunk
@@ -336,7 +337,7 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
-                        curriculum.log_metrics(writer, global_step)
+                        curriculum.log_metrics(writer, [], step=global_step)
                     break
 
             # Syllabus curriculum update

@@ -11,7 +11,6 @@ class SimpleBoxCurriculum(Curriculum):
     Base class and API for defining curricula to interface with Gym environments.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self,
@@ -33,7 +32,7 @@ class SimpleBoxCurriculum(Curriculum):
         self.consecutive_successes = 0
         self.max_reached = False
 
-    def update_task_progress(self, task: typing.Any, success_prob: float, env_id: int = None) -> None:
+    def update_task_progress(self, task: typing.Any, progress: Union[float, bool], env_id: int = None) -> None:
         """
         Update the curriculum with a task and its success probability upon
         success or failure.
@@ -42,7 +41,7 @@ class SimpleBoxCurriculum(Curriculum):
             return
 
         # Check if this task passed success threshold
-        if success_prob > self.success_threshold:
+        if progress > self.success_threshold:
             self.consecutive_successes += 1
         else:
             self.consecutive_successes = 0
@@ -62,12 +61,9 @@ class SimpleBoxCurriculum(Curriculum):
         """
         return [self.max_range for _ in range(k)]
 
-    def log_metrics(self, writer, step=None):
-        print("Logging", flush=True)
-        try:
-            import wandb
-            writer.log({"range_min": self.max_range[0]}, step=step)
-            writer.log({"range_max": self.max_range[1]}, step=step)
-
-        except ImportError:
-            pass
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        """ Log metrics to writer. """
+        logs = [] if logs is None else logs
+        logs.append(("range_min", self.max_range[0]))
+        logs.append(("range_max", self.max_range[1]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)

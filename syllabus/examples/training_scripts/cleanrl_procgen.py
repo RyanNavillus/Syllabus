@@ -21,9 +21,9 @@ import torch.optim as optim
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator, DummyEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -128,21 +128,22 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
 
-        if task_wrapper or curriculum is not None:
+        if task_wrapper or curriculum_components is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
-        if curriculum is not None:
-            env = MultiProcessingSyncWrapper(
+        if curriculum_components is not None:
+            env = GymnasiumSyncWrapper(
                 env,
-                curriculum.get_components(),
-                update_on_step=curriculum.requires_step_updates,
-                task_space=env.task_space,
-                batch_size=256
+                env.task_space,
+                curriculum_components,
+                batch_size=256,
+                buffer_size=4,
             )
         return env
     return thunk
@@ -265,7 +266,8 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            evaluator = CleanRLDiscreteEvaluator(agent, device="cuda", copy_agent=True)
+            # evaluator = DummyEvaluator(sample_env.action_space)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -275,6 +277,8 @@ if __name__ == "__main__":
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
+                device="cuda",
+                record_stats=True,
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -282,19 +286,23 @@ if __name__ == "__main__":
         elif args.curriculum_method == "bdr":
             print("Using batched domain randomization.")
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
+        elif args.curriculum_method == "noop":
+            print("Using noop curriculum.")
+            curriculum = NoopCurriculum(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
+                                                    sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
             stopping = []
             for i in range(0, 199, 10):
-                curricula.append(list(range(i, i+10)))
+                curricula.append(list(range(i, i + 10)))
                 stopping.append("steps>=500000")
                 curricula.append(list(range(i + 10)))
                 stopping.append("steps>=500000")
@@ -302,7 +310,6 @@ if __name__ == "__main__":
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
-        del sample_env
 
     # env setup
     print("Creating env")
@@ -311,13 +318,17 @@ if __name__ == "__main__":
             make_env(
                 args.env_id,
                 args.seed + i,
-                curriculum=curriculum if args.curriculum else None,
-                num_levels=1 if args.curriculum else 0
+                curriculum_components=curriculum.components if args.curriculum else None,
+                num_levels=1 if args.curriculum else 0,
             )
             for i in range(args.num_envs)
         ]
     )
     envs = wrap_vecenv(envs)
+
+    # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
+    if args.curriculum:
+        del sample_env
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -370,7 +381,7 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
-                        curriculum.log_metrics(writer, global_step)
+                        curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                     break
 
         # bootstrap value if not done

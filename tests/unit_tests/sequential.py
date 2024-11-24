@@ -6,7 +6,7 @@ from nle.env.tasks import NetHackEat, NetHackScore
 
 from syllabus.core import make_multiprocessing_curriculum
 from syllabus.curricula import SequentialCurriculum, NoopCurriculum, DomainRandomization
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace
 from syllabus.tests.utils import create_nethack_env, run_native_multiprocess, run_single_process, run_set_length
 
 
@@ -52,7 +52,8 @@ def test_parsing_compount_conditions(create_env):
 
 def test_curriculum_sequence_2step(create_env):
     env = create_env()
-    curriculum = SequentialCurriculum([NetHackScore, TaskSpace(3, env.task_space.list_tasks()[1:4])], ["steps>100"], env.task_space)
+    curriculum = SequentialCurriculum([NetHackScore, DiscreteTaskSpace(
+        3, env.task_space.list_tasks()[1:4])], ["steps>100"], env.task_space)
     assert isinstance(curriculum.current_curriculum, NoopCurriculum)
     env_outputs = run_set_length(env, curriculum, steps=50)
     assert isinstance(curriculum.current_curriculum, NoopCurriculum)
@@ -62,7 +63,8 @@ def test_curriculum_sequence_2step(create_env):
 
 def test_curriculum_sequence_3step(create_env):
     env = create_env()
-    curriculum = SequentialCurriculum([NetHackScore, TaskSpace(3, env.task_space.list_tasks()[1:4]), NetHackEat], ["steps>100", "episodes>=5"], env.task_space)
+    curriculum = SequentialCurriculum([NetHackScore, DiscreteTaskSpace(3, env.task_space.list_tasks()[1:4]), NetHackEat], [
+                                      "steps>100", "episodes>=5"], env.task_space)
     assert isinstance(curriculum.current_curriculum, NoopCurriculum)
     env_outputs = run_set_length(env, curriculum, steps=50)
     assert isinstance(curriculum.current_curriculum, NoopCurriculum)

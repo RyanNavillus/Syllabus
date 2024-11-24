@@ -1,13 +1,15 @@
 import dataclasses
+import json
 import math
 import os
-import json
 import warnings
+from collections import deque
+
 import numpy as np
 import torch
-from syllabus.task_space import TaskSpace
 from gymnasium.spaces import Discrete
-from collections import deque, defaultdict
+
+from syllabus.task_space import TaskSpace
 
 
 @dataclasses.dataclass
@@ -89,7 +91,7 @@ class StatRecorder:
         assert isinstance(self.task_space.gym_space,
                           Discrete), f"Only Discrete task spaces are supported. Got {type(task_space.gym_space)}"
 
-        self.tasks = self.task_space.get_tasks()
+        self.tasks = self.task_space.tasks
         self.num_tasks = self.task_space.num_tasks
 
         self.episode_returns = {task: StatMean() for task in self.tasks}
@@ -109,37 +111,31 @@ class StatRecorder:
         self.episode_returns[episode_task] += episode_return
         self.episode_lengths[episode_task] += episode_length
 
-    def log_metrics(self, writer, step=None, log_full_dist=False):
+    def get_metrics(self, log_n_tasks=1):
         """Log the statistics of the first 5 tasks to the provided tensorboard writer.
 
         :param writer: Tensorboard summary writer.
+        :param log_n_tasks: Number of tasks to log statistics for. Use -1 to log all tasks.
         """
-        try:
-            import wandb
-            tasks_to_log = self.tasks
-            if len(self.tasks) > 10 and not log_full_dist:
-                warnings.warn("Only logging stats for 5 tasks.")
-                tasks_to_log = self.tasks[:10]
-            logs = []
-            for idx in tasks_to_log:
-                if self.episode_returns[idx].n > 0:
-                    name = self.task_names(list(self.task_space.tasks)[idx], idx)
-                    logs.append((f"tasks/{name}_episode_return", self.episode_returns[idx].mean(), step))
-                    logs.append((f"tasks/{name}_episode_length", self.episode_lengths[idx].mean(), step))
-            for name, prob, step in logs:
-                if writer == wandb:
-                    writer.log({name: prob}, step=step)
-                else:
-                    writer.add_scalar(name, prob, step)
-        except ImportError:
-            warnings.warn("Wandb is not installed. Skipping logging.")
-        except wandb.errors.Error:
-            # No need to crash over logging :)
-            warnings.warn("Failed to log curriculum stats to wandb.")
+        tasks_to_log = self.tasks
+        if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
+            warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
+            tasks_to_log = self.tasks[:log_n_tasks]
+
+        logs = []
+        for idx in tasks_to_log:
+            if self.episode_returns[idx].n > 0:
+                name = self.task_names(list(self.task_space.tasks)[idx], idx)
+                logs.append((f"tasks/{name}_episode_return", self.episode_returns[idx].mean()))
+                logs.append((f"tasks/{name}_episode_length", self.episode_lengths[idx].mean()))
+        return logs
 
     def normalize(self, reward, task):
         """
         Normalize reward by task.
+
+        :param reward: Reward to normalize
+        :param task: Task to normalize reward by
         """
         task_return_stats = self.episode_returns[task]
         reward_std = task_return_stats.std()
@@ -151,11 +147,13 @@ class StatRecorder:
     def save_statistics(self, output_path):
         """
         Write task-specific statistics to file.
+
+        :param output_path: Path to save the statistics file.
         """
         def convert_numpy(obj):
             if isinstance(obj, np.generic):
                 return obj.item()  # Use .item() to convert numpy types to native Python types
             raise TypeError
-        stats = json.dumps(self.stats, default=convert_numpy)
-        with open(os.path.join(output_path, 'task_specific_stats.json'), "w") as file:
+        stats = json.dumps(self.episode_returns, default=convert_numpy)
+        with open(os.path.join(output_path, 'task_specific_stats.json'), "w", encoding="utf-8") as file:
             file.write(stats)

@@ -7,7 +7,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.vec_env import (DummyVecEnv, VecMonitor,
                                               VecNormalize)
-from syllabus.core import (MultiProcessingSyncWrapper,
+from syllabus.core import (GymnasiumSyncWrapper,
                            make_multiprocessing_curriculum)
 from syllabus.curricula import CentralizedPrioritizedLevelReplay
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -18,12 +18,12 @@ def make_env(task_queue, update_queue, start_level=0, num_levels=1):
     def thunk():
         env = gym.make("procgen-bigfish-v0", distribution_mode="easy", start_level=start_level, num_levels=num_levels)
         env = ProcgenTaskWrapper(env)
-        env = MultiProcessingSyncWrapper(
+        env = GymnasiumSyncWrapper(
             env,
+            env.task_space,
             task_queue,
             update_queue,
             update_on_step=False,
-            task_space=env.task_space,
         )
         return env
     return thunk
@@ -42,6 +42,7 @@ class CustomCallback(BaseCallback):
 
     :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
     """
+
     def __init__(self, curriculum, verbose=0):
         super().__init__(verbose)
         self.curriculum = curriculum
@@ -68,6 +69,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
         return progress_remaining * initial_value
     return func
 
+
 if __name__ == "__main__":
     run = wandb.init(
         project="sb3",
@@ -75,7 +77,6 @@ if __name__ == "__main__":
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         save_code=True,  # optional
     )
-
 
     sample_env = gym.make("procgen-bigfish-v0")
     sample_env = ProcgenTaskWrapper(sample_env)

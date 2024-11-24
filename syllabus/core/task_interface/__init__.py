@@ -2,4 +2,4 @@
 from .task_wrapper import TaskWrapper, PettingZooTaskWrapper
 from .subclass_task_wrapper import SubclassTaskWrapper
 from .reinit_task_wrapper import ReinitTaskWrapper, PettingZooReinitTaskWrapper
-from .environment_task_env import TaskEnv, PettingZooTaskEnv
+from .task_env import TaskEnv, PettingZooTaskEnv

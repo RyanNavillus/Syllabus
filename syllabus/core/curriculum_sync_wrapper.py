@@ -1,14 +1,17 @@
+import signal
 import threading
 import time
+import warnings
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
-from typing import List, Tuple
+from queue import Empty
+from typing import Dict
 
 import ray
-from torch.multiprocessing import Lock, SimpleQueue
-from torch.utils.tensorboard import SummaryWriter
+from torch.multiprocessing import Lock, Queue
 
-from syllabus.core import Curriculum, decorate_all_functions
+from syllabus.core import Curriculum
+from syllabus.utils import UsageError, decorate_all_functions
 
 
 class CurriculumWrapper:
@@ -38,10 +41,6 @@ class CurriculumWrapper:
     def requires_step_updates(self):
         return self.curriculum.requires_step_updates
 
-    @property
-    def requires_episode_updates(self):
-        return self.curriculum.requires_episode_updates
-
     def get_tasks(self, task_space=None):
         return self.task_space.get_tasks(gym_space=task_space)
 
@@ -51,17 +50,17 @@ class CurriculumWrapper:
     def update_task_progress(self, task, progress):
         self.curriculum.update_task_progress(task, progress)
 
-    def update_on_step(self, task, step, reward, term, trunc):
-        self.curriculum.update_on_step(task, step, reward, term, trunc)
+    def update_on_step(self, task, obs, reward, term, trunc, info, progress):
+        self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress)
 
-    def log_metrics(self, writer, step=None):
-        self.curriculum.log_metrics(writer, step=step)
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        return self.curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
-    def update_on_step_batch(self, step_results):
-        self.curriculum.update_on_step_batch(step_results)
+    def update_on_step_batch(self, step_results, env_id=None):
+        self.curriculum.update_on_step_batch(step_results, env_id=env_id)
 
-    def update_on_episode(self, episode_return, episode_length, episode_task, env_id=None):
-        self.curriculum.update_on_episode(episode_return, episode_length, episode_task, env_id=env_id)
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None):
+        self.curriculum.update_on_episode(episode_return, length, task, progress, env_id=env_id)
 
     def update(self, metrics):
         self.curriculum.update(metrics)
@@ -69,23 +68,23 @@ class CurriculumWrapper:
     def update_batch(self, metrics):
         self.curriculum.update_batch(metrics)
 
-    def add_task(self, task):
-        self.curriculum.add_task(task)
-
     def normalize(self, rewards, task):
         return self.curriculum.normalize(rewards, task)
 
 
 class MultiProcessingComponents:
-    def __init__(self, task_queue, update_queue):
-        self.task_queue = task_queue
-        self.update_queue = update_queue
+    def __init__(self, requires_step_updates, max_queue_size=1000000, timeout=60, max_envs=None):
+        self.requires_step_updates = requires_step_updates
+        self.task_queue = Queue(maxsize=max_queue_size)
+        self.update_queue = Queue(maxsize=max_queue_size)
         self._instance_lock = Lock()
         self._env_count = ShareableList([0])
-        self._task_count = ShareableList([0])
-        self._update_count = ShareableList([0])
-        self._debug = False
-        self._verbose = False
+        self._debug = True
+        self.timeout = timeout
+        self.max_envs = max_envs
+
+    def peek_id(self):
+        return self._env_count[0]
 
     def get_id(self):
         with self._instance_lock:
@@ -93,83 +92,71 @@ class MultiProcessingComponents:
             self._env_count[0] += 1
         return instance_id
 
+    def should_sync(self, env_id):
+        # Only receive step updates from self.max_envs environments
+        if self.max_envs is not None and env_id >= self.max_envs:
+            return False
+        return True
+
     def put_task(self, task):
-        self.task_queue.put(task)
-        if self._debug:
-            task_count = self.added_task()
-            if self._verbose:
-                print(f"Task added to queue. Task count: {task_count}")
+        try:
+            self.task_queue.put(task, block=True, timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(
+                f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
 
     def get_task(self):
-        task = self.task_queue.get()
-        if self._debug:
-            task_count = self.removed_task()
-            if self._verbose:
-                print(f"Task removed from queue. Task count: {task_count}")
+        try:
+            task = self.task_queue.get(block=True, timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(
+                f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
         return task
 
     def put_update(self, update):
-        self.update_queue.put(update)
-        if self._debug:
-            update_count = self.added_update()
-            if self._verbose:
-                print(f"Update added to queue. Update count: {update_count}")
+        try:
+            self.update_queue.put(update, block=True, timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(
+                f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
     def get_update(self):
-        update = self.update_queue.get()
-        if self._debug:
-            update_count = self.removed_update()
-            if self._verbose:
-                print(f"Update removed from queue. Update count: {update_count}")
+         try:
+            update = self.update_queue.get(block=True, timeout=self.timeout)
+        except Empty as e:
+            raise UsageError(
+                f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
         return update
 
-    def added_task(self):
-        with self._instance_lock:
-            self._task_count[0] += 1
-            task_count = self._task_count[0]
-        return task_count
+    def close(self):
+        if self._env_count is not None:
+            self._env_count.shm.close()
+            try:
+                self._env_count.shm.unlink()
+            except FileNotFoundError:
+                pass    # Already unlinked
+            self.task_queue.close()
+            self.update_queue.close()
+            self._env_count = None
+            del self.task_queue
+            del self.update_queue
 
-    def removed_task(self):
-        with self._instance_lock:
-            self._task_count[0] -= 1
-            task_count = self._task_count[0]
-        return task_count
-
-    def get_task_count(self):
-        with self._instance_lock:
-            task_count = self._task_count[0]
-        return task_count
-
-    def get_update_count(self):
-        with self._instance_lock:
-            update_count = self._update_count[0]
-        return update_count
-
-    def added_update(self):
-        with self._instance_lock:
-            self._update_count[0] += 1
-            update_count = self._update_count[0]
-        return update_count
-
-    def removed_update(self):
-        with self._instance_lock:
-            self._update_count[0] -= 1
-            update_count = self._update_count[0]
-        return update_count
+    def get_metrics(self, log_n_tasks=1):
+        logs = []
+        logs.append(("curriculum/updates_in_queue", self.update_queue.qsize()))
+        logs.append(("curriculum/tasks_in_queue", self.task_queue.qsize()))
+        return logs
 
 
-class MultiProcessingCurriculumWrapper(CurriculumWrapper):
+class CurriculumSyncWrapper(CurriculumWrapper):
     def __init__(
         self,
         curriculum: Curriculum,
-        task_queue: SimpleQueue,
-        update_queue: SimpleQueue,
-        sequential_start: bool = True
+        sequential_start: bool = True,
+        **kwargs,
     ):
         super().__init__(curriculum)
-        self.task_queue = task_queue
-        self.update_queue = update_queue
         self.sequential_start = sequential_start
 
         self.update_thread = None
@@ -177,7 +164,7 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         self.added_tasks = []
         self.num_assigned_tasks = 0
 
-        self._components = MultiProcessingComponents(task_queue, update_queue)
+        self.components = MultiProcessingComponents(self.curriculum.requires_step_updates, **kwargs)
 
     def start(self):
         """
@@ -186,85 +173,79 @@ class MultiProcessingCurriculumWrapper(CurriculumWrapper):
         print("Start curriculum")
         self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
         self.should_update = True
+        signal.signal(signal.SIGINT, self._sigint_handler)
         self.update_thread.start()
 
     def stop(self):
         """
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
-        # Process final few updates
-        start = time.time()
-        end = time.time()
-        while end - start < 3 and not self.update_queue.empty():
-            time.sleep(0.5)
-            end = time.time()
-
         self.should_update = False
         self.update_thread.join()
-        components = self.get_components()
-        components._env_count.shm.close()
-        components._env_count.shm.unlink()
-        components._update_count.shm.close()
-        components._update_count.shm.unlink()
-        components._task_count.shm.close()
-        components._task_count.shm.unlink()
-        # components.task_queue.close()
-        # components.update_queue.close()
+        self.components.close()
+
+    def _sigint_handler(self, sig, frame):
+        self.stop()
 
     def _update_queues(self):
         """
         Continuously process completed tasks and sample new tasks.
         """
-        # TODO: Refactor long method? Write tests first
         # Update curriculum with environment results:
         while self.should_update:
-            requested_tasks = 0
-            while not self.update_queue.empty():
+            if self.components.task_queue.qsize() < 3 and self.num_assigned_tasks > 10:
+                warnings.warn(
+                    f"Task queue capacity is {self.components.task_queue.qsize()} / {self.components.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
 
-                batch_updates = self.get_components().get_update()  # Blocks until update is available
+            if not self.components.update_queue.empty():
+                # while not self.components.update_queue.empty():
+                update = self.components.get_update()  # Blocks until update is available
+                if isinstance(update, list):
+                    update = update[0]
 
-                if isinstance(batch_updates, dict):
-                    batch_updates = [batch_updates]
-
-                # Count number of requested tasks
-                for update in batch_updates:
-                    if "request_sample" in update and update["request_sample"]:
-                        requested_tasks += 1
-                
-                self.update_batch(batch_updates)
-
-            # Sample new tasks
-            if requested_tasks > 0:
-                new_tasks = self.curriculum.sample(k=requested_tasks)
-                for i, task in enumerate(new_tasks):
-                    message = {
-                        "next_task": task,
-                        "sample_id": self.num_assigned_tasks + i,
-                    }
-
-                    self.get_components().put_task(message)
-                self.num_assigned_tasks += requested_tasks
-                time.sleep(0)
+                # Sample new tasks if requested
+                if "request_sample" in update and update["request_sample"]:
+                    new_tasks = self.curriculum.sample(k=1)
+                    for task in new_tasks:
+                        message = {"next_task": task}
+                        self.components.put_task(message)
+                        self.num_assigned_tasks += 1
+                self.route_update(update)
+                time.sleep(0.0)
             else:
                 time.sleep(0.01)
 
-    def log_metrics(self, writer, step=None):
-        super().log_metrics(writer, step=step)
-        if self.get_components()._debug:
-            if isinstance(writer, SummaryWriter):
-                writer.add_scalar("curriculum/updates_in_queue", self.get_components()._update_count[0], step)
-                writer.add_scalar("curriculum/tasks_in_queue", self.get_components()._task_count[0], step)
-            else:
-                print("logging", self.get_components()._update_count[0], self.get_components()._task_count[0])
-                writer.log({"curriculum/updates_in_queue": self.get_components()._update_count[0], "global_step": step})
-                writer.log({"curriculum/tasks_in_queue": self.get_components()._task_count[0], "global_step": step})
+    def route_update(self, update_data: Dict[str, tuple]):
+        """Update the curriculum with the specified update type.
+        TODO: Change method header to not use dictionary, use enums?
 
-    def add_task(self, task):
-        super().add_task(task)
-        self.added_tasks.append(task)
+        :param update_data: Dictionary
+        :type update_data: Dictionary with "update_type" key which maps to one of ["step", "step_batch", "episode", "on_demand", "task_progress", "noop"] and "args" with a tuple of the appropriate arguments for the given "update_type".
+        :raises NotImplementedError:
+        """
 
-    def get_components(self):
-        return self._components
+        update_type = update_data["update_type"]
+        args = update_data["metrics"]
+        env_id = update_data["env_id"] if "env_id" in update_data else None
+
+        if update_type == "step":
+            self.update_on_step(*args, env_id=env_id)
+        elif update_type == "step_batch":
+            self.update_on_step_batch(*args, env_id=env_id)
+        elif update_type == "episode":
+            self.update_on_episode(*args, env_id=env_id)
+        elif update_type == "task_progress":
+            self.update_task_progress(*args, env_id=env_id)
+        elif update_type == "noop":
+            # Used to request tasks from the synchronization layer
+            pass
+        else:
+            raise NotImplementedError(f"Update type {update_type} not implemented.")
+
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        logs = [] if logs is None else logs
+        logs += self.components.get_metrics(log_n_tasks=log_n_tasks)
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
 
 def remote_call(func):
@@ -290,17 +271,14 @@ def make_multiprocessing_curriculum(curriculum, start=True, **kwargs):
     """
     Helper function for creating a MultiProcessingCurriculumWrapper.
     """
-    task_queue = SimpleQueue()
-    update_queue = SimpleQueue()
-
-    mp_curriculum = MultiProcessingCurriculumWrapper(curriculum, task_queue, update_queue, **kwargs)
+    mp_curriculum = CurriculumSyncWrapper(curriculum, **kwargs)
     if start:
         mp_curriculum.start()
     return mp_curriculum
 
 
 @ray.remote
-class RayWrapper(CurriculumWrapper):
+class RayCurriculumWrapper(CurriculumWrapper):
     def __init__(self, curriculum: Curriculum) -> None:
         super().__init__(curriculum)
 
@@ -310,7 +288,7 @@ class RayWrapper(CurriculumWrapper):
 
 
 @decorate_all_functions(remote_call)
-class RayCurriculumWrapper(CurriculumWrapper):
+class RayCurriculumSyncWrapper(CurriculumWrapper):
     """
     Subclass of LearningProgress Curriculum that uses Ray to share tasks and receive feedback
     from the environment. The only change is the @ray.remote decorator on the class.
@@ -323,7 +301,7 @@ class RayCurriculumWrapper(CurriculumWrapper):
 
     def __init__(self, curriculum, actor_name="curriculum") -> None:
         super().__init__(curriculum)
-        self.curriculum = RayWrapper.options(name=actor_name).remote(curriculum)
+        self.curriculum = RayCurriculumWrapper.options(name=actor_name).remote(curriculum)
         self.unwrapped = None
         self.task_space = curriculum.task_space
         self.added_tasks = []
@@ -333,16 +311,12 @@ class RayCurriculumWrapper(CurriculumWrapper):
     def sample(self, k: int = 1):
         return ray.get(self.curriculum.sample.remote(k=k))
 
-    def update_on_step_batch(self, step_results: List[Tuple[int, int, int, int]]) -> None:
+    def update_on_step_batch(self, step_results, env_id=None) -> None:
         ray.get(self.curriculum._on_step_batch.remote(step_results))
-
-    def add_task(self, task):
-        super().add_task(task)
-        self.added_tasks.append(task)
 
 
 def make_ray_curriculum(curriculum, actor_name="curriculum", **kwargs):
     """
     Helper function for creating a RayCurriculumWrapper.
     """
-    return RayCurriculumWrapper(curriculum, actor_name=actor_name, **kwargs)
+    return RayCurriculumSyncWrapper(curriculum, actor_name=actor_name, **kwargs)

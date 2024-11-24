@@ -1,13 +1,11 @@
-import wandb
-import ray
 import gymnasium as gym
 from gymnasium.spaces import Box
 from ray import train, tune
 from ray.air.integrations.wandb import WandbLoggerCallback, setup_wandb, _clean_log, _QueueItem
 from ray.tune.registry import register_env
-from syllabus.core import RaySyncWrapper, make_ray_curriculum
+from syllabus.core import RayGymnasiumSyncWrapper, make_ray_curriculum
 from syllabus.curricula import SimpleBoxCurriculum, NoopCurriculum
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import BoxTaskSpace
 
 from syllabus.examples.task_wrappers import CartPoleTaskWrapper
 from ray.tune.logger import LoggerCallback
@@ -36,14 +34,14 @@ class CustomWandbLoggerCallback(WandbLoggerCallback):
 
 # Define a task space
 if __name__ == "__main__":
-    task_space = TaskSpace(Box(-0.3, 0.3, shape=(2,)))
+    task_space = BoxTaskSpace(Box(-0.3, 0.3, shape=(2,)))
 
     def env_creator(config):
         env = gym.make("CartPole-v1")
         # Wrap the environment to change tasks on reset()
         env = CartPoleTaskWrapper(env)
         # Add environment sync wrapper
-        env = RaySyncWrapper(
+        env = RayGymnasiumSyncWrapper(
             env, task_space=task_space, update_on_step=False
         )
         return env

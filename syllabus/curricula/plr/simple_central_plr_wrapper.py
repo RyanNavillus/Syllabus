@@ -1,12 +1,11 @@
 import warnings
-from typing import Any, Dict, List, Tuple, Union
-import wandb
+from typing import Any, Dict, List, Union
+
 import gymnasium as gym
 import torch
-from gymnasium.spaces import Discrete, MultiDiscrete
 
-from syllabus.core import Curriculum, enumerate_axes
-from syllabus.task_space import TaskSpace
+from syllabus.core import Curriculum
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 from .task_sampler import TaskSampler
 
@@ -64,12 +63,11 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(
         self,
-        task_space: TaskSpace,
+        task_space: Union[DiscreteTaskSpace, MultiDiscreteTaskSpace],
         *curriculum_args,
         task_sampler_kwargs_dict: dict = None,
         action_space: gym.Space = None,
@@ -84,13 +82,13 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
             task_sampler_kwargs_dict = {}
 
         self._strategy = task_sampler_kwargs_dict.get("strategy", None)
-        if not isinstance(task_space.gym_space, Discrete) and not isinstance(task_space.gym_space, MultiDiscrete):
+        if not isinstance(task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)):
             raise ValueError(
-                f"Task space must be discrete or multi-discrete, got {task_space.gym_space}."
+                f"Task space must be discrete or multi-discrete, got {task_space}."
             )
         if "num_actors" in task_sampler_kwargs_dict and task_sampler_kwargs_dict['num_actors'] != num_processes:
             warnings.warn(
-                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.")
+                f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.", stacklevel=2)
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
@@ -110,7 +108,7 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
         self.num_updates = 0  # Used to ensure proper usage
         self.num_samples = 0  # Used to ensure proper usage
 
-    def update_on_demand(self, metrics: Dict):
+    def update(self, metrics: Dict):
         """
         Update the curriculum with arbitrary inputs.
         """
@@ -142,31 +140,22 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
         else:
             return [self._task_sampler.sample() for _ in range(k)]
 
-    def _enumerate_tasks(self, space):
-        assert isinstance(space, Discrete) or isinstance(
-            space, MultiDiscrete), f"Unsupported task space {space}: Expected Discrete or MultiDiscrete"
-        if isinstance(space, Discrete):
-            return list(range(space.n))
-        else:
-            return list(enumerate_axes(space.nvec))
-
-    def log_metrics(self, writer, step=None, log_full_dist=False):
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """
         Log the task distribution to the provided tensorboard writer.
         """
-        super().log_metrics(writer, step)
+        logs = [] if logs is None else logs
         metrics = self._task_sampler.metrics()
-        if writer == wandb:
-            writer.log({"curriculum/proportion_seen": metrics["proportion_seen"], "step": step})
-            writer.log({"curriculum/score": metrics["score"], "step": step})
-            for idx in range(self.num_tasks)[:10]:
-                name = self.task_names(self.tasks[idx], idx)
-                writer.log({f"curriculum/{name}_score": metrics["task_scores"][idx], "step": step})
-                writer.log({f"curriculum/{name}_staleness": metrics["task_staleness"][idx], "step": step})
-        else:
-            writer.add_scalar("curriculum/proportion_seen", metrics["proportion_seen"], step)
-            writer.add_scalar("curriculum/score", metrics["score"], step)
-            for idx in range(self.num_tasks)[:10]:
-                name = self.task_names(self.tasks[idx], idx)
-                writer.add_scalar(f"curriculum/{name}_score", metrics["task_scores"][idx], step)
-                writer.add_scalar(f"curriculum/{name}_staleness", metrics["task_staleness"][idx], step)
+        logs.append(("curriculum/proportion_seen", metrics["proportion_seen"]))
+        logs.append(("curriculum/score", metrics["score"]))
+
+        tasks = range(self.num_tasks)
+        if self.num_tasks > log_n_tasks and log_n_tasks != -1:
+            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.", stacklevel=2)
+            tasks = tasks[:log_n_tasks]
+
+        for idx in tasks:
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_staleness", metrics["task_staleness"][idx]))
+            logs.append((f"curriculum/{name}_score", metrics["task_scores"][idx]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)

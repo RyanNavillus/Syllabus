@@ -1,7 +1,6 @@
 import gymnasium as gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
-from syllabus.task_space import TaskSpace
 
 
 class TaskWrapper(gym.Wrapper):
@@ -16,8 +15,6 @@ class TaskWrapper(gym.Wrapper):
         new_task = kwargs.pop("new_task", None)
         if new_task is not None:
             self.change_task(new_task)
-            # TODO: Handle failure case for change task
-            self.task = new_task
 
         obs, info = self.env.reset(**kwargs)
         info["task_completion"] = 0.0
@@ -35,7 +32,7 @@ class TaskWrapper(gym.Wrapper):
         If you need to reset or re-init the environment here, make sure to check
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
-        raise NotImplementedError
+        self.task = new_task
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """
@@ -102,12 +99,12 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
     def get_current_task(self):
         return self.current_task
 
-    def reset(self, *args, **kwargs):
+    def reset(self, **kwargs):
         new_task = kwargs.pop("new_task", None)
         if new_task is not None:
             self.change_task(new_task)
             self.task = new_task
-        obs, info = self.env.reset(*args, **kwargs)
+        obs, info = self.env.reset(**kwargs)
         for agent in info.keys():
             info[agent]["task_completion"] = 0.0
             info[agent]["task_id"] = self.task
