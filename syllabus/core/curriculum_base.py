@@ -108,6 +108,15 @@ class Curriculum:
         if self.stat_recorder is not None:
             self.stat_recorder.record(episode_return, length, task, env_id)
 
+    def get_opponent(self, agent_id: int):
+        raise NotImplementedError("This curriculum does not track opponents.")
+
+    def update_agent(self, agent):
+        raise NotImplementedError("This curriculum does not track agents.")
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int):
+        raise NotImplementedError("This curriculum does not track winrates.")
+
     def _sample_distribution(self) -> List[float]:
         """Returns a sample distribution over the task space.
 
