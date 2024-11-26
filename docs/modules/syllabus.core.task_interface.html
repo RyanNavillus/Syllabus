@@ -247,7 +247,7 @@
         <article role="main">
           <section id="task-interface">
 <span id="taskinterface"></span><h1>Task Interface<a class="headerlink" href="#task-interface" title="Link to this heading">¶</a></h1>
-<p>Each environment will define tasks in a different way. A “task” might be the environment seed, an initialization argument, or an entirely different subclass. The <a class="reference internal" href="#taskenv">TaskEnv</a> and <a class="reference internal" href="#taskwrapper">TaskWrapper</a> provides a simple interface to change the task of an environment.</p>
+<p>Each environment will define tasks in a different way. A “task” might be the environment seed, an intialization argument, or an entirely different subclass. The <a class="reference internal" href="#taskenv">TaskEnv</a> and <a class="reference internal" href="#taskwrapper">TaskWrapper</a> provides a simple interface to change the task of an environment.</p>
 <p>A task wrapper defines allows an existing environment to change its task when <cite>reset()</cite> is called. It can be used to map tasks from the task space to actual environment
 configurations, or to add entirely new tasks to an environment.
 To write a custom task wrapper for an environment, simply subclass the <a class="reference internal" href="#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a> for gym environments or <a class="reference internal" href="#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper" title="syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">PettingZooTaskWrapper</span></code></a> for pettingzoo environments.
@@ -267,8 +267,8 @@ If you need to perform more complex operations, you can also override the entire
 </section>
 <section id="optional-features">
 <h2>Optional features<a class="headerlink" href="#optional-features" title="Link to this heading">¶</a></h2>
-<section id="syllabus-core-task-interface-environment-task-env-module">
-<h3>syllabus.core.task_interface.environment_task_env module<a class="headerlink" href="#syllabus-core-task-interface-environment-task-env-module" title="Link to this heading">¶</a></h3>
+<section id="syllabus-core-task-interface-task-env-module">
+<h3>syllabus.core.task_interface.task_env module<a class="headerlink" href="#syllabus-core-task-interface-task-env-module" title="Link to this heading">¶</a></h3>
 <dl class="py class" id="module-syllabus.core.task_interface.task_env">
 <span id="taskenv"></span><dt class="sig sig-object py" id="syllabus.core.task_interface.task_env.PettingZooTaskEnv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.task_interface.task_env.</span></span><span class="sig-name descname"><span class="pre">PettingZooTaskEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.task_interface.task_env.PettingZooTaskEnv" title="Link to this definition">¶</a></dt>
@@ -635,7 +635,7 @@ TODO: Complete this implementation and find way to support centralized encodings
 <li><a class="reference internal" href="#">Task Interface</a><ul>
 <li><a class="reference internal" href="#required-methods">Required Methods</a></li>
 <li><a class="reference internal" href="#optional-features">Optional features</a><ul>
-<li><a class="reference internal" href="#syllabus-core-task-interface-environment-task-env-module">syllabus.core.task_interface.environment_task_env module</a><ul>
+<li><a class="reference internal" href="#syllabus-core-task-interface-task-env-module">syllabus.core.task_interface.task_env module</a><ul>
 <li><a class="reference internal" href="#syllabus.core.task_interface.task_env.PettingZooTaskEnv"><code class="docutils literal notranslate"><span class="pre">PettingZooTaskEnv</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.core.task_interface.task_env.PettingZooTaskEnv.change_task"><code class="docutils literal notranslate"><span class="pre">PettingZooTaskEnv.change_task()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.task_interface.task_env.PettingZooTaskEnv.get_current_task"><code class="docutils literal notranslate"><span class="pre">PettingZooTaskEnv.get_current_task()</span></code></a></li>

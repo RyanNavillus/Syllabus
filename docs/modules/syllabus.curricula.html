@@ -251,7 +251,7 @@
 <span id="syllabus-curricula-noop-module"></span><h2>syllabus.curricula.noop module<a class="headerlink" href="#module-syllabus.curricula.noop" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.noop.</span></span><span class="sig-name descname"><span class="pre">NoopCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.noop.</span></span><span class="sig-name descname"><span class="pre">NoopCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_step_updates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
 <p>Used to to test API without a curriculum.</p>
 <dl class="py attribute">
@@ -261,8 +261,19 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.REQUIRES_STEP_UPDATES">
-<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.REQUIRES_STEP_UPDATES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">REQUIRES_STEP_UPDATES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.REQUIRES_STEP_UPDATES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.requires_step_updates">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_step_updates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.requires_step_updates" title="Link to this definition">¶</a></dt>
+<dd><p>Returns whether the curriculum requires step updates from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the curriculum requires step updates, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.sample">
@@ -530,6 +541,7 @@ success or failure.</p>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.requires_step_updates</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.sample()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_episode()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step()</span></code></a></li>

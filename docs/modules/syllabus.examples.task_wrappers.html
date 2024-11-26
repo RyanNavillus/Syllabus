@@ -306,23 +306,6 @@ calling the final reset.</p>
 </dd></dl>
 
 </section>
-<section id="module-syllabus.examples.task_wrappers.minihack_task_wrapper">
-<span id="syllabus-examples-task-wrappers-minihack-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.minihack_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.minihack_task_wrapper" title="Link to this heading">¶</a></h2>
-<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.minihack_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">MinihackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
-<p>This wrapper simply changes the seed of a Minigrid environment.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset" title="Link to this definition">¶</a></dt>
-<dd><p>Uses the <a class="reference internal" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset" title="syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
 <section id="module-syllabus.examples.task_wrappers.nethack_wrappers">
 <span id="syllabus-examples-task-wrappers-nethack-wrappers-module"></span><h2>syllabus.examples.task_wrappers.nethack_wrappers module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.nethack_wrappers" title="Link to this heading">¶</a></h2>
 <p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
@@ -465,7 +448,7 @@ fail in case Nethack is initialized with some uncommon options.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NethackSeedWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_seeds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NethackSeedWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_seeds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
 <p>This wrapper allows you to change the task of an NLE environment.</p>
 <dl class="simple">
@@ -611,6 +594,24 @@ but then some caching and numpy stuff to speed up things.</p>
 </dd></dl>
 
 </section>
+<section id="module-syllabus.examples.task_wrappers.pistonball_task_wrapper">
+<span id="syllabus-examples-task-wrappers-pistonball-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.pistonball_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper" title="Link to this heading">¶</a></h2>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.pistonball_task_wrapper.</span></span><span class="sig-name descname"><span class="pre">PistonballTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ParallelEnv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper" title="syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">PettingZooTaskWrapper</span></code></a></p>
+<p>This wrapper simply changes the seed of a Minigrid environment.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset" title="Link to this definition">¶</a></dt>
+<dd><p>Resets the environment.</p>
+<p>And returns a dictionary of observations (keyed by the agent name)</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-syllabus.examples.task_wrappers.procgen_task_wrapper">
 <span id="syllabus-examples-task-wrappers-procgen-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.procgen_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.procgen_task_wrapper" title="Link to this heading">¶</a></h2>
 <dl class="py class">
@@ -736,13 +737,6 @@ calling the final reset.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.minihack_task_wrapper">syllabus.examples.task_wrappers.minihack_task_wrapper module</a><ul>
-<li><a class="reference internal" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper"><code class="docutils literal notranslate"><span class="pre">MinihackTaskWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.task_wrappers.minihack_task_wrapper.MinihackTaskWrapper.reset"><code class="docutils literal notranslate"><span class="pre">MinihackTaskWrapper.reset()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.nethack_wrappers">syllabus.examples.task_wrappers.nethack_wrappers module</a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect"><code class="docutils literal notranslate"><span class="pre">NetHackCollect</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset"><code class="docutils literal notranslate"><span class="pre">NetHackCollect.reset()</span></code></a></li>
@@ -785,6 +779,13 @@ calling the final reset.</p>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.RenderCharImagesWithNumpyWrapperV2"><code class="docutils literal notranslate"><span class="pre">RenderCharImagesWithNumpyWrapperV2</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.RenderCharImagesWithNumpyWrapperV2.reset"><code class="docutils literal notranslate"><span class="pre">RenderCharImagesWithNumpyWrapperV2.reset()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.RenderCharImagesWithNumpyWrapperV2.step"><code class="docutils literal notranslate"><span class="pre">RenderCharImagesWithNumpyWrapperV2.step()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper">syllabus.examples.task_wrappers.pistonball_task_wrapper module</a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper"><code class="docutils literal notranslate"><span class="pre">PistonballTaskWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset"><code class="docutils literal notranslate"><span class="pre">PistonballTaskWrapper.reset()</span></code></a></li>
 </ul>
 </li>
 </ul>

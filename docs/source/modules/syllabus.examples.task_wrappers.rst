@@ -19,14 +19,6 @@ syllabus.examples.task\_wrappers.minigrid\_task\_wrapper module
    :undoc-members:
    :show-inheritance:
 
-syllabus.examples.task\_wrappers.minihack\_task\_wrapper module
----------------------------------------------------------------
-
-.. automodule:: syllabus.examples.task_wrappers.minihack_task_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 syllabus.examples.task\_wrappers.nethack\_wrappers module
 --------------------------------------------------------------
 
@@ -35,13 +27,13 @@ syllabus.examples.task\_wrappers.nethack\_wrappers module
    :undoc-members:
    :show-inheritance:
 
-.. syllabus.examples.task\_wrappers.pistonball\_task\_wrapper module
-.. -----------------------------------------------------------------
+syllabus.examples.task\_wrappers.pistonball\_task\_wrapper module
+-----------------------------------------------------------------
 
-.. .. automodule:: syllabus.examples.task_wrappers.pistonball_task_wrapper
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+.. automodule:: syllabus.examples.task_wrappers.pistonball_task_wrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 syllabus.examples.task\_wrappers.procgen\_task\_wrapper module
 --------------------------------------------------------------
