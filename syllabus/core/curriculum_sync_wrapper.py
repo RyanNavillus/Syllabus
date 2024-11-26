@@ -1,6 +1,7 @@
 import signal
 import threading
 import time
+import warnings
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
 from queue import Empty
@@ -72,14 +73,18 @@ class CurriculumWrapper:
 
 
 class MultiProcessingComponents:
-    def __init__(self, requires_step_updates, maxsize=1000000, timeout=60):
+    def __init__(self, requires_step_updates, max_queue_size=1000000, timeout=60, max_envs=None):
         self.requires_step_updates = requires_step_updates
-        self.task_queue = Queue(maxsize=maxsize)
-        self.update_queue = Queue(maxsize=maxsize)
+        self.task_queue = Queue(maxsize=max_queue_size)
+        self.update_queue = Queue(maxsize=max_queue_size)
         self._instance_lock = Lock()
         self._env_count = ShareableList([0])
         self._debug = True
         self.timeout = timeout
+        self.max_envs = max_envs
+
+    def peek_id(self):
+        return self._env_count[0]
 
     def get_id(self):
         with self._instance_lock:
@@ -87,16 +92,22 @@ class MultiProcessingComponents:
             self._env_count[0] += 1
         return instance_id
 
+    def should_sync(self, env_id):
+        # Only receive step updates from self.max_envs environments
+        if self.max_envs is not None and env_id >= self.max_envs:
+            return False
+        return True
+
     def put_task(self, task):
         try:
-            self.task_queue.put(task, timeout=self.timeout)
+            self.task_queue.put(task, block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
 
     def get_task(self):
         try:
-            task = self.task_queue.get(timeout=self.timeout)
+            task = self.task_queue.get(block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
@@ -104,14 +115,14 @@ class MultiProcessingComponents:
 
     def put_update(self, update):
         try:
-            self.update_queue.put(update, timeout=self.timeout)
+            self.update_queue.put(update, block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
     def get_update(self):
-        try:
-            update = self.update_queue.get(timeout=self.timeout)
+         try:
+            update = self.update_queue.get(block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
                 f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
@@ -143,8 +154,7 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         self,
         curriculum: Curriculum,
         sequential_start: bool = True,
-        max_queue_size: int = 100000,
-        timeout: int = 60,
+        **kwargs,
     ):
         super().__init__(curriculum)
         self.sequential_start = sequential_start
@@ -154,8 +164,7 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         self.added_tasks = []
         self.num_assigned_tasks = 0
 
-        self.components = MultiProcessingComponents(
-            self.curriculum.requires_step_updates, maxsize=max_queue_size, timeout=timeout)
+        self.components = MultiProcessingComponents(self.curriculum.requires_step_updates, **kwargs)
 
     def start(self):
         """
@@ -181,33 +190,27 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         """
         Continuously process completed tasks and sample new tasks.
         """
-        # TODO: Refactor long method? Write tests first
         # Update curriculum with environment results:
         while self.should_update:
-            requested_tasks = 0
-            while not self.components.update_queue.empty():
-                batch_updates = self.components.get_update()  # Blocks until update is available
+            if self.components.task_queue.qsize() < 3 and self.num_assigned_tasks > 10:
+                warnings.warn(
+                    f"Task queue capacity is {self.components.task_queue.qsize()} / {self.components.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
 
-                if isinstance(batch_updates, dict):
-                    batch_updates = [batch_updates]
+            if not self.components.update_queue.empty():
+                # while not self.components.update_queue.empty():
+                update = self.components.get_update()  # Blocks until update is available
+                if isinstance(update, list):
+                    update = update[0]
 
-                # Count number of requested tasks
-                for update in batch_updates:
-                    if "request_sample" in update and update["request_sample"]:
-                        requested_tasks += 1
-                    self.route_update(update)
-
-            # Sample new tasks
-            if requested_tasks > 0:
-                new_tasks = self.curriculum.sample(k=requested_tasks)
-                for i, task in enumerate(new_tasks):
-                    message = {
-                        "next_task": task,
-                        "sample_id": self.num_assigned_tasks + i,
-                    }
-                    self.components.put_task(message)
-                self.num_assigned_tasks += requested_tasks
-                time.sleep(0)
+                # Sample new tasks if requested
+                if "request_sample" in update and update["request_sample"]:
+                    new_tasks = self.curriculum.sample(k=1)
+                    for task in new_tasks:
+                        message = {"next_task": task}
+                        self.components.put_task(message)
+                        self.num_assigned_tasks += 1
+                self.route_update(update)
+                time.sleep(0.0)
             else:
                 time.sleep(0.01)
 
@@ -230,9 +233,6 @@ class CurriculumSyncWrapper(CurriculumWrapper):
             self.update_on_step_batch(*args, env_id=env_id)
         elif update_type == "episode":
             self.update_on_episode(*args, env_id=env_id)
-        elif update_type == "on_demand":
-            # Directly pass metrics without expanding
-            self.update(args)
         elif update_type == "task_progress":
             self.update_task_progress(*args, env_id=env_id)
         elif update_type == "noop":
@@ -245,10 +245,6 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         logs = [] if logs is None else logs
         logs += self.components.get_metrics(log_n_tasks=log_n_tasks)
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
-
-    def __del__(self):
-        self.stop()
-        del self
 
 
 def remote_call(func):

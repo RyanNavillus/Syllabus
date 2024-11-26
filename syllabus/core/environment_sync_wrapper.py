@@ -25,6 +25,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                  components: MultiProcessingComponents,
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
+                 remove_keys: list = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(
@@ -34,12 +35,13 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         self.task_space = task_space
         self.components = components
         self._latest_task = None
-        self.update_on_step = components.requires_step_updates
         self.batch_size = batch_size
+        self.remove_keys = remove_keys if remove_keys is not None else []
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
         self._batch_step = 0
         self.instance_id = components.get_id()
+        self.update_on_step = components.requires_step_updates and components.should_sync(self.instance_id)
 
         self.episode_length = 0
         self.episode_return = 0
@@ -75,6 +77,19 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
+
+        if self.update_on_step:
+            trimmed_obs = {key: obs[key]
+                           for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
+            self._obs[self._batch_step] = trimmed_obs
+            self._rews[self._batch_step] = 0.0
+            self._terms[self._batch_step] = False
+            self._truncs[self._batch_step] = False
+            self._infos[self._batch_step] = info
+            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+            self._task_progresses[self._batch_step] = self.task_progress
+            self._batch_step += 1
+
         return obs, info
 
     def step(self, action):
@@ -85,7 +100,9 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         # Update curriculum with step info
         if self.update_on_step:
-            self._obs[self._batch_step] = obs
+            trimmed_obs = {key: obs[key]
+                           for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
+            self._obs[self._batch_step] = trimmed_obs
             self._rews[self._batch_step] = rew
             self._terms[self._batch_step] = term
             self._truncs[self._batch_step] = trunc

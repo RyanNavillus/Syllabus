@@ -222,7 +222,7 @@ class DiscreteTaskSpace(TaskSpace):
         :return: Boolean specifying if the tasks are sequential integers
         :rtype: bool
         """
-        return isinstance(tasks[0], int) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
+        return isinstance(tasks[0], (int, np.integer)) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
 
     def _decode(self, encoding: int) -> int:
         """
@@ -233,6 +233,7 @@ class DiscreteTaskSpace(TaskSpace):
         :return: Decoded task representation
         :rtype: int
         """
+        assert isinstance(encoding, (int, np.integer)), f"Encoding must be an integer. Got {type(encoding)} instead."
         if self._sequential:
             task = encoding + self._first_task
             if task < self._first_task or task > self._last_task:
@@ -251,6 +252,7 @@ class DiscreteTaskSpace(TaskSpace):
         :rtype: int
         """
         if self._sequential:
+            assert isinstance(task, (int, np.integer)), f"Task must be an integer. Got {type(task)} instead."
             if task < self._first_task or task > self._last_task:
                 raise UsageError(f"Task {task} is not in the task space")
             return task - self._first_task
@@ -290,6 +292,7 @@ class BoxTaskSpace(TaskSpace):
         :rtype: np.ndarray
         :raises UsageError: If encoding does not map to a task in the task space
         """
+        assert isinstance(encoding, np.ndarray), f"Encoding must be a numpy array. Got {type(encoding)} instead."
         if not self.contains(encoding):
             raise UsageError(f"Encoding {encoding} does not map to a task in the task space")
         return encoding
@@ -411,7 +414,7 @@ class MultiDiscreteTaskSpace(TaskSpace):
         :return: Boolean specifying if the tasks are sequential integers
         :rtype: bool
         """
-        return isinstance(tasks[0], int) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
+        return isinstance(tasks[0], (int, np.integer)) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
 
     def _decode(self, encoding: Union[int, Tuple[int]]) -> Tuple[int]:
         """
@@ -422,7 +425,11 @@ class MultiDiscreteTaskSpace(TaskSpace):
         :return: Decoded task representation
         :rtype: Tuple[int]
         """
+        assert isinstance(encoding, (int, np.integer, tuple)
+                          ), f"Encoding must be an integer or tuple. Got {type(encoding)} instead."
         if self.flatten:
+            assert isinstance(encoding, (int, np.integer)
+                              ), f"Encoding must be an integer. Got {type(encoding)} instead."
             encoding = np.unravel_index(encoding, self.gym_space.nvec)
         if len(encoding) != len(self._decode_maps):
             raise UsageError(
@@ -524,9 +531,9 @@ class TupleTaskSpace(TaskSpace):
         :return: Boolean specifying if the tasks are sequential integers
         :rtype: bool
         """
-        return isinstance(tasks[0], int) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
+        return isinstance(tasks[0], (int, np.integer)) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
 
-    def _decode(self, encoding: int):
+    def _decode(self, encoding: Union[int, Tuple[Any]]) -> Tuple[int]:
         """
         Convert the task encoding to the original task representation.
 
@@ -535,7 +542,11 @@ class TupleTaskSpace(TaskSpace):
         :return: Decoded task representation
         :rtype: Tuple[Any]
         """
+        assert isinstance(encoding, (int, np.integer, tuple)
+                          ), f"Encoding must be an integer or tuple. Got {type(encoding)} instead."
         if self.flatten:
+            assert isinstance(encoding, (int, np.integer)
+                              ), f"Encoding must be an integer. Got {type(encoding)} instead."
             encoding = np.unravel_index(encoding, self._task_nums)
         if len(encoding) != len(self.task_spaces):
             raise UsageError(

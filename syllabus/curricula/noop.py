@@ -7,12 +7,17 @@ class NoopCurriculum(Curriculum):
     """
     Used to to test API without a curriculum.
     """
-    REQUIRES_STEP_UPDATES = True
+    REQUIRES_STEP_UPDATES = False
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, default_task, *curriculum_args, **curriculum_kwargs):
+    def __init__(self, default_task, *curriculum_args, require_step_updates=False, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         self.default_task = self.task_space.encode(default_task)
+        self.require_step_updates = require_step_updates
+
+    @property
+    def requires_step_updates(self) -> bool:
+        return self.require_step_updates
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """

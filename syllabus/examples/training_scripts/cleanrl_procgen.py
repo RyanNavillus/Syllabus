@@ -142,7 +142,8 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
                 env,
                 env.task_space,
                 curriculum_components,
-                batch_size=256
+                batch_size=256,
+                buffer_size=4,
             )
         return env
     return thunk
@@ -286,7 +287,7 @@ if __name__ == "__main__":
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "noop":
             print("Using noop curriculum.")
-            curriculum = NoopCurriculum(0, sample_env.task_space)
+            curriculum = NoopCurriculum(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
