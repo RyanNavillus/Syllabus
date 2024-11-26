@@ -34,7 +34,7 @@ syllabus.core.task_interface.environment\_task\_env module
 
 .. _TaskEnv:
 
-.. automodule:: syllabus.core.task_interface.environment_task_env
+.. automodule:: syllabus.core.task_interface.task_env
    :members:
    :undoc-members:
    :show-inheritance:

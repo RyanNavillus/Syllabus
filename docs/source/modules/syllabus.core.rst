@@ -55,19 +55,3 @@ syllabus.core.environment\_sync\_wrapper module
    :members:
    :undoc-members:
    :show-inheritance:
-
-syllabus.core.multivariate\_curriculum\_wrapper module
-------------------------------------------------------
-
-.. automodule:: syllabus.core.multivariate_curriculum_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-syllabus.core.utils module
---------------------------
-
-.. automodule:: syllabus.core.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
