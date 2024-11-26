@@ -37,30 +37,6 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
             self.curriculum.update_on_episode(
                 episode_return[agent], length, task, progress, env_id=(env_id * self.num_agents) + i)
 
-    def update_batch(self, metrics):
-        for update in metrics:
-            self.update(update)
-
-    def update(self, metrics):
-        update_type = metrics["update_type"]
-        args = metrics["metrics"]
-        env_id = metrics["env_id"] if "env_id" in metrics else None
-
-        if update_type == "step":
-            self.update_on_step(*args, env_id=env_id)
-        elif update_type == "step_batch":
-            self.update_on_step_batch(*args, env_id=env_id)
-        elif update_type == "episode":
-            self.update_on_episode(*args, env_id=env_id)
-        elif update_type == "task_progress":
-            self.update_task_progress(*args, env_id=env_id)
-        elif update_type == "noop":
-            # Used to request tasks from the synchronization layer
-            pass
-        else:
-            raise NotImplementedError(f"Update type {update_type} not implemented.")
-        self.unwrapped.n_updates += 1
-
 
 class MultiagentIndependentCurriculumWrapper(CurriculumWrapper):
     def __init__(self, curriculum, possible_agents, *args, **kwargs):
