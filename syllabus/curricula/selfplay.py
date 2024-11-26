@@ -9,7 +9,7 @@ import numpy as np
 from gymnasium import spaces
 from scipy.special import softmax
 
-from syllabus.core import Curriculum, AgentType  # noqa: E402
+from syllabus.core import Curriculum, Agent  # noqa: E402
 from syllabus.task_space import TaskSpace  # noqa: E402
 
 
@@ -22,7 +22,7 @@ class SelfPlay(Curriculum):
     def __init__(
         self,
         task_space: TaskSpace,
-        agent: AgentType,
+        agent: Agent,
         device: str,
     ):
         """ Initialize the self play curriculum.
@@ -42,11 +42,11 @@ class SelfPlay(Curriculum):
             "n_games": 0,
         }
 
-    def add_agent(self, agent: AgentType) -> int:
+    def add_agent(self, agent: Agent) -> int:
         self.agent = deepcopy(agent).to(self.device)
         return 0
 
-    def get_agent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> Agent:
         if agent_id is None:
             agent_id = 0
         assert agent_id == 0, (
@@ -91,7 +91,7 @@ class FictitiousSelfPlay(Curriculum):
     def __init__(
         self,
         task_space: TaskSpace,
-        agent: AgentType,
+        agent: Agent,
         device: str,
         storage_path: str,
         max_agents: int,
@@ -154,7 +154,7 @@ class FictitiousSelfPlay(Curriculum):
             old_winrate + (opponent_reward - old_winrate) / n
         )
 
-    def get_agent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> Agent:
         """Loads an agent from the buffer of saved agents."""
         if self.loaded_agents[agent_id] is None:
             if self.n_loaded_agents >= self.max_loaded_agents:
@@ -198,7 +198,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
     def __init__(
         self,
         task_space: TaskSpace,
-        agent: AgentType,
+        agent: Agent,
         device: str,
         storage_path: str,
         max_agents: int,
@@ -260,7 +260,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             old_winrate + (opponent_reward - old_winrate) / n
         )
 
-    def get_agent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> Agent:
         """
         Samples an agent id from the softmax distribution induced by winrates
         then loads the selected agent from the buffer of saved agents.

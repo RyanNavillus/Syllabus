@@ -1,0 +1,1 @@
+pytest tests/multiprocessing_sync_tests.py tests/multiprocessing_smoke_tests.py tests/multiagent_sync_tests.py tests/multiagent_sync_tests.py

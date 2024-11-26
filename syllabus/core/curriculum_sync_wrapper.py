@@ -1,17 +1,17 @@
+import copy
 import signal
 import threading
 import time
 import warnings
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
-from queue import Empty
 from typing import Dict
 
 import ray
 from torch.multiprocessing import Lock, Queue
 
 from syllabus.core import Curriculum
-from syllabus.utils import UsageError, decorate_all_functions
+from syllabus.utils import decorate_all_functions
 
 
 class CurriculumWrapper:
@@ -71,6 +71,11 @@ class CurriculumWrapper:
     def normalize(self, rewards, task):
         return self.curriculum.normalize(rewards, task)
 
+    def __getattr__(self, attr):
+        curriculum_atr = getattr(self.curriculum, attr, None)
+        if curriculum_atr is not None:
+            return curriculum_atr
+
 
 class MultiProcessingComponents:
     def __init__(self, requires_step_updates, max_queue_size=1000000, timeout=60, max_envs=None):
@@ -82,6 +87,7 @@ class MultiProcessingComponents:
         self._debug = True
         self.timeout = timeout
         self.max_envs = max_envs
+        self._maxsize = max_queue_size
 
     def peek_id(self):
         return self._env_count[0]
@@ -99,34 +105,17 @@ class MultiProcessingComponents:
         return True
 
     def put_task(self, task):
-        try:
-            self.task_queue.put(task, block=True, timeout=self.timeout)
-        except Empty as e:
-            raise UsageError(
-                f"Failed to put task in queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
+        self.task_queue.put(task, block=False)
 
     def get_task(self):
-        try:
-            task = self.task_queue.get(block=True, timeout=self.timeout)
-        except Empty as e:
-            raise UsageError(
-                f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
+        task = self.task_queue.get(block=True)
         return task
 
     def put_update(self, update):
-        try:
-            self.update_queue.put(update, block=True, timeout=self.timeout)
-        except Empty as e:
-            raise UsageError(
-                f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
+        self.update_queue.put(copy.deepcopy(update), block=False)
 
     def get_update(self):
-         try:
-            update = self.update_queue.get(block=True, timeout=self.timeout)
-        except Empty as e:
-            raise UsageError(
-                f"Failed to get update from queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
-
+        update = self.update_queue.get(block=False)
         return update
 
     def close(self):
@@ -170,10 +159,11 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         """
         Start the thread that reads the complete_queue and reads the task_queue.
         """
-        self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
-        self.should_update = True
-        signal.signal(signal.SIGINT, self._sigint_handler)
-        self.update_thread.start()
+        if not self.should_update:
+            self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
+            self.should_update = True
+            signal.signal(signal.SIGINT, self._sigint_handler)
+            self.update_thread.start()
 
     def stop(self):
         """
@@ -197,8 +187,8 @@ class CurriculumSyncWrapper(CurriculumWrapper):
                     f"Task queue capacity is {self.components.task_queue.qsize()} / {self.components.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
 
             if not self.components.update_queue.empty():
-                # while not self.components.update_queue.empty():
                 update = self.components.get_update()  # Blocks until update is available
+
                 if isinstance(update, list):
                     update = update[0]
 
@@ -226,7 +216,6 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         update_type = update_data["update_type"]
         args = update_data["metrics"]
         env_id = update_data["env_id"] if "env_id" in update_data else None
-
         if update_type == "step":
             self.update_on_step(*args, env_id=env_id)
         elif update_type == "step_batch":

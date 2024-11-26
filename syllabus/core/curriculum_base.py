@@ -8,7 +8,7 @@ from syllabus.task_space import TaskSpace
 from .stat_recorder import StatRecorder
 
 
-AgentType = TypeVar("AgentType")
+Agent = TypeVar("Agent")
 
 
 class Curriculum:
@@ -111,7 +111,7 @@ class Curriculum:
         if self.stat_recorder is not None:
             self.stat_recorder.record(episode_return, length, task, env_id)
 
-    def get_agent(self, agent_id: int) -> AgentType:
+    def get_agent(self, agent_id: int) -> Agent:
         """ Load an agent from the buffer of saved agents.
 
         :param agent_id: Identifier of the agent to load
@@ -119,7 +119,7 @@ class Curriculum:
         """
         raise NotImplementedError("This curriculum does not track agents.")
 
-    def add_agent(self, agent: AgentType):
+    def add_agent(self, agent: Agent):
         """ Add an agent to the curriculum.
 
         :param agent: Agent to add to the curriculum
