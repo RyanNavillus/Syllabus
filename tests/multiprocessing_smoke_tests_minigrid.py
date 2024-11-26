@@ -13,7 +13,6 @@ N_EPISODES = 16
 
 
 if __name__ == "__main__":
-    ray.init()
     sample_env = create_minigrid_env()
     curricula = [
         NoopCurriculum("MiniGrid-DoorKey-5x5-v0", sample_env.task_space, random_start_tasks=10),

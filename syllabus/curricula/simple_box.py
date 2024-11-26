@@ -1,6 +1,7 @@
 import typing
 from typing import Any, List, Union
 
+import numpy as np
 from gymnasium.spaces import Box
 
 from syllabus.core import Curriculum
@@ -28,7 +29,7 @@ class SimpleBoxCurriculum(Curriculum):
         full_range = self.task_space.gym_space.high[1] - self.task_space.gym_space.low[0]
         midpoint = self.task_space.gym_space.low[0] + (full_range / 2.0)
         self.step_size = (full_range / 2.0) / steps
-        self.max_range = (midpoint - self.step_size, midpoint + self.step_size)
+        self.max_range = np.array([midpoint - self.step_size, midpoint + self.step_size])
         self.consecutive_successes = 0
         self.max_reached = False
 
@@ -50,7 +51,7 @@ class SimpleBoxCurriculum(Curriculum):
         if self.consecutive_successes >= self.required_successes:
             new_low = max(self.max_range[0] - self.step_size, self.task_space.gym_space.low[0])
             new_high = min(self.max_range[1] + self.step_size, self.task_space.gym_space.high[1])
-            self.max_range = (new_low, new_high)
+            self.max_range = np.array([new_low, new_high])
             self.consecutive_successes = 0
             if new_low == self.task_space.gym_space.low[0] and new_high == self.task_space.gym_space.high[1]:
                 self.max_reached = True
