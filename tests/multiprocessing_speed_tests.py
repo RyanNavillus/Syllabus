@@ -56,5 +56,4 @@ def test_native_syllabus_speed(benchmark):
 
 #         curriculum = make_multiprocessing_curriculum(curriculum)
 #         return run_native_multiprocess(env_fn, env_args=env_args, env_kwargs=env_kwargs, curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
-
 #     benchmark.pedantic(wrapper, iterations=N_ITERATIONS, rounds=N_ROUNDS)

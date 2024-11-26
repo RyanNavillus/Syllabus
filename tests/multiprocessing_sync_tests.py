@@ -6,7 +6,7 @@ from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_gymnasium_synctest_env
 
 # Setup global variables
-N_ENVS = 1
+N_ENVS = 8
 N_EPISODES = 10
 
 

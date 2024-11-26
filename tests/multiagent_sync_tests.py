@@ -5,8 +5,8 @@ from syllabus.tests import SyncTestCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum, MultiagentSharedCurriculumWrapper
 from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_pettingzoo_synctest_env
 
-N_ENVS = 2
-N_EPISODES = 2
+N_ENVS = 8
+N_EPISODES = 10
 
 
 def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_agents=2):

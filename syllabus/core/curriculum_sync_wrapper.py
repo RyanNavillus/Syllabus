@@ -5,13 +5,14 @@ import time
 import warnings
 from functools import wraps
 from multiprocessing.shared_memory import ShareableList
+from queue import Empty
 from typing import Dict
 
 import ray
 from torch.multiprocessing import Lock, Queue
 
 from syllabus.core import Curriculum
-from syllabus.utils import decorate_all_functions
+from syllabus.utils import UsageError, decorate_all_functions
 
 
 class CurriculumWrapper:
@@ -108,8 +109,15 @@ class MultiProcessingComponents:
         self.task_queue.put(task, block=False)
 
     def get_task(self):
-        task = self.task_queue.get(block=True)
-        return task
+        try:
+            if self.task_queue.empty():
+                warnings.warn(
+                    f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
+            task = self.task_queue.get(block=True, timeout=self.timeout)
+            return task
+        except Empty as e:
+            raise UsageError(
+                f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
 
     def put_update(self, update):
         self.update_queue.put(copy.deepcopy(update), block=False)
@@ -182,10 +190,6 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         """
         # Update curriculum with environment results:
         while self.should_update:
-            if self.components.task_queue.qsize() < 3 and self.num_assigned_tasks > 10:
-                warnings.warn(
-                    f"Task queue capacity is {self.components.task_queue.qsize()} / {self.components.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
-
             if not self.components.update_queue.empty():
                 update = self.components.get_update()  # Blocks until update is available
 
