@@ -1,4 +1,6 @@
+import copy
 import time
+import torch
 from typing import Any, Callable, Dict
 
 import gymnasium as gym
@@ -54,7 +56,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             self._truncs = np.zeros(self.batch_size, dtype=bool)
             self._infos = [None] * self.batch_size
             self._tasks = [None] * self.batch_size
-            self._task_progresses = [None] * self.batch_size
+            self._task_progresses = np.zeros(self.batch_size, dtype=np.float32)
 
         # Request initial task
         assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."
@@ -77,19 +79,8 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
-
         if self.update_on_step:
-            trimmed_obs = {key: obs[key]
-                           for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
-            self._obs[self._batch_step] = trimmed_obs
-            self._rews[self._batch_step] = 0.0
-            self._terms[self._batch_step] = False
-            self._truncs[self._batch_step] = False
-            self._infos[self._batch_step] = info
-            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
-            self._task_progresses[self._batch_step] = self.task_progress
-            self._batch_step += 1
-
+            self._update_step(obs, 0.0, False, False, info, send=False)
         return obs, info
 
     def step(self, action):
@@ -100,22 +91,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         # Update curriculum with step info
         if self.update_on_step:
-            trimmed_obs = {key: obs[key]
-                           for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
-            self._obs[self._batch_step] = trimmed_obs
-            self._rews[self._batch_step] = rew
-            self._terms[self._batch_step] = term
-            self._truncs[self._batch_step] = trunc
-            self._infos[self._batch_step] = info
-            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
-            self._task_progresses[self._batch_step] = self.task_progress
-            self._batch_step += 1
-
-            # Send batched updates
-            if self._batch_step >= self.batch_size or term or trunc:
-                updates = self._package_step_updates()
-                self.components.put_update(updates)
-                self._batch_step = 0
+            self._update_step(obs, rew, term, trunc, info)
 
         # Episode update
         if term or trunc:
@@ -131,10 +107,36 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         return obs, rew, term, trunc, info
 
+    def _update_step(self, obs, rew, term, trunc, info, send=True):
+        trimmed_obs = {key: obs[key]
+                       for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
+        self._obs[self._batch_step] = trimmed_obs
+        self._rews[self._batch_step] = rew
+        self._terms[self._batch_step] = term
+        self._truncs[self._batch_step] = trunc
+        self._infos[self._batch_step] = info
+        self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+        self._task_progresses[self._batch_step] = self.task_progress
+        self._batch_step += 1
+
+        # Send batched updates
+        if send and (self._batch_step >= self.batch_size or term or trunc):
+            updates = self._package_step_updates()
+            self.components.put_update(updates)
+            self._batch_step = 0
+
     def _package_step_updates(self):
         return [{
             "update_type": "step_batch",
-            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step], self._task_progresses[:self._batch_step]],),
+            "metrics": ([
+                self._tasks[:self._batch_step],
+                self._obs[:self._batch_step],
+                self._rews[:self._batch_step],
+                self._terms[:self._batch_step],
+                self._truncs[:self._batch_step],
+                self._infos[:self._batch_step],
+                self._task_progresses[:self._batch_step],
+            ],),
             "env_id": self.instance_id,
             "request_sample": False
         }]
@@ -162,9 +164,9 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
                  env,
                  task_space: TaskSpace,
                  components: MultiProcessingComponents,
-                 update_on_step: bool = True,   # TODO: Fine grained control over which step elements are used. Controlled by curriculum?
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
+                 remove_keys: list = None,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(
@@ -174,12 +176,22 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
         self.task_space = task_space
         self.components = components
         self._latest_task = None
-        self.update_on_step = update_on_step
         self.batch_size = batch_size
+        self.remove_keys = remove_keys if remove_keys is not None else []
         self.global_task_completion = global_task_completion
-        self.task_progress = 0.0
         self._batch_step = 0
         self.instance_id = components.get_id()
+        self.update_on_step = components.requires_step_updates and components.should_sync(self.instance_id)
+
+        self.task_progress = 0.0
+        self.episode_length = 0
+        self.episode_returns = {agent: 0 for agent in self.env.possible_agents}
+
+        # Create template values for reset step update
+        _template_rews = {agent: 0 for agent in self.env.possible_agents}
+        _template_terms = {agent: False for agent in self.env.possible_agents}
+        _template_truncs = {agent: False for agent in self.env.possible_agents}
+        self._template_args = (_template_rews, _template_terms, _template_truncs)
 
         # Create batch buffers for step updates
         if self.update_on_step:
@@ -190,7 +202,7 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
             self._terms = np.zeros((self.batch_size, num_agents), dtype=bool)
             self._truncs = np.zeros((self.batch_size, num_agents), dtype=bool)
             self._infos = [[None for _ in range(num_agents)]] * self.batch_size
-            self._tasks = np.zeros((self.batch_size,) + self.task_space.task_shape, dtype=np.float32)
+            self._tasks = [[None for _ in range(num_agents)]] * self.batch_size
             self._task_progresses = np.zeros((self.batch_size, num_agents), dtype=np.float32)
 
         # Request initial task
@@ -214,6 +226,8 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
 
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
+        if self.update_on_step:
+            self._update_step(obs, *self._template_args, info, False, send=False)
         return self.env.reset(*args, new_task=next_task, **kwargs)
 
     def step(self, actions):
@@ -228,59 +242,59 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
         is_finished = (len(self.env.agents) == 0) or all(terms.values())
         # Update curriculum with step info
         if self.update_on_step:
-            agent_indices = [self.agent_map[agent] for agent in rews.keys()]
-            # Environment outputs
-            self._obs[self._batch_step] = obs
-            self._rews[self._batch_step][agent_indices] = list(rews.values())
-            self._terms[self._batch_step][agent_indices] = list(terms.values())
-            self._truncs[self._batch_step][agent_indices] = list(truncs.values())
-            self._infos[self._batch_step] = infos
-            self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
-            self._task_progresses[self._batch_step] = self.task_progress
-            self._batch_step += 1
-
-            # Send batched updates
-            if self._batch_step >= self.batch_size or is_finished:
-                updates = self._package_step_updates()
-                self.components.put_update(updates)
-                self._batch_step = 0
+            self._update_step(obs, rews, terms, truncs, infos, is_finished)
 
         if is_finished:
-            # Task progress
-            task_update = {
-                "update_type": "task_progress",
-                "metrics": ((self.task_space.encode(self.env.task), self.task_progress)),
-                "env_id": self.instance_id,
-                "request_sample": False,
-            }
             episode_update = {
                 "update_type": "episode",
-                "metrics": (self.episode_returns, self.episode_length, self.task_space.encode(self.env.task)),
+                "metrics": (self.episode_returns, self.episode_length, self.task_space.encode(self.env.task), self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True
             }
-            self.components.put_update([task_update, episode_update])
+            self.components.put_update([episode_update])
 
         return obs, rews, terms, truncs, infos
 
+    def _update_step(self, obs, rews, terms, truncs, infos, is_finished, send=True):
+        agent_indices = [self.agent_map[agent] for agent in rews.keys()]
+        # Environment outputs
+        trimmed_obs = self._trim_obs(obs)
+        self._obs[self._batch_step] = trimmed_obs
+        self._rews[self._batch_step][agent_indices] = list(rews.values())
+        self._terms[self._batch_step][agent_indices] = list(terms.values())
+        self._truncs[self._batch_step][agent_indices] = list(truncs.values())
+        self._infos[self._batch_step] = infos
+        self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+        self._task_progresses[self._batch_step] = self.task_progress
+        self._batch_step += 1
+
+        # Send batched updates
+        if self._batch_step >= self.batch_size or is_finished:
+            updates = self._package_step_updates()
+            self.components.put_update(updates)
+            self._batch_step = 0
+
     def _package_step_updates(self):
-        step_batch = {
+        return [{
             "update_type": "step_batch",
-            "metrics": ([self._tasks[:self._batch_step], self._obs[:self._batch_step], self._rews[:self._batch_step], self._terms[:self._batch_step], self._truncs[:self._batch_step], self._infos[:self._batch_step]],),
+            "metrics": ([
+                self._tasks[:self._batch_step],
+                self._obs[:self._batch_step],
+                self._rews[:self._batch_step],
+                self._terms[:self._batch_step],
+                self._truncs[:self._batch_step],
+                self._infos[:self._batch_step],
+                self._task_progresses[:self._batch_step],
+            ],),
             "env_id": self.instance_id,
             "request_sample": False
-        }
-        update = [step_batch]
+        }]
 
-        if self.update_on_progress:
-            task_batch = {
-                "update_type": "task_progress_batch",
-                "metrics": (self._tasks[:self._batch_step], self._task_progresses[:self._batch_step],),
-                "env_id": self.instance_id,
-                "request_sample": False
-            }
-            update.append(task_batch)
-        return update
+    def _trim_obs(self, obs):
+        if len(self.agents) > 0 and isinstance(obs[self.agents[0]], dict):
+            return {agent: {key: obs[agent][key] for key in obs[agent].keys() if key not in self.remove_keys} for agent in self.agents}
+        else:
+            return obs
 
     def get_task(self):
         # Allow user to reject task

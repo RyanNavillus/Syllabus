@@ -111,6 +111,7 @@ def run_pettingzoo_episode(env, new_task=None, curriculum=None, env_id=0):
             curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
         for agent, rew in rews.items():
             ep_rew[agent] += rew
+        time.sleep(0)
     if curriculum:
         curriculum.update_on_episode(ep_rew, steps, env.task_space.encode(env.task), 0.0, env_id=env_id)
     return ep_rew
@@ -134,6 +135,7 @@ def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
             curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
         ep_rew += rew
         ep_len += 1
+        time.sleep(0)
     if curriculum:
         curriculum.update_on_episode(ep_rew, ep_len, env.task_space.encode(env.task), 0.0, env_id=env_id)
     return ep_rew
@@ -194,19 +196,19 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
     env.close()
 
 
-def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step,
-                 buffer_size=buffer_size, batch_size=1) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, buffer_size=1, env_id=0):
+    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, sync_type="queue",
+                 buffer_size=buffer_size, batch_size=2) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env, env_id=env_id))
-    env.close()
+    time.sleep(3)
 
 
 @ray.remote
-def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray",
-                 update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
+def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10):
+    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, sync_type="ray") if sync else env_fn(
+        env_args=env_args, env_kwargs=env_kwargs)
     ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
@@ -215,7 +217,7 @@ def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, u
 
 def run_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
     start = time.time()
-    for num_eps in range(num_episodes):
+    for _ in range(num_episodes):
         # Interleave episodes for each environment
         for env_idx in range(num_envs):
             run_episodes(env_fn, env_args, env_kwargs, curriculum=curriculum, num_episodes=1, env_id=env_idx)
@@ -224,17 +226,17 @@ def run_single_process(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_
     return native_speed
 
 
-def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True, buffer_size=2):
+def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, buffer_size=2):
     start = time.time()
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-        args = (env_fn, env_args, env_kwargs, curriculum.components, True, num_episodes,
-                update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
+        args = (env_fn, env_args, env_kwargs, curriculum.components, True, num_episodes, buffer_size)
     else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
-
+    if curriculum is not None:
+        curriculum.start()
     # Run episodes
     actors = []
     for i in range(num_envs):
@@ -253,13 +255,13 @@ def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None,
     return native_speed
 
 
-def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=True):
+def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
     if curriculum:
         target = run_episodes_ray
-        args = (env_fn, env_args, env_kwargs, True, num_episodes, update_on_step)
+        args = (env_fn, env_args, env_kwargs, True, num_episodes)
     else:
         target = run_episodes_ray
-        args = (env_fn, env_args, env_kwargs, False, num_episodes, update_on_step)
+        args = (env_fn, env_args, env_kwargs, False, num_episodes)
 
     start = time.time()
     remotes = []
@@ -273,13 +275,11 @@ def run_ray_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None, nu
     return ray_speed
 
 
-def run_native_vecenv(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10, update_on_step=None):
-    if update_on_step is None:
-        update_on_step = curriculum.requires_step_updates if curriculum else False
+def run_native_vecenv(env_fn, env_args=(), env_kwargs={}, curriculum=None, num_envs=2, num_episodes=10):
     sample_env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
     sample_env.reset()
     envs = gym.vector.AsyncVectorEnv(
-        [env_fn(curriculum.components, env_args=env_args, type="queue" if curriculum else None, env_kwargs=env_kwargs, wrap=True, update_on_step=update_on_step)
+        [env_fn(curriculum.components, env_args=env_args, sync_type="queue" if curriculum else None, env_kwargs=env_kwargs, wrap=True)
          for _ in range(num_envs)]
     )
     envs.reset()
@@ -342,34 +342,34 @@ class ExtractDictObservation(gym.ObservationWrapper, gym.utils.RecordConstructor
         return self.observation(obs), info
 
 
-def create_gymnasium_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_gymnasium_synctest_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
-    if type == "queue":
+    if sync_type == "queue":
         env = GymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
-    elif type == "ray":
+    elif sync_type == "ray":
         env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
 
 
-def create_pettingzoo_synctest_env(*args, type=None, env_args=(), env_kwargs={}, **kwargs):
+def create_pettingzoo_synctest_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     env = PettingZooSyncTestEnv(*env_args, **env_kwargs)
-    if type == "queue":
+    if sync_type == "queue":
         env = PettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
-    elif type == "ray":
+    elif sync_type == "ray":
         env = RayPettingZooSyncWrapper(env, env.task_space, *args, **kwargs)
     return env
 
 
 # Cartpole Tests
-def create_cartpole_env(*args, type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
+def create_cartpole_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     def thunk():
         env = gym.make("CartPole-v1", **env_kwargs)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = CartPoleTaskWrapper(env, discretize=False)
 
-        if type == "queue":
+        if sync_type == "queue":
             env = GymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
-        elif type == "ray":
+        elif sync_type == "ray":
             env = RayGymnasiumSyncWrapper(env, env.task_space, *args, **kwargs)
         return env
     return thunk if wrap else thunk()
