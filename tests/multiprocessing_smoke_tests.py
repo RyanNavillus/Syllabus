@@ -74,16 +74,6 @@ def test_multiprocessing_sync_queue_multi_process(curriculum, env_fn, args, kwar
     print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
 
-# @pytest.mark.parametrize("curriculum, env_fn, args, kwargs", curricula, ids=test_names)
-# def test_multiprocessing_sync_ray_multi_process(curriculum, env_fn, args, kwargs, ray_session):
-#     # Test Ray multiprocess speed with Syllabus
-#     test_curriculum = curriculum(*args, **kwargs)
-#     test_curriculum = make_ray_curriculum(test_curriculum)
-#     print("\nRUNNING: Ray multiprocess test with Syllabus...")
-#     ray_syllabus_speed = run_ray_multiprocess(env_fn, num_envs=N_ENVS, num_episodes=N_EPISODES)
-#     print(f"PASSED: Ray multiprocess test with Syllabus: {ray_syllabus_speed:.2f}s")
-
-
 if __name__ == "__main__":
     test_multiprocessing_sync_single_process(*curricula[2])
     test_multiprocessing_sync_queue_multi_process(*curricula[2])
