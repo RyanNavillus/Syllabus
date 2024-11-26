@@ -1,9 +1,8 @@
 from typing import Tuple, TypeVar
 
-from syllabus.core import AgentType, Curriculum, CurriculumWrapper
+from syllabus.core import Agent, Curriculum, CurriculumWrapper
 from syllabus.task_space import TupleTaskSpace
 
-Agent = TypeVar("Agent")
 EnvTask = TypeVar("EnvTask")
 AgentTask = TypeVar("AgentTask")
 
@@ -40,10 +39,10 @@ class DualCurriculumWrapper(CurriculumWrapper):
         agent_task = [self.batched_tasks.pop() for _ in range(k)]
         return list(zip(env_task, agent_task))
 
-    def get_agent(self, agent: AgentTask) -> AgentType:
+    def get_agent(self, agent: AgentTask) -> Agent:
         return self.agent_curriculum.get_opponent(agent)
 
-    def update_agent(self, agent: AgentType) -> int:
+    def update_agent(self, agent: Agent) -> int:
         return self.agent_curriculum.update_agent(agent)
 
     def update_on_episode(self, episode_return, length, task, progress, env_id=None):

@@ -1,5 +1,0 @@
-modules/syllabus.core.curriculum.rst:8: (reproducibility)  implementations following this API to encourage reproducibility and ease of use.
-../../syllabus/core/curriculum_base.py:docstring of syllabus.core.curriculum_base.Curriculum.log_metrics:5: (param)  :param writer: Tensorboard summary writer.
-../../syllabus/core/curriculum_base.py:docstring of syllabus.core.curriculum_base.Curriculum.log_metrics:5: (Tensorboard)  :param writer: Tensorboard summary writer.
-../../syllabus/core/curriculum_base.py:docstring of syllabus.core.curriculum_base.Curriculum.update:2: (enums)  TODO: Change method header to not use dictionary, use enums?
-../../syllabus/core/curriculum_base.py:docstring of syllabus.core.curriculum_base.Curriculum.update_on_step:1: (teh)  Observation from teh environment
