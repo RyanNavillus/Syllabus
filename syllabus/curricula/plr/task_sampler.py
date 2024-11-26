@@ -138,16 +138,16 @@ class TaskSampler:
         return 1 - (top2_confidence[:, 0] - top2_confidence[:, 1]).mean().item()
 
     def _average_gae(self, **kwargs):
-        returns = kwargs["returns"][:-1]
-        value_preds = kwargs["value_preds"][:-1]
+        returns = kwargs["returns"]
+        value_preds = kwargs["value_preds"]
 
         advantages = returns - value_preds
 
         return advantages.mean().item()
 
     def _average_value_l1(self, **kwargs):
-        returns = kwargs["returns"][:-1]
-        value_preds = kwargs["value_preds"][:-1]
+        returns = kwargs["returns"]
+        value_preds = kwargs["value_preds"]
 
         advantages = returns - value_preds
 
