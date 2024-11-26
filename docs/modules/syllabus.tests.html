@@ -186,7 +186,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -200,7 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -249,6 +249,39 @@
 <h1>syllabus.tests package<a class="headerlink" href="#syllabus-tests-package" title="Link to this heading">¶</a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-syllabus.tests.determinism">
+<span id="syllabus-tests-determinism-module"></span><h2>syllabus.tests.determinism module<a class="headerlink" href="#module-syllabus.tests.determinism" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.determinism.compare_episodes">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.determinism.</span></span><span class="sig-name descname"><span class="pre">compare_episodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.determinism.compare_episodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.determinism.compare_episodes_gymnasium">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.determinism.</span></span><span class="sig-name descname"><span class="pre">compare_episodes_gymnasium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.determinism.compare_episodes_gymnasium" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.determinism.compare_episodes_pettingzoo">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.determinism.</span></span><span class="sig-name descname"><span class="pre">compare_episodes_pettingzoo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.determinism.compare_episodes_pettingzoo" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.determinism.compare_obs">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.determinism.</span></span><span class="sig-name descname"><span class="pre">compare_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.determinism.compare_obs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.determinism.print_if_verbose">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.determinism.</span></span><span class="sig-name descname"><span class="pre">print_if_verbose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.determinism.print_if_verbose" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.tests.determinism.test_determinism">
+<span class="sig-prename descclassname"><span class="pre">syllabus.tests.determinism.</span></span><span class="sig-name descname"><span class="pre">test_determinism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.tests.determinism.test_determinism" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-syllabus.tests.sync_test_curriculum">
 <span id="syllabus-tests-sync-test-curriculum-module"></span><h2>syllabus.tests.sync_test_curriculum module<a class="headerlink" href="#module-syllabus.tests.sync_test_curriculum" title="Link to this heading">¶</a></h2>
@@ -652,6 +685,15 @@ to support curricula that rely on this metric.</p>
             <ul>
 <li><a class="reference internal" href="#">syllabus.tests package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-syllabus.tests.determinism">syllabus.tests.determinism module</a><ul>
+<li><a class="reference internal" href="#syllabus.tests.determinism.compare_episodes"><code class="docutils literal notranslate"><span class="pre">compare_episodes()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.tests.determinism.compare_episodes_gymnasium"><code class="docutils literal notranslate"><span class="pre">compare_episodes_gymnasium()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.tests.determinism.compare_episodes_pettingzoo"><code class="docutils literal notranslate"><span class="pre">compare_episodes_pettingzoo()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.tests.determinism.compare_obs"><code class="docutils literal notranslate"><span class="pre">compare_obs()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.tests.determinism.print_if_verbose"><code class="docutils literal notranslate"><span class="pre">print_if_verbose()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.tests.determinism.test_determinism"><code class="docutils literal notranslate"><span class="pre">test_determinism()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-syllabus.tests.sync_test_curriculum">syllabus.tests.sync_test_curriculum module</a><ul>
 <li><a class="reference internal" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum"><code class="docutils literal notranslate"><span class="pre">SyncTestCurriculum</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
