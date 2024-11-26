@@ -121,7 +121,7 @@ class MultiProcessingComponents:
                 f"Failed to put update in queue after {self.timeout}s. Queue capacity is {self.update_queue.qsize()} / {self.update_queue._maxsize} items.") from e
 
     def get_update(self):
-         try:
+        try:
             update = self.update_queue.get(block=True, timeout=self.timeout)
         except Empty as e:
             raise UsageError(
