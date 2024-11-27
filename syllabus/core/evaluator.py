@@ -4,6 +4,7 @@ from collections import defaultdict
 from io import BytesIO
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
+import gymnasium as gym
 import numpy as np
 import torch
 from torch import Tensor
@@ -247,7 +248,10 @@ class Evaluator:
 class DummyEvaluator(Evaluator):
     def __init__(self, action_space, *args, **kwargs):
         self.action_space = action_space
-        self.action_shape = action_space.sample().shape
+        if isinstance(action_space, gym.spaces.Discrete):
+            self.action_shape = 1
+        else:
+            self.action_shape = action_space.sample().shape
         kwargs.pop("copy_agent", None)
         super().__init__(None, *args, copy_agent=False, **kwargs)
 
