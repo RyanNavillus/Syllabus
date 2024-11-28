@@ -186,7 +186,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -200,7 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -252,7 +252,7 @@ but rarely highlighted in the literature,such as simulated annealing of difficul
 have several popular curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning
 progress curriculum introduced in Kanitscheider et al. 2021.</p>
 <section id="domain-randomization">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.domain_randomization.DomainRandomization" title="syllabus.curricula.domain_randomization.DomainRandomization"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code></a><a class="headerlink" href="#domain-randomization" title="Link to this heading">¶</a></h2>
+<h2><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization" title="syllabus.curricula.domain_randomization.DomainRandomization"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code></a><a class="headerlink" href="#domain-randomization" title="Link to this heading">¶</a></h2>
 <p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
 </section>
 <section id="sequential-curriculum">
@@ -267,7 +267,7 @@ It can be used to manually design curricula by providing tasks in an order that 
 The curriculum increases the range to the next stage when a provided reward threshold is met.</p>
 </section>
 <section id="learning-progress">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.learning_progress.LearningProgressCurriculum" title="syllabus.curricula.learning_progress.LearningProgressCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a><a class="headerlink" href="#learning-progress" title="Link to this heading">¶</a></h2>
+<h2><a class="reference internal" href="../modules/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum" title="syllabus.curricula.learning_progress.LearningProgressCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a><a class="headerlink" href="#learning-progress" title="Link to this heading">¶</a></h2>
 <p>Uses a heuristic to estimate the learning progress of a task. It maintains a fast and slow exponential moving average (EMA) of the task
 completion rates for a set of discrete tasks.
 By measuring the difference between the fast and slow EMAs and reweighting it to adjust for the time delay created by the EMA, this method can

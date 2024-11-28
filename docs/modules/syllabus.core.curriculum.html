@@ -186,7 +186,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -200,7 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -261,10 +261,10 @@ implementations following this API to encourage reproducibility and ease of use.
 a deterministic sequence of tasks, or a single constant task depending on the curriculum learning method.</p>
 <p>To incorporate feedback from the environment, the API provides multiple methods:</p>
 <ul class="simple">
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step</span></code></p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress</span></code></p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step_batch</span></code></p></li>
+<li><p><a class="reference internal" href="#syllabus.core.curriculum_base.Curriculum.update_on_step" title="syllabus.core.curriculum_base.Curriculum.update_on_step"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step</span></code></a></p></li>
+<li><p><a class="reference internal" href="#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress</span></code></a></p></li>
+<li><p><a class="reference internal" href="#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a></p></li>
+<li><p><a class="reference internal" href="#syllabus.core.curriculum_base.Curriculum.update_on_step_batch" title="syllabus.core.curriculum_base.Curriculum.update_on_step_batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_step_batch</span></code></a></p></li>
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_curriculum_batch</span></code></p></li>
 </ul>
 <section id="module-syllabus.core.curriculum_base">

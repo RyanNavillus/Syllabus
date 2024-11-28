@@ -123,7 +123,7 @@ To help people get started using Syllabus, I've added a few simple curriculum le
 To build the documentation, run the following commands:
 
 ```
-sphinx-build -M html ./docs/source ./docs
+sphinx-build -M html ./docs-source ./docs
 cp -r ./docs/html/* ./docs && rm -R ./docs/html/*
 ```
 
@@ -133,6 +133,7 @@ If you need to regenerate the module docs from scratch, you can use the followin
 ```
 sphinx-apidoc -o ./docs/modules ./syllabus
 ```
+Then manually merge the results with ./docs-source as needed.
 
 ## Citing Syllabus
 To be added soon.

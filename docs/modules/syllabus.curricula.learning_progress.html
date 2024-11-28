@@ -186,7 +186,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -200,7 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Example TaskWrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -253,7 +253,7 @@ The method tracks the completion rate of individual binary tasks over time. It m
 <dl class="py class" id="module-syllabus.curricula.learning_progress">
 <dt class="sig sig-object py" id="syllabus.curricula.learning_progress.LearningProgressCurriculum">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.learning_progress.</span></span><span class="sig-name descname"><span class="pre">LearningProgressCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_action</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ema_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_interval_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.curricula.learning_progress.LearningProgressCurriculum" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
 <p>Provides an interface for tracking success rates of discrete tasks and sampling tasks
 based on their success rate using the method from <a class="reference external" href="https://arxiv.org/abs/2106.14876">https://arxiv.org/abs/2106.14876</a>.
 TODO: Support task spaces aside from Discrete</p>
