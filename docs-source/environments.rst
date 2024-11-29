@@ -12,4 +12,3 @@ We recommend using the `Shimmy <https://github.com/Farama-Foundation/Shimmy>`_ p
 
         env = gym.make('CartPole-v0')
         env = GymV21CompatibilityV0(env)
-

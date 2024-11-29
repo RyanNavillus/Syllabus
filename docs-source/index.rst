@@ -12,9 +12,7 @@ those curricula across environments running in multiple processes. Syllabus make
 and add them to existing training code. It takes only a few lines of code to add a curriculum to an existing training script, and
 because of the shared Curriculum API, you can swap out different curriculum learning methods by changing a single line of code.
 
-It currently has support for environments run with Python native multiprocessing or Ray actors, which includes RLLib, CleanRL, 
-Stable Baselines 3, and Monobeast (Torchbeast). We have working examples with CleanRL, RLLib, Stable Baselines 3, and Monobeast (Torchbeast). 
-We also have preliminary support and examples for multiagent PettingZoo environments.
+It currently has support for environments run with Python native multiprocessing or Ray actors, which includes nearly any existing RL library. We have working examples with CleanRL, RLLib, Stable Baselines 3, PufferLib, Moolib, and Monobeast (Torchbeast). Syllabus also supports multiagent PettingZoo environments.
 
 .. toctree::
    :maxdepth: 2
