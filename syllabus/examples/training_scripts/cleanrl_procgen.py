@@ -23,7 +23,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLDiscreteEvaluator, DummyEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum, SimpleCentralizedPrioritizedLevelReplay, CentralizedPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -279,6 +279,25 @@ if __name__ == "__main__":
                 device="cuda",
                 record_stats=True,
             )
+        elif args.curriculum_method == "simpleplr":
+            print("Using simple prioritized level replay.")
+            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                device="cpu",
+                suppress_usage_warnings=False,
+            )
+        elif args.curriculum_method == "centralplr":
+            print("Using centralized prioritized level replay.")
+            curriculum = CentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
+            )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
@@ -336,6 +355,7 @@ if __name__ == "__main__":
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
     values = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    tasks = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
     # TRY NOT TO MODIFY: start the game
     global_step = 0
@@ -365,6 +385,7 @@ if __name__ == "__main__":
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
+            tasks[step] = torch.Tensor(envs.get_attr("task"))
 
             # TRY NOT TO MODIFY: execute the game and log data.
             next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
@@ -382,6 +403,24 @@ if __name__ == "__main__":
                     if curriculum is not None:
                         curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                     break
+
+            # Syllabus curriculum update
+            if args.curriculum and args.curriculum_method == "centralplr":
+                with torch.no_grad():
+                    next_value = agent.get_value(next_obs)
+                tasks = envs.get_attr("task")
+
+                update = {
+                    "update_type": "on_demand",
+                    "metrics": {
+                        "value": value,
+                        "next_value": next_value,
+                        "rew": reward,
+                        "dones": done,
+                        "tasks": tasks,
+                    },
+                }
+                curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -411,6 +450,10 @@ if __name__ == "__main__":
                     returns[t] = rewards[t] + args.gamma * nextnonterminal * next_return
                 advantages = returns - values
 
+        if args.curriculum and args.curriculum_method == "simpleplr":
+            scores = advantages.abs()
+            curriculum.update(tasks, scores, dones)
+
         # flatten the batch
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
         b_logprobs = logprobs.reshape(-1)
@@ -422,7 +465,7 @@ if __name__ == "__main__":
         # Optimizing the policy and value network
         b_inds = np.arange(args.batch_size)
         clipfracs = []
-        for epoch in range(args.update_epochs):
+        for _ in range(args.update_epochs):
             np.random.shuffle(b_inds)
             for start in range(0, args.batch_size, args.minibatch_size):
                 end = start + args.minibatch_size
