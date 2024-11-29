@@ -94,6 +94,7 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
 
         self._num_steps = num_steps  # Number of steps stored in rollouts and used to update task sampler
         self._num_processes = num_processes  # Number of parallel environments
+        self._device = device
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._task_sampler = TaskSampler(self.tasks, self._num_steps,
@@ -108,15 +109,15 @@ class SimpleCentralizedPrioritizedLevelReplay(Curriculum):
         self.num_updates = 0  # Used to ensure proper usage
         self.num_samples = 0  # Used to ensure proper usage
 
-    def update(self, metrics: Dict):
+    def update(self, tasks, scores, dones, actors=None):
         """
         Update the curriculum with arbitrary inputs.
         """
+        if actors is None:
+            actors = torch.arange(self._num_processes)
+
         self.num_updates += 1
-        tasks = metrics["tasks"]
-        scores = metrics["scores"]
-        actors = metrics["actors"]
-        masks = torch.Tensor(1 - metrics["dones"].int())
+        masks = torch.Tensor(1 - dones.int())
 
         # Update rollouts
         self._rollouts.insert(tasks, masks, scores, actors)
