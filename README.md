@@ -129,5 +129,10 @@ cp -r ./docs/html/* ./docs && rm -R ./docs/html/*
 
 Then you can view it at docs/html/index.html
 
+If you need to regenerate the module docs from scratch, you can use the following:
+```
+sphinx-apidoc -o ./docs/modules ./syllabus
+```
+
 ## Citing Syllabus
 To be added soon.

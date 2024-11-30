@@ -1,14 +1,20 @@
-# docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppopy
+""" An example applying Syllabus Prioritized Level Replay to Procgen. This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
 
+NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
+we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
+"""
 import argparse
-from collections import deque
 import os
 import random
 import time
+from collections import deque
 from distutils.util import strtobool
 
+import gym as openai_gym
 import gymnasium as gym
 import numpy as np
+import procgen  # type: ignore # noqa: F401
+from procgen import ProcgenEnv
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,12 +22,10 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
-from syllabus.curricula.plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator, DummyEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum, SimpleCentralizedPrioritizedLevelReplay, CentralizedPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
 
 
@@ -29,57 +33,65 @@ def parse_args():
     # fmt: off
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp-name", type=str, default=os.path.basename(__file__).rstrip(".py"),
-        help="the name of this experiment")
+                        help="the name of this experiment")
     parser.add_argument("--seed", type=int, default=1,
-        help="seed of the experiment")
+                        help="seed of the experiment")
     parser.add_argument("--torch-deterministic", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-        help="if toggled, `torch.backends.cudnn.deterministic=False`")
+                        help="if toggled, `torch.backends.cudnn.deterministic=False`")
     parser.add_argument("--cuda", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-        help="if toggled, cuda will be enabled by default")
+                        help="if toggled, cuda will be enabled by default")
     parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
-        help="if toggled, this experiment will be tracked with Weights and Biases")
-    parser.add_argument("--wandb-project-name", type=str, default="Syllabus",
-        help="the wandb's project name")
+                        help="if toggled, this experiment will be tracked with Weights and Biases")
+    parser.add_argument("--wandb-project-name", type=str, default="syllabus",
+                        help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None,
-        help="the entity (team) of wandb's project")
+                        help="the entity (team) of wandb's project")
     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
-        help="whether to capture videos of the agent performances (check out `videos` folder)")
+                        help="weather to capture videos of the agent performances (check out `videos` folder)")
+    parser.add_argument("--logging-dir", type=str, default=".",
+                        help="the base directory for logging and wandb storage.")
 
     # Algorithm specific arguments
-    parser.add_argument("--env-id", type=str, default="CartPole-v1",
-        help="the id of the environment")
-    parser.add_argument("--total-timesteps", type=int, default=500000,
-        help="total timesteps of the experiments")
-    parser.add_argument("--learning-rate", type=float, default=2.5e-4,
-        help="the learning rate of the optimizer")
-    parser.add_argument("--num-envs", type=int, default=4,
-        help="the number of parallel game environments")
-    parser.add_argument("--num-steps", type=int, default=128,
-        help="the number of steps to run in each environment per policy rollout")
-    parser.add_argument("--anneal-lr", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-        help="Toggle learning rate annealing for policy and value networks")
-    parser.add_argument("--gamma", type=float, default=0.99,
-        help="the discount factor gamma")
+    parser.add_argument("--env-id", type=str, default="starpilot",
+                        help="the id of the environment")
+    parser.add_argument("--total-timesteps", type=int, default=int(25e6),
+                        help="total timesteps of the experiments")
+    parser.add_argument("--learning-rate", type=float, default=5e-4,
+                        help="the learning rate of the optimizer")
+    parser.add_argument("--num-envs", type=int, default=64,
+                        help="the number of parallel game environments")
+    parser.add_argument("--num-steps", type=int, default=256,
+                        help="the number of steps to run in each environment per policy rollout")
+    parser.add_argument("--anneal-lr", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="Toggle learning rate annealing for policy and value networks")
+    parser.add_argument("--gae", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
+                        help="Use GAE for advantage computation")
+    parser.add_argument("--gamma", type=float, default=0.999,
+                        help="the discount factor gamma")
     parser.add_argument("--gae-lambda", type=float, default=0.95,
-        help="the lambda for the general advantage estimation")
-    parser.add_argument("--num-minibatches", type=int, default=4,
-        help="the number of mini-batches")
-    parser.add_argument("--update-epochs", type=int, default=4,
-        help="the K epochs to update the policy")
+                        help="the lambda for the general advantage estimation")
+    parser.add_argument("--num-minibatches", type=int, default=8,
+                        help="the number of mini-batches")
+    parser.add_argument("--update-epochs", type=int, default=3,
+                        help="the K epochs to update the policy")
     parser.add_argument("--norm-adv", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-        help="Toggles advantages normalization")
+                        help="Toggles advantages normalization")
     parser.add_argument("--clip-coef", type=float, default=0.2,
-        help="the surrogate clipping coefficient")
+                        help="the surrogate clipping coefficient")
     parser.add_argument("--clip-vloss", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-        help="Toggles whether or not to use a clipped loss for the value function, as per the paper.")
+                        help="Toggles whether or not to use a clipped loss for the value function, as per the paper.")
     parser.add_argument("--ent-coef", type=float, default=0.01,
-        help="coefficient of the entropy")
+                        help="coefficient of the entropy")
     parser.add_argument("--vf-coef", type=float, default=0.5,
-        help="coefficient of the value function")
+                        help="coefficient of the value function")
     parser.add_argument("--max-grad-norm", type=float, default=0.5,
-        help="the maximum norm for the gradient clipping")
+                        help="the maximum norm for the gradient clipping")
     parser.add_argument("--target-kl", type=float, default=None,
                         help="the target KL divergence threshold")
+
+    # Procgen arguments
+    parser.add_argument("--full-dist", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
+                        help="Train on full distribution of levels.")
 
     # Curriculum arguments
     parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
@@ -96,63 +108,86 @@ def parse_args():
     return args
 
 
-def make_env(env_id, task_wrapper=False, curriculum=None):
+PROCGEN_RETURN_BOUNDS = {
+    "coinrun": (5, 10),
+    "starpilot": (2.5, 64),
+    "caveflyer": (3.5, 12),
+    "dodgeball": (1.5, 19),
+    "fruitbot": (-1.5, 32.4),
+    "chaser": (0.5, 13),
+    "miner": (1.5, 13),
+    "jumper": (3, 10),
+    "leaper": (3, 10),
+    "maze": (5, 10),
+    "bigfish": (1, 40),
+    "heist": (3.5, 10),
+    "climber": (2, 12.6),
+    "plunder": (4.5, 30),
+    "ninja": (3.5, 10),
+    "bossfight": (0.5, 13),
+}
+
+
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1):
     def thunk():
-        env = gym.make(f"{env_id}")
-        # env = GymV21CompatibilityV0(env=env)
-        env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
+                              start_level=start_level, num_levels=num_levels)
+        env = GymV21CompatibilityV0(env=env)
 
-        if task_wrapper or curriculum is not None:
-            env = CartPoleTaskWrapper(env)
+        if task_wrapper or curriculum_components is not None:
+            env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
-        if curriculum is not None:
+        if curriculum_components is not None:
             env = GymnasiumSyncWrapper(
                 env,
                 env.task_space,
-                curriculum.components,
-                update_on_step=curriculum.requires_step_updates,
-                batch_size=10
+                curriculum_components,
+                batch_size=256,
+                buffer_size=4,
             )
-        env.action_space.seed(0)
-        env.observation_space.seed(0)
-        env.task_space.seed(0)
         return env
     return thunk
 
 
-def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
-    torch.nn.init.orthogonal_(layer.weight, std)
-    torch.nn.init.constant_(layer.bias, bias_const)
-    return layer
+def wrap_vecenv(vecenv):
+    vecenv.is_vector_env = True
+    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
+    return vecenv
 
 
-class Agent(nn.Module):
-    def __init__(self, observation_shape, n_actions):
-        super().__init__()
-        self.critic = nn.Sequential(
-            layer_init(nn.Linear(np.array(observation_shape).prod(), 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 1), std=1.0),
-        )
-        self.actor = nn.Sequential(
-            layer_init(nn.Linear(np.array(observation_shape).prod(), 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, n_actions), std=0.01),
-        )
+def level_replay_evaluate(
+    env_name,
+    policy,
+    num_episodes,
+    device,
+    num_levels=0
+):
+    policy.eval()
 
-    def get_value(self, x):
-        return self.critic(x)
+    eval_envs = ProcgenEnv(
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+    )
+    eval_envs = VecExtractDictObs(eval_envs, "rgb")
+    eval_envs = wrap_vecenv(eval_envs)
+    eval_obs, _ = eval_envs.reset()
+    eval_episode_rewards = []
 
-    def get_action_and_value(self, x, action=None):
-        logits = self.actor(x)
-        probs = torch.distributions.Categorical(logits=logits)
-        if action is None:
-            action = probs.sample()
-        return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+    while len(eval_episode_rewards) < num_episodes:
+        with torch.no_grad():
+            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+
+        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
+        for info in infos:
+            if 'episode' in info.keys():
+                eval_episode_rewards.append(info['episode']['r'])
+
+    mean_returns = np.mean(eval_episode_rewards)
+    stddev_returns = np.std(eval_episode_rewards)
+    env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
+    normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    policy.train()
+    return mean_returns, stddev_returns, normalized_mean_returns
 
 
 def make_value_fn():
@@ -186,8 +221,11 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
+            dir=args.logging_dir
         )
-    writer = SummaryWriter(f"runs/{run_name}")
+        # wandb.run.log_code("./syllabus/examples")
+
+    writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -203,6 +241,7 @@ if __name__ == "__main__":
     print("Device:", device)
 
     sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
+    sample_envs = wrap_vecenv(sample_envs)
     single_action_space = sample_envs.single_action_space
     single_observation_space = sample_envs.single_observation_space
     sample_envs.close()
@@ -210,21 +249,24 @@ if __name__ == "__main__":
     # Agent setup
     assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
-    agent = Agent(
+    agent = ProcgenAgent(
         single_observation_space.shape,
         single_action_space.n,
+        base_kwargs={'hidden_size': 256}
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # Curriculum setup
     curriculum = None
     if args.curriculum:
-        sample_env = make_env(args.env_id, task_wrapper=True)()
+        sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
+        sample_env = GymV21CompatibilityV0(env=sample_env)
+        sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            evaluator = CleanRLDiscreteEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -234,6 +276,17 @@ if __name__ == "__main__":
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
+                device="cuda",
+                record_stats=True,
+            )
+        elif args.curriculum_method == "simpleplr":
+            print("Using simple prioritized level replay.")
+            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                device="cpu",
+                suppress_usage_warnings=False,
             )
         elif args.curriculum_method == "centralplr":
             print("Using centralized prioritized level replay.")
@@ -251,11 +304,15 @@ if __name__ == "__main__":
         elif args.curriculum_method == "bdr":
             print("Using batched domain randomization.")
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
+        elif args.curriculum_method == "noop":
+            print("Using noop curriculum.")
+            curriculum = NoopCurriculum(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, task_wrapper=True) for _ in range(8)]
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
+            eval_envs = wrap_vecenv(eval_envs)
             curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
                                                     sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
@@ -263,7 +320,7 @@ if __name__ == "__main__":
             curricula = []
             stopping = []
             for i in range(0, 199, 10):
-                curricula.append(list(range(i, i+10)))
+                curricula.append(list(range(i, i + 10)))
                 stopping.append("steps>=500000")
                 curricula.append(list(range(i + 10)))
                 stopping.append("steps>=500000")
@@ -271,15 +328,25 @@ if __name__ == "__main__":
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
-        del sample_env
 
     # env setup
+    print("Creating env")
     envs = gym.vector.AsyncVectorEnv(
-        [make_env(args.env_id, curriculum=curriculum) for i in range(args.num_envs)]
+        [
+            make_env(
+                args.env_id,
+                args.seed + i,
+                curriculum_components=curriculum.components if args.curriculum else None,
+                num_levels=1 if args.curriculum else 0,
+            )
+            for i in range(args.num_envs)
+        ]
     )
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    envs = wrap_vecenv(envs)
 
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
+    if args.curriculum:
+        del sample_env
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -288,11 +355,12 @@ if __name__ == "__main__":
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
     values = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    tasks = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
     # TRY NOT TO MODIFY: start the game
     global_step = 0
     start_time = time.time()
-    next_obs, _ = envs.reset(seed=args.seed)
+    next_obs, _ = envs.reset()
     next_obs = torch.Tensor(next_obs).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
     num_updates = args.total_timesteps // args.batch_size
@@ -317,26 +385,24 @@ if __name__ == "__main__":
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
+            tasks[step] = torch.Tensor(envs.get_attr("task"))
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, term, trunc, infos = envs.step(action.cpu().numpy())
+            next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
             done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
             completed_episodes += sum(done)
-            # print(infos)
 
-            if "final_info" in infos:
-                for info in infos["final_info"]:
-                    if info and "episode" in info:
-                        ep_return = info['episode']['r'][0]
-                        episode_rewards.append(ep_return)
-                        print(f"global_step={global_step}, episodic_return={ep_return}")
-                        writer.add_scalar("charts/episodic_return", ep_return, global_step)
-                        writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
-                        if curriculum is not None:
-                            curriculum.log_metrics(writer, [], step=global_step)
-                        break
+            for item in info:
+                if "episode" in item.keys():
+                    episode_rewards.append(item['episode']['r'])
+                    print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
+                    writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
+                    writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
+                    if curriculum is not None:
+                        curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
+                    break
 
             # Syllabus curriculum update
             if args.curriculum and args.curriculum_method == "centralplr":
@@ -359,18 +425,34 @@ if __name__ == "__main__":
         # bootstrap value if not done
         with torch.no_grad():
             next_value = agent.get_value(next_obs).reshape(1, -1)
-            advantages = torch.zeros_like(rewards).to(device)
-            lastgaelam = 0
-            for t in reversed(range(args.num_steps)):
-                if t == args.num_steps - 1:
-                    nextnonterminal = 1.0 - next_done
-                    nextvalues = next_value
-                else:
-                    nextnonterminal = 1.0 - dones[t + 1]
-                    nextvalues = values[t + 1]
-                delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
-                advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
-            returns = advantages + values
+            if args.gae:
+                advantages = torch.zeros_like(rewards).to(device)
+                lastgaelam = 0
+                for t in reversed(range(args.num_steps)):
+                    if t == args.num_steps - 1:
+                        nextnonterminal = 1.0 - next_done
+                        nextvalues = next_value
+                    else:
+                        nextnonterminal = 1.0 - dones[t + 1]
+                        nextvalues = values[t + 1]
+                    delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
+                    advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                returns = advantages + values
+            else:
+                returns = torch.zeros_like(rewards).to(device)
+                for t in reversed(range(args.num_steps)):
+                    if t == args.num_steps - 1:
+                        nextnonterminal = 1.0 - next_done
+                        next_return = next_value
+                    else:
+                        nextnonterminal = 1.0 - dones[t + 1]
+                        next_return = returns[t + 1]
+                    returns[t] = rewards[t] + args.gamma * nextnonterminal * next_return
+                advantages = returns - values
+
+        if args.curriculum and args.curriculum_method == "simpleplr":
+            scores = advantages.abs()
+            curriculum.update(tasks, scores, dones)
 
         # flatten the batch
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
@@ -383,7 +465,7 @@ if __name__ == "__main__":
         # Optimizing the policy and value network
         b_inds = np.arange(args.batch_size)
         clipfracs = []
-        for epoch in range(args.update_epochs):
+        for _ in range(args.update_epochs):
             np.random.shuffle(b_inds)
             for start in range(0, args.batch_size, args.minibatch_size):
                 end = start + args.minibatch_size
@@ -439,8 +521,17 @@ if __name__ == "__main__":
         var_y = np.var(y_true)
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
+        # Evaluate agent
+        mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+        )
+        mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+        )
+
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+        writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
         writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
         writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
         writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
@@ -450,5 +541,16 @@ if __name__ == "__main__":
         writer.add_scalar("losses/explained_variance", explained_var, global_step)
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
+
+        writer.add_scalar("test_eval/mean_episode_return", mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/normalized_mean_eval_return", normalized_mean_eval_returns, global_step)
+        writer.add_scalar("test_eval/stddev_eval_return", stddev_eval_returns, global_step)
+
+        writer.add_scalar("train_eval/mean_episode_return", mean_train_returns, global_step)
+        writer.add_scalar("train_eval/normalized_mean_train_return", normalized_mean_train_returns, global_step)
+        writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
+
+        writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
+
     envs.close()
     writer.close()

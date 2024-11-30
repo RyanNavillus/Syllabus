@@ -1,23 +1,26 @@
 import re
 import warnings
+from collections import deque
 from typing import Any, Callable, List, Union
 
 from syllabus.core import Curriculum
-from syllabus.curricula import NoopCurriculum, DomainRandomization
-from syllabus.task_space import TaskSpace
+from syllabus.curricula import DomainRandomization, NoopCurriculum
+from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 
 
 class SequentialCurriculum(Curriculum):
+    """ Curriculum that iterates through a list of curricula based on stopping conditions. """
     REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = True
     REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
-        assert len(stopping_conditions) == len(curriculum_list) - 1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
+        assert len(stopping_conditions) == len(curriculum_list) - \
+            1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
-            warnings.warn("Your sequential curriculum only containes one element. Consider using that element directly instead.")
+            warnings.warn(
+                "Your sequential curriculum only containes one element. Consider using that element directly instead.", stacklevel=2)
 
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
@@ -30,10 +33,10 @@ class SequentialCurriculum(Curriculum):
         self.total_episodes = 0
         self.n_tasks = 0
         self.total_tasks = 0
-        self.episode_returns = []
+        self.episode_returns = deque(maxlen=return_buffer_size)
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
-        """ Parse the curriculum list to ensure that all items are curricula. 
+        """ Parse the curriculum list to ensure that all items are curricula.
         Adds Curriculum objects directly. Wraps task space items in NoopCurriculum objects.
         """
         parsed_list = []
@@ -41,12 +44,12 @@ class SequentialCurriculum(Curriculum):
             if isinstance(item, Curriculum):
                 parsed_list.append(item)
             elif isinstance(item, TaskSpace):
-                parsed_list.append(DomainRandomization(item))
+                parsed_list.append(DomainRandomization(item, task_names=self.task_names))
             elif isinstance(item, list):
-                task_space = TaskSpace(len(item), item)
-                parsed_list.append(DomainRandomization(task_space))
+                task_space = DiscreteTaskSpace(len(item), item)
+                parsed_list.append(DomainRandomization(task_space, task_names=self.task_names))
             elif self.task_space.contains(item):
-                parsed_list.append(NoopCurriculum(item, self.task_space))
+                parsed_list.append(NoopCurriculum(item, self.task_space, task_names=self.task_names))
             else:
                 raise ValueError(f"Invalid curriculum item: {item}")
 
@@ -142,12 +145,6 @@ class SequentialCurriculum(Curriculum):
     def requires_step_updates(self):
         return any(map(lambda c: c.requires_step_updates, self.curriculum_list))
 
-    def _sample_distribution(self) -> List[float]:
-        """
-        Return None to indicate that tasks are not drawn from a distribution.
-        """
-        return None
-
     def sample(self, k: int = 1) -> Union[List, Any]:
         """
         Choose the next k tasks from the list.
@@ -166,27 +163,27 @@ class SequentialCurriculum(Curriculum):
         self.check_stopping_conditions()
         return recoded_tasks
 
-    def update_on_episode(self, episode_return, episode_len, episode_task, env_id=None):
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None):
         self.n_episodes += 1
         self.total_episodes += 1
-        self.n_steps += episode_len
-        self.total_steps += episode_len
+        self.n_steps += length
+        self.total_steps += length
         self.episode_returns.append(episode_return)
+        if self.stat_recorder is not None:
+            self.stat_recorder.record(episode_return, length, task)
 
         # Update current curriculum
-        if self.current_curriculum.requires_episode_updates:
-            self.current_curriculum.update_on_episode(episode_return, episode_len, episode_task, env_id)
+        self.current_curriculum.update_on_episode(episode_return, length, task, progress, env_id)
 
-    def update_on_step(self, task, obs, rew, term, trunc, info, env_id=None):
+        self.check_stopping_conditions()
+
+    def update_on_step(self, task, obs, rew, term, trunc, info, progress, env_id=None):
         if self.current_curriculum.requires_step_updates:
-            self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, env_id)
+            self.current_curriculum.update_on_step(task, obs, rew, term, trunc, info, progress, env_id)
 
     def update_on_step_batch(self, step_results, env_id=None):
         if self.current_curriculum.requires_step_updates:
             self.current_curriculum.update_on_step_batch(step_results, env_id)
-
-    def update_on_demand(self, metrics):
-        self.current_curriculum.update_on_demand(metrics)
 
     def update_task_progress(self, task, progress, env_id=None):
         self.current_curriculum.update_task_progress(task, progress, env_id)
@@ -196,12 +193,26 @@ class SequentialCurriculum(Curriculum):
             self._curriculum_index += 1
             self.n_episodes = 0
             self.n_steps = 0
-            self.episode_returns = []
+            self.episode_returns = deque(maxlen=100)
             self.n_tasks = 0
 
-    def log_metrics(self, writer, step=None, log_full_dist=False):
-        # super().log_metrics(writer, step, log_full_dist)
-        writer.add_scalar("curriculum/current_stage", self._curriculum_index, step)
-        writer.add_scalar("curriculum/steps", self.n_steps, step)
-        writer.add_scalar("curriculum/episodes", self.n_episodes, step)
-        writer.add_scalar("curriculum/episode_returns", self._get_episode_return(), step)
+    def _sample_distribution(self) -> List[float]:
+        return self.current_curriculum._sample_distribution()
+
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        logs = [] if logs is None else logs
+        logs.append(("curriculum/current_stage", self._curriculum_index))
+        logs.append(("curriculum/steps", self.n_steps))
+        logs.append(("curriculum/episodes", self.n_episodes))
+        logs.append(("curriculum/episode_returns", self._get_episode_return()))
+
+        # Set probability for tasks from other stages to 0
+        current_tasks = set(self.current_curriculum.task_space.tasks)
+        all_tasks = set(self.task_space.tasks)
+        noncurrent_tasks = all_tasks - current_tasks
+        for task in noncurrent_tasks:
+            name = self.task_names(task, self.task_space.encode(task))
+            logs.append((f"curriculum/{name}_prob", 0))
+
+        # Current curriculum will pass data to the writer for us
+        return self.current_curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)

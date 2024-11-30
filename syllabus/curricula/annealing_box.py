@@ -1,24 +1,30 @@
-import typing
-from typing import Any, List, Union, Sequence, SupportsFloat, SupportsInt, Tuple
-import numpy as np
+from typing import Any, List, SupportsFloat, SupportsInt, Union
 
+import numpy as np
 from gymnasium.spaces import Box
+
 from syllabus.core import Curriculum
 
-class AnnealingBoxCurriculum(Curriculum):
-    REQUIRES_STEP_UPDATES = True
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
+class SimulatedAnnealing(Curriculum):
+    """ Curriculum that anneals a set of values from start_values to end_values over a set number of steps."""
+    REQUIRES_STEP_UPDATES = False
+    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
         *curriculum_args,
         start_values: List[SupportsFloat],
         end_values: List[SupportsFloat],
-        total_steps: Tuple[int, List[int]],
+        total_steps: Union[int, List[int]],
         **curriculum_kwargs,
     ):
+        """ Initialize the SimulatedAnnealing curriculum.
+
+        :param start_values: The initial values of the curriculum.
+        :param end_values: The final values of the curriculum.
+        :param total_steps: The total number of steps to anneal the curriculum over.
+        """
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert isinstance(
             self.task_space.gym_space, Box
@@ -37,11 +43,11 @@ class AnnealingBoxCurriculum(Curriculum):
 
         self.current_step = 0
 
-    def update_on_step(self, *args, **kwargs) -> None:
+    def update_on_episode(self, episode_return, length, task, progress, env_id=None) -> None:
         """
-        Update the curriculum based on the current training timestep.
+        Update the curriculum with episode results from the environment.
         """
-        self.current_step += 1
+        self.current_step += length
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         """

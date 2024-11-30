@@ -13,8 +13,9 @@ from distutils.util import strtobool
 import gym as openai_gym
 import gymnasium as gym
 import numpy as np
-import procgen  # noqa: F401
+import procgen  # type: ignore # noqa: F401
 from procgen import ProcgenEnv
+from syllabus.curricula.plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -22,8 +23,10 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import CentralizedPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
-from syllabus.examples.models import ProcgenAgent
+from syllabus.core.evaluator import CleanRLDiscreteEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula.plr.simple_central_plr_wrapper import SimpleCentralizedPrioritizedLevelReplay
+from syllabus.examples.models import ProcgenLSTMAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
 
@@ -97,7 +100,7 @@ def parse_args():
                         help="if toggled, this experiment will use curriculum learning")
     parser.add_argument("--curriculum-method", type=str, default="plr",
                         help="curriculum method to use")
-    parser.add_argument("--num-eval-episodes", type=int, default=10,
+    parser.add_argument("--num-eval-episodes", type=int, default=8,
                         help="the number of episodes to evaluate the agent on after each policy update.")
 
     args = parser.parse_args()
@@ -127,18 +130,22 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
-        if curriculum is not None:
+
+        if task_wrapper or curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
+
+        if curriculum is not None:
             env = GymnasiumSyncWrapper(
                 env,
                 env.task_space,
                 curriculum.components,
-                update_on_step=False,
+                update_on_step=curriculum.requires_step_updates,
+                batch_size=256,
             )
         return env
     return thunk
@@ -167,13 +174,19 @@ def level_replay_evaluate(
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = [-1] * num_episodes
-
+    next_lstm_state = (
+        torch.zeros(agent.lstm.num_layers, args.num_eval_episodes, agent.lstm.hidden_size).to(device),
+        torch.zeros(agent.lstm.num_layers, args.num_eval_episodes, agent.lstm.hidden_size).to(device),
+    )  # hidden and cell states (see https://youtu.be/8HyCNIVRbSU)
+    terms = truncs = np.zeros(args.num_eval_episodes)
     while -1 in eval_episode_rewards:
         with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+            eval_action, _, _, _, next_lstm_state = policy.get_action_and_value(
+                torch.Tensor(eval_obs).to(device), next_lstm_state, torch.Tensor(np.logical_or(terms, truncs)).to(device), deterministic=False
+            )
 
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
+        eval_obs, _, truncs, terms, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        for i, info in enumerate(eval_infos):
             if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
                 eval_episode_rewards[i] = info['episode']['r']
 
@@ -204,7 +217,7 @@ if __name__ == "__main__":
         )
         # wandb.run.log_code("./syllabus/examples")
 
-    writer = SummaryWriter(os.path.join(args.logging_dir, "./runs/{run_name}"))
+    writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -219,6 +232,22 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     print("Device:", device)
 
+    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
+    sample_envs = wrap_vecenv(sample_envs)
+    single_action_space = sample_envs.single_action_space
+    single_observation_space = sample_envs.single_observation_space
+    sample_envs.close()
+
+    # Agent setup
+    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+    print("Creating agent")
+    agent = ProcgenLSTMAgent(
+        single_observation_space.shape,
+        single_action_space.n,
+        base_kwargs={'hidden_size': 256}
+    ).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+
     # Curriculum setup
     curriculum = None
     if args.curriculum:
@@ -229,32 +258,62 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
+            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            curriculum = PrioritizedLevelReplay(
+                sample_env.task_space,
+                sample_env.observation_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                num_minibatches=1,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                evaluator=evaluator,
+                lstm_size=256,
+                record_stats=True,
+            )
+        elif args.curriculum_method == "centralplr":
             curriculum = CentralizedPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                record_stats=True,
+
+            )
+        elif args.curriculum_method == "simpleplr":
+            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                record_stats=True,
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
             curriculum = DomainRandomization(sample_env.task_space)
-        elif args.curriculum_method == "sbdr":
-            print("Using domain randomization.")
-            curriculum = SyncedBatchedDomainRandomization(args.batch_size, sample_env.task_space)
+        elif args.curriculum_method == "bdr":
+            print("Using batched domain randomization.")
+            curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            curriculum = LearningProgressCurriculum(sample_env.task_space)
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
+            )
+            eval_envs = wrap_vecenv(eval_envs)
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
+                                                    sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
             stopping = []
-            for i in range(199):
-                curricula.append(i + 1)
-                stopping.append("steps>=50000")
-                curricula.append(list(range(i + 1)))
-                stopping.append("steps>=50000")
+            for i in range(0, 199, 10):
+                curricula.append(list(range(i, i + 10)))
+                stopping.append("steps>=500000")
+                curricula.append(list(range(i + 10)))
+                stopping.append("steps>=500000")
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
@@ -276,16 +335,6 @@ if __name__ == "__main__":
     )
     envs = wrap_vecenv(envs)
 
-    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        envs.single_observation_space.shape,
-        envs.single_action_space.n,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
     actions = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
@@ -293,6 +342,7 @@ if __name__ == "__main__":
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
     values = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    tasks = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
     # TRY NOT TO MODIFY: start the game
     global_step = 0
@@ -300,37 +350,43 @@ if __name__ == "__main__":
     next_obs, _ = envs.reset()
     next_obs = torch.Tensor(next_obs).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
+    next_lstm_state = (
+        torch.zeros(agent.lstm.num_layers, args.num_envs, agent.lstm.hidden_size).to(device),
+        torch.zeros(agent.lstm.num_layers, args.num_envs, agent.lstm.hidden_size).to(device),
+    )  # hidden and cell states (see https://youtu.be/8HyCNIVRbSU)
     num_updates = args.total_timesteps // args.batch_size
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
 
-    for update in range(1, num_updates + 1):
+    for iteration in range(1, num_updates + 1):
+        initial_lstm_state = (next_lstm_state[0].clone(), next_lstm_state[1].clone())
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
-            frac = 1.0 - (update - 1.0) / num_updates
+            frac = 1.0 - (iteration - 1.0) / args.num_iterations
             lrnow = frac * args.learning_rate
             optimizer.param_groups[0]["lr"] = lrnow
 
         for step in range(0, args.num_steps):
-            global_step += 1 * args.num_envs
+            global_step += args.num_envs
             obs[step] = next_obs
             dones[step] = next_done
 
             # ALGO LOGIC: action logic
             with torch.no_grad():
-                action, logprob, _, value = agent.get_action_and_value(next_obs)
+                action, logprob, _, value, next_lstm_state = agent.get_action_and_value(
+                    next_obs, next_lstm_state, next_done)
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
-            done = np.logical_or(term, trunc)
+            next_obs, reward, terminations, truncations, infos = envs.step(action.cpu().numpy())
+            next_done = np.logical_or(terminations, truncations)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
-            next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
-            completed_episodes += sum(done)
+            next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
+            tasks[step] = torch.Tensor(envs.get_attr("task"))
 
-            for item in info:
+            for item in infos:
                 if "episode" in item.keys():
                     episode_rewards.append(item['episode']['r'])
                     print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
@@ -341,10 +397,10 @@ if __name__ == "__main__":
                     break
 
             # Syllabus curriculum update
-            if args.curriculum and args.curriculum_method == "plr":
+            if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
-                    next_value = agent.get_value(next_obs)
-                tasks = envs.get_attr("task")
+                    next_value, _ = agent.get_value(next_obs, next_lstm_state, next_done)
+                current_tasks = envs.get_attr("task")
 
                 update = {
                     "update_type": "on_demand",
@@ -352,64 +408,61 @@ if __name__ == "__main__":
                         "value": value,
                         "next_value": next_value,
                         "rew": reward,
-                        "dones": done,
-                        "tasks": tasks,
+                        "dones": next_done,
+                        "tasks": current_tasks,
                     },
                 }
                 curriculum.update(update)
-        if args.curriculum and args.curriculum_method == "sbdr":
-            update = {
-                "update_type": "on_demand",
-                "metrics": None
-            }
-            curriculum.update(update)
 
         # bootstrap value if not done
         with torch.no_grad():
-            next_value = agent.get_value(next_obs).reshape(1, -1)
-            if args.gae:
-                advantages = torch.zeros_like(rewards).to(device)
-                lastgaelam = 0
-                for t in reversed(range(args.num_steps)):
-                    if t == args.num_steps - 1:
-                        nextnonterminal = 1.0 - next_done
-                        nextvalues = next_value
-                    else:
-                        nextnonterminal = 1.0 - dones[t + 1]
-                        nextvalues = values[t + 1]
-                    delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
-                    advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
-                returns = advantages + values
-            else:
-                returns = torch.zeros_like(rewards).to(device)
-                for t in reversed(range(args.num_steps)):
-                    if t == args.num_steps - 1:
-                        nextnonterminal = 1.0 - next_done
-                        next_return = next_value
-                    else:
-                        nextnonterminal = 1.0 - dones[t + 1]
-                        next_return = returns[t + 1]
-                    returns[t] = rewards[t] + args.gamma * nextnonterminal * next_return
-                advantages = returns - values
+            next_value, _ = agent.get_value(
+                next_obs,
+                next_lstm_state,
+                next_done,
+            ).reshape(1, -1)
+            advantages = torch.zeros_like(rewards).to(device)
+            lastgaelam = 0
+            for t in reversed(range(args.num_steps)):
+                if t == args.num_steps - 1:
+                    nextnonterminal = 1.0 - next_done
+                    nextvalues = next_value
+                else:
+                    nextnonterminal = 1.0 - dones[t + 1]
+                    nextvalues = values[t + 1]
+                delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
+                advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+            returns = advantages + values
 
         # flatten the batch
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
         b_logprobs = logprobs.reshape(-1)
         b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
+        b_dones = dones.reshape(-1)
         b_advantages = advantages.reshape(-1)
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
+        b_tasks = tasks.reshape(-1)
 
         # Optimizing the policy and value network
-        b_inds = np.arange(args.batch_size)
+        assert args.num_envs % args.num_minibatches == 0
+        envsperbatch = args.num_envs // args.num_minibatches
+        envinds = np.arange(args.num_envs)
+        flatinds = np.arange(args.batch_size).reshape(args.num_steps, args.num_envs)
         clipfracs = []
         for epoch in range(args.update_epochs):
-            np.random.shuffle(b_inds)
-            for start in range(0, args.batch_size, args.minibatch_size):
-                end = start + args.minibatch_size
-                mb_inds = b_inds[start:end]
+            np.random.shuffle(envinds)
+            for start in range(0, args.num_envs, envsperbatch):
+                end = start + envsperbatch
+                mbenvinds = envinds[start:end]
+                mb_inds = flatinds[:, mbenvinds].ravel()  # be really careful about the index
 
-                _, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_actions.long()[mb_inds])
+                _, newlogprob, entropy, newvalue, _ = agent.get_action_and_value(
+                    b_obs[mb_inds],
+                    (initial_lstm_state[0][:, mbenvinds], initial_lstm_state[1][:, mbenvinds]),
+                    b_dones[mb_inds],
+                    b_actions.long()[mb_inds],
+                )
                 logratio = newlogprob - b_logprobs[mb_inds]
                 ratio = logratio.exp()
 
@@ -443,6 +496,23 @@ if __name__ == "__main__":
                 else:
                     v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
 
+                # Syllabus curriculum update
+                if args.curriculum and args.curriculum_method == "simpleplr":
+                    current_tasks = tasks[:, mbenvinds]
+                    current_dones = dones[:, mbenvinds]
+                    scores = (b_returns[mb_inds].cpu() - newvalue.cpu()).abs().view(args.num_steps, envsperbatch).cpu()
+
+                    update = {
+                        "update_type": "on_demand",
+                        "metrics": {
+                            "scores": scores,
+                            "dones": current_dones,
+                            "tasks": current_tasks,
+                            "actors": mbenvinds
+                        },
+                    }
+                    curriculum.update(update)
+
                 entropy_loss = entropy.mean()
                 loss = pg_loss - args.ent_coef * entropy_loss + v_loss * args.vf_coef
 
@@ -451,9 +521,8 @@ if __name__ == "__main__":
                 nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
                 optimizer.step()
 
-            if args.target_kl is not None:
-                if approx_kl > args.target_kl:
-                    break
+            if args.target_kl is not None and approx_kl > args.target_kl:
+                break
 
         y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
         var_y = np.var(y_true)

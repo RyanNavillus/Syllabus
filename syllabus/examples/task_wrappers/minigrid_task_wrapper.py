@@ -1,20 +1,24 @@
 """ Task wrapper that can select a new MiniGrid task on reset. """
+import warnings
+
 import gymnasium as gym
 import numpy as np
+
 from syllabus.core import TaskWrapper
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace
 
 
 class MinigridTaskWrapper(TaskWrapper):
     """
     This wrapper allows you to change the task of an NLE environment.
     """
+
     def __init__(self, env: gym.Env):
         super().__init__(env)
         try:
             from gym_minigrid.minigrid import COLOR_TO_IDX, OBJECT_TO_IDX
         except ImportError:
-            warnings.warn("Unable to import gym_minigrid.")
+            warnings.warn("Unable to import gym_minigrid.", stacklevel=2)
 
         self.observation_space = gym.spaces.Box(
             low=0,
@@ -30,7 +34,7 @@ class MinigridTaskWrapper(TaskWrapper):
             dtype=self.observation_space.dtype)
 
         # Set up task space
-        self.task_space = TaskSpace(gym.spaces.Discrete(4000), list(np.arange(4000)))
+        self.task_space = DiscreteTaskSpace(4000)
         self.task = None
 
     def reset(self, new_task=None, **kwargs):

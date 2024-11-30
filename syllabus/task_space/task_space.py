@@ -1,234 +1,638 @@
 import itertools
-from typing import Any, List, Union
+import typing
+import warnings
+from typing import Any, List, Tuple, Union
 
 import numpy as np
-from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete, Space, Tuple
+from gymnasium.spaces import Discrete, MultiDiscrete, Space
+
+from syllabus.utils import UsageError
 
 
-class TaskSpace():
-    def __init__(self, gym_space: Union[Space, int], tasks=None):
+class TaskSpace:
+    """
+    TaskSpace is an extension of gym spaces that allows for efficient encoding and decoding of tasks.
+    This is useful for environments that have a large number of tasks or require complex task representations.
 
-        if not isinstance(gym_space, Space):
-            gym_space = self._create_gym_space(gym_space)
+    Encoding tasks provides several advantages:
+    1. Minimizing the bandwidth required to transfer tasks between processes
+    2. Simplifying the task formats that curricula need to support
+    3. Allowing the environment to use a convenient and interpretable task format, with no impact on performance
+    """
 
-        self.gym_space = gym_space
+    def __init__(self, space_or_value: Union[Space, int, List, Tuple], tasks: List[Any] = None):
+        """
+        Generic TaskSpace initialization. Provides syntactic sugar for creating gym spaces.
+
+        :param space_or_value: gym space or value that can be parsed into a gym space
+        :type space_or_value: Union[Space, int, List, Tuple]
+        :param tasks: The corresponding task representations
+        :type tasks: List[Any], optional
+        """
+        # Syntactic sugar for creating gym spaces
+        if isinstance(space_or_value, Space):
+            self.gym_space = space_or_value
+        else:
+            self.gym_space = self._create_gym_space(space_or_value)
 
         # Autogenerate task names
         if tasks is None:
-            tasks = self._generate_task_names(gym_space)
+            tasks = self._generate_task_names(self.gym_space)
 
-        self._tasks = set(tasks) if tasks is not None else None
-        self._encoder, self._decoder = self._make_task_encoder(gym_space, tasks)
+        self._task_set = set(tasks)
+        self._task_list = tasks
 
-    def _create_gym_space(self, gym_space):
+    def _create_gym_space(self, gym_space: Space):
+        """
+        Create a gym space from a simple value.
+
+        :param gym_space: A simple value to create a gym space from
+        :type gym_space: Space
+        :return: Created gym space
+        :rtype: Space
+        """
         if isinstance(gym_space, int):
-            # Syntactic sugar for discrete space
             gym_space = Discrete(gym_space)
-        elif isinstance(gym_space, tuple):
-            # Syntactic sugar for discrete space
+        elif isinstance(gym_space, (tuple, list)):
             gym_space = MultiDiscrete(gym_space)
-        elif isinstance(gym_space, list):
-            # Syntactic sugar for tuple space
-            spaces = []
-            for i, value in enumerate(gym_space):
-                spaces[i] = self._create_gym_space(value)
-            gym_space = Tuple(spaces)
-        elif isinstance(gym_space, dict):
-            # Syntactic sugar for dict space
-            spaces = {}
-            for key, value in gym_space.items():
-                spaces[key] = self._create_gym_space(value)
-            gym_space = Dict(spaces)
         return gym_space
 
-    def _generate_task_names(self, gym_space):
+    def _generate_task_names(self, gym_space: Space):
+        """
+        Generate basic task names for a gym space.
+
+        :param gym_space: A gymnasium space
+        :type gym_space: Space
+        :return: List of task names
+        :rtype: List
+        """
         if isinstance(gym_space, Discrete):
-            tasks = tuple(range(gym_space.n))
+            tasks = list(range(gym_space.n))
         elif isinstance(gym_space, MultiDiscrete):
             tasks = [tuple(range(dim)) for dim in gym_space.nvec]
-        elif isinstance(gym_space, Tuple):
-            tasks = [self._generate_task_names(value) for value in gym_space.spaces]
-        elif isinstance(gym_space, Dict):
-            tasks = {key: tuple(self._generate_task_names(value)) for key, value in gym_space.spaces.items()}
         else:
-            tasks = None
+            tasks = []
         return tasks
 
-    def _make_task_encoder(self, space, tasks):
-        if isinstance(space, Discrete):
-            assert space.n == len(tasks), f"Number of tasks ({space.n}) must match number of discrete options ({len(tasks)})"
-            self._encode_map = {task: i for i, task in enumerate(tasks)}
-            self._decode_map = {i: task for i, task in enumerate(tasks)}
-            encoder = lambda task: self._encode_map[task] if task in self._encode_map else None
-            decoder = lambda task: self._decode_map[task] if task in self._decode_map else None
+    def decode(self, encoding: Any) -> Any:
+        """
+        Convert the task encoding to the original task representation.
+        This method provides generic decoding safety checks for all task spaces, and
+        calls the specific _decode method for each task space. It will throw a
+        UsageError if the encoding cannot be decoded into the task space.
 
-        elif isinstance(space, Box):
-            encoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
-            decoder = lambda task: task if space.contains(np.asarray(task, dtype=space.dtype)) else None
-        elif isinstance(space, Tuple):
+        :param encoding: Encoding of the task
+        :type encoding: Any
+        :return: Decoded task that can be used by the environment
+        :rtype: Any
+        """
+        try:
+            return self._decode(encoding)
+        except KeyError as e:
+            # Check if task is already in decoded form
+            try:
+                self._encode(encoding)
+                warnings.warn(f"Task encoding already decoded: {encoding}", stacklevel=2)
+                return encoding
+            except (KeyError, TypeError):
+                raise UsageError(f"Failed to decode task encoding: {encoding}") from e
+        except ValueError as e:
+            raise UsageError(f"Failed to decode task encoding: {encoding}") from e
 
-            assert len(space.spaces) == len(tasks), f"Number of task ({len(space.spaces)})must match options in Tuple ({len(tasks)})"
-            results = [list(self._make_task_encoder(s, t)) for (s, t) in zip(space.spaces, tasks)]
-            encoders = [r[0] for r in results]
-            decoders = [r[1] for r in results]
-            encoder = lambda task: [e(t) for e, t in zip(encoders, task)]
-            decoder = lambda task: [d(t) for d, t in zip(decoders, task)]
+    def encode(self, task: Any) -> Any:
+        """
+        Convert the task to an efficient encoding to speed up multiprocessing.
+        This method provides generic encoding safety checks for all task spaces,
+        and calls the specific _encode method for each task space. It will throw a
+        UsageError if the task is not in the task space or cannot be encoded.
 
-        elif isinstance(space, MultiDiscrete):
-            assert len(space.nvec) == len(tasks), f"Number of steps in a tasks ({len(space.nvec)}) must match number of discrete options ({len(tasks)})"
+        :param task: Task to encode
+        :type task: Any
+        :return: Encoded task
+        :rtype: Any
+        """
+        try:
+            return self._encode(task)
+        except KeyError as e:
+            try:
+                self._decode(task)
+                warnings.warn(f"Task already encoded: {task}", stacklevel=2)
+                return task
+            except (KeyError, TypeError):
+                raise UsageError(f"Failed to encode task: {task}") from e
+        except ValueError as e:
+            raise UsageError(f"Failed to encode task: {task}") from e
 
-            combinations = [p for p in itertools.product(*tasks)]
-            encode_map = {task: i for i, task in enumerate(combinations)}
-            decode_map = {i: task for i, task in enumerate(combinations)}
+    def _decode(self, encoding: Any) -> Any:
+        """
+        Convert the task encoding to the original task representation.
+        Subclasses should implement this method for their decoding logic.
 
-            encoder = lambda task: encode_map[task] if task in encode_map else None
-            decoder = lambda task: decode_map[task] if task in decode_map else None
+        :param encoding: Encoding of the task
+        :type encoding: Any
+        :return: Decoded task representation
+        :rtype: Any
+        """
+        raise NotImplementedError
 
-        elif isinstance(space, Dict):
+    def _encode(self, task: Any) -> Any:
+        """
+        Convert the task to an efficient encoding to speed up multiprocessing.
+        Subclasses should implement this method for their encoding logic.
 
-            def helper(task, spaces, tasks, action="encode"):
-                # Iteratively encodes or decodes each space in the dictionary
-                output = {}
-                if (isinstance(spaces, dict) or isinstance(spaces, Dict)):
-                    for key, value in spaces.items():
-                        if (isinstance(value, dict) or isinstance(value, Dict)):
-                            temp = helper(task[key], value, tasks[key], action)
-                            output.update({key: temp})
-                        else:
-                            encoder, decoder = self._make_task_encoder(value, tasks[key])
-                            output[key] = encoder(task[key]) if action == "encode" else decoder(task[key])
-                return output
+        :param task: Task to encode
+        :type task: Any
+        :return: Encoded task
+        :rtype: Any
+        """
+        raise NotImplementedError
 
-            encoder = lambda task: helper(task, space.spaces, tasks, "encode")
-            decoder = lambda task: helper(task, space.spaces, tasks, "decode")
+    def contains(self, encoding: Any) -> bool:
+        """
+        Check if the encoding is a valid task in the task space.
+
+        :param encoding: Encoding of the task
+        :type encoding: Any
+        :return: Boolean specifying if the encoding is a valid task
+        :rtype: bool
+        """
+        return encoding in self._task_set or self._decode(encoding) in self._task_set
+
+    @property
+    def tasks(self) -> List[Any]:
+        """
+        Return the list of all tasks in the task space.
+
+        :return: List of all tasks
+        :rtype: List[Any]
+        """
+        return self._task_list
+
+    @property
+    def num_tasks(self) -> int:
+        """
+        Return the number of tasks in the task space.
+
+        :return: Number of tasks
+        :rtype: int
+        """
+        return len(self._task_list)
+
+    def task_name(self, task: int) -> str:
+        """
+        Return the name of the task.
+
+        :param task: Task to get the name of
+        :type task: int
+        :return: Name of the task
+        :rtype: str
+        """
+        return repr(self._decode(task))
+
+
+class DiscreteTaskSpace(TaskSpace):
+    """Task space for discrete tasks."""
+
+    def __init__(self, space_or_value: Union[Space, int], tasks=None):
+        """
+        Initialize a discrete task space.
+
+        :param space_or_value: gym space or value that can be parsed into a gym space
+        :type space_or_value: Union[Space, int]
+        :param tasks: The corresponding tasks representations
+        :type tasks: List[Any], optional
+        """
+        super().__init__(space_or_value, tasks)
+
+        # Use space efficient implementation for sequential task spaces
+        self._sequential = self._is_sequential(self.tasks)
+        if self._sequential:
+            self._first_task = self.tasks[0]     # First and smallest task
+            self._last_task = self.tasks[-1]     # Last and largest task
         else:
-            encoder = lambda task: task
-            decoder = lambda task: task
-        return encoder, decoder
+            self._encode_map = {task: i for i, task in enumerate(self.tasks)}
+            self._decode_map = {i: task for i, task in enumerate(self.tasks)}
 
-    def decode(self, encoding):
-        """Convert the efficient task encoding to a task that can be used by the environment."""
-        return self._decoder(encoding)
+    def _is_sequential(self, tasks: List[int]):
+        """
+        Check if the tasks are sequential integers.
 
-    def encode(self, task):
-        """Convert the task to an efficient encoding to speed up multiprocessing."""
-        return self._encoder(task)
+        :param tasks: List of tasks
+        :type tasks: List[int]
+        :return: Boolean specifying if the tasks are sequential integers
+        :rtype: bool
+        """
+        return isinstance(tasks[0], (int, np.integer)) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
 
-    def add_task(self, task):
-        """Add a task to the task space. Only implemented for discrete spaces."""
-        if task not in self._tasks:
-            self._tasks.add(task)
-            # TODO: Increment task space size
-            self.gym_space = self.increase_space()
-            # TODO: Optimize adding tasks
-            self._encoder, self._decoder = self._make_task_encoder(self.gym_space, self._tasks)
+    def _decode(self, encoding: int) -> int:
+        """
+        Convert the task encoding to the original task representation.
 
-    def _sum_axes(list_or_size: Union[list, int]):
-        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
-            return list_or_size
-        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
-            return np.prod([TaskSpace._sum_axes(x) for x in list_or_size])
+        :param encoding: Encoding of the task
+        :type encoding: int
+        :return: Decoded task representation
+        :rtype: int
+        """
+        assert isinstance(encoding, (int, np.integer)), f"Encoding must be an integer. Got {type(encoding)} instead."
+        if self._sequential:
+            task = encoding + self._first_task
+            if task < self._first_task or task > self._last_task:
+                raise UsageError(f"Encoding {encoding} does not map to a task in the task space")
+            return task
         else:
-            raise NotImplementedError(f"{type(list_or_size)}")
+            return self._decode_map[encoding]
 
-    def _enumerate_axes(self, list_or_size: Union[np.ndarray, int]):
-        if isinstance(list_or_size, int) or isinstance(list_or_size, np.int64):
-            return tuple(range(list_or_size))
-        elif isinstance(list_or_size, list) or isinstance(list_or_size, np.ndarray):
-            return tuple(itertools.product(*[self._enumerate_axes(x) for x in list_or_size]))
+    def _encode(self, task: int) -> int:
+        """
+        Convert the task to an efficient encoding.
+
+        :param task: Task to encode
+        :type task: int
+        :return: Encoded task
+        :rtype: int
+        """
+        if self._sequential:
+            assert isinstance(task, (int, np.integer)), f"Task must be an integer. Got {type(task)} instead."
+            if task < self._first_task or task > self._last_task:
+                raise UsageError(f"Task {task} is not in the task space")
+            return task - self._first_task
         else:
-            raise NotImplementedError(f"{type(list_or_size)}")
+            return self._encode_map[task]
 
-    def seed(self, seed):
+    def sample(self) -> int:
+        """
+        Sample a task from the task space.
+
+        :return: Sampled task
+        :rtype: int
+        """
+        sample = self.gym_space.sample()
+        return self._decode(sample)
+
+    def seed(self, seed: int):
+        """
+        Seed the task space.
+
+        :param seed: Seed value
+        :type seed: int
+        """
+        self.gym_space.seed(seed)
+
+
+class BoxTaskSpace(TaskSpace):
+    """Task space for continuous tasks."""
+
+    def _decode(self, encoding: np.ndarray) -> np.ndarray:
+        """
+        Convert the task encoding to the original task representation.
+
+        :param encoding: Encoding of the task
+        :type encoding: np.ndarray
+        :return: Decoded task representation
+        :rtype: np.ndarray
+        :raises UsageError: If encoding does not map to a task in the task space
+        """
+        assert isinstance(encoding, np.ndarray), f"Encoding must be a numpy array. Got {type(encoding)} instead."
+        if not self.contains(encoding):
+            raise UsageError(f"Encoding {encoding} does not map to a task in the task space")
+        return encoding
+
+    def _encode(self, task: np.ndarray) -> np.ndarray:
+        """
+        Convert the task to an efficient encoding.
+
+        :param task: Task to encode
+        :type task: np.ndarray
+        :return: Encoded task
+        :rtype: np.ndarray
+        """
+        return task
+
+    def sample(self) -> np.ndarray:
+        """
+        Sample a task from the task space.
+
+        :return: Sampled task
+        :rtype: np.ndarray
+        """
+        sample = self.gym_space.sample()
+        return self._decode(sample)
+
+    def seed(self, seed: int):
+        """
+        Seed the task space.
+
+        :param seed: Seed value
+        :type seed: int
+        """
         self.gym_space.seed(seed)
 
     @property
     def tasks(self) -> List[Any]:
-        # TODO: Can I just use _tasks?
-        return self._tasks
-
-    def get_tasks(self, gym_space: Space = None, sample_interval: float = None) -> List[tuple]:
         """
-        Return the full list of discrete tasks in the task_space.
-        Return a sample of the tasks for continuous spaces if sample_interval is specified.
-        Can be overridden to exclude invalid tasks within the space.
-        """
-        if gym_space is None:
-            gym_space = self.gym_space
+        Return the list of all tasks in the task space.
 
-        if isinstance(gym_space, Discrete):
-            return list(range(gym_space.n))
-        elif isinstance(gym_space, Box):
-            raise NotImplementedError
-        elif isinstance(gym_space, Tuple):
-            return list(itertools.product([self.get_tasks(task_space=s) for s in gym_space.spaces]))
-        elif isinstance(gym_space, Dict):
-            return itertools.product([self.get_tasks(task_space=s) for s in gym_space.spaces.values()])
-        elif isinstance(gym_space, MultiBinary):
-            return list(self._enumerate_axes(gym_space.nvec))
-        elif isinstance(gym_space, MultiDiscrete):
-            return list(self._enumerate_axes(gym_space.nvec))
-        elif gym_space is None:
-            return []
-        else:
-            raise NotImplementedError
+        :return: List of all tasks
+        :rtype: List[Any]
+        """
+        return None
 
     @property
     def num_tasks(self) -> int:
-        # TODO: Cache results
-        return self.count_tasks()
-
-    def count_tasks(self, gym_space: Space = None) -> int:
         """
-        Return the number of discrete tasks in the task_space.
-        Returns None for continuous spaces.
-        Graph space not implemented.
+        Return the number of tasks in the task space.
+
+        :return: Number of tasks
+        :rtype: int
         """
-        # TODO: Test these implementations
-        if gym_space is None:
-            gym_space = self.gym_space
+        return -1
 
-        if isinstance(gym_space, Discrete):
-            return gym_space.n
-        elif isinstance(gym_space, Box):
-            return None
-        elif isinstance(gym_space, Tuple):
-            return sum([self.count_tasks(gym_space=s) for s in gym_space.spaces])
-        elif isinstance(gym_space, Dict):
-            return sum([self.count_tasks(gym_space=s) for s in gym_space.spaces.values()])
-        elif isinstance(gym_space, MultiBinary):
-            return TaskSpace._sum_axes(gym_space.nvec)
-        elif isinstance(gym_space, MultiDiscrete):
-            return TaskSpace._sum_axes(gym_space.nvec)
-        elif gym_space is None:
-            return 0
-        else:
-            raise NotImplementedError(f"Unsupported task space type: {type(gym_space)}")
+    def task_name(self, task: np.ndarray) -> str:
+        """
+        Return the name of the task.
 
-    def task_name(self, task):
-        return repr(self.decode(task))
+        :param task: Task to get the name of
+        :type task: np.ndarray
+        :return: Name of the task
+        :rtype: str
+        """
+        return repr(self._decode(task))
 
-    def contains(self, task):
-        return task in self._tasks or self.decode(task) in self._tasks
+    def contains(self, encoding: np.ndarray) -> bool:
+        """
+        Return boolean specifying if encoding is a valid member of this space.
 
-    def increase_space(self, amount: Union[int, float] = 1):
-        if isinstance(self.gym_space, Discrete):
-            assert isinstance(amount, int), f"Discrete task space can only be increased by integer amount. Got {amount} instead."
-            return Discrete(self.gym_space.n + amount)
-
-    def sample(self):
-        assert isinstance(self.gym_space, Discrete) or isinstance(self.gym_space, Box) or isinstance(self.gym_space, Dict) or isinstance(self.gym_space, Tuple)
-        return self.decode(self.gym_space.sample())
-
-    def list_tasks(self):
-        return list(self._tasks)
-
-    def box_contains(self, x) -> bool:
-        """Return boolean specifying if x is a valid member of this space."""
-        if not isinstance(x, np.ndarray):
+        :param encoding: Encoding of the task
+        :type encoding: np.ndarray
+        :return: Boolean specifying if encoding is a valid task
+        :rtype: bool
+        """
+        if not isinstance(encoding, np.ndarray):
             try:
-                x = np.asarray(x, dtype=self.gym_space.dtype)
+                encoding = np.asarray(encoding, dtype=self.gym_space.dtype)
             except (ValueError, TypeError):
                 return False
 
-        return not bool(x.shape == self.gym_space.shape and np.any((x < self.gym_space.low) | (x > self.gym_space.high)))
+        shape_check = encoding.shape == self.gym_space.shape
+        bounds_check = np.all((encoding >= self.gym_space.low) & (encoding <= self.gym_space.high))
+        return shape_check and bounds_check
+
+    # def to_multidiscrete(self, grid_points: Union[int, List[int]]):
+    #     # Convert to Box Task Space to MultiDiscrete Task Space
+    #     if isinstance(self.gym_space, Box):
+    #         elements = self.gym_space.shape[0]
+    #         print(self.gym_space.shape)
+
+
+class MultiDiscreteTaskSpace(TaskSpace):
+    """Task space for multi-discrete tasks."""
+
+    def __init__(self, space_or_value: Union[MultiDiscrete, int], tasks: Union[List[Any], Tuple[Any]] = None, flatten: bool = False):
+        """
+        Initialize a multi-discrete task space.
+
+        :param space_or_value: gym space or value that can be parsed into a gym space
+        :type space_or_value: Union[MultiDiscrete, int]
+        :param tasks: The corresponding tasks representations
+        :type tasks: Union[List[Any], Tuple[Any]], optional
+        :param flatten: Whether to flatten the encoding into a discrete list
+        :type flatten: bool
+        """
+        super().__init__(space_or_value, tasks)
+
+        self.flatten = flatten
+        self._all_tasks = list(itertools.product(*self._task_list))
+        self._encode_maps = [{task: i for i, task in enumerate(tasks)} for tasks in self._task_list]
+        self._decode_maps = [{i: task for i, task in enumerate(tasks)} for tasks in self._task_list]
+
+    def _is_sequential(self, tasks: List[int]) -> bool:
+        """
+        Check if the tasks are sequential integers.
+
+        :param tasks: List of tasks
+        :type tasks: List[int]
+        :return: Boolean specifying if the tasks are sequential integers
+        :rtype: bool
+        """
+        return isinstance(tasks[0], (int, np.integer)) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
+
+    def _decode(self, encoding: Union[int, Tuple[int]]) -> Tuple[int]:
+        """
+        Convert the task encoding to the original task representation.
+
+        :param encoding: Encoding of the task
+        :type encoding: Union[int, Tuple[int]]
+        :return: Decoded task representation
+        :rtype: Tuple[int]
+        """
+        assert isinstance(encoding, (int, np.integer, tuple)
+                          ), f"Encoding must be an integer or tuple. Got {type(encoding)} instead."
+        if self.flatten:
+            assert isinstance(encoding, (int, np.integer)
+                              ), f"Encoding must be an integer. Got {type(encoding)} instead."
+            encoding = np.unravel_index(encoding, self.gym_space.nvec)
+        if len(encoding) != len(self._decode_maps):
+            raise UsageError(
+                f"Encoding length ({len(encoding)}) must match number of discrete spaces ({len(self._decode_maps)})")
+        return tuple(decode_map[t] for decode_map, t in zip(self._decode_maps, encoding))
+
+    def _encode(self, task: Tuple[Any]) -> int:
+        """
+        Convert the task to an efficient encoding.
+
+        :param task: Task to encode
+        :type task: Tuple[Any]
+        :return: Encoded task
+        :rtype: int
+        """
+        if len(task) != len(self._encode_maps):
+            raise UsageError(
+                f"Task length ({len(task)}) must match number of discrete spaces ({len(self._encode_maps)})")
+        encoding = tuple(encode_map[t] for encode_map, t in zip(self._encode_maps, task))
+        if self.flatten:
+            encoding = np.ravel_multi_index(encoding, self.gym_space.nvec)
+        return encoding
+
+    def sample(self):
+        """
+        Sample a task from the task space.
+
+        :return: Sampled task
+        :rtype: int
+        """
+        sample = self.gym_space.sample()
+        if self.flatten:
+            sample = np.ravel_multi_index(sample, self.gym_space.nvec)
+        return self._decode(sample)
+
+    def seed(self, seed: int):
+        """
+        Seed the task space.
+
+        :param seed: Seed value
+        :type seed: int
+        """
+        self.gym_space.seed(seed)
+
+    @property
+    def tasks(self) -> List[Any]:
+        """
+        Return the list of all tasks in the task space.
+
+        :return: List of all tasks
+        :rtype: List[Any]
+        """
+        return self._all_tasks
+
+    @property
+    def num_tasks(self) -> int:
+        """
+        Return the number of tasks in the task space.
+
+        :return: Number of tasks
+        :rtype: int
+        """
+        return int(np.prod(self.gym_space.nvec))
+
+
+class TupleTaskSpace(TaskSpace):
+    """Task space for tuple tasks. Can be used to combine multiple task spaces into a single task space."""
+
+    def __init__(self, task_spaces: Tuple[TaskSpace], space_names: Tuple = None, flatten: bool = False):
+        """
+        Initialize a tuple task space.
+
+        :param task_spaces: Tuple of task spaces
+        :type task_spaces: Tuple[TaskSpace]
+        :param space_names: Names of the spaces
+        :type space_names: Tuple, optional
+        :param flatten: Whether to flatten the encoding into a discrete list
+        :type flatten: bool
+        """
+        super().__init__(None, None)
+        self.task_spaces = task_spaces
+        self.space_names = space_names
+        self.flatten = flatten
+
+        if self.flatten:
+            for space in self.task_spaces:
+                if hasattr(space, "flatten"):
+                    space.flatten = self.flatten
+
+        self._all_tasks = None
+        self._task_nums = tuple(space.num_tasks for space in self.task_spaces)
+
+    def _is_sequential(self, tasks: Tuple[int]) -> bool:
+        """
+        Check if the tasks are sequential integers.
+
+        :param tasks: List of tasks
+        :type tasks: Tuple[int]
+        :return: Boolean specifying if the tasks are sequential integers
+        :rtype: bool
+        """
+        return isinstance(tasks[0], (int, np.integer)) and tuple(tasks) == tuple(range(tasks[0], tasks[-1] + 1))
+
+    def _decode(self, encoding: Union[int, Tuple[Any]]) -> Tuple[int]:
+        """
+        Convert the task encoding to the original task representation.
+
+        :param encoding: Encoding of the task
+        :type encoding: int
+        :return: Decoded task representation
+        :rtype: Tuple[Any]
+        """
+        assert isinstance(encoding, (int, np.integer, tuple)
+                          ), f"Encoding must be an integer or tuple. Got {type(encoding)} instead."
+        if self.flatten:
+            assert isinstance(encoding, (int, np.integer)
+                              ), f"Encoding must be an integer. Got {type(encoding)} instead."
+            encoding = np.unravel_index(encoding, self._task_nums)
+        if len(encoding) != len(self.task_spaces):
+            raise UsageError(
+                f"Encoding length ({len(encoding)}) must match number of task spaces ({len(self.task_spaces)})")
+        return tuple(space.decode(t) for space, t in zip(self.task_spaces, encoding))
+
+    def _encode(self, task: Tuple[Any]):
+        """
+        Convert the task to an efficient encoding.
+
+        :param task: Task to encode
+        :type task: Tuple[Any]
+        :return: Encoded task
+        :rtype: int
+        """
+        if len(task) != len(self.task_spaces):
+            raise UsageError(
+                f"Task length ({len(task)}) must match number of task spaces ({len(self.task_spaces)})")
+        encoding = tuple(space.encode(t) for space, t in zip(self.task_spaces, task))
+        if self.flatten:
+            encoding = np.ravel_multi_index(encoding, self._task_nums)
+        return encoding
+
+    def contains(self, encoding: int) -> bool:
+        """
+        Check if the encoding is a valid task in the task space.
+
+        :param encoding: Encoding of the task
+        :type encoding: int
+        :return: Boolean specifying if the encoding is a valid task
+        :rtype: bool
+        """
+        for element, space in zip(encoding, self.task_spaces):
+            if not space.contains(element):
+                return False
+        return True
+
+    def sample(self) -> Tuple[Any]:
+        """
+        Sample a task from the task space.
+
+        :return: Sampled task
+        :rtype: Tuple[Any]
+        """
+        return [space.sample() for space in self.task_spaces]
+
+    def seed(self, seed: int):
+        """
+        Seed all subspaces.
+
+        :param seed: Seed value
+        :type seed: int
+        """
+        for space in self.task_spaces:
+            space.seed(seed)
+
+    @property
+    def tasks(self) -> List[Any]:
+        """
+        Return the list of all tasks in the task space.
+
+        :return: List of all tasks
+        :rtype: List[Any]
+        """
+        if self._all_tasks is None:
+            task_lists = [space.tasks for space in self.task_spaces]
+            self._all_tasks = list(itertools.product(*task_lists))
+        return self._all_tasks
+
+    @property
+    def num_tasks(self) -> int:
+        """
+        Return the number of tasks in the task space.
+
+        :return: Number of tasks
+        :rtype: int
+        """
+        return int(np.prod(self._task_nums))
+
+    def task_name(self, task: Tuple[int]) -> str:
+        """
+        Return the name of the task.
+
+        :param task: Task to get the name of
+        :type task: Tuple[int]
+        :return: Name of the task
+        :rtype: str
+        """
+        return repr(self._decode(task))

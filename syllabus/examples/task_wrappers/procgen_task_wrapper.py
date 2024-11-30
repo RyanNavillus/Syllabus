@@ -1,8 +1,7 @@
 import gymnasium as gym
-import numpy as np
-from syllabus.core import TaskWrapper
-from syllabus.task_space import TaskSpace
 
+from syllabus.core import TaskWrapper
+from syllabus.task_space import DiscreteTaskSpace
 
 PROCGEN_RETURN_BOUNDS = {
     "coinrun": (5, 10),
@@ -28,9 +27,10 @@ class ProcgenTaskWrapper(TaskWrapper):
     """
     This wrapper allows you to change the task of an NLE environment.
     """
+
     def __init__(self, env: gym.Env, env_id, seed=0):
         super().__init__(env)
-        self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(0, 200)))
+        self.task_space = DiscreteTaskSpace(200)
         self.env_id = env_id
         self.task = seed
         self.seed(seed)
@@ -77,8 +77,9 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.episode_return += rew
 
         env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
-        normalized_return = (self.episode_return - env_min) / (env_max - env_min)
-        info["task_completion"] = normalized_return
+        normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
+        clipped_return = 1 if normalized_return > 0.1 else 0    # Binary progress
+        info["task_completion"] = clipped_return
 
         return self.observation(obs), rew, term, trunc, info
 
