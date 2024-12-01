@@ -18,7 +18,7 @@ class RolloutStorage(object):
     ):
         self.tasks = torch.zeros(num_steps, num_processes, dtype=torch.int)
         self.masks = torch.ones(num_steps, num_processes, dtype=torch.int)
-        self.scores = torch.zeros(num_steps, num_processes)
+        self.scores = torch.zeros(num_steps + 1, num_processes)
 
         self.num_processes = num_processes
         self.actor_steps = torch.zeros(num_processes, dtype=torch.int)
@@ -35,6 +35,7 @@ class RolloutStorage(object):
             self.tasks[self.actor_steps[actors] + step, actors] = tasks.int().cpu()[step]
             self.masks[self.actor_steps[actors] + step, actors] = masks.cpu()[step]
             self.scores[self.actor_steps[actors] + step, actors] = scores.cpu()[step]
+        self.scores[self.actor_steps[actors] + steps, actors] = scores.cpu()[steps]
         self.actor_steps[actors] += steps
         self.actors.update(actors)
 
