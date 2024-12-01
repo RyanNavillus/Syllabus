@@ -8,7 +8,7 @@ except ImportError as e:
     warnings.warn(f"Unable to import the following minigrid dependencies: {e.name}", stacklevel=2)
 
 try:
-    from .nethack_wrappers import NethackTaskWrapper, NethackSeedWrapper, RenderCharImagesWithNumpyWrapperV2, NetHackCollect, NetHackDescend, NetHackSatiate, NetHackScoutClipped, NetHackSeed
+    from .nethack_wrappers import NethackTaskWrapper, NethackSeedWrapper, NetHackCollect, NetHackDescend, NetHackSatiate, NetHackScoutClipped, NetHackSeed
 except ImportError as e:
     warnings.warn(f"Unable to import the following nle dependencies: {e.name}", stacklevel=2)
 
