@@ -138,16 +138,16 @@ class TaskSampler:
         return 1 - (top2_confidence[:, 0] - top2_confidence[:, 1]).mean().item()
 
     def _average_gae(self, **kwargs):
-        returns = kwargs["returns"][:-1]
-        value_preds = kwargs["value_preds"][:-1]
+        returns = kwargs["returns"]
+        value_preds = kwargs["value_preds"]
 
         advantages = returns - value_preds
 
         return advantages.mean().item()
 
     def _average_value_l1(self, **kwargs):
-        returns = kwargs["returns"][:-1]
-        value_preds = kwargs["value_preds"][:-1]
+        returns = kwargs["returns"]
+        value_preds = kwargs["value_preds"]
 
         advantages = returns - value_preds
 
@@ -187,17 +187,16 @@ class TaskSampler:
 
                 task_idx_t = tasks[start_t, actor_index].item()
 
-                score = scores[start_t, actor_index].item()
-                num_steps = len(rollouts.tasks[start_t:t, actor_index])
+                score = scores[start_t:t, actor_index].mean().item()
+                num_steps = t - start_t
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
-
                 start_t = t.item()
             if start_t < self.num_steps:
                 task_idx_t = tasks[start_t, actor_index].item()
 
-                score = scores[start_t, actor_index].item()
+                score = scores[start_t:, actor_index].mean().item()
                 self._last_score = score
-                num_steps = len(rollouts.tasks[start_t:, actor_index])
+                num_steps = self.num_steps - start_t
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
     def _update_with_rollouts(self, rollouts, score_function, actor_index=None):

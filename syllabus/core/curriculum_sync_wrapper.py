@@ -1,5 +1,6 @@
 import copy
 import signal
+import sys
 import threading
 import time
 import warnings
@@ -63,12 +64,6 @@ class CurriculumWrapper:
     def update_on_episode(self, episode_return, length, task, progress, env_id=None):
         self.curriculum.update_on_episode(episode_return, length, task, progress, env_id=env_id)
 
-    def update(self, metrics):
-        self.curriculum.update(metrics)
-
-    def update_batch(self, metrics):
-        self.curriculum.update_batch(metrics)
-
     def normalize(self, rewards, task):
         return self.curriculum.normalize(rewards, task)
 
@@ -89,6 +84,7 @@ class MultiProcessingComponents:
         self.timeout = timeout
         self.max_envs = max_envs
         self._maxsize = max_queue_size
+        self.started = False
 
     def peek_id(self):
         return self._env_count[0]
@@ -110,7 +106,7 @@ class MultiProcessingComponents:
 
     def get_task(self):
         try:
-            if self.task_queue.empty():
+            if self.started and self.task_queue.empty():
                 warnings.warn(
                     f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
             task = self.task_queue.get(block=True, timeout=self.timeout)
@@ -136,8 +132,6 @@ class MultiProcessingComponents:
             self.task_queue.close()
             self.update_queue.close()
             self._env_count = None
-            del self.task_queue
-            del self.update_queue
 
     def get_metrics(self, log_n_tasks=1):
         logs = []
@@ -170,6 +164,7 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         if not self.should_update:
             self.update_thread = threading.Thread(name='update', target=self._update_queues, daemon=True)
             self.should_update = True
+            self.components.started = True
             signal.signal(signal.SIGINT, self._sigint_handler)
             self.update_thread.start()
 
@@ -178,11 +173,13 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
         self.should_update = False
+        self.components.started = False
         self.update_thread.join()
         self.components.close()
 
     def _sigint_handler(self, sig, frame):
         self.stop()
+        sys.exit(0)
 
     def _update_queues(self):
         """
