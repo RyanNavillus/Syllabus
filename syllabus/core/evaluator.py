@@ -279,7 +279,7 @@ class DummyEvaluator(Evaluator):
         return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
 
-class CleanRLDiscreteEvaluator(Evaluator):
+class CleanRLEvaluator(Evaluator):
     def __init__(self, agent, *args, is_lstm=False, **kwargs):
         super().__init__(agent, *args, **kwargs)
         self.is_lstm = is_lstm or hasattr(agent, "lstm")

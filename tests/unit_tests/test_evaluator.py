@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import procgen      # type: ignore # noqa: F401
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
-from syllabus.core import Evaluator, CleanRLDiscreteEvaluator
+from syllabus.core import Evaluator, CleanRLEvaluator
 from syllabus.examples.models import ProcgenAgent, CartPoleAgent
 from syllabus.examples.models.procgen_model import ProcgenLSTMAgent
 
@@ -37,7 +37,7 @@ def test_evaluator():
         [make_env("CartPole-v1") for i in range(4)]
     )
     agent = CartPoleAgent(envs)
-    evaluator = CleanRLDiscreteEvaluator(agent)
+    evaluator = CleanRLEvaluator(agent)
 
     obs, _ = envs.reset(seed=1)
 
@@ -64,7 +64,7 @@ def test_evaluator_procgen():
         [make_env("procgen-bigfish-v0") for i in range(4)]
     )
     agent = ProcgenAgent((64, 64, 3), 15)
-    evaluator = CleanRLDiscreteEvaluator(agent)
+    evaluator = CleanRLEvaluator(agent)
 
     obs, _ = envs.reset()
 
@@ -90,7 +90,7 @@ def test_evaluator_lstm():
         [make_env("procgen-bigfish-v0") for i in range(4)]
     )
     agent = ProcgenLSTMAgent((64, 64, 3), 15, {"hidden_size": 256})
-    evaluator = CleanRLDiscreteEvaluator(agent)
+    evaluator = CleanRLEvaluator(agent)
 
     obs, _ = envs.reset()
 

@@ -21,10 +21,9 @@ class Curriculum:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
-        TODO: Implement this in a way that works with any curriculum, maybe as a wrapper
         :param random_start_tasks: Number of uniform random tasks to sample before using the algorithm's sample method, defaults to 0
-        TODO: Use task space for this
         :param task_names: Names of the tasks in the task space, defaults to None
+        :param record_stats: Whether to record statistics for each task, defaults to False
         """
         assert isinstance(
             task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
@@ -146,16 +145,13 @@ class Curriculum:
         :param k: Number of tasks to sample, defaults to 1
         :return: Either returns a single task if k=1, or a list of k tasks
         """
-        # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
             return self._startup_sample()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
-        # tasks = self.tasks
-        n_tasks = self.num_tasks
         task_dist = self._sample_distribution()
-        task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
+        task_idx = np.random.choice(list(range(self.num_tasks)), size=k, p=task_dist)
         return task_idx
 
     def normalize(self, reward, task):
