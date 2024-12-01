@@ -408,17 +408,14 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
-                tasks = envs.get_attr("task")
+                current_task = envs.get_attr("task")
 
                 update = {
-                    "update_type": "on_demand",
-                    "metrics": {
-                        "value": value,
-                        "next_value": next_value,
-                        "rew": reward,
-                        "dones": done,
-                        "tasks": tasks,
-                    },
+                    "value": value,
+                    "next_value": next_value,
+                    "rew": reward,
+                    "dones": done,
+                    "tasks": current_task,
                 }
                 curriculum.update(update)
 
@@ -451,7 +448,13 @@ if __name__ == "__main__":
                 advantages = returns - values
 
         if args.curriculum and args.curriculum_method == "simpleplr":
-            scores = advantages.abs()
+            a, b = returns.shape
+            new_returns = torch.zeros((a + 1, b))
+            new_returns[:-1, :] = returns
+            new_values = torch.zeros((a + 1, b))
+            new_values[:-1, :] = values
+            new_values[-1, :] = next_value
+            scores = (new_returns - new_values).abs()
             curriculum.update(tasks, scores, dones)
 
         # flatten the batch
