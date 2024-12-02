@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
@@ -250,7 +251,7 @@
 <span id="prioritized-level-replay"></span><h1>Prioritized Level Replay (PLR) Curriculum<a class="headerlink" href="#prioritized-level-replay-plr-curriculum" title="Permalink to this heading">#</a></h1>
 <p>Prioritized Level Replay is a simple, yet effective curriculum learning method introduced in <a class="reference external" href="https://arxiv.org/pdf/2010.03934.pdf">https://arxiv.org/pdf/2010.03934.pdf</a>. See this paper for additional information on the method.
 The implementation in this code base is based on the original implementation <a class="reference external" href="https://github.com/facebookresearch/level-replay/tree/main">https://github.com/facebookresearch/level-replay/tree/main</a></p>
-<p>PLR has been sucessfully used to train agents in <a class="reference external" href="https://arxiv.org/pdf/2301.07608.pdf">https://arxiv.org/pdf/2301.07608.pdf</a> with a custom fitness function.</p>
+<p>PLR has been successfully used to train agents in <a class="reference external" href="https://arxiv.org/pdf/2301.07608.pdf">https://arxiv.org/pdf/2301.07608.pdf</a> with a custom fitness function.</p>
 <p>Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task’s learning progress is occasionally updated based on the current policy’s capabilities.</p>
 <p>In practice prioritized level replay updates it’s sampling distribution after each batch, and samples the single highest learning potential task more than 90% of the time. The sampling temperature and task diversity can can be increased by raising the <cite>temperature</cite> argument.</p>
 <p>The default hyperparameters are tuned for Procgen. When applying PLR to a new environment, you may want to tune the <cite>staleness_coef</cite>, the replay probability <cite>rho</cite>, or alter the number of training seeds. You can change the number of training tasks by modifying your task space.</p>

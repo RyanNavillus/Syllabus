@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
@@ -248,27 +249,89 @@
         <article role="main">
           <section id="evaluators">
 <h1>Evaluators<a class="headerlink" href="#evaluators" title="Permalink to this heading">#</a></h1>
-<p>Syllabus provides an evaluator class that allows curricula to interface with the agent throughout training. We provide default implementations for several popular RL libraries and hooks to support most common use cases.
-However, it is easy to extend the evaluator class to support new libraries and custom use cases. By default the evaluator holds a reference to the training agent, and can be used to asynchronously get action or value predictions.
-If the agent performs differently during training and during evaluation, it is necessary to switch the agent to evaluation mode beforehand. Since the evaluator may be called asynchronously from a separate thread, the Evaluator class
-provides a method to copy the agent and periodically synchronize its weights, allowing the copy to be used in evaluation mode while the original agent continues training.</p>
+<p>Syllabus provides an evaluator class that allows curricula to interface with the agent throughout training. We provide default implementations for several popular RL libraries and hooks to support most common use cases. However, it is easy to extend the evaluator class to support new libraries and custom use cases. By default the evaluator holds a reference to the training agent, and can be used to asynchronously get action or value predictions. If the agent performs differently during training and during evaluation, it is necessary to switch the agent to evaluation mode beforehand. Since the evaluator may be called asynchronously from a separate thread, the Evaluator class provides a method to copy the agent and periodically synchronize its weights, allowing the copy to be used in evaluation mode while the original agent continues training.</p>
 <section id="creating-an-evaluator">
 <h2>Creating an Evaluator<a class="headerlink" href="#creating-an-evaluator" title="Permalink to this heading">#</a></h2>
 <p>To create an evaluator, simply choose the appropriate evaluator for your RL library and pass it a reference to the agent.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core.evaluators</span> <span class="kn">import</span> <span class="n">CleanRLDiscreteEvaluator</span>
-<span class="n">evaluator</span> <span class="o">=</span> <span class="n">CleanRLDiscreteEvaluator</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core.evaluators</span> <span class="kn">import</span> <span class="n">CleanRLEvaluator</span>
+<span class="n">evaluator</span> <span class="o">=</span> <span class="n">CleanRLEvaluator</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Optionally, you can choose to copy the agent to the gpu or cpu for asynchronous evaluation. If your agent has separate training and evaluation behavior, and you choose not to copy the agent, then if the evaluator is used during the training step you may see an error related to training behaviors not being available in evaluation mode.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core.evaluators</span> <span class="kn">import</span> <span class="n">CleanRLDiscreteEvaluator</span>
-<span class="n">evaluator</span> <span class="o">=</span> <span class="n">CleanRLDiscreteEvaluator</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">copy_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core.evaluators</span> <span class="kn">import</span> <span class="n">CleanRLEvaluator</span>
+<span class="n">evaluator</span> <span class="o">=</span> <span class="n">CleanRLEvaluator</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">copy_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>If your RL library preprocesses observations between the environment and the agent, you may need to preprocess the observations before passing them to the evaluator. You can do this by passing a <cite>_preprocess_obs</cite> callback to your evaluator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core.evaluators</span> <span class="kn">import</span> <span class="n">CleanRLEvaluator</span>
+
+<span class="k">def</span> <span class="nf">_preprocess_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
+    <span class="c1"># Preprocess the observation</span>
+    <span class="k">return</span> <span class="n">obs</span>
+
+<span class="n">evaluator</span> <span class="o">=</span> <span class="n">CleanRLEvaluator</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">preprocess_obs</span><span class="o">=</span><span class="n">_preprocess_obs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="implementing-a-custom-evaluator">
+<h2>Implementing a Custom Evaluator<a class="headerlink" href="#implementing-a-custom-evaluator" title="Permalink to this heading">#</a></h2>
+<p>To implement an evaluator, you will need to convert the inputs and outputs to match the format expected by the agent for the <cite>_get_action</cite>, <cite>_get_value</cite>, and <cite>_get_action_and_value</cite> methods. The <cite>_get_action_and_value</cite> method can be implemented to avoid duplicate computations when both actions and values are needed. Otherwise, you can leave the default implementation which simply calls both <cite>_get_action</cite> and <cite>_get_value</cite> separately.</p>
+<p>Note that you should NOT override the <cite>get_action</cite>, <cite>get_value</cite>, or <cite>get_action_and_value</cite> methods directly, because they wrap your custom <cite>_get_action</cite>,  <cite>_get_value</cite>, and <cite>_get_action_and_value</cite> methods in logic that avoids common implementation mistakes and raises warnings for common user errors. More specifically, these methods perform the following operations in order:
+1. Update the copied agent’s weights to match the training agent
+2. Format observations using the evaluator’s <cite>_prepare_state</cite> method. The default implementation of this method calls the user provided <cite>_preprocess_obs</cite> method first, if it is provided.
+3. Format lstm states using the evaluator’s <cite>_prepare_lstm</cite> method.
+4. Set the agent to evaluation mode.
+5. Call <cite>_get_action</cite>, <cite>_get_value</cite>, or <cite>get_action_and_value</cite> wrapped in a <cite>torch.no_grad()</cite> scope.
+6. Set the agent to training mode.</p>
+<p>If there is additional information from the agent that you would like to use in your curriculum, you can return it in the <cite>extras</cite> dictionary of the output.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core.evaluator</span> <span class="kn">import</span> <span class="n">Evaluator</span>
+<span class="k">class</span> <span class="nc">CustomEvaluator</span><span class="p">(</span><span class="n">Evaluator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Convert inputs to the format expected by the agent</span>
+        <span class="c1"># Call the agent&#39;s get_action method</span>
+        <span class="c1"># Convert the output to the format expected by the curriculum</span>
+        <span class="k">return</span> <span class="n">action</span><span class="p">,</span> <span class="n">lstm_state</span><span class="p">,</span> <span class="n">extras</span>
+
+    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Convert inputs to the format expected by the agent</span>
+        <span class="c1"># Call the agent&#39;s get_value method</span>
+        <span class="c1"># Convert the output to the format expected by the curriculum</span>
+        <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">lstm_state</span><span class="p">,</span> <span class="n">extras</span>
+
+    <span class="k">def</span> <span class="nf">_get_action_and_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Convert inputs to the format expected by the agent</span>
+        <span class="c1"># Call the agent&#39;s get_action_and_value method</span>
+        <span class="c1"># Convert the output to the format expected by the curriculum</span>
+        <span class="k">return</span> <span class="n">action</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">lstm_state</span><span class="p">,</span> <span class="n">extras</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="c1"># Convert the state to the format expected by the agent.</span>
+        <span class="c1"># Your method should start by calling `self._preprocess_obs` if it is provided.</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_lstm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lstm_state</span><span class="p">,</span> <span class="n">done</span><span class="p">):</span>
+        <span class="c1"># Convert the lstm state to the format expected by the agent</span>
+        <span class="k">return</span> <span class="n">lstm_state</span><span class="p">,</span> <span class="n">done</span>
+
+    <span class="k">def</span> <span class="nf">_set_eval_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Set the agent to evaluation mode</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_set_train_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Set the agent to training mode</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="using-an-evaluator-in-your-curriculum">
+<h2>Using an Evaluator in your Curriculum<a class="headerlink" href="#using-an-evaluator-in-your-curriculum" title="Permalink to this heading">#</a></h2>
+<p>To use the evaluator in your curriculum, simply call the evaluator’s <cite>get_action</cite>, <cite>get_value</cite>, or <cite>get_action_and_value</cite> methods. You’ll need to track the inputs within your curriculum, which typically includes the observations and lstm state of the agent.
+If you need to generate values for an entire trajectory, be careful to evaluate states sequentially for lstm agents. The evaluator takes care of all the necessary steps to ensure that the agent is in the correct mode and that the inputs are formatted correctly. As long as you format the inputs and read the outputs correctly, you can use the evaluator in your curriculum without worrying about the details of the agent’s implementation.</p>
 <section id="id1">
 <h3>Evaluators<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <span class="target" id="module-syllabus.core.evaluator"></span><dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.evaluator.CleanRLDiscreteEvaluator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.evaluator.</span></span><span class="sig-name descname"><span class="pre">CleanRLDiscreteEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.evaluator.CleanRLDiscreteEvaluator" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="syllabus.core.evaluator.CleanRLEvaluator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.evaluator.</span></span><span class="sig-name descname"><span class="pre">CleanRLEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.evaluator.CleanRLEvaluator" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#syllabus.core.evaluator.Evaluator" title="syllabus.core.evaluator.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluator</span></code></a></p>
 </dd></dl>
 
@@ -414,9 +477,11 @@ provides a method to copy the agent and periodically synchronize its weights, al
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Evaluators</a><ul>
-<li><a class="reference internal" href="#creating-an-evaluator">Creating an Evaluator</a><ul>
+<li><a class="reference internal" href="#creating-an-evaluator">Creating an Evaluator</a></li>
+<li><a class="reference internal" href="#implementing-a-custom-evaluator">Implementing a Custom Evaluator</a></li>
+<li><a class="reference internal" href="#using-an-evaluator-in-your-curriculum">Using an Evaluator in your Curriculum</a><ul>
 <li><a class="reference internal" href="#id1">Evaluators</a><ul>
-<li><a class="reference internal" href="#syllabus.core.evaluator.CleanRLDiscreteEvaluator"><code class="docutils literal notranslate"><span class="pre">CleanRLDiscreteEvaluator</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.evaluator.CleanRLEvaluator"><code class="docutils literal notranslate"><span class="pre">CleanRLEvaluator</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.evaluator.DummyEvaluator"><code class="docutils literal notranslate"><span class="pre">DummyEvaluator</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.evaluator.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.core.evaluator.Evaluator.get_action"><code class="docutils literal notranslate"><span class="pre">Evaluator.get_action()</span></code></a></li>

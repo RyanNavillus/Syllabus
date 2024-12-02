@@ -158,6 +158,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
@@ -345,12 +346,16 @@
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.change_task">(syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper method)</a>
 </li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.change_task">(syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.change_task">(syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper method)</a>
+</li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.change_task">(syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper method)</a>
 </li>
         </ul></li>
         <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions">check_stopping_conditions() (syllabus.curricula.sequential.SequentialCurriculum method)</a>
 </li>
-        <li><a href="evaluators.html#syllabus.core.evaluator.CleanRLDiscreteEvaluator">CleanRLDiscreteEvaluator (class in syllabus.core.evaluator)</a>
+        <li><a href="evaluators.html#syllabus.core.evaluator.CleanRLEvaluator">CleanRLEvaluator (class in syllabus.core.evaluator)</a>
 </li>
         <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.close">close() (syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents method)</a>
 
@@ -364,10 +369,10 @@
 </li>
         <li><a href="modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.closed">closed (syllabus.examples.utils.vecenv.VecEnv attribute)</a>
 </li>
-        <li><a href="modules/syllabus.tests.html#syllabus.tests.determinism.compare_episodes">compare_episodes() (in module syllabus.tests.determinism)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/syllabus.tests.html#syllabus.tests.determinism.compare_episodes">compare_episodes() (in module syllabus.tests.determinism)</a>
+</li>
         <li><a href="modules/syllabus.tests.html#syllabus.tests.determinism.compare_episodes_gymnasium">compare_episodes_gymnasium() (in module syllabus.tests.determinism)</a>
 </li>
         <li><a href="modules/syllabus.tests.html#syllabus.tests.determinism.compare_episodes_pettingzoo">compare_episodes_pettingzoo() (in module syllabus.tests.determinism)</a>
@@ -672,11 +677,9 @@
 </li>
         <li><a href="modules/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum">LearningProgressCurriculum (class in syllabus.curricula.learning_progress)</a>
 </li>
-        <li><a href="logging.html#syllabus.core.curriculum_base.Curriculum.log_metrics">log_metrics() (in module syllabus.core.curriculum_base.Curriculum)</a>
+        <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics">log_metrics() (syllabus.core.curriculum_base.Curriculum method)</a>
 
         <ul>
-          <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics">(syllabus.core.curriculum_base.Curriculum method)</a>
-</li>
           <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics">(syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.log_metrics">(syllabus.core.curriculum_sync_wrapper.CurriculumWrapper method)</a>
@@ -804,6 +807,8 @@
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.minigrid_task_wrapper">syllabus.examples.task_wrappers.minigrid_task_wrapper</a>
 </li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.nethack_wrappers">syllabus.examples.task_wrappers.nethack_wrappers</a>
+</li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.pistonball_task_wrapper">syllabus.examples.task_wrappers.pistonball_task_wrapper</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.procgen_task_wrapper">syllabus.examples.task_wrappers.procgen_task_wrapper</a>
@@ -853,10 +858,26 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.core.html#syllabus.core.stat_recorder.StatMean.n">n (syllabus.core.stat_recorder.StatMean attribute)</a>
 </li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect">NetHackCollect (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend">NetHackDescend (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSatiate">NetHackSatiate (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped">NetHackScoutClipped (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed">NetHackSeed (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper">NethackSeedWrapper (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper">NethackTaskWrapper (class in syllabus.examples.task_wrappers.nethack_wrappers)</a>
+</li>
         <li><a href="modules/syllabus.examples.models.html#syllabus.examples.models.procgen_model.NNBase">NNBase (class in syllabus.examples.models.procgen_model)</a>
 </li>
         <li><a href="modules/syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum">NoopCurriculum (class in syllabus.curricula.noop)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.normalize">normalize() (syllabus.core.curriculum_base.Curriculum method)</a>
 
         <ul>
@@ -867,8 +888,6 @@
           <li><a href="modules/syllabus.core.html#syllabus.core.stat_recorder.StatRecorder.normalize">(syllabus.core.stat_recorder.StatRecorder method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.num_tasks">num_tasks (syllabus.core.curriculum_base.Curriculum property)</a>
 
         <ul>
@@ -901,6 +920,10 @@
           <li><a href="modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.observation">(syllabus.core.task_interface.task_wrapper.TaskWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.observation">(syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.observation">(syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.observation">(syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.observation">(syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper method)</a>
 </li>
@@ -1075,8 +1098,6 @@
           <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_STEP_UPDATES">(syllabus.curricula.sequential.SequentialCurriculum attribute)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates">requires_step_updates (syllabus.curricula.sequential.SequentialCurriculum property)</a>
 </li>
         <li><a href="modules/syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.REQUIRES_STEP_UPDATES">REQUIRES_STEP_UPDATES (syllabus.curricula.simple_box.SimpleBoxCurriculum attribute)</a>
@@ -1085,6 +1106,8 @@
           <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_STEP_UPDATES">(syllabus.tests.sync_test_curriculum.SyncTestCurriculum attribute)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.requires_step_updates">requires_step_updates (syllabus.tests.sync_test_curriculum.SyncTestCurriculum property)</a>
 </li>
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.requires_value_buffers">requires_value_buffers (syllabus.curricula.plr.task_sampler.TaskSampler property)</a>
@@ -1113,6 +1136,18 @@
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset">(syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.reset">(syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset">(syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend.reset">(syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped.reset">(syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed.reset">(syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.reset">(syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.reset">(syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset">(syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper method)</a>
 </li>
@@ -1235,9 +1270,13 @@
 </li>
         <li><a href="modules/syllabus.core.html#syllabus.core.stat_recorder.StatRecorder.save_statistics">save_statistics() (syllabus.core.stat_recorder.StatRecorder method)</a>
 </li>
-        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed">seed() (syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper method)</a>
+        <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.seed">seed() (syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper method)</a>
 
         <ul>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.seed">(syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.seed">(syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper method)</a>
+</li>
           <li><a href="modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.seed">(syllabus.task_space.task_space.BoxTaskSpace method)</a>
 </li>
           <li><a href="modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace.seed">(syllabus.task_space.task_space.DiscreteTaskSpace method)</a>
@@ -1289,6 +1328,10 @@
           <li><a href="modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.step">(syllabus.core.task_interface.task_wrapper.TaskWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper.step">(syllabus.examples.task_wrappers.minigrid_task_wrapper.MinigridTaskWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.step">(syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper method)</a>
+</li>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.step">(syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper method)</a>
 </li>
           <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper.step">(syllabus.examples.task_wrappers.procgen_task_wrapper.ProcgenTaskWrapper method)</a>
 </li>
@@ -1351,6 +1394,8 @@
           <li><a href="modules/syllabus.core.html#module-syllabus.core.environment_sync_wrapper">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     syllabus.core.evaluator
 
@@ -1358,8 +1403,6 @@
           <li><a href="evaluators.html#module-syllabus.core.evaluator">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     syllabus.core.multiagent_curriculum_wrappers
 
@@ -1526,6 +1569,13 @@
 
         <ul>
           <li><a href="modules/syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.minigrid_task_wrapper">module</a>
+</li>
+        </ul></li>
+        <li>
+    syllabus.examples.task_wrappers.nethack_wrappers
+
+        <ul>
+          <li><a href="modules/syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.nethack_wrappers">module</a>
 </li>
         </ul></li>
         <li>

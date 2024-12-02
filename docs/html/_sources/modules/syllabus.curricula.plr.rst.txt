@@ -6,7 +6,7 @@ Prioritized Level Replay (PLR) Curriculum
 Prioritized Level Replay is a simple, yet effective curriculum learning method introduced in https://arxiv.org/pdf/2010.03934.pdf. See this paper for additional information on the method.
 The implementation in this code base is based on the original implementation https://github.com/facebookresearch/level-replay/tree/main
 
-PLR has been sucessfully used to train agents in https://arxiv.org/pdf/2301.07608.pdf with a custom fitness function.
+PLR has been successfully used to train agents in https://arxiv.org/pdf/2301.07608.pdf with a custom fitness function.
 
 Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task's learning progress is occasionally updated based on the current policy's capabilities.
 

@@ -135,7 +135,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Logging</a></li>
@@ -240,7 +241,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -248,10 +249,10 @@
         <article role="main">
           <section id="logging">
 <h1>Logging<a class="headerlink" href="#logging" title="Permalink to this heading">#</a></h1>
-<p>Syllabus currently support logging through TensorBoard or Weights and Biases through the <a class="reference internal" href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics" title="syllabus.core.curriculum_base.Curriculum.log_metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">log_metrics</span></code></a> function for curricula. This method collects logs and passes them along to the base Curriculum class, which performs the actual logging. As such, you must call <cite>super().log_metrics()`</cite> in your custom curriculum’s log_metrics function to ensure that the logs are propogated and saved.</p>
+<p>Syllabus currently support logging through TensorBoard or Weights and Biases through the <a class="reference internal" href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics" title="syllabus.core.curriculum_base.Curriculum.log_metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">log_metrics</span></code></a> function for curricula. This method collects logs and passes them along to the base Curriculum class, which performs the actual logging. As such, you must call <cite>super().log_metrics()`</cite> in your custom curriculum’s log_metrics function to ensure that the logs are propagated and saved.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="syllabus.core.curriculum_base.Curriculum.log_metrics">
-<span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_base.Curriculum.</span></span><span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_base.Curriculum.log_metrics" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_base.Curriculum.</span></span><span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Log the task distribution to the provided writer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -313,27 +314,8 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Logging</a><ul>
-<li><a class="reference internal" href="#syllabus.core.curriculum_base.Curriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">log_metrics()</span></code></a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

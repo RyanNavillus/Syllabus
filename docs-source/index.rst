@@ -21,6 +21,7 @@ It currently has support for environments run with Python native multiprocessing
    self
    installation
    quickstart
+   motivation
    environments
    evaluation/evaluation
    logging

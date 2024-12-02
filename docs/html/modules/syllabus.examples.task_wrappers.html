@@ -309,8 +309,257 @@ calling the final reset.</p>
 </dd></dl>
 
 </section>
-<section id="syllabus-examples-task-wrappers-nethack-wrappers-module">
-<h2>syllabus.examples.task_wrappers.nethack_wrappers module<a class="headerlink" href="#syllabus-examples-task-wrappers-nethack-wrappers-module" title="Permalink to this heading">#</a></h2>
+<section id="module-syllabus.examples.task_wrappers.nethack_wrappers">
+<span id="syllabus-examples-task-wrappers-nethack-wrappers-module"></span><h2>syllabus.examples.task_wrappers.nethack_wrappers module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.nethack_wrappers" title="Permalink to this heading">#</a></h2>
+<p>Task wrapper for NLE that can change tasks at reset using the NLE’s task definition format.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NetHackCollect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NetHackGold</span></code></p>
+<p>Environment for “staircase” task.</p>
+<p>This task requires the agent to get on top of a staircase down (&gt;).
+The reward function is <span class="math notranslate nohighlight">\(I +   ext{TP}\)</span>, where <span class="math notranslate nohighlight">\(I\)</span> is 1 if the
+task is successful, and 0 otherwise, and :math:`    ext{TP}` is the time step
+function as defined by <cite>NetHackScore</cite>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wizkit_items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We attempt to manually navigate the first few menus so that the
+first seen state is ready to be acted upon by the user. This might
+fail in case Nethack is initialized with some uncommon options.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>(tuple) (Observation of the state as</dt><dd><p>defined by <cite>self.observation_space</cite>,
+Extra game state information)</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NetHackDescend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NetHackScore</span></code></p>
+<p>Environment for “staircase” task.</p>
+<p>This task requires the agent to get on top of a staircase down (&gt;).
+The reward function is <span class="math notranslate nohighlight">\(I +   ext{TP}\)</span>, where <span class="math notranslate nohighlight">\(I\)</span> is 1 if the
+task is successful, and 0 otherwise, and :math:`    ext{TP}` is the time step
+function as defined by <cite>NetHackScore</cite>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wizkit_items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We attempt to manually navigate the first few menus so that the
+first seen state is ready to be acted upon by the user. This might
+fail in case Nethack is initialized with some uncommon options.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>(tuple) (Observation of the state as</dt><dd><p>defined by <cite>self.observation_space</cite>,
+Extra game state information)</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackSatiate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NetHackSatiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSatiate" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NetHackScore</span></code></p>
+<p>Environment for the “eat” task.</p>
+<p>The task is similar to the one defined by <cite>NetHackScore</cite>, but the reward
+uses positive changes in the character’s hunger level (e.g. by consuming
+comestibles or monster corpses), rather than the score.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NetHackScoutClipped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NetHackScore</span></code></p>
+<p>Environment for the “scout” task.</p>
+<p>The task is similar to the one defined by <cite>NetHackScore</cite>, but the score is
+defined by the changes in glyphs discovered by the agent.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We attempt to manually navigate the first few menus so that the
+first seen state is ready to be acted upon by the user. This might
+fail in case Nethack is initialized with some uncommon options.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>(tuple) (Observation of the state as</dt><dd><p>defined by <cite>self.observation_space</cite>,
+Extra game state information)</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NetHackSeed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">character</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_all_yn_questions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_all_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_episode_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('glyphs',</span> <span class="pre">'chars',</span> <span class="pre">'colors',</span> <span class="pre">'specials',</span> <span class="pre">'blstats',</span> <span class="pre">'message',</span> <span class="pre">'inv_glyphs',</span> <span class="pre">'inv_strs',</span> <span class="pre">'inv_letters',</span> <span class="pre">'inv_oclasses',</span> <span class="pre">'tty_chars',</span> <span class="pre">'tty_colors',</span> <span class="pre">'tty_cursor',</span> <span class="pre">'misc')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_progress_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NetHackScore</span></code></p>
+<p>Environment for the NetHack Challenge.</p>
+<p>The task is an augmentation of the standard NLE task. This is the NLE Score Task
+but with some subtle differences:
+* the action space is fixed to include the full keyboard
+* menus and “&lt;More&gt;” tokens are not skipped
+* starting character is randomly assigned</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We attempt to manually navigate the first few menus so that the
+first seen state is ready to be acted upon by the user. This might
+fail in case Nethack is initialized with some uncommon options.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>(tuple) (Observation of the state as</dt><dd><p>defined by <cite>self.observation_space</cite>,
+Extra game state information)</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NethackSeedWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_seeds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<p>This wrapper allows you to change the task of an NLE environment.</p>
+<dl class="simple">
+<dt>This wrapper was designed to meet two goals.</dt><dd><ol class="arabic simple">
+<li><p>Allow us to change the task of the NLE environment at the start of an episode</p></li>
+<li><p>Allow us to use the predefined NLE task definitions without copying/modifying their code.
+This makes it easier to integrate with other work on nethack tasks or curricula.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
+environment to change its task. This wrapper manipulates the __class__ property to achieve this,
+but does so in a safe way. Specifically, we ensure that the instance variables needed for each
+task are available and reset at the start of the episode regardless of which task is active.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.change_task">
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<dd><p>Change task by setting the seed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.observation">
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.observation" title="Permalink to this definition">#</a></dt>
+<dd><p>Parses current inventory and new items gained this timestep from the observation.
+Returns a modified observation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment along with all available tasks, and change the current task.</p>
+<p>This ensures that all instance variables are reset, not just the ones for the current task.
+We do this efficiently by keeping track of which reset functions have already been called,
+since very few tasks override reset. If new_task is provided, we change the task before
+calling the final reset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.seed" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Step through environment and update task completion.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.task_wrappers.nethack_wrappers.</span></span><span class="sig-name descname"><span class="pre">NethackTaskWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NLE</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_default_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrappers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Wrapper</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper" title="syllabus.core.task_interface.task_wrapper.TaskWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskWrapper</span></code></a></p>
+<p>This wrapper allows you to change the task of an NLE environment.</p>
+<dl class="simple">
+<dt>This wrapper was designed to meet two goals.</dt><dd><ol class="arabic simple">
+<li><p>Allow us to change the task of the NLE environment at the start of an episode</p></li>
+<li><p>Allow us to use the predefined NLE task definitions without copying/modifying their code.
+This makes it easier to integrate with other work on nethack tasks or curricula.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
+environment to change its task. This wrapper manipulates the __class__ property to achieve this,
+but does so in a safe way. Specifically, we ensure that the instance variables needed for each
+task are available and reset at the start of the episode regardless of which task is active.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.change_task">
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<dd><p>Change task by directly editing environment class.</p>
+<p>Ignores requests for unknown tasks or task changes outside of a reset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.observation">
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.observation" title="Permalink to this definition">#</a></dt>
+<dd><p>Parses current inventory and new items gained this timestep from the observation.
+Returns a modified observation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment along with all available tasks, and change the current task.</p>
+<p>This ensures that all instance variables are reset, not just the ones for the current task.
+We do this efficiently by keeping track of which reset functions have already been called,
+since very few tasks override reset. If new_task is provided, we change the task before
+calling the final reset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.seed" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Step through environment and update task completion.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-syllabus.examples.task_wrappers.pistonball_task_wrapper">
 <span id="syllabus-examples-task-wrappers-pistonball-task-wrapper-module"></span><h2>syllabus.examples.task_wrappers.pistonball_task_wrapper module<a class="headerlink" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper" title="Permalink to this heading">#</a></h2>
@@ -474,7 +723,42 @@ calling the final reset.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#syllabus-examples-task-wrappers-nethack-wrappers-module">syllabus.examples.task_wrappers.nethack_wrappers module</a></li>
+<li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.nethack_wrappers">syllabus.examples.task_wrappers.nethack_wrappers module</a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect"><code class="docutils literal notranslate"><span class="pre">NetHackCollect</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset"><code class="docutils literal notranslate"><span class="pre">NetHackCollect.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend"><code class="docutils literal notranslate"><span class="pre">NetHackDescend</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend.reset"><code class="docutils literal notranslate"><span class="pre">NetHackDescend.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSatiate"><code class="docutils literal notranslate"><span class="pre">NetHackSatiate</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped"><code class="docutils literal notranslate"><span class="pre">NetHackScoutClipped</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped.reset"><code class="docutils literal notranslate"><span class="pre">NetHackScoutClipped.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed"><code class="docutils literal notranslate"><span class="pre">NetHackSeed</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed.reset"><code class="docutils literal notranslate"><span class="pre">NetHackSeed.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper"><code class="docutils literal notranslate"><span class="pre">NethackSeedWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">NethackSeedWrapper.change_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.observation"><code class="docutils literal notranslate"><span class="pre">NethackSeedWrapper.observation()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.reset"><code class="docutils literal notranslate"><span class="pre">NethackSeedWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.seed"><code class="docutils literal notranslate"><span class="pre">NethackSeedWrapper.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.step"><code class="docutils literal notranslate"><span class="pre">NethackSeedWrapper.step()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper"><code class="docutils literal notranslate"><span class="pre">NethackTaskWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">NethackTaskWrapper.change_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.observation"><code class="docutils literal notranslate"><span class="pre">NethackTaskWrapper.observation()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.reset"><code class="docutils literal notranslate"><span class="pre">NethackTaskWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.seed"><code class="docutils literal notranslate"><span class="pre">NethackTaskWrapper.seed()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.step"><code class="docutils literal notranslate"><span class="pre">NethackTaskWrapper.step()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-syllabus.examples.task_wrappers.pistonball_task_wrapper">syllabus.examples.task_wrappers.pistonball_task_wrapper module</a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper"><code class="docutils literal notranslate"><span class="pre">PistonballTaskWrapper</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.examples.task_wrappers.pistonball_task_wrapper.PistonballTaskWrapper.reset"><code class="docutils literal notranslate"><span class="pre">PistonballTaskWrapper.reset()</span></code></a></li>
@@ -516,5 +800,6 @@ calling the final reset.</p>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/scripts/furo.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

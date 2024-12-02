@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
@@ -279,7 +280,7 @@ is either learning or forgetting the task. For more information you can read the
 </section>
 <section id="prioritized-level-replay">
 <h2><a class="reference internal" href="../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay" title="syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code></a><a class="headerlink" href="#prioritized-level-replay" title="Permalink to this heading">#</a></h2>
-<p>A curriculum learning method that estimates an agent’s regret on particular environment instantiations and uses a prioritized replay buffer to
+<p>A curriculum learning method that estimates an agent’s regret on particular environment seed and uses a prioritized replay buffer to
 replay levels for which the agent has high regret. This implementation is based on the open-source original implementation at
 <a class="reference external" href="https://github.com/facebookresearch/level-replay">https://github.com/facebookresearch/level-replay</a>, but has been modified to support Syllabus task spaces instead of just environment seeds.
 PLR has been used in multiple prominent RL works. For more information you can read the original paper

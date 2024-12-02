@@ -44,7 +44,7 @@ is either learning or forgetting the task. For more information you can read the
 :mod:`Prioritized Level Replay <syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay>`
 -------------------------------------------------------------------------------------------
 
-A curriculum learning method that estimates an agent's regret on particular environment instantiations and uses a prioritized replay buffer to
+A curriculum learning method that estimates an agent's regret on particular environment seed and uses a prioritized replay buffer to
 replay levels for which the agent has high regret. This implementation is based on the open-source original implementation at
 https://github.com/facebookresearch/level-replay, but has been modified to support Syllabus task spaces instead of just environment seeds.
 PLR has been used in multiple prominent RL works. For more information you can read the original paper
