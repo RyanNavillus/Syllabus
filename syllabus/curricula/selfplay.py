@@ -15,9 +15,6 @@ from syllabus.task_space import TaskSpace  # noqa: E402
 
 class SelfPlay(Curriculum):
     """Self play curriculum for training agents against themselves."""
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
@@ -84,9 +81,6 @@ class SelfPlay(Curriculum):
 
 
 class FictitiousSelfPlay(Curriculum):
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
@@ -191,9 +185,6 @@ class FictitiousSelfPlay(Curriculum):
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,

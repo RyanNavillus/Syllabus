@@ -134,5 +134,10 @@ If you need to regenerate the module docs from scratch, you can use the followin
 sphinx-apidoc -o ./docs/modules ./syllabus
 ```
 
+You can also run a spell check for the documentation:
+```
+sphinx-build -b spelling ./docs/source ./docs
+```
+
 ## Citing Syllabus
 To be added soon.

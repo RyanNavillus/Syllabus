@@ -14,8 +14,6 @@ Agent = TypeVar("Agent")
 class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
         """Initialize the base Curriculum
@@ -42,7 +40,7 @@ class Curriculum:
 
         :return: True if the curriculum requires step updates, False otherwise
         """
-        return self.__class__.REQUIRES_STEP_UPDATES
+        return False
 
     @property
     def num_tasks(self) -> int:
@@ -72,7 +70,7 @@ class Curriculum:
     def update_on_step(self, task: Any, obs: Any, rew: float, term: bool, trunc: bool, info: dict, progress: Union[float, bool], env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
-        :param obs: Observation from teh environment
+        :param obs: Observation from the environment
         :param rew: Reward from the environment
         :param term: True if the episode ended on this step, False otherwise
         :param trunc: True if the episode was truncated on this step, False otherwise

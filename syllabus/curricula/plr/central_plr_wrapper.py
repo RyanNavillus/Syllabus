@@ -127,8 +127,6 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(
         self,
