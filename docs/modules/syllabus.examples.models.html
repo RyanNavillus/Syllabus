@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example Utils" href="syllabus.examples.utils.html" /><link rel="prev" title="Examples" href="syllabus.examples.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>Example Models - Syllabus 0.5 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
@@ -175,6 +176,7 @@
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../curricula/implemented_curricula.html">Curriculum Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
@@ -246,21 +248,21 @@
         </div>
         <article role="main">
           <section id="example-models">
-<h1>Example Models<a class="headerlink" href="#example-models" title="Link to this heading">¶</a></h1>
+<h1>Example Models<a class="headerlink" href="#example-models" title="Permalink to this heading">#</a></h1>
 <p>PyTorch models used in example scripts.</p>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
 </section>
 <section id="module-syllabus.examples.models.minigrid_model">
-<span id="syllabus-examples-models-minigrid-model-module"></span><h2>syllabus.examples.models.minigrid_model module<a class="headerlink" href="#module-syllabus.examples.models.minigrid_model" title="Link to this heading">¶</a></h2>
+<span id="syllabus-examples-models-minigrid-model-module"></span><h2>syllabus.examples.models.minigrid_model module<a class="headerlink" href="#module-syllabus.examples.models.minigrid_model" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.Categorical">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">Categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.Categorical" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">Categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.Categorical" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Categorical distribution (NN module)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.Categorical.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.Categorical.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.Categorical.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -276,23 +278,23 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.FixedCategorical">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">FixedCategorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">FixedCategorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Categorical</span></code></p>
 <p>Categorical distribution object</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.FixedCategorical.log_probs">
-<span class="sig-name descname"><span class="pre">log_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical.log_probs" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">log_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical.log_probs" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.FixedCategorical.mode">
-<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical.mode" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical.mode" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the mode of the distribution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.FixedCategorical.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical.sample" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.FixedCategorical.sample" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates a sample_shape shaped sample or sample_shape shaped batch of
 samples if the distribution parameters are batched.</p>
 </dd></dl>
@@ -301,38 +303,38 @@ samples if the distribution parameters are batched.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridAgent">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">MinigridAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridAgent" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">MinigridAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridAgent" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#syllabus.examples.models.minigrid_model.MinigridPolicy" title="syllabus.examples.models.minigrid_model.MinigridPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinigridPolicy</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridAgent.get_action_and_value">
-<span class="sig-name descname"><span class="pre">get_action_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_log_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridAgent.get_action_and_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_action_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_log_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridAgent.get_action_and_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridAgent.get_value">
-<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridAgent.get_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridAgent.get_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">MinigridPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">MinigridPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Actor-Critic module</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy.act">
-<span class="sig-name descname"><span class="pre">act</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.act" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">act</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.act" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy.evaluate_actions">
-<span class="sig-name descname"><span class="pre">evaluate_actions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.evaluate_actions" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate_actions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.evaluate_actions" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -346,17 +348,17 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy.get_value">
-<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.get_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.get_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy.is_recurrent">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_recurrent</span></span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.is_recurrent" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_recurrent</span></span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.is_recurrent" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.MinigridPolicy.recurrent_hidden_state_size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recurrent_hidden_state_size</span></span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.recurrent_hidden_state_size" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recurrent_hidden_state_size</span></span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.MinigridPolicy.recurrent_hidden_state_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Size of rnn_hx.</p>
 </dd></dl>
 
@@ -364,41 +366,41 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.apply_init_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">apply_init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.apply_init_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">apply_init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.apply_init_" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize NN modules</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.init">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.init_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.init_relu_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init_relu_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init_relu_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init_relu_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init_relu_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.minigrid_model.init_tanh_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init_tanh_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init_tanh_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.minigrid_model.</span></span><span class="sig-name descname"><span class="pre">init_tanh_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.minigrid_model.init_tanh_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="module-syllabus.examples.models.procgen_model">
-<span id="syllabus-examples-models-procgen-model-module"></span><h2>syllabus.examples.models.procgen_model module<a class="headerlink" href="#module-syllabus.examples.models.procgen_model" title="Link to this heading">¶</a></h2>
+<span id="syllabus-examples-models-procgen-model-module"></span><h2>syllabus.examples.models.procgen_model module<a class="headerlink" href="#module-syllabus.examples.models.procgen_model" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.BasicBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">BasicBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.BasicBlock" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">BasicBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.BasicBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Residual Network Block</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.BasicBlock.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.BasicBlock.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.BasicBlock.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -414,12 +416,12 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.Categorical">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">Categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Categorical" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">Categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Categorical" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Categorical distribution (NN module)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.Categorical.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Categorical.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Categorical.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -435,12 +437,12 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.Conv2d_tf">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">Conv2d_tf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Conv2d_tf" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">Conv2d_tf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Conv2d_tf" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2d</span></code></p>
 <p>Conv2d with the padding behavior from TF</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.Conv2d_tf.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Conv2d_tf.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Conv2d_tf.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -456,23 +458,23 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.FixedCategorical">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">FixedCategorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">FixedCategorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Categorical</span></code></p>
 <p>Categorical distribution object</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.FixedCategorical.log_probs">
-<span class="sig-name descname"><span class="pre">log_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical.log_probs" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">log_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical.log_probs" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.FixedCategorical.mode">
-<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical.mode" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical.mode" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the mode of the distribution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.FixedCategorical.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical.sample" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.FixedCategorical.sample" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates a sample_shape shaped sample or sample_shape shaped batch of
 samples if the distribution parameters are batched.</p>
 </dd></dl>
@@ -481,12 +483,12 @@ samples if the distribution parameters are batched.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.Flatten">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">Flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Flatten" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">Flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Flatten" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Flatten a tensor</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.Flatten.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Flatten.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.Flatten.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -502,71 +504,71 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.NNBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">NNBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.NNBase" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">NNBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.NNBase" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Actor-Critic network (base class)</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.NNBase.output_size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_size</span></span><a class="headerlink" href="#syllabus.examples.models.procgen_model.NNBase.output_size" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_size</span></span><a class="headerlink" href="#syllabus.examples.models.procgen_model.NNBase.output_size" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenAgent">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">ProcgenAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">ProcgenAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenAgent.get_action">
-<span class="sig-name descname"><span class="pre">get_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent.get_action" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent.get_action" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenAgent.get_action_and_value">
-<span class="sig-name descname"><span class="pre">get_action_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent.get_action_and_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_action_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent.get_action_and_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenAgent.get_value">
-<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent.get_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenAgent.get_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenLSTMAgent">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">ProcgenLSTMAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">ProcgenLSTMAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_action">
-<span class="sig-name descname"><span class="pre">get_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_action" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_action" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_action_and_value">
-<span class="sig-name descname"><span class="pre">get_action_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_action_and_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_action_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_action_and_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_states">
-<span class="sig-name descname"><span class="pre">get_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_states" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_states" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_value">
-<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lstm_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ProcgenLSTMAgent.get_value" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ResNetBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">ResNetBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[16,</span> <span class="pre">32,</span> <span class="pre">32]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ResNetBase" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">ResNetBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[16,</span> <span class="pre">32,</span> <span class="pre">32]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ResNetBase" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#syllabus.examples.models.procgen_model.NNBase" title="syllabus.examples.models.procgen_model.NNBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">NNBase</span></code></a></p>
 <p>Residual Network</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.ResNetBase.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ResNetBase.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.ResNetBase.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -582,33 +584,33 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.apply_init_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">apply_init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.apply_init_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">apply_init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.apply_init_" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize NN modules</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.init">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.init_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.init_relu_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init_relu_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init_relu_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init_relu_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init_relu_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.init_tanh_">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init_tanh_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init_tanh_" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">init_tanh_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.init_tanh_" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.examples.models.procgen_model.layer_init">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">layer_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4142135623730951</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_const</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.layer_init" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.examples.models.procgen_model.</span></span><span class="sig-name descname"><span class="pre">layer_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4142135623730951</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_const</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.models.procgen_model.layer_init" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -766,9 +768,9 @@ registered hooks while the latter silently ignores them.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=db78e746"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
     </body>
 </html>

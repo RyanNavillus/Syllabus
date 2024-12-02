@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Logging" href="../logging.html" /><link rel="prev" title="Environment Support" href="../environments.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>Evaluation - Syllabus 0.5 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
@@ -175,6 +176,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../curricula/implemented_curricula.html">Curriculum Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
@@ -246,12 +248,12 @@
         </div>
         <article role="main">
           <section id="evaluation">
-<h1>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading">¶</a></h1>
+<h1>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this heading">#</a></h1>
 <p>Evaluating RL agents trained with curriculum learning requires special consideration. Typically training tasks are assumed to be drawn from the same distribution as the test tasks. However, curriculum learning methods modify the training task distribution to improve test performance. Therefore, training returns are not a good measure of performance. Agents should be periodically evaluated during training on uniformly sampled tasks, ideally from a held out test set. You can see an example of this approach in our <a class="reference external" href="https://github.com/RyanNavillus/Syllabus/tree/main/syllabus/examples">procgen script</a>.</p>
 <p>Correctly implementing this evaluation code can be surprisingly challenging, so we list a few guidelines to keep in mind here:
 * Make sure not to bias evaluation results towards shorter episodes. This is is easy to do by accident if you try to multiprocess evaluations. For example, if you run a vectorized environment and save the first 10 results, your test returns will be biased toward shorter episodes, which likely earned lower returns.
 * Reset the environments before each evaluation. This may seem obvious, but if you since some vectorized environments don’t allow you to directly reset the environments, some might be tempted to skip this step.
-* Use the same environment wrappers for the evaluation environment. This is important because some wrappers, such as the <cite>TimeLimit</cite> wrapper, can change the dynamics of the environment. If you use different wrappers, you may get different results.</p>
+* Use the same environment wrappers for the evaluation environment. This is important because some wrappers, such as the <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> wrapper, can change the dynamics of the environment. If you use different wrappers, you may get different results.</p>
 </section>
 
         </article>
@@ -303,9 +305,9 @@
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=db78e746"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
     </body>
 </html>

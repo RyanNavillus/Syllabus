@@ -20,7 +20,7 @@ Optionally, you can choose to copy the agent to the gpu or cpu for asynchronous 
     from syllabus.core.evaluators import CleanRLEvaluator
     evaluator = CleanRLEvaluator(agent, copy_agent=True, device="cpu")
 
-If your RL library preprocesses observations between the environment and the agent, you may need to preprocess the observations before passing them to the evaluator. You can do this by passing a `_preprocess_obs` callback to your evaluator.
+If your RL library preprocesses observations between the environment and the agent, you may need to preprocess the observations before passing them to the evaluator. You can do this by passing a ``_preprocess_obs`` callback to your evaluator.
 
 .. code-block:: python
 
@@ -36,17 +36,23 @@ If your RL library preprocesses observations between the environment and the age
 Implementing a Custom Evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To implement an evaluator, you will need to convert the inputs and outputs to match the format expected by the agent for the `_get_action`, `_get_value`, and `_get_action_and_value` methods. The `_get_action_and_value` method can be implemented to avoid duplicate computations when both actions and values are needed. Otherwise, you can leave the default implementation which simply calls both `_get_action` and `_get_value` separately.
+To implement an evaluator, you will need to convert the inputs and outputs to match the format expected by the agent for the ``_get_action``, ``_get_value``, and ``_get_action_and_value`` methods. The ``_get_action_and_value`` method can be implemented to avoid duplicate computations when both actions and values are needed. Otherwise, you can leave the default implementation which simply calls both ``_get_action`` and ``_get_value`` separately.
 
-Note that you should NOT override the `get_action`, `get_value`, or `get_action_and_value` methods directly, because they wrap your custom `_get_action`,  `_get_value`, and `_get_action_and_value` methods in logic that avoids common implementation mistakes and raises warnings for common user errors. More specifically, these methods perform the following operations in order:
+Note that you should NOT override the ``get_action``, ``get_value``, or ``get_action_and_value`` methods directly, because they wrap your custom ``_get_action``,  ``_get_value``, and ``_get_action_and_value`` methods in logic that avoids common implementation mistakes and raises warnings for common user errors. More specifically, these methods perform the following operations in order:
+
 1. Update the copied agent's weights to match the training agent
-2. Format observations using the evaluator's `_prepare_state` method. The default implementation of this method calls the user provided `_preprocess_obs` method first, if it is provided.
-3. Format lstm states using the evaluator's `_prepare_lstm` method.
+
+2. Format observations using the evaluator's ``_prepare_state`` method. The default implementation of this method calls the user provided ``_preprocess_obs`` method first, if it is provided.
+
+3. Format lstm states using the evaluator's ``_prepare_lstm`` method.
+
 4. Set the agent to evaluation mode.
-5. Call `_get_action`, `_get_value`, or `get_action_and_value` wrapped in a `torch.no_grad()` scope.
+
+5. Call ``_get_action``, ``_get_value``, or ``get_action_and_value`` wrapped in a ``torch.no_grad()`` scope.
+
 6. Set the agent to training mode.
 
-If there is additional information from the agent that you would like to use in your curriculum, you can return it in the `extras` dictionary of the output.
+If there is additional information from the agent that you would like to use in your curriculum, you can return it in the ``extras`` dictionary of the output.
 
 .. code-block:: python
 
@@ -72,7 +78,7 @@ If there is additional information from the agent that you would like to use in 
 
         def _prepare_state(self, state):
             # Convert the state to the format expected by the agent.
-            # Your method should start by calling `self._preprocess_obs` if it is provided.
+            # Your method should start by calling ``self._preprocess_obs`` if it is provided.
             return state
 
         def _prepare_lstm(self, lstm_state, done):
@@ -91,7 +97,7 @@ If there is additional information from the agent that you would like to use in 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Using an Evaluator in your Curriculum
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To use the evaluator in your curriculum, simply call the evaluator's `get_action`, `get_value`, or `get_action_and_value` methods. You'll need to track the inputs within your curriculum, which typically includes the observations and lstm state of the agent.
+To use the evaluator in your curriculum, simply call the evaluator's ``get_action``, ``get_value``, or ``get_action_and_value`` methods. You'll need to track the inputs within your curriculum, which typically includes the observations and lstm state of the agent.
 If you need to generate values for an entire trajectory, be careful to evaluate states sequentially for lstm agents. The evaluator takes care of all the necessary steps to ensure that the agent is in the correct mode and that the inputs are formatted correctly. As long as you format the inputs and read the outputs correctly, you can use the evaluator in your curriculum without worrying about the details of the agent's implementation.
 
 Evaluators

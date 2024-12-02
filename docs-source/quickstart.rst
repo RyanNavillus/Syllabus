@@ -25,7 +25,7 @@ For example, in procgen, the task space is usually a discrete set of 200 seeds.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating a Syllabus Curriculum
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Either use one of the curricula built into Syllabus, or create your own by extending the :ref:`Curriculum <Curriculum>` class.
+Either use one of the curricula built into Syllabus, or create your own by extending the :ref:`Curriculum API` class.
 
 .. code-block:: python
 
