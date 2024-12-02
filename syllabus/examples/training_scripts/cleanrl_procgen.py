@@ -385,12 +385,12 @@ if __name__ == "__main__":
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
-            tasks[step] = torch.Tensor(envs.get_attr("task"))
 
             # TRY NOT TO MODIFY: execute the game and log data.
             next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
             done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
+            tasks[step] = torch.Tensor([i["task"] for i in info])
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
             completed_episodes += sum(done)
 
@@ -408,7 +408,7 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
-                current_task = envs.get_attr("task")
+                current_task = [i["task"] for i in info]
 
                 update = {
                     "value": value,
