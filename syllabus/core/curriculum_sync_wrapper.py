@@ -144,11 +144,9 @@ class CurriculumSyncWrapper(CurriculumWrapper):
     def __init__(
         self,
         curriculum: Curriculum,
-        sequential_start: bool = True,
         **kwargs,
     ):
         super().__init__(curriculum)
-        self.sequential_start = sequential_start
 
         self.update_thread = None
         self.should_update = False

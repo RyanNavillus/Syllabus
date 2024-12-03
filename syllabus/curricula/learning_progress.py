@@ -16,8 +16,6 @@ class LearningProgressCurriculum(Curriculum):
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,7 +37,6 @@ class LearningProgressCurriculum(Curriculum):
         self._evaluate_all_tasks()
 
     def _evaluate_all_tasks(self, eval_eps=1):
-        print("EVALUATE")
         task_progresses = np.zeros(self.task_space.num_tasks)
         for task_idx, task in enumerate(self.task_space.tasks):
             obss, _ = self.eval_envs.reset(options=task)

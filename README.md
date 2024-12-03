@@ -136,5 +136,10 @@ sphinx-apidoc -o ./docs/modules ./syllabus
 ```
 Then manually merge the results with `./docs-source` as needed.
 
+You can also run a spell check for the documentation:
+```
+sphinx-build -b spelling ./docs/source ./docs-spelling
+```
+
 ## Citing Syllabus
 To be added soon.

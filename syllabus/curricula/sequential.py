@@ -10,8 +10,6 @@ from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 
 class SequentialCurriculum(Curriculum):
     """ Curriculum that iterates through a list of curricula based on stopping conditions. """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
