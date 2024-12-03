@@ -1,4 +1,4 @@
-syllabus.examples.task\_wrappers package
+Task Wrappers
 ========================================
 
 Submodules

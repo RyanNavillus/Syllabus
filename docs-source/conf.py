@@ -6,6 +6,8 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
 project = 'Syllabus'
 copyright = '2023, Ryan Sullivan'
 author = 'Ryan Sullivan'
@@ -16,14 +18,13 @@ release = '0.6'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
+              'sphinx.ext.viewcode',
               'sphinx_tabs.tabs',
               'sphinx.ext.napoleon',
               'sphinxcontrib.spelling']
 
 templates_path = ['_templates']
 
-import sys
-import os
 sys.path.insert(0, os.path.abspath('../../syllabus'))
 
 

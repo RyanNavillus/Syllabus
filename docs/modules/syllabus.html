@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Examples" href="syllabus.examples.html" /><link rel="prev" title="syllabus" href="modules.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>syllabus package - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -185,7 +185,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -199,7 +199,7 @@
 <li class="toctree-l3"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -245,9 +245,9 @@
         </div>
         <article role="main">
           <section id="syllabus-package">
-<h1>syllabus package<a class="headerlink" href="#syllabus-package" title="Permalink to this heading">#</a></h1>
+<h1>syllabus package<a class="headerlink" href="#syllabus-package" title="Link to this heading">¶</a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">#</a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a><ul>
@@ -295,7 +295,7 @@
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.models.html#module-syllabus.examples.models.procgen_model">syllabus.examples.models.procgen_model module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.examples.task_wrappers.html">Task Wrappers</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.cartpole_task_wrapper">syllabus.examples.task_wrappers.cartpole_task_wrapper module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.examples.task_wrappers.html#module-syllabus.examples.task_wrappers.minigrid_task_wrapper">syllabus.examples.task_wrappers.minigrid_task_wrapper module</a></li>
@@ -408,8 +408,6 @@
 <li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.annealing_box">syllabus.curricula.annealing_box module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.sample"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.sample()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.update_on_episode"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.update_on_episode()</span></code></a></li>
 </ul>
@@ -418,8 +416,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.noop">syllabus.curricula.noop module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.requires_step_updates</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.sample()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_episode()</span></code></a></li>
@@ -432,9 +428,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.selfplay">syllabus.curricula.selfplay module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.REQUIRES_EPISODE_UPDATES"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.REQUIRES_EPISODE_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.add_agent()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.get_agent()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.log_metrics()</span></code></a></li>
@@ -443,9 +436,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.REQUIRES_EPISODE_UPDATES"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.REQUIRES_EPISODE_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.add_agent()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.get_agent()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.log_metrics()</span></code></a></li>
@@ -454,9 +444,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay"><code class="docutils literal notranslate"><span class="pre">SelfPlay</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SelfPlay.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.REQUIRES_EPISODE_UPDATES"><code class="docutils literal notranslate"><span class="pre">SelfPlay.REQUIRES_EPISODE_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">SelfPlay.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">SelfPlay.add_agent()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">SelfPlay.get_agent()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">SelfPlay.log_metrics()</span></code></a></li>
@@ -468,8 +455,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.sequential">syllabus.curricula.sequential module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.check_stopping_conditions()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.current_curriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.current_curriculum</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.log_metrics()</span></code></a></li>
@@ -485,8 +470,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.simple_box">syllabus.curricula.simple_box module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.REQUIRES_CENTRAL_UPDATES"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.REQUIRES_CENTRAL_UPDATES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.REQUIRES_STEP_UPDATES"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.REQUIRES_STEP_UPDATES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.log_metrics()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.sample()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.update_task_progress()</span></code></a></li>
@@ -501,24 +484,24 @@
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
 </section>
 <section id="module-syllabus.utils">
-<span id="syllabus-utils-module"></span><h2>syllabus.utils module<a class="headerlink" href="#module-syllabus.utils" title="Permalink to this heading">#</a></h2>
+<span id="syllabus-utils-module"></span><h2>syllabus.utils module<a class="headerlink" href="#module-syllabus.utils" title="Link to this heading">¶</a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="syllabus.utils.UsageError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.utils.</span></span><span class="sig-name descname"><span class="pre">UsageError</span></span><a class="headerlink" href="#syllabus.utils.UsageError" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.utils.</span></span><span class="sig-name descname"><span class="pre">UsageError</span></span><a class="reference internal" href="../_modules/syllabus/utils.html#UsageError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.utils.UsageError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.utils.decorate_all_functions">
-<span class="sig-prename descclassname"><span class="pre">syllabus.utils.</span></span><span class="sig-name descname"><span class="pre">decorate_all_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_decorator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.utils.decorate_all_functions" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.utils.</span></span><span class="sig-name descname"><span class="pre">decorate_all_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_decorator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/utils.html#decorate_all_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.utils.decorate_all_functions" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="syllabus.utils.enumerate_axes">
-<span class="sig-prename descclassname"><span class="pre">syllabus.utils.</span></span><span class="sig-name descname"><span class="pre">enumerate_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_or_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.utils.enumerate_axes" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">syllabus.utils.</span></span><span class="sig-name descname"><span class="pre">enumerate_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_or_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/utils.html#enumerate_axes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.utils.enumerate_axes" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -599,9 +582,10 @@
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=ec806d2c"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

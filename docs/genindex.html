@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 --><title>Index - Syllabus 0.6 documentation</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 --><title>Index - Syllabus 0.6 documentation</title>
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -183,7 +183,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -197,7 +197,7 @@
 <li class="toctree-l3"><a class="reference internal" href="modules/syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -271,9 +271,9 @@
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.after_update">after_update() (syllabus.curricula.plr.central_plr_wrapper.RolloutStorage method)</a>
 
         <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage.after_update">(syllabus.curricula.plr.plr_wrapper.RolloutStorage method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage.after_update">(syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage method)</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage.after_update">(syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage.after_update">(syllabus.curricula.plr.plr_wrapper.RolloutStorage method)</a>
 </li>
           <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.after_update">(syllabus.curricula.plr.task_sampler.TaskSampler method)</a>
 </li>
@@ -320,7 +320,7 @@
           <li><a href="modules/syllabus.examples.models.html#syllabus.examples.models.procgen_model.Categorical">(class in syllabus.examples.models.procgen_model)</a>
 </li>
         </ul></li>
-        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay">CentralizedPrioritizedLevelReplay (class in syllabus.curricula.plr.central_plr_wrapper)</a>
+        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay">CentralPrioritizedLevelReplay (class in syllabus.curricula.plr.central_plr_wrapper)</a>
 </li>
         <li><a href="modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task">change_task() (syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper method)</a>
 
@@ -436,10 +436,12 @@
 </li>
         <li><a href="modules/syllabus.html#syllabus.utils.decorate_all_functions">decorate_all_functions() (in module syllabus.utils)</a>
 </li>
-        <li><a href="modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace">DiscreteTaskSpace (class in syllabus.task_space.task_space)</a>
+        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay">DirectPrioritizedLevelReplay (class in syllabus.curricula.plr.direct_plr_wrapper)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace">DiscreteTaskSpace (class in syllabus.task_space.task_space)</a>
+</li>
         <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization">DomainRandomization (class in syllabus.curricula.domain_randomization)</a>
 </li>
         <li><a href="modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper">DualCurriculumWrapper (class in syllabus.core.dual_curriculum_wrapper)</a>
@@ -655,7 +657,7 @@
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.insert">insert() (syllabus.curricula.plr.central_plr_wrapper.RolloutStorage method)</a>
 
         <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage.insert">(syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage.insert">(syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage method)</a>
 </li>
         </ul></li>
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage.insert_at_index">insert_at_index() (syllabus.curricula.plr.plr_wrapper.RolloutStorage method)</a>
@@ -683,11 +685,11 @@
 </li>
           <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.log_metrics">(syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper method)</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay.log_metrics">(syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.log_metrics">(syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay method)</a>
+</li>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay.log_metrics">(syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay method)</a>
 </li>
           <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay.log_metrics">(syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay method)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay.log_metrics">(syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay method)</a>
 </li>
           <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics">(syllabus.curricula.selfplay.FictitiousSelfPlay method)</a>
 </li>
@@ -780,9 +782,9 @@
 </li>
           <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.central_plr_wrapper">syllabus.curricula.plr.central_plr_wrapper</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.plr_wrapper">syllabus.curricula.plr.plr_wrapper</a>
+          <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.direct_plr_wrapper">syllabus.curricula.plr.direct_plr_wrapper</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.simple_central_plr_wrapper">syllabus.curricula.plr.simple_central_plr_wrapper</a>
+          <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.plr_wrapper">syllabus.curricula.plr.plr_wrapper</a>
 </li>
           <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.task_sampler">syllabus.curricula.plr.task_sampler</a>
 </li>
@@ -997,7 +999,7 @@
 </li>
         <li><a href="modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper">RayPettingZooSyncWrapper (class in syllabus.core.environment_sync_wrapper)</a>
 </li>
-        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage.ready">ready() (syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage method)</a>
+        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage.ready">ready() (syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage method)</a>
 </li>
         <li><a href="stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.record">record() (syllabus.core.stat_recorder.StatRecorder method)</a>
 </li>
@@ -1013,99 +1015,23 @@
           <li><a href="modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.render">(syllabus.examples.utils.vecenv.VecEnvWrapper method)</a>
 </li>
         </ul></li>
-        <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.REQUIRES_CENTRAL_UPDATES">REQUIRES_CENTRAL_UPDATES (syllabus.core.curriculum_base.Curriculum attribute)</a>
-
-        <ul>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.annealing_box.SimulatedAnnealing attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.domain_randomization.BatchedDomainRandomization attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.domain_randomization.DomainRandomization attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.learning_progress.LearningProgressCurriculum attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.noop.NoopCurriculum attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.selfplay.FictitiousSelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.selfplay.SelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.sequential.SequentialCurriculum attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.REQUIRES_CENTRAL_UPDATES">(syllabus.curricula.simple_box.SimpleBoxCurriculum attribute)</a>
-</li>
-          <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES">(syllabus.tests.sync_test_curriculum.SyncTestCurriculum attribute)</a>
-</li>
-        </ul></li>
-        <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.REQUIRES_EPISODE_UPDATES">REQUIRES_EPISODE_UPDATES (syllabus.curricula.selfplay.FictitiousSelfPlay attribute)</a>
-
-        <ul>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.REQUIRES_EPISODE_UPDATES">(syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.REQUIRES_EPISODE_UPDATES">(syllabus.curricula.selfplay.SelfPlay attribute)</a>
-</li>
-        </ul></li>
-        <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.REQUIRES_STEP_UPDATES">REQUIRES_STEP_UPDATES (syllabus.core.curriculum_base.Curriculum attribute)</a>
+        <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES">REQUIRES_CENTRAL_UPDATES (syllabus.tests.sync_test_curriculum.SyncTestCurriculum attribute)</a>
 </li>
         <li><a href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.requires_step_updates">requires_step_updates (syllabus.core.curriculum_base.Curriculum property)</a>
 
         <ul>
           <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.requires_step_updates">(syllabus.core.curriculum_sync_wrapper.CurriculumWrapper property)</a>
 </li>
-        </ul></li>
-        <li><a href="modules/syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.REQUIRES_STEP_UPDATES">REQUIRES_STEP_UPDATES (syllabus.curricula.annealing_box.SimulatedAnnealing attribute)</a>
-
-        <ul>
-          <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization.REQUIRES_STEP_UPDATES">(syllabus.curricula.domain_randomization.BatchedDomainRandomization attribute)</a>
+          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.requires_step_updates">(syllabus.curricula.noop.NoopCurriculum property)</a>
 </li>
-          <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization.REQUIRES_STEP_UPDATES">(syllabus.curricula.domain_randomization.DomainRandomization attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.REQUIRES_STEP_UPDATES">(syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.REQUIRES_STEP_UPDATES">(syllabus.curricula.learning_progress.LearningProgressCurriculum attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.REQUIRES_STEP_UPDATES">(syllabus.curricula.noop.NoopCurriculum attribute)</a>
+          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates">(syllabus.curricula.sequential.SequentialCurriculum property)</a>
 </li>
         </ul></li>
-        <li><a href="modules/syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.requires_step_updates">requires_step_updates (syllabus.curricula.noop.NoopCurriculum property)</a>
+        <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_STEP_UPDATES">REQUIRES_STEP_UPDATES (syllabus.tests.sync_test_curriculum.SyncTestCurriculum attribute)</a>
 </li>
-        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay.REQUIRES_STEP_UPDATES">REQUIRES_STEP_UPDATES (syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay attribute)</a>
-
-        <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay.REQUIRES_STEP_UPDATES">(syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay.REQUIRES_STEP_UPDATES">(syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.REQUIRES_STEP_UPDATES">(syllabus.curricula.selfplay.FictitiousSelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.REQUIRES_STEP_UPDATES">(syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.REQUIRES_STEP_UPDATES">(syllabus.curricula.selfplay.SelfPlay attribute)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.REQUIRES_STEP_UPDATES">(syllabus.curricula.sequential.SequentialCurriculum attribute)</a>
-</li>
-        </ul></li>
-        <li><a href="modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates">requires_step_updates (syllabus.curricula.sequential.SequentialCurriculum property)</a>
-</li>
-        <li><a href="modules/syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.REQUIRES_STEP_UPDATES">REQUIRES_STEP_UPDATES (syllabus.curricula.simple_box.SimpleBoxCurriculum attribute)</a>
-
-        <ul>
-          <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_STEP_UPDATES">(syllabus.tests.sync_test_curriculum.SyncTestCurriculum attribute)</a>
-</li>
-        </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.requires_step_updates">requires_step_updates (syllabus.tests.sync_test_curriculum.SyncTestCurriculum property)</a>
+</li>
+        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay.requires_step_updates">requires_step_updates() (syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay method)</a>
 </li>
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.requires_value_buffers">requires_value_buffers (syllabus.curricula.plr.task_sampler.TaskSampler property)</a>
 </li>
@@ -1169,6 +1095,8 @@
           <li><a href="modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation.reset">(syllabus.tests.utils.ExtractDictObservation method)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.examples.models.html#syllabus.examples.models.procgen_model.ResNetBase">ResNetBase (class in syllabus.examples.models.procgen_model)</a>
 </li>
         <li><a href="stat_recorder.html#syllabus.core.stat_recorder.StatMean.result">result() (syllabus.core.stat_recorder.StatMean method)</a>
@@ -1176,9 +1104,9 @@
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage">RolloutStorage (class in syllabus.curricula.plr.central_plr_wrapper)</a>
 
         <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage">(class in syllabus.curricula.plr.plr_wrapper)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage">(class in syllabus.curricula.plr.direct_plr_wrapper)</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage">(class in syllabus.curricula.plr.simple_central_plr_wrapper)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage">(class in syllabus.curricula.plr.plr_wrapper)</a>
 </li>
         </ul></li>
         <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update">route_update() (syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper method)</a>
@@ -1230,11 +1158,11 @@
 </li>
           <li><a href="modules/syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.sample">(syllabus.curricula.noop.NoopCurriculum method)</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay.sample">(syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.sample">(syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay method)</a>
+</li>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay.sample">(syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay method)</a>
 </li>
           <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay.sample">(syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay method)</a>
-</li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay.sample">(syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay method)</a>
 </li>
           <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample">(syllabus.curricula.plr.task_sampler.TaskSampler method)</a>
 </li>
@@ -1290,8 +1218,6 @@
         <li><a href="modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.should_sync">should_sync() (syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents method)</a>
 </li>
         <li><a href="modules/syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum">SimpleBoxCurriculum (class in syllabus.curricula.simple_box)</a>
-</li>
-        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay">SimpleCentralizedPrioritizedLevelReplay (class in syllabus.curricula.plr.simple_central_plr_wrapper)</a>
 </li>
         <li><a href="modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.simpletag_task_wrapper.SimpleTagTaskWrapper">SimpleTagTaskWrapper (class in syllabus.examples.task_wrappers.simpletag_task_wrapper)</a>
 </li>
@@ -1391,8 +1317,6 @@
           <li><a href="modules/syllabus.core.html#module-syllabus.core.environment_sync_wrapper">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     syllabus.core.evaluator
 
@@ -1400,6 +1324,8 @@
           <li><a href="evaluators.html#module-syllabus.core.evaluator">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     syllabus.core.multiagent_curriculum_wrappers
 
@@ -1485,17 +1411,17 @@
 </li>
         </ul></li>
         <li>
+    syllabus.curricula.plr.direct_plr_wrapper
+
+        <ul>
+          <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.direct_plr_wrapper">module</a>
+</li>
+        </ul></li>
+        <li>
     syllabus.curricula.plr.plr_wrapper
 
         <ul>
           <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.plr_wrapper">module</a>
-</li>
-        </ul></li>
-        <li>
-    syllabus.curricula.plr.simple_central_plr_wrapper
-
-        <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.simple_central_plr_wrapper">module</a>
 </li>
         </ul></li>
         <li>
@@ -1712,9 +1638,9 @@
         <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.to">to() (syllabus.curricula.plr.central_plr_wrapper.RolloutStorage method)</a>
 
         <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage.to">(syllabus.curricula.plr.plr_wrapper.RolloutStorage method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage.to">(syllabus.curricula.plr.direct_plr_wrapper.RolloutStorage method)</a>
 </li>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage.to">(syllabus.curricula.plr.simple_central_plr_wrapper.RolloutStorage method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.RolloutStorage.to">(syllabus.curricula.plr.plr_wrapper.RolloutStorage method)</a>
 </li>
         </ul></li>
         <li><a href="modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace">TupleTaskSpace (class in syllabus.task_space.task_space)</a>
@@ -1729,10 +1655,10 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.unwrapped">unwrapped (syllabus.examples.utils.vecenv.VecEnv property)</a>
 </li>
-        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay.update">update() (syllabus.curricula.plr.central_plr_wrapper.CentralizedPrioritizedLevelReplay method)</a>
+        <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.update">update() (syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay method)</a>
 
         <ul>
-          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay.update">(syllabus.curricula.plr.simple_central_plr_wrapper.SimpleCentralizedPrioritizedLevelReplay method)</a>
+          <li><a href="modules/syllabus.curricula.plr.html#syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay.update">(syllabus.curricula.plr.direct_plr_wrapper.DirectPrioritizedLevelReplay method)</a>
 </li>
           <li><a href="modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd.update">(syllabus.examples.utils.vecenv.RunningMeanStd method)</a>
 </li>
@@ -1917,10 +1843,10 @@
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
-    <script src="_static/tabs.js"></script>
+</div><script src="_static/documentation_options.js?v=ec806d2c"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/tabs.js?v=3030b3cb"></script>
     </body>
 </html>

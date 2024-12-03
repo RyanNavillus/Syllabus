@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Curriculum Methods" href="implemented_curricula.html" /><link rel="prev" title="Creating Your Own Curriculum" href="custom_curricula.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>Co-player Curricula - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -185,7 +185,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -199,7 +199,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -245,7 +245,7 @@
         </div>
         <article role="main">
           <section id="co-player-curricula">
-<span id="co-player"></span><h1>Co-player Curricula<a class="headerlink" href="#co-player-curricula" title="Permalink to this heading">#</a></h1>
+<span id="co-player"></span><h1>Co-player Curricula<a class="headerlink" href="#co-player-curricula" title="Link to this heading">¶</a></h1>
 <p><strong>NOTE:</strong> These interfaces may change in the future.</p>
 <p>Co-player curricula maintain a distribution of co-players and samples one for the training agent to play with at the start of each episode. These co-players might be partners in cooperative environments, opponents in competitive environments, or a mix of both in mixed-sum games. Fictitious Self-Play, which randomly selects an opponent from a set of previous checkpoints of the protagonist agent, is one example of a curriculum over co-players.</p>
 <p>These curricula directly interface with the training agent, and therefore must be called from the main process. For task-based curricula we allow a heterogeneous API for update methods that are called by the training process. However for co-player curricula, we define a homogeneous interface that provide the core functionality to promote interoperability between different co-player curricula. It is of course possible to add additional heterogeneous methods if necessary.</p>
@@ -254,7 +254,7 @@
 <li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.get_agent" title="syllabus.core.curriculum_base.Curriculum.get_agent"><code class="xref py py-mod docutils literal notranslate"><span class="pre">get_agent</span></code></a> - returns the agent corresponding to the given agent_id. If the agent is already in memory, it simply returns it. If not, it should load it from the disk.</p></li>
 </ul>
 <section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
 <p>In practice, the curriculum will assign an agent task to the environment, then the training process will load the corresponding agent for inference. This makes it difficult to efficiently batch inference, because a different policy needs to be loaded for each environment. To avoid this, it may be helpful to batch tasks according to the number of processes in the curriculum’s <code class="docutils literal notranslate"><span class="pre">sample</span></code> method. This way, the training process will only need to load 2-3 agents at a time, and they will change infrequently.</p>
 <p>Here is an example of the intended interaction loop for a single environment. The environment will automatically sample an opponent from the curriculum, and put it’s identifier in the info dictionary under the key “task”. The training process can then use this identifier to load the corresponding agent:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">,</span> <span class="n">PettingZooSyncWrapper</span>
@@ -359,9 +359,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=ec806d2c"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

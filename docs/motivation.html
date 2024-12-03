@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Environment Support" href="environments.html" /><link rel="prev" title="Quickstart" href="quickstart.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>Motivation - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -185,7 +185,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.core.task_interface.html">Task Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
@@ -199,7 +199,7 @@
 <li class="toctree-l3"><a class="reference internal" href="modules/syllabus.core.html">Global Synchronization</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.models.html">Example Models</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">syllabus.examples.task_wrappers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modules/syllabus.examples.utils.html">Example Utils</a></li>
 </ul>
 </li>
@@ -245,12 +245,12 @@
         </div>
         <article role="main">
           <section id="motivation">
-<span id="id1"></span><h1>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">#</a></h1>
-<p>Syllabus was created to help researchers to study curriculum learning algorithms on complex environments. Challenging environments like Chess, Go, and Starcraft have served as milestones for AI and working towards solving these benchmarks is the main driver of progress in RL. However, complex problems often require complex solutions, so the best agents in many RL environments utilize custom learning infrastructure. This makes it extremely difficult to apply new methods to these problems. As a result, the most impressive applications of reinforcement learning have been achieved by large industry labs with extensive manpower and computational resources. Curriculum learning is a nearly ubiquitous component of these achievements, but it is rarely used in academic research. Syllabus aims to change this by providing a portable and flexible API for curriculum learning that can be easily integrated into existing training code. This allows researchers to experiment with curriculum learning methods on complex environments without needing to build custom infrastructure mitigating any possibility of implementation error and promoting reproducibility.</p>
-<p>Curriculum learning is a unique approach in that it only modifies the task distribution of the environment, not the core learning process. It is therefore possible to implement curricula as modular components that can be easily added to existing training code. This is in contrast to other curriculum learning libraries, which often come as standalone learning libraries. Syllabus provides an API for defining curricula which encourages the minimum possible interface surface area, meaning less work for practitioners and fewer opportunities for implementation errors.</p>
-<p>Many of the major RL successes on challenging problems have used curriculum learning. Since then, challenging academic benchmarks have been developed as testbeds for autocurricula. Despite this, most academic research often focuses on simple environments like Procgen and Minigrid. Although these benchmarks have led to many important discoveries, it is clear that many of our methods and findings do not scale to more difficult problems. Syllabus aims to bridge this gap by providing a framework for studying curriculum learning on complex environments.</p>
+<span id="id1"></span><h1>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">¶</a></h1>
+<p>Syllabus was created to help researchers to study curriculum learning algorithms on complex environments. Challenging environments like Chess, Go, and Starcraft have served as milestones for progress in AI. However, complex problems often require complex solutions, so the best agents in many RL environments utilize custom learning infrastructure with task-specific methods. Conversely, new methods are often introduced as standalone libraries, with support for a limited number of algorithms and environments. This makes it extremely difficult to apply new methods to complex problems. As a consequence of these challenges, the most impressive applications of reinforcement learning have been achieved by large industry labs with extensive manpower and computational resources. In particular, curriculum learning is a nearly ubiquitous component of these achievements, but it is rarely used in academic research. Syllabus aims to change this by providing a portable and flexible API for curriculum learning that can be easily integrated into existing training code. This allows researchers to experiment with curriculum learning methods on complex environments without needing to build custom infrastructure, thereby mitigating implementation errors and promoting reproducibility.</p>
+<p>Curriculum learning is a unique class of methods in that they only modify the task distribution of the environment, not the core learning process. It is therefore possible to implement curricula as modular components that can be easily added to existing training code. Syllabus provides an API for defining curricula which encourages the minimum possible interface surface area, meaning less work for practitioners and fewer opportunities for implementation errors. This is in contrast to existing curriculum learning libraries, which are implemented as standalone solutions and do not intergrate with existing RL libraries.</p>
+<p>Many of the major RL successes on challenging problems have used curriculum learning, and challenging academic benchmarks have been developed as testbeds for autocurricula. Despite this, most academic research focuses on simple environments like Procgen and Minigrid. Although these benchmarks have led to many important discoveries, it is clear that many of the methods and lessons from these environments do not scale to more difficult problems. Syllabus aims to bridge this gap by providing a framework for studying curriculum learning on complex environments.</p>
 <section id="design-goals">
-<h2>Design Goals<a class="headerlink" href="#design-goals" title="Permalink to this heading">#</a></h2>
+<h2>Design Goals<a class="headerlink" href="#design-goals" title="Link to this heading">¶</a></h2>
 <p>Guided by these goals, Syllabus was designed with several focuses in mind:</p>
 <ol class="arabic simple">
 <li><p>Integrating Syllabus into training infrastructure should require minimal code changes.</p></li>
@@ -259,8 +259,8 @@
 <li><p>Algorithm logic should be contained in the minimum possible number of files.</p></li>
 </ol>
 <p>Syllabus’s main goal is to improve the ease of use and reproducibility of curriculum learning methods. Both of these benefit from interfaces with small surface areas, and library agnostic code. The fewer changes that need to be made to existing training code, the fewer opportunities there are for implementation errors. Focusing on interoperability minimizes the work that practitioners need to do to use curriculum learning in their work.</p>
-<p>To make this library widely useful for the community, we tried to distill the shared components of curriculum learning algorithms into a single API. Curriculum learning methods can have extremely varied components, so in cases where we don’t implement a required feature, we allow for heterogeneous APIs that add on top of the features provided by Syllabus rather than replacing them. This makes it at least as easy to add a curriculum to Syllabus than it is to write from scratch, and typically makes it much easier. This approach also allows Syllabus to grow naturally with new use cases, adding new APIs to provide portability to new classes of autocurricula over time.</p>
-<p>Finally, inspired by the success of <a class="reference external" href="https://github.com/vwxyzjn/cleanrl">CleanRL</a> and other single-file libraries, Syllabus’s Curriculum API supports the use of single or few-file implementations of algorithms. This approach has been shown to speed up prototyping and improve reproducibility, because complex object-oriented systems tend to obfuscate important implementation details. Syllabus reaches a middle ground by providing well-engineered and tested infrastructure that interfaces with flat curriculum implementations. This allows researchers to focus on the core logic of their curriculum learning and reinforcement learning methods, while still benefiting from the shared infrastructure of Syllabus.</p>
+<p>To make this library widely useful for the community, we tried to distill the shared structure of curriculum learning algorithms into a single API. This makes it easier to add a curriculum to Syllabus than it is to write from scratch. However, curriculum learning methods can have extremely varied components, so in cases where Syllabus does not provide a required feature, we recommend heterogeneous APIs that add on top of Syllabus’s existing interfaces  This approach also allows Syllabus to grow naturally with new use cases by adding APIs and improving the portability of new autocurricula over time.</p>
+<p>Finally, inspired by the success of <a class="reference external" href="https://github.com/vwxyzjn/cleanrl">CleanRL</a> and other single-file libraries, Syllabus’s Curriculum API encourages the use of single or few-file implementations of algorithms. This approach has been shown to speed up prototyping and improve reproducibility, because complex object-oriented systems tend to obfuscate important implementation details. However, Syllabus’s infrastructure also needs to be optimized to support many possible RL libraries and applications. Syllabus reaches a middle ground by providing well-engineered infrastructure that interfaces with simple, flat curriculum implementations. This places the core logic of curriculum learning methods in a single file, separate from the reinforcement learning code, while allowing the algorithm-agnostic infrastructure to be carefully tested and optimized.</p>
 </section>
 </section>
 
@@ -332,9 +332,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
+</div><script src="_static/documentation_options.js?v=ec806d2c"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>
