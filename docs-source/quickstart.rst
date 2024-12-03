@@ -45,7 +45,8 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
         .. code-block:: python
 
             from syllabus.core import make_multiprocessing_curriculum
-            curriculum, task_queue, update_queue = make_multiprocessing_curriculum(curriculum)
+            curriculum = make_multiprocessing_curriculum(curriculum)
+
    .. tab:: Ray Multiprocessing
 
         .. code-block:: python
@@ -60,34 +61,45 @@ Use the matching native multiprocessing or ray multiprocessing wrapper for eithe
 
 .. tabs::
 
-   .. tab:: Native Python Multiprocessing for Gymnasium Environments
+   .. tab:: Native Multiprocessing for Gymnasium
 
         .. code-block:: python
 
             from syllabus.core import GymnasiumSyncWrapper
-            env = GymnasiumSyncWrapper(env, task_queue, update_queue)
+            env = GymnasiumSyncWrapper(env, curriculum.components)
 
-
-   .. tab:: Native Python Multiprocessing for PettingZoo Environments
+   .. tab:: Native Multiprocessing for PettingZoo
 
         .. code-block:: python
 
             from syllabus.core import PettingZooSyncWrapper
-            env = PettingZooSyncWrapper(env, task_queue, update_queue)
+            env = PettingZooSyncWrapper(env, curriculum.components)
 
-   .. tab:: Ray Multiprocessing for Gymnasium Environments
+   .. tab:: Ray Multiprocessing for Gymnasium
 
         .. code-block:: python
 
             from syllabus.core import RayGymnasiumSyncWrapper
             env = RayGymnasiumSyncWrapper(env)
 
-   .. tab:: Ray Multiprocessing for PettingZoo Environments
+   .. tab:: Ray Multiprocessing for PettingZoo
 
         .. code-block:: python
 
             from syllabus.core import RayPettingZooSyncWrapper
             env = RayPettingZooSyncWrapper(env)
+
+^^^^^^^^^^^^^^^^^^
+Things to consider
+^^^^^^^^^^^^^^^^^^
+
+**Training returns no longer reflect agent performance** - when you use a curriculum, it changes the task distribution in some non-uniform way, often prioritizing easier or harder tasks. This means that training returns no longer reflect the agent's average performance over the task space. You typically need to write a separate evaluation pipeline over a uniform task distribution to properly evaluate agents. You can find more info in the :ref:`Evaluation` section.
+
+**Reward normalization may no longer work** - many baselines in RL will normalize returns automatically using running statistics of the agent's average episodic return. If you are using a curriculum these statistics depend on the task distribution, and may harm the agent's performance by dramatically increasing the nonstationarity of the rewards. If you want to use per-task return normalization, you can use the :ref:`StatRecorder` to track per-task returns.
+
+**Curriculum learning can be slow** - curriculum learning methods do additional computation to select tasks and improve sample efficiency, but this comes at the cost of reduced time efficiency per episode. Syllabus is designed to do this extra computation asynchronously, but it will always be slower than training on a fixed distribution.
+
+**Curriculum learning can change the optimal hyperparameters** - because curriculum learning changes the task distribution, and therefore the reward scale, it can also change the optimal hyperparameters for your agent. You may need to tune your hyperparameters to get the best performance with a curriculum, though you should see some improvement without any tuning if the curriculum works on your environment.
 
 ^^^^^^^^
 Examples

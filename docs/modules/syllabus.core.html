@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus" href="modules.html" /><link rel="prev" title="syllabus.examples.task_wrappers package" href="syllabus.examples.task_wrappers.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Global Synchronization - Syllabus 0.5 documentation</title>
+        <title>Global Synchronization - Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Syllabus 0.5 documentation</div></a>
+      <a href="../index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -147,7 +147,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Syllabus 0.5 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -166,17 +166,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../background/curriculum_learning.html">Curriculum Learning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../background/ued.html">Unsupervised Environment Design</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/co_player.html">Co-player Curricula</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../curricula/implemented_curricula.html">Curriculum Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stat_recorder.html">Stat Recorder</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
@@ -249,9 +246,9 @@
         <article role="main">
           <section id="global-synchronization">
 <span id="synchronization"></span><h1>Global Synchronization<a class="headerlink" href="#global-synchronization" title="Permalink to this heading">#</a></h1>
-<p>Syllabus’s multiprocessing infrastructure uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment metrics, while the environment receives tasks and sends metrics. The environment runs the provided task in the next episode and the curriculum uses the metrics to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information.</p>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
+<p>Syllabus’s multiprocessing infrastructure uses a bidirectional sender-receiver model in which the curriculum sends tasks and receives environment metrics, while the environment receives tasks and sends metrics. The environment runs the provided task in the next episode and the curriculum uses the metrics to update its task distribution. You can also update the curriculum directly from the main learner process to incorporate training information. Syllabus is designed to simply work for most environments and curricula, but some complex infrastructure can require more careful configuration. This documentation provides an overview of the synchronization process and common pitfalls to avoid with configuring the synchronization wrappers.</p>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this heading">#</a></h2>
 <p>If your environment is vectorized with python multiprocessing (this is true for most libraries, including CleanRL, Stable Baselines 3, and Torchbeast) then you can wrap your curriculum and environment as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">,</span> <span class="n">MultiProcessingSyncWrapper</span>
 <span class="n">curriculum</span><span class="p">,</span> <span class="n">task_queue</span><span class="p">,</span> <span class="n">update_queue</span> <span class="o">=</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">)</span>
@@ -264,19 +261,149 @@
 <span class="n">env</span> <span class="o">=</span> <span class="n">RaySyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now that you’ve applied these wrappers, the environment will automatically receive tasks from the curriculum at the start of each episode. Depending on your environment wrapper options and curriculum method, the curriculum might also receive metrics from the environment at each step or at the end of the episode.</p>
-<p>You can also update the curriculum directly from the main learner process to incorporate training information. The exact update metrics will depend on your curriculum method, but the API is the same for all methods. You can see an example of how to do this in various RL libraries using <a class="reference internal" href="syllabus.curricula.plr.html#prioritized-level-replay-update"><span class="std std-ref">Prioritized Level Replay</span></a></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">update</span> <span class="o">=</span> <span class="p">{</span>
-   <span class="s2">&quot;update_type&quot;</span><span class="p">:</span> <span class="s2">&quot;on_demand&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="o">...</span>
-   <span class="p">},</span>
-<span class="p">}</span>
-<span class="n">curriculum</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
+<p><strong>Note</strong> the environment must be a TaskEnv or wrapped in a TaskWrapper immediately before the synchronization wrapper. When the synchronization wrapper calls the environment’s reset method, it must be able to accept a <cite>new_task</cite> keyword argument. You do not need to actually subclass TaskEnv or TaskWrapper, but you must follow the task interface API. See <a class="reference internal" href="syllabus.core.task_interface.html#taskinterface"><span class="std std-ref">Task Interface</span></a> for more information.</p>
+<p>Now that you’ve applied these wrappers, the environment will automatically receive tasks from the curriculum at the start of each episode, and the environment will automatically send feedback to the curriculum. The environment synchronization wrapper sends updates at the end of each episode, which tell the curriculum to sample another task. The episode return and length may also be used by the <code class="docutils literal notranslate"><span class="pre">StatRecorder</span></code> if it is enabled in the curriculum.</p>
+<p>You can also update the curriculum directly from the main learner process to incorporate training information. Since this doesn’t need multiprocessing synchronization, you can define the interface however you like. However, we suggest making these interfaces as simple as possible to promote portability to other RL libraries. You can read <a class="reference internal" href="../motivation.html#motivation"><span class="std std-ref">Motivation</span></a> for more information and see an example of these updates in <a class="reference internal" href="syllabus.curricula.plr.html#prioritized-level-replay-update"><span class="std std-ref">Prioritized Level Replay</span></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">curriculum</span><span class="o">.</span><span class="n">custom_update</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="environment-synchronization">
+<h2>Environment Synchronization<a class="headerlink" href="#environment-synchronization" title="Permalink to this heading">#</a></h2>
+<p>The environment synchronization wrappers collect and send the data that will eventually be used to call the <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code>, <code class="docutils literal notranslate"><span class="pre">update_on_episode</span></code>, and <code class="docutils literal notranslate"><span class="pre">update_on_progress</span></code> methods of the <a class="reference internal" href="syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a>. These wrappers also request a new task at the start of each episode in the <code class="docutils literal notranslate"><span class="pre">reset</span></code> method before calling the environment’s <code class="docutils literal notranslate"><span class="pre">reset</span></code> method. Since updating the curriculum is separate from the main training process, we can batch updates without slowing down training to more efficiently transfer data between processes. Episode and task updates are sent immediately, but step updates are batched for efficient transfer. The size of these batches can be controlled by the <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> argument in the synchronization wrapper initializer. Additionally, the environment synchronization wrapper will not send any step updates if the curriculum’s <code class="docutils literal notranslate"><span class="pre">requires_step_updates</span></code> method is not implemented or returns False.</p>
+<p>The environment synchronization wrapper also has a <code class="docutils literal notranslate"><span class="pre">buffer_size</span></code> argument, which controls how many tasks will be in the task_queue at any given time. Increasing this can be useful if you want to reduce the amount of time the environment spends waiting for a new task. If the buffer is too small, the environment may run out of tasks and be forced to wait for the curriculum to send more. However, increasing the buffer_size will also cause the environment to be less responsive to changes in the curriculum. Increasing the <code class="docutils literal notranslate"><span class="pre">buffer_size</span></code> by one effectively causes the environment to use a task distribution from a number of episodes in the past equal to the number of parallel environments. We have seen some evidence that this delay can impact the performance of methods like PLR, so we recommend setting this value to at most 2. If you are seeing the environment waiting for tasks often, then check if your update queue size is spiking. If it is, you may need to optimize your curriculum because it is having trouble keeping up with the number of updates it is receiving.</p>
+<section id="module-syllabus.core.environment_sync_wrapper">
+<span id="environment-synchronization-wrappers"></span><h3>Environment Synchronization Wrappers<a class="headerlink" href="#module-syllabus.core.environment_sync_wrapper" title="Permalink to this heading">#</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">GymnasiumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents" title="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents"><span class="pre">MultiProcessingComponents</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code></p>
+<p>This wrapper is used to set the task on reset for a Gym environments running
+on parallel processes created using multiprocessing.Process. Meant to be used
+with a QueueLearningProgressCurriculum running on the main process.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task">
+<span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset" title="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step" title="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">PettingZooSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents" title="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents"><span class="pre">MultiProcessingComponents</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParallelWrapper</span></code></p>
+<p>This wrapper is used to set the task on reset for a Gym environments running
+on parallel processes created using multiprocessing.Process. Meant to be used
+with a QueueLearningProgressCurriculum running on the main process.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task">
+<span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment.</p>
+<p>And returns a dictionary of observations (keyed by the agent name)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Receives a dictionary of actions keyed by the agent name.</p>
+<p>Returns the observation dictionary, reward dictionary, terminated dictionary, truncated dictionary
+and info dictionary, where each dictionary is keyed by the agent.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">RayGymnasiumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code></p>
+<p>This wrapper is used to set the task on reset for a Gym environments running
+on parallel processes created using ray. Meant to be used with a
+RayLearningProgressCurriculum running on the main process.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task">
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<dd><p>Changes the task of the existing environment to the new_task.</p>
+<p>Each environment will implement tasks differently. The easiest system would be to call a
+function or set an instance variable to change the task.</p>
+<p>Some environments may need to be reset or even reinitialized to change the task.
+If you need to reset or re-init the environment here, make sure to check
+that it is not in the middle of an episode to avoid unexpected behavior.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset" title="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step" title="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">RayPettingZooSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParallelWrapper</span></code></p>
+<p>This wrapper is used to set the task on reset for a Gym environments running
+on parallel processes created using ray. Meant to be used with a
+RayLearningProgressCurriculum running on the main process.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task">
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task" title="Permalink to this definition">#</a></dt>
+<dd><p>Changes the task of the existing environment to the new_task.</p>
+<p>Each environment will implement tasks differently. The easiest system would be to call a
+function or set an instance variable to change the task.</p>
+<p>Some environments may need to be reset or even reinitialized to change the task.
+If you need to reset or re-init the environment here, make sure to check
+that it is not in the middle of an episode to avoid unexpected behavior.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
+<dd><p>Resets the environment.</p>
+<p>And returns a dictionary of observations (keyed by the agent name)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Receives a dictionary of actions keyed by the agent name.</p>
+<p>Returns the observation dictionary, reward dictionary, terminated dictionary, truncated dictionary
+and info dictionary, where each dictionary is keyed by the agent.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="curriculum-synchronization">
+<h2>Curriculum Synchronization<a class="headerlink" href="#curriculum-synchronization" title="Permalink to this heading">#</a></h2>
+<p>The curriculum synchronization wrapper routes update messages to the proper <a class="reference internal" href="syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a> methods and requests tasks from the Curriculum to send back to the environments. You can create a synchronized curriculum by calling the <code class="docutils literal notranslate"><span class="pre">make_multiprocessing_curriculum</span></code> or <code class="docutils literal notranslate"><span class="pre">make_ray_curriculum</span></code> functions. The ray method will wrap the curriculum in a ray actor, allowing it to communicate with the environments running as separate ray actors. The native multiprocessing method will wrap the curriculum in a wrapper class which has a <code class="docutils literal notranslate"><span class="pre">components</span></code> property. This contains all of the information that needs to be passed to the environment synchronization wrapper, including the task and update queues, methods for getting unique environment identifiers, and a method indicating whether the environment should send step updates. Passing these components to the environment synchronization wrapper will allow the curriculum to communicate with the environments. It is possible to have multiple separate curricula and sets of environments communicating via different components but that behavior is not officially supported.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">make_multiprocessing_curriculum</span></code> method has several options to provide control over the queue behavior. The <code class="docutils literal notranslate"><span class="pre">timeout</span></code> option controls how long each environment will wait for a new task before throwing an error. The remaining communication methods do not block and instead throw an error if a value is not immediately available. Updates are only requested after checking that the update queue is not empty, so this should never throw an error.  Placing updates or tasks into their respective queues will only error if the queue is full. If this happens, you can increase the <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> argument to increase the size of both queues, though this is likely indicative of the curriculum processing updates too slowly. If this happens, you can choose to limit the number of environments that are used to update the curriculum with the <code class="docutils literal notranslate"><span class="pre">max_envs</span></code> option. This causes the environment synchronization wrapper to only send step updates for at most <code class="docutils literal notranslate"><span class="pre">max_envs</span></code> environments. Task updates and environment updates are still sent because they are used to request new tasks from the curriculum, and they are sent at a much slower rate than step updates.</p>
 <section id="module-syllabus.core.curriculum_sync_wrapper">
-<span id="syllabus-core-curriculum-sync-wrapper-module"></span><h3>syllabus.core.curriculum_sync_wrapper module<a class="headerlink" href="#module-syllabus.core.curriculum_sync_wrapper" title="Permalink to this heading">#</a></h3>
+<span id="curriculum-synchronization-wrappers"></span><h3>Curriculum Synchronization Wrappers<a class="headerlink" href="#module-syllabus.core.curriculum_sync_wrapper" title="Permalink to this heading">#</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">CurriculumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequential_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper" title="Permalink to this definition">#</a></dt>
@@ -509,9 +636,52 @@ for convenience.
 <p>Note that this causes functions to block, and should be only used for operations that do not require parallelization.</p>
 </dd></dl>
 
+<section id="multiagent-curriculum-synchronization">
+<h4>Multiagent Curriculum Synchronization<a class="headerlink" href="#multiagent-curriculum-synchronization" title="Permalink to this heading">#</a></h4>
+<p>There are multiple valid ways to use curricula with multiagent environments. Each agent might be given a separate curriculum, or they may all update the same curriculum. A shared curriculum may be explicitly designed for multiagent environments, or they may be single agent curricula that simply use all of the agent’s data to update a single sampling distribution. In cases where the curriculum tracks environments individually, there is also a question of whether each agent from a given environment should be treated as the same data stream, or if each agent should be treated as a separate data stream, similar to a separate single agent environment.</p>
+<p>By default, Syllabus sends updates in the PettingZoo format, and therefore assumes that a curriculum is explicitly designed for multiagent environments. If you want to use a single agent curriculum instead, you can wrap the curriculum in the <code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper</span></code> which separates each agent’s data and calls the curriculum’s <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code> method. The <code class="docutils literal notranslate"><span class="pre">joint_policy</span></code> argument controls whether the wrapper will separate observations into individual agent observations, or keep the global observation such that a joint policy could select actions for all agents at once, and also creates a unique environment identifier for each agent in each environment. This is only important if you plan to use an <a class="reference external" href="Evaluator">Evaluator</a> with the observations, or if your curriculum uses the <code class="docutils literal notranslate"><span class="pre">env_id</span></code> argument of <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code>.</p>
+</section>
+</section>
+<section id="module-syllabus.core.multiagent_curriculum_wrappers">
+<span id="multiagent-synchronization-wrappers"></span><h3>Multiagent Synchronization Wrappers<a class="headerlink" href="#module-syllabus.core.multiagent_curriculum_wrappers" title="Permalink to this heading">#</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.multiagent_curriculum_wrappers.</span></span><span class="sig-name descname"><span class="pre">MultiagentIndependentCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">possible_agents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.multiagent_curriculum_wrappers.</span></span><span class="sig-name descname"><span class="pre">MultiagentSharedCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">possible_agents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joint_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode" title="Permalink to this definition">#</a></dt>
+<dd><p>Update the curriculum with episode results from the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step">
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step" title="Permalink to this definition">#</a></dt>
+<dd><p>Update the curriculum with the current step results from the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch">
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress">
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<p>Additionally, if you have an competitive multiagent, multitask environment and want to design a curriculum over both opponents and tasks, you can use the <code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper</span></code> to combine an agent-based and task-based curriculum into a single curriculum that samples from both. For example, you can use <a class="reference external" href="Co-player">Self Play</a> with <a class="reference external" href="prioritized-level-replay">Prioritized Level Replay</a> to individually sample an opponent and seed for each episode. Internally it will send all episode and task updates to both curricula, and it will send step updates to any curriculum that requires them. It will sample tasks from each curriculum and then concatenate them into an <code class="docutils literal notranslate"><span class="pre">(agent,</span> <span class="pre">task)</span></code> tuple.</p>
 </section>
 <section id="module-syllabus.core.dual_curriculum_wrapper">
-<span id="syllabus-core-dual-curriculum-wrapper-module"></span><h3>syllabus.core.dual_curriculum_wrapper module<a class="headerlink" href="#module-syllabus.core.dual_curriculum_wrapper" title="Permalink to this heading">#</a></h3>
+<span id="dual-curriculum-wrapper"></span><h3>Dual Curriculum Wrapper<a class="headerlink" href="#module-syllabus.core.dual_curriculum_wrapper" title="Permalink to this heading">#</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.dual_curriculum_wrapper.</span></span><span class="sig-name descname"><span class="pre">DualCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_agent_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper" title="Permalink to this definition">#</a></dt>
@@ -552,273 +722,6 @@ for convenience.
 <dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress">
 <span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.core.environment_sync_wrapper">
-<span id="syllabus-core-environment-sync-wrapper-module"></span><h3>syllabus.core.environment_sync_wrapper module<a class="headerlink" href="#module-syllabus.core.environment_sync_wrapper" title="Permalink to this heading">#</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">GymnasiumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents" title="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents"><span class="pre">MultiProcessingComponents</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code></p>
-<p>This wrapper is used to set the task on reset for a Gym environments running
-on parallel processes created using multiprocessing.Process. Meant to be used
-with a QueueLearningProgressCurriculum running on the main process.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task">
-<span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset" title="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step" title="syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">PettingZooSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents" title="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents"><span class="pre">MultiProcessingComponents</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParallelWrapper</span></code></p>
-<p>This wrapper is used to set the task on reset for a Gym environments running
-on parallel processes created using multiprocessing.Process. Meant to be used
-with a QueueLearningProgressCurriculum running on the main process.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task">
-<span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Resets the environment.</p>
-<p>And returns a dictionary of observations (keyed by the agent name)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Receives a dictionary of actions keyed by the agent name.</p>
-<p>Returns the observation dictionary, reward dictionary, terminated dictionary, truncated dictionary
-and info dictionary, where each dictionary is keyed by the agent.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">RayGymnasiumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Space</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code></p>
-<p>This wrapper is used to set the task on reset for a Gym environments running
-on parallel processes created using ray. Meant to be used with a
-RayLearningProgressCurriculum running on the main process.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task">
-<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task" title="Permalink to this definition">#</a></dt>
-<dd><p>Changes the task of the existing environment to the new_task.</p>
-<p>Each environment will implement tasks differently. The easiest system would be to call a
-function or set an instance variable to change the task.</p>
-<p>Some environments may need to be reset or even reinitialized to change the task.
-If you need to reset or re-init the environment here, make sure to check
-that it is not in the middle of an episode to avoid unexpected behavior.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset" title="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Uses the <a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step" title="syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.environment_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">RayPettingZooSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_task_completion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParallelWrapper</span></code></p>
-<p>This wrapper is used to set the task on reset for a Gym environments running
-on parallel processes created using ray. Meant to be used with a
-RayLearningProgressCurriculum running on the main process.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task">
-<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task" title="Permalink to this definition">#</a></dt>
-<dd><p>Changes the task of the existing environment to the new_task.</p>
-<p>Each environment will implement tasks differently. The easiest system would be to call a
-function or set an instance variable to change the task.</p>
-<p>Some environments may need to be reset or even reinitialized to change the task.
-If you need to reset or re-init the environment here, make sure to check
-that it is not in the middle of an episode to avoid unexpected behavior.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Resets the environment.</p>
-<p>And returns a dictionary of observations (keyed by the agent name)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Receives a dictionary of actions keyed by the agent name.</p>
-<p>Returns the observation dictionary, reward dictionary, terminated dictionary, truncated dictionary
-and info dictionary, where each dictionary is keyed by the agent.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.core.multiagent_curriculum_wrappers">
-<span id="syllabus-core-multiagent-curriculum-wrappers-module"></span><h3>syllabus.core.multiagent_curriculum_wrappers module<a class="headerlink" href="#module-syllabus.core.multiagent_curriculum_wrappers" title="Permalink to this heading">#</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.multiagent_curriculum_wrappers.</span></span><span class="sig-name descname"><span class="pre">MultiagentIndependentCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">possible_agents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.multiagent_curriculum_wrappers.</span></span><span class="sig-name descname"><span class="pre">MultiagentSharedCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">possible_agents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joint_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode">
-<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode" title="Permalink to this definition">#</a></dt>
-<dd><p>Update the curriculum with episode results from the environment.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step">
-<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step" title="Permalink to this definition">#</a></dt>
-<dd><p>Update the curriculum with the current step results from the environment.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch">
-<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress">
-<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.core.stat_recorder">
-<span id="syllabus-core-stat-recorder-module"></span><h3>syllabus.core.stat_recorder module<a class="headerlink" href="#module-syllabus.core.stat_recorder" title="Permalink to this heading">#</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.stat_recorder.</span></span><span class="sig-name descname"><span class="pre">StatMean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.m2">
-<span class="sig-name descname"><span class="pre">m2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.m2" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.mean">
-<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.mean" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.mu">
-<span class="sig-name descname"><span class="pre">mu</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.mu" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.n">
-<span class="sig-name descname"><span class="pre">n</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.n" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.reset" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.result">
-<span class="sig-name descname"><span class="pre">result</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.result" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatMean.std">
-<span class="sig-name descname"><span class="pre">std</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatMean.std" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatRecorder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.stat_recorder.</span></span><span class="sig-name descname"><span class="pre">StatRecorder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_past_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatRecorder" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Individual statistics tracking for each task.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatRecorder.get_metrics">
-<span class="sig-name descname"><span class="pre">get_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatRecorder.get_metrics" title="Permalink to this definition">#</a></dt>
-<dd><p>Log the statistics of the first 5 tasks to the provided tensorboard writer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>writer</strong> – Tensorboard summary writer.</p></li>
-<li><p><strong>log_n_tasks</strong> – Number of tasks to log statistics for. Use -1 to log all tasks.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatRecorder.normalize">
-<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatRecorder.normalize" title="Permalink to this definition">#</a></dt>
-<dd><p>Normalize reward by task.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>reward</strong> – Reward to normalize</p></li>
-<li><p><strong>task</strong> – Task to normalize reward by</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatRecorder.record">
-<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatRecorder.record" title="Permalink to this definition">#</a></dt>
-<dd><p>Record the length and return of an episode for a given task.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>episode_length</strong> – Length of the episode, i.e. the total number of steps taken during the episode</p></li>
-<li><p><strong>episodic_return</strong> – Total return for the episode</p></li>
-<li><p><strong>episode_task</strong> – Identifier for the task</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.core.stat_recorder.StatRecorder.save_statistics">
-<span class="sig-name descname"><span class="pre">save_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.stat_recorder.StatRecorder.save_statistics" title="Permalink to this definition">#</a></dt>
-<dd><p>Write task-specific statistics to file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>output_path</strong> – Path to save the statistics file.</p>
-</dd>
-</dl>
-</dd></dl>
 
 </dd></dl>
 
@@ -882,8 +785,39 @@ and info dictionary, where each dictionary is keyed by the agent.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Global Synchronization</a><ul>
-<li><a class="reference internal" href="#usage">Usage</a><ul>
-<li><a class="reference internal" href="#module-syllabus.core.curriculum_sync_wrapper">syllabus.core.curriculum_sync_wrapper module</a><ul>
+<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li><a class="reference internal" href="#environment-synchronization">Environment Synchronization</a><ul>
+<li><a class="reference internal" href="#module-syllabus.core.environment_sync_wrapper">Environment Synchronization Wrappers</a><ul>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper.get_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper.step()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper.get_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper.step()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper.change_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper.step()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper.change_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper.reset()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper.step()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#curriculum-synchronization">Curriculum Synchronization</a><ul>
+<li><a class="reference internal" href="#module-syllabus.core.curriculum_sync_wrapper">Curriculum Synchronization Wrappers</a><ul>
 <li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper.log_metrics()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper.route_update()</span></code></a></li>
@@ -933,49 +867,10 @@ and info dictionary, where each dictionary is keyed by the agent.</p>
 <li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.make_multiprocessing_curriculum"><code class="docutils literal notranslate"><span class="pre">make_multiprocessing_curriculum()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.make_ray_curriculum"><code class="docutils literal notranslate"><span class="pre">make_ray_curriculum()</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.remote_call"><code class="docutils literal notranslate"><span class="pre">remote_call()</span></code></a></li>
+<li><a class="reference internal" href="#multiagent-curriculum-synchronization">Multiagent Curriculum Synchronization</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-syllabus.core.dual_curriculum_wrapper">syllabus.core.dual_curriculum_wrapper module</a><ul>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.get_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_episode()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_step()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_step_batch()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.core.environment_sync_wrapper">syllabus.core.environment_sync_wrapper module</a><ul>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper.get_task()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">GymnasiumSyncWrapper.step()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper.get_task()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">PettingZooSyncWrapper.step()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper.change_task()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">RayGymnasiumSyncWrapper.step()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper.change_task()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step"><code class="docutils literal notranslate"><span class="pre">RayPettingZooSyncWrapper.step()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.core.multiagent_curriculum_wrappers">syllabus.core.multiagent_curriculum_wrappers module</a><ul>
+<li><a class="reference internal" href="#module-syllabus.core.multiagent_curriculum_wrappers">Multiagent Synchronization Wrappers</a><ul>
 <li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">MultiagentIndependentCurriculumWrapper</span></code></a></li>
 <li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper</span></code></a><ul>
 <li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper.update_on_episode()</span></code></a></li>
@@ -986,22 +881,15 @@ and info dictionary, where each dictionary is keyed by the agent.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-syllabus.core.stat_recorder">syllabus.core.stat_recorder module</a><ul>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean"><code class="docutils literal notranslate"><span class="pre">StatMean</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.m2"><code class="docutils literal notranslate"><span class="pre">StatMean.m2</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.mean"><code class="docutils literal notranslate"><span class="pre">StatMean.mean()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.mu"><code class="docutils literal notranslate"><span class="pre">StatMean.mu</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.n"><code class="docutils literal notranslate"><span class="pre">StatMean.n</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.reset"><code class="docutils literal notranslate"><span class="pre">StatMean.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.result"><code class="docutils literal notranslate"><span class="pre">StatMean.result()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatMean.std"><code class="docutils literal notranslate"><span class="pre">StatMean.std()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatRecorder"><code class="docutils literal notranslate"><span class="pre">StatRecorder</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatRecorder.get_metrics"><code class="docutils literal notranslate"><span class="pre">StatRecorder.get_metrics()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatRecorder.normalize"><code class="docutils literal notranslate"><span class="pre">StatRecorder.normalize()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatRecorder.record"><code class="docutils literal notranslate"><span class="pre">StatRecorder.record()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.core.stat_recorder.StatRecorder.save_statistics"><code class="docutils literal notranslate"><span class="pre">StatRecorder.save_statistics()</span></code></a></li>
+<li><a class="reference internal" href="#module-syllabus.core.dual_curriculum_wrapper">Dual Curriculum Wrapper</a><ul>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.get_agent()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_agent()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_episode()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_step()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_step_batch()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_task_progress()</span></code></a></li>
 </ul>
 </li>
 </ul>

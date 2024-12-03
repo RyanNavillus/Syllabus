@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation" href="installation.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Syllabus 0.5 documentation</title>
+        <title>Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">Syllabus 0.5 documentation</div></a>
+      <a href="#"><div class="brand">Syllabus 0.6 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -147,7 +147,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
   
   
-  <span class="sidebar-brand-text">Syllabus 0.5 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -166,17 +166,14 @@
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="background/curriculum_learning.html">Curriculum Learning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="background/ued.html">Unsupervised Environment Design</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/co_player.html">Co-player Curricula</a></li>
 <li class="toctree-l1"><a class="reference internal" href="curricula/implemented_curricula.html">Curriculum Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluators.html">Evaluators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stat_recorder.html">Stat Recorder</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
@@ -265,6 +262,7 @@ because of the shared Curriculum API, you can swap out different curriculum lear
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#creating-a-syllabus-curriculum">Creating a Syllabus Curriculum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#synchronizing-the-curriculum">Synchronizing the Curriculum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#synchronizing-the-environment">Synchronizing the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#things-to-consider">Things to consider</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#examples">Examples</a></li>
 </ul>
 </li>
@@ -279,24 +277,22 @@ because of the shared Curriculum API, you can swap out different curriculum lear
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="background/curriculum_learning.html">Curriculum Learning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="background/ued.html">Unsupervised Environment Design</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.core.curriculum.html">Curriculum</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="modules/syllabus.core.curriculum.html#module-syllabus.core.curriculum_base">syllabus.core.curriculum_base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/syllabus.core.curriculum.html#id1">Curriculum</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="curricula/custom_curricula.html">Creating Your Own Curriculum</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="curricula/custom_curricula.html#required-methods">Required Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="curricula/custom_curricula.html#curriculum-dependent-methods">Curriculum Dependent Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="curricula/custom_curricula.html#recommended-methods">Recommended Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="curricula/custom_curricula.html#co-player-methods">Co-player Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="curricula/custom_curricula.html#optional-methods">Optional Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/co_player.html">Co-player Curricula</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="curricula/co_player.html#usage">Usage</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="curricula/implemented_curricula.html">Curriculum Methods</a><ul>
@@ -305,12 +301,19 @@ because of the shared Curriculum API, you can swap out different curriculum lear
 <li class="toctree-l2"><a class="reference internal" href="curricula/implemented_curricula.html#simple-box-curriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">Box</span> <span class="pre">Curriculum</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="curricula/implemented_curricula.html#learning-progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="curricula/implemented_curricula.html#prioritized-level-replay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="curricula/implemented_curricula.html#self-play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Self</span> <span class="pre">Play</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="curricula/implemented_curricula.html#fictitious-self-play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Fictitious</span> <span class="pre">Self</span> <span class="pre">Play</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="curricula/implemented_curricula.html#prioritized-fictitious-self-play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Fictitious</span> <span class="pre">Self</span> <span class="pre">Play</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="evaluators.html">Evaluators</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="evaluators.html#creating-an-evaluator">Creating an Evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evaluators.html#implementing-a-custom-evaluator">Implementing a Custom Evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evaluators.html#using-an-evaluator-in-your-curriculum">Using an Evaluator in your Curriculum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stat_recorder.html">Stat Recorder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stat_recorder.html#id1">Stat Recorder</a></li>
 </ul>
 </li>
 </ul>

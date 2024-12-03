@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Evaluators" href="../evaluators.html" /><link rel="prev" title="Co-player Curricula" href="co_player.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Curriculum Methods" href="implemented_curricula.html" /><link rel="prev" title="Creating Your Own Curriculum" href="custom_curricula.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Curriculum Methods - Syllabus 0.6 documentation</title>
+        <title>Co-player Curricula - Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
@@ -170,8 +170,8 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom_curricula.html">Creating Your Own Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="co_player.html">Co-player Curricula</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Curriculum Methods</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Co-player Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented_curricula.html">Curriculum Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stat_recorder.html">Stat Recorder</a></li>
 </ul>
@@ -244,40 +244,50 @@
           </label>
         </div>
         <article role="main">
-          <section id="curriculum-methods">
-<span id="implemented-curricula"></span><h1>Curriculum Methods<a class="headerlink" href="#curriculum-methods" title="Permalink to this heading">#</a></h1>
-<p>Syllabus has a small collection of curriculum learning methods implemented.These include simple techniques that are often used in practice but rarely highlighted in the literature,such as simulated annealing of difficulty, or sequential curricula of easy to hard tasks. We also have several popular automatic curriculum learning baselines; Domain Randomization, Prioritized Level Replay (Jiang et al. 2021), and the learning progress curriculum introduced in Kanitscheider et al. 2021. We plan to implement many more curriculum learning methods, but we have so far focused on methods which have had demonstrable empirical success in challenging RL environments.</p>
-<section id="domain-randomization">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization" title="syllabus.curricula.domain_randomization.DomainRandomization"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code></a><a class="headerlink" href="#domain-randomization" title="Permalink to this heading">#</a></h2>
-<p>A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.</p>
-</section>
-<section id="sequential-curriculum">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum" title="syllabus.curricula.sequential.SequentialCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Sequential</span> <span class="pre">Curriculum</span></code></a><a class="headerlink" href="#sequential-curriculum" title="Permalink to this heading">#</a></h2>
-<p>Plays a sequence of curricula in order, either for a fixed time or after certain stopping criteria are met. It can be used to manually design curricula using existing domain knowledge by providing curricula or tasks in an order that will result in the best final performance.</p>
-</section>
-<section id="simple-box-curriculum">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum" title="syllabus.curricula.simple_box.SimpleBoxCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">Box</span> <span class="pre">Curriculum</span></code></a><a class="headerlink" href="#simple-box-curriculum" title="Permalink to this heading">#</a></h2>
-<p>A simple curriculum that expands a zero-centered range from an initial range to a final range over a number of discrete steps. The curriculum increases the range to the next stage when a provided reward threshold is met.</p>
-</section>
-<section id="learning-progress">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum" title="syllabus.curricula.learning_progress.LearningProgressCurriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a><a class="headerlink" href="#learning-progress" title="Permalink to this heading">#</a></h2>
-<p>Uses a heuristic to estimate the learning progress of a task. It maintains a fast and slow exponential moving average (EMA) of the task completion rates for a set of discrete tasks. By measuring the difference between the fast and slow EMAs and reweighting it to adjust for the time delay created by the EMA, this method can estimate the learning progress of a task. The curriculum then assigns a higher probability to tasks with a very high or very low learning progress, indicating that the agent is either learning or forgetting the task. For more information you can read the original paper <a class="reference external" href="https://arxiv.org/abs/2106.14876.pdf">Multi-task curriculum learning in a complex, visual, hard-exploration domain: Minecraft (Kanitscheider et al. 2021)</a>.</p>
-</section>
-<section id="prioritized-level-replay">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay" title="syllabus.curricula.plr.plr_wrapper.PrioritizedLevelReplay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code></a><a class="headerlink" href="#prioritized-level-replay" title="Permalink to this heading">#</a></h2>
-<p>A curriculum learning method that estimates an agent’s regret on particular environment seed and uses a prioritized replay buffer to replay levels for which the agent has high regret. This implementation is based on the open-source original implementation at <a class="reference external" href="https://github.com/facebookresearch/level-replay">https://github.com/facebookresearch/level-replay</a>, but has been modified to support Syllabus task spaces instead of just environment seeds. PLR has been used in multiple prominent RL works, such as <a class="reference external" href="https://arxiv.org/abs/2301.07608">Human-Timescale Adaptation in an Open-Ended Task Space</a>. For more information you can read the original paper <a class="reference external" href="https://arxiv.org/abs/2010.03934.pdf">Prioritized Level Replay (Jiang et al. 2021)</a>.</p>
-</section>
-<section id="self-play">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay" title="syllabus.curricula.selfplay.SelfPlay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Self</span> <span class="pre">Play</span></code></a><a class="headerlink" href="#self-play" title="Permalink to this heading">#</a></h2>
-<p>A simple method for 2-player competitive games where the protagonist plays against a copy of itself. This produces an implicit curriculum of increasingly challenging opponents as the agent becomes more proficient at the game. However, because the opponent is always equally skilled at the game, it does not always produce the most useful reward signal. In addition, in transative games where it is not possible to strictly improve over a given strategy, Self Play can lead to oscillations in performance as the agent learns cyclical strategies to exploit its current behavior. The classic example of this is Rock Paper Scissors, where the agent will rotate between choosing rock, paper, and scissors over the course of training.</p>
-</section>
-<section id="fictitious-self-play">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay" title="syllabus.curricula.selfplay.FictitiousSelfPlay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Fictitious</span> <span class="pre">Self</span> <span class="pre">Play</span></code></a><a class="headerlink" href="#fictitious-self-play" title="Permalink to this heading">#</a></h2>
-<p>An extension of Self Play that samples the opponent from previous iterations of the protagonist agent. The deep learning version is also sometimes called <a class="reference external" href="https://arxiv.org/abs/1603.01121">Neural Ficitious Self Play</a>. This allows the agent to play against a variety of strategies that it has previously learned, and can be used to prevent oscillations in performance. This allows the agent to converge to a policy that is robust against all strategies it has previously learned. However, it can be less sample-efficient than Self Play because the agent must spend a disproportionate amount of time playing against older strategies that it has already learned to beat. Despite this, Fictitious Self Play has been used in several high profile successes in reinforcement learning including <a class="reference external" href="https://www.nature.com/articles/nature16961">AlphaGo</a> and <a class="reference external" href="https://arxiv.org/pdf/1912.06680">OpenAI Five</a>, and agent trained to play Dota 2. The method was originally introduced in <a class="reference external" href="https://cowles.yale.edu/sites/default/files/2022-09/m13-all.pdf">“Iterative Solutions of Games by Fictitious Play” In Activity Analysis of Production and Allocation</a> by Brown, G. W. in 1951.</p>
-</section>
-<section id="prioritized-fictitious-self-play">
-<h2><a class="reference internal" href="../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay" title="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Fictitious</span> <span class="pre">Self</span> <span class="pre">Play</span></code></a><a class="headerlink" href="#prioritized-fictitious-self-play" title="Permalink to this heading">#</a></h2>
-<p>This method addresses some of the limitations of Fictitious Self Play by prioritizing agents which have a high winrate against the current agent. That way, the protagonist agent is trained against a variety of strategies but does not spend a disproportionate amount of time playing against weak opponents. This method in combination with many other curricula, was used to train <a class="reference external" href="https://www.nature.com/articles/s41586-019-1724-z">AlphaStar</a>, the agent which learned to play Starcraft 2 at a high professional level.</p>
+          <section id="co-player-curricula">
+<span id="co-player"></span><h1>Co-player Curricula<a class="headerlink" href="#co-player-curricula" title="Permalink to this heading">#</a></h1>
+<p><strong>NOTE:</strong> These interfaces may change in the future.</p>
+<p>Co-player curricula maintain a distribution of co-players and samples one for the training agent to play with at the start of each episode. These co-players might be partners in cooperative environments, opponents in competitive environments, or a mix of both in mixed-sum games. Fictitious Self-Play, which randomly selects an opponent from a set of previous checkpoints of the protagonist agent, is one example of a curriculum over co-players.</p>
+<p>These curricula directly interface with the training agent, and therefore must be called from the main process. For task-based curricula we allow a heterogeneous API for update methods that are called by the training process. However for co-player curricula, we define a homogeneous interface that provide the core functionality to promote interoperability between different co-player curricula. It is of course possible to add additional heterogeneous methods if necessary.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.add_agent" title="syllabus.core.curriculum_base.Curriculum.add_agent"><code class="xref py py-mod docutils literal notranslate"><span class="pre">add_agent</span></code></a> - adds and agent to the curriculum’s agent store. This should be used to provide an efficient interface for saving and loading agents without holding an unbounded number of agents in memory.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.get_agent" title="syllabus.core.curriculum_base.Curriculum.get_agent"><code class="xref py py-mod docutils literal notranslate"><span class="pre">get_agent</span></code></a> - returns the agent corresponding to the given agent_id. If the agent is already in memory, it simply returns it. If not, it should load it from the disk.</p></li>
+</ul>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
+<p>In practice, the curriculum will assign an agent task to the environment, then the training process will load the corresponding agent for inference. This makes it difficult to efficiently batch inference, because a different policy needs to be loaded for each environment. To avoid this, it may be helpful to batch tasks according to the number of processes in the curriculum’s <code class="docutils literal notranslate"><span class="pre">sample</span></code> method. This way, the training process will only need to load 2-3 agents at a time, and they will change infrequently.</p>
+<p>Here is an example of the intended interaction loop for a single environment. The environment will automatically sample an opponent from the curriculum, and put it’s identifier in the info dictionary under the key “task”. The training process can then use this identifier to load the corresponding agent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">,</span> <span class="n">PettingZooSyncWrapper</span>
+<span class="kn">from</span> <span class="nn">syllabus.curricula</span> <span class="kn">import</span> <span class="n">SelfPlay</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">MyAgent</span><span class="p">()</span>
+<span class="n">curriculum</span> <span class="o">=</span> <span class="n">FictitiousSelfPlay</span><span class="p">()</span>
+<span class="n">curriculum</span> <span class="o">=</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">)</span>
+
+<span class="c1"># Add initial agent to the curriculum</span>
+<span class="n">curriculum</span><span class="o">.</span><span class="n">add_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">Env</span><span class="p">()</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">PettingZooSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">.</span><span class="n">components</span><span class="p">)</span>
+<span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">agent_id</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span>
+    <span class="c1"># Get agent for the corresponding task</span>
+    <span class="n">agent</span> <span class="o">=</span> <span class="n">curriculum</span><span class="o">.</span><span class="n">get_agent</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">term</span> <span class="ow">or</span> <span class="n">trunc</span><span class="p">:</span>
+        <span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">learn</span><span class="p">()</span>
+
+        <span class="c1"># Add new agent iteration to the curriculum</span>
+        <span class="n">curriculum</span><span class="o">.</span><span class="n">add_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We currently have implementations of Self Play, Fictitious Self Play, and Prioritized Fictitious Self Play. You can read more about them here: <a class="reference internal" href="implemented_curricula.html#implemented-curricula"><span class="std std-ref">Curriculum Methods</span></a>.</p>
 </section>
 </section>
 
@@ -286,23 +296,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../evaluators.html">
+          <a class="next-page" href="implemented_curricula.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Evaluators</div>
+                <div class="title">Curriculum Methods</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="co_player.html">
+          <a class="prev-page" href="custom_curricula.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Co-player Curricula</div>
+                <div class="title">Creating Your Own Curriculum</div>
                 
               </div>
             </a>
@@ -336,15 +346,8 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Curriculum Methods</a><ul>
-<li><a class="reference internal" href="#domain-randomization"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Domain</span> <span class="pre">Randomization</span></code></a></li>
-<li><a class="reference internal" href="#sequential-curriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Sequential</span> <span class="pre">Curriculum</span></code></a></li>
-<li><a class="reference internal" href="#simple-box-curriculum"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">Box</span> <span class="pre">Curriculum</span></code></a></li>
-<li><a class="reference internal" href="#learning-progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Learning</span> <span class="pre">Progress</span></code></a></li>
-<li><a class="reference internal" href="#prioritized-level-replay"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Level</span> <span class="pre">Replay</span></code></a></li>
-<li><a class="reference internal" href="#self-play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Self</span> <span class="pre">Play</span></code></a></li>
-<li><a class="reference internal" href="#fictitious-self-play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Fictitious</span> <span class="pre">Self</span> <span class="pre">Play</span></code></a></li>
-<li><a class="reference internal" href="#prioritized-fictitious-self-play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Prioritized</span> <span class="pre">Fictitious</span> <span class="pre">Self</span> <span class="pre">Play</span></code></a></li>
+<li><a class="reference internal" href="#">Co-player Curricula</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
 </ul>
 </li>
 </ul>

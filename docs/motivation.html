@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Environment Support" href="environments.html" /><link rel="prev" title="Quickstart" href="quickstart.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Motivation - Syllabus 0.5 documentation</title>
+        <title>Motivation - Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">Syllabus 0.5 documentation</div></a>
+      <a href="index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -147,7 +147,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">Syllabus 0.5 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -166,17 +166,14 @@
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="background/curriculum_learning.html">Curriculum Learning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="background/ued.html">Unsupervised Environment Design</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules/syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1"><a class="reference internal" href="curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/co_player.html">Co-player Curricula</a></li>
 <li class="toctree-l1"><a class="reference internal" href="curricula/implemented_curricula.html">Curriculum Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluators.html">Evaluators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stat_recorder.html">Stat Recorder</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
@@ -248,7 +245,7 @@
         </div>
         <article role="main">
           <section id="motivation">
-<h1>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">#</a></h1>
+<span id="id1"></span><h1>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">#</a></h1>
 <p>Syllabus was created to help researchers to study curriculum learning algorithms on complex environments. Challenging environments like Chess, Go, and Starcraft have served as milestones for AI and working towards solving these benchmarks is the main driver of progress in RL. However, complex problems often require complex solutions, so the best agents in many RL environments utilize custom learning infrastructure. This makes it extremely difficult to apply new methods to these problems. As a result, the most impressive applications of reinforcement learning have been achieved by large industry labs with extensive manpower and computational resources. Curriculum learning is a nearly ubiquitous component of these achievements, but it is rarely used in academic research. Syllabus aims to change this by providing a portable and flexible API for curriculum learning that can be easily integrated into existing training code. This allows researchers to experiment with curriculum learning methods on complex environments without needing to build custom infrastructure mitigating any possibility of implementation error and promoting reproducibility.</p>
 <p>Curriculum learning is a unique approach in that it only modifies the task distribution of the environment, not the core learning process. It is therefore possible to implement curricula as modular components that can be easily added to existing training code. This is in contrast to other curriculum learning libraries, which often come as standalone learning libraries. Syllabus provides an API for defining curricula which encourages the minimum possible interface surface area, meaning less work for practitioners and fewer opportunities for implementation errors.</p>
 <p>Many of the major RL successes on challenging problems have used curriculum learning. Since then, challenging academic benchmarks have been developed as testbeds for autocurricula. Despite this, most academic research often focuses on simple environments like Procgen and Minigrid. Although these benchmarks have led to many important discoveries, it is clear that many of our methods and findings do not scale to more difficult problems. Syllabus aims to bridge this gap by providing a framework for studying curriculum learning on complex environments.</p>

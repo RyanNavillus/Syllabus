@@ -27,7 +27,7 @@ Your curriculum will likely require some feedback from the RL training loop to g
 
 * :mod:`update_task_progress <syllabus.core.curriculum_base.Curriculum.update_task_progress>` - is called either after a task is completed. It receives a task and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task. If you need to track task progress at each step or each episode you should instead implement ``update_on_step`` or ``update_on_episode`` respectively. This method is used for tasks that complete mid-episode.
 
-Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. If your curriculum requires information from the main training process, such as TD errors or gradient magnitudes, you can define your own update method. However, you should make use of the existing update methods as much as possible to minimize the API surface of your method. Updates from the training process have to be implemented differently for each learning library, reducing interoperability. You can look at the different variants of :ref:`Prioritized Level Replay` for examples of how to implement these methods for different libraries.
+Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. These methods also receive a unique indentifier for the environment that generated the update in case you need to track each environment individually. If your curriculum requires information from the main training process, such as TD errors or gradient magnitudes, you can define your own update method. However, you should make use of the existing update methods as much as possible to minimize the API surface of your method. Updates from the training process have to be implemented differently for each learning library, reducing interoperability. You can look at the different variants of :ref:`Prioritized Level Replay` for examples of how to implement these methods for different libraries.
 
 -------------------
 Recommended Methods
@@ -40,6 +40,18 @@ For most curricula, we recommend implementing these methods to support convenien
 If your curriculum uses a probability distribution to sample tasks, you should implement ``_sample_distribution()``. The default implementation of ``log_metrics`` will log the probabilities from ``_sample_distribution()`` for each task in a discrete task space to tensorboard or weights and biases. You can also override ``log_metrics`` to log other values for your specific curriculum.
 
 * :mod:`_sample_distribution  <syllabus.core.curriculum_base.Curriculum._sample_distribution>` - Returns a probability distribution over tasks. This is called by ``log_metrics`` to log the sampling distribution. If you don't implement this method, the default implementation will return a uniform distribution over tasks.
+
+-----------------
+Co-player Methods
+-----------------
+
+If your curriculum is designed to sample over opponent players, you will need to implement these methods:
+
+* :mod:`add_agent <syllabus.core.curriculum_base.Curriculum.add_agent>` - adds and agent to the curriculum's agent store.
+
+* :mod:`get_agent <syllabus.core.curriculum_base.Curriculum.get_agent>` - returns the agent corresponding to the given agent_id.
+
+You can find more information about these methods and co-player curricula here :ref:`Co-player`.
 
 ----------------
 Optional Methods

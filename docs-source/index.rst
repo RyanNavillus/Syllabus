@@ -27,12 +27,12 @@ It currently has support for environments run with Python native multiprocessing
    logging
    benchmarks
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Curriculum Learning Background:
+.. .. toctree::
+..    :maxdepth: 1
+..    :caption: Curriculum Learning Background:
 
-   background/curriculum_learning
-   background/ued
+..    background/curriculum_learning
+..    background/ued
 
 .. toctree::
    :maxdepth: 2
@@ -40,8 +40,10 @@ It currently has support for environments run with Python native multiprocessing
 
    modules/syllabus.core.curriculum
    curricula/custom_curricula
+   curricula/co_player
    curricula/implemented_curricula
    evaluators
+   stat_recorder
 
 .. toctree::
    :maxdepth: 1

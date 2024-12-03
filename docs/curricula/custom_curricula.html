@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Curriculum Methods" href="implemented_curricula.html" /><link rel="prev" title="Curriculum" href="../modules/syllabus.core.curriculum.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Co-player Curricula" href="co_player.html" /><link rel="prev" title="Curriculum" href="../modules/syllabus.core.curriculum.html" />
 
     <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Creating Your Own Curriculum - Syllabus 0.5 documentation</title>
+        <title>Creating Your Own Curriculum - Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Syllabus 0.5 documentation</div></a>
+      <a href="../index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -147,7 +147,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Syllabus 0.5 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -166,17 +166,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Curriculum Learning Background:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../background/curriculum_learning.html">Curriculum Learning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../background/ued.html">Unsupervised Environment Design</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.curriculum.html">Curriculum</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="co_player.html">Co-player Curricula</a></li>
 <li class="toctree-l1"><a class="reference internal" href="implemented_curricula.html">Curriculum Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stat_recorder.html">Stat Recorder</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
@@ -266,7 +263,7 @@
 <li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a> - will be called once for each completed episode by the environment synchronization wrapper. The default implementation of this method also updates the StatRecorder, so if you override it you should call <code class="docutils literal notranslate"><span class="pre">super().update_on_episode()</span></code> to maintain this functionality.</p></li>
 <li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress</span></code></a> - is called either after a task is completed. It receives a task and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task. If you need to track task progress at each step or each episode you should instead implement <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code> or <code class="docutils literal notranslate"><span class="pre">update_on_episode</span></code> respectively. This method is used for tasks that complete mid-episode.</p></li>
 </ul>
-<p>Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. If your curriculum requires information from the main training process, such as TD errors or gradient magnitudes, you can define your own update method. However, you should make use of the existing update methods as much as possible to minimize the API surface of your method. Updates from the training process have to be implemented differently for each learning library, reducing interoperability. You can look at the different variants of <a class="reference internal" href="../modules/syllabus.curricula.plr.html#prioritized-level-replay"><span class="std std-ref">Prioritized Level Replay (PLR) Curriculum</span></a> for examples of how to implement these methods for different libraries.</p>
+<p>Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. These methods also receive a unique indentifier for the environment that generated the update in case you need to track each environment individually. If your curriculum requires information from the main training process, such as TD errors or gradient magnitudes, you can define your own update method. However, you should make use of the existing update methods as much as possible to minimize the API surface of your method. Updates from the training process have to be implemented differently for each learning library, reducing interoperability. You can look at the different variants of <a class="reference internal" href="../modules/syllabus.curricula.plr.html#prioritized-level-replay"><span class="std std-ref">Prioritized Level Replay (PLR) Curriculum</span></a> for examples of how to implement these methods for different libraries.</p>
 </section>
 <section id="recommended-methods">
 <h2>Recommended Methods<a class="headerlink" href="#recommended-methods" title="Permalink to this heading">#</a></h2>
@@ -278,6 +275,15 @@
 <ul class="simple">
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">_sample_distribution</span></code> - Returns a probability distribution over tasks. This is called by <code class="docutils literal notranslate"><span class="pre">log_metrics</span></code> to log the sampling distribution. If you don’t implement this method, the default implementation will return a uniform distribution over tasks.</p></li>
 </ul>
+</section>
+<section id="co-player-methods">
+<h2>Co-player Methods<a class="headerlink" href="#co-player-methods" title="Permalink to this heading">#</a></h2>
+<p>If your curriculum is designed to sample over opponent players, you will need to implement these methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.add_agent" title="syllabus.core.curriculum_base.Curriculum.add_agent"><code class="xref py py-mod docutils literal notranslate"><span class="pre">add_agent</span></code></a> - adds and agent to the curriculum’s agent store.</p></li>
+<li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.get_agent" title="syllabus.core.curriculum_base.Curriculum.get_agent"><code class="xref py py-mod docutils literal notranslate"><span class="pre">get_agent</span></code></a> - returns the agent corresponding to the given agent_id.</p></li>
+</ul>
+<p>You can find more information about these methods and co-player curricula here <a class="reference internal" href="co_player.html#co-player"><span class="std std-ref">Co-player Curricula</span></a>.</p>
 </section>
 <section id="optional-methods">
 <h2>Optional Methods<a class="headerlink" href="#optional-methods" title="Permalink to this heading">#</a></h2>
@@ -293,12 +299,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="implemented_curricula.html">
+          <a class="next-page" href="co_player.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Curriculum Methods</div>
+                <div class="title">Co-player Curricula</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -347,6 +353,7 @@
 <li><a class="reference internal" href="#required-methods">Required Methods</a></li>
 <li><a class="reference internal" href="#curriculum-dependent-methods">Curriculum Dependent Methods</a></li>
 <li><a class="reference internal" href="#recommended-methods">Recommended Methods</a></li>
+<li><a class="reference internal" href="#co-player-methods">Co-player Methods</a></li>
 <li><a class="reference internal" href="#optional-methods">Optional Methods</a></li>
 </ul>
 </li>

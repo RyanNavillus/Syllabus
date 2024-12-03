@@ -31,9 +31,7 @@ To incorporate feedback from the environment, the API provides multiple methods:
 
 - :mod:`update_on_step_batch <syllabus.core.curriculum_base.Curriculum.update_on_step_batch>`
 
-- :mod:`update_curriculum_batch <syllabus.core.curriculum_base.Curriculum.update_curriculum_batch>`
-
-syllabus.core.curriculum\_base module
+Curriculum
 -------------------------------------
 
 .. automodule:: syllabus.core.curriculum_base
