@@ -23,7 +23,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum, SimpleCentralizedPrioritizedLevelReplay, CentralizedPrioritizedLevelReplay
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum, DirectPrioritizedLevelReplay, CentralPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -281,7 +281,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "simpleplr":
             print("Using simple prioritized level replay.")
-            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+            curriculum = DirectPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
@@ -290,7 +290,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "centralplr":
             print("Using centralized prioritized level replay.")
-            curriculum = CentralizedPrioritizedLevelReplay(
+            curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,

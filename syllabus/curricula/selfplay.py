@@ -61,7 +61,7 @@ class SelfPlay(Curriculum):
     def update_winrate(self, agent_id: int, reward: int) -> None:
         """
         Uses an incremental mean to update an agent's winrate. This assumes that reward
-        is postive for a win and negative for a loss. Not used for sampling.
+        is positive for a win and negative for a loss. Not used for sampling.
 
         :param agent_id: Identifier of the agent
         :param reward: Reward received by the agent

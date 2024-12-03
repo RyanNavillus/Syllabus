@@ -136,7 +136,7 @@ sphinx-apidoc -o ./docs/modules ./syllabus
 
 You can also run a spell check for the documentation:
 ```
-sphinx-build -b spelling ./docs/source ./docs
+sphinx-build -b spelling ./docs/source ./docs-spelling
 ```
 
 ## Citing Syllabus

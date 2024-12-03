@@ -111,7 +111,7 @@ class RolloutStorage():
             self.returns[step, env_idxs] = gae + self.value_preds[step, env_idxs]
 
 
-class CentralizedPrioritizedLevelReplay(Curriculum):
+class CentralPrioritizedLevelReplay(Curriculum):
     """ Prioritized Level Replay (PLR) Curriculum.
 
     Args:

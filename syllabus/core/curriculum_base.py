@@ -103,7 +103,6 @@ class Curriculum:
         :param task: Task for which the episode was completed
         :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
         :param env_id: Environment identifier
-        :raises NotImplementedError:
         """
         if self.stat_recorder is not None:
             self.stat_recorder.record(episode_return, length, task, env_id)
@@ -152,7 +151,7 @@ class Curriculum:
         task_idx = np.random.choice(list(range(self.num_tasks)), size=k, p=task_dist)
         return task_idx
 
-    def normalize(self, reward, task):
+    def normalize(self, reward: float, task: Any) -> float:
         """
         Normalize reward by task.
 
@@ -163,7 +162,7 @@ class Curriculum:
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
-    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+    def log_metrics(self, writer, logs: List[Dict], step: int = None, log_n_tasks: int = 1):
         """Log the task distribution to the provided writer.
 
         :param writer: Tensorboard summary writer or wandb object
