@@ -130,9 +130,10 @@ def run_gymnasium_episode(env, new_task=None, curriculum=None, env_id=0):
         action = env.action_space.sample()
         obs, rew, term, trunc, info = env.step(action)
         if curriculum and curriculum.requires_step_updates:
+            task_completion = info["task_completion"] if "task_completion" in info else 0.0
             curriculum.update_on_step(env.task_space.encode(env.task), obs, rew, term,
-                                      trunc, info, info["task_completion"], env_id=env_id)
-            curriculum.update_task_progress(env.task_space.encode(env.task), info["task_completion"], env_id=env_id)
+                                      trunc, info, task_completion, env_id=env_id)
+            curriculum.update_task_progress(env.task_space.encode(env.task), task_completion, env_id=env_id)
         ep_rew += rew
         ep_len += 1
         time.sleep(0)
@@ -305,7 +306,6 @@ def get_test_actions(x):
     return torch.IntTensor(np.array([0] * len(x)))
 
 
-# Sync Test Environment
 class ExtractDictObservation(gym.ObservationWrapper, gym.utils.RecordConstructorArgs):
     """Extract space from Dict observation space by the key."""
 
@@ -342,6 +342,7 @@ class ExtractDictObservation(gym.ObservationWrapper, gym.utils.RecordConstructor
         return self.observation(obs), info
 
 
+# Sync Test Environments
 def create_gymnasium_synctest_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
     env = SyncTestEnv(*env_args, **env_kwargs)
     if sync_type == "queue":
@@ -379,15 +380,15 @@ def create_cartpole_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=
 def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
     from nle.env.tasks import NetHackScore
 
-    from syllabus.examples.task_wrappers.nethack_wrappers import \
-        NethackTaskWrapper
+    from syllabus.examples.task_wrappers.nethack_wrappers import NethackSeedWrapper
 
     def thunk():
         env = NetHackScore(*env_args, **env_kwargs)
-        env = GymV21CompatibilityV0(env=env)
-        env = gym.wrappers.RecordEpisodeStatistics(env)
-        env = NethackTaskWrapper(env)
         env = ExtractDictObservation(env, filter_key="blstats")
+
+        # env = GymV21CompatibilityV0(env=env)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = NethackSeedWrapper(env)
 
         if sync_type == "queue":
             env = GymnasiumSyncWrapper(

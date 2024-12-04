@@ -17,10 +17,10 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
+    def __init__(self, eval_envs, evaluator, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.eval_envs = eval_envs
-        self.get_action = get_action
+        self.evaluator = evaluator
         self.ema_alpha = ema_alpha
         self.eval_interval = eval_interval
         self.eval_interval_steps = eval_interval_steps
@@ -43,7 +43,7 @@ class LearningProgress(Curriculum):
             ep_counter = 0
             progress = 0.0
             while ep_counter < eval_eps:
-                actions = self.get_action(obss)
+                actions, _, _ = self.evaluator.get_action(obss)
                 obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
                 dones = tuple(a | b for a, b in zip(terminateds, truncateds))
                 for i, done in enumerate(dones):

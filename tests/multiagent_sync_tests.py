@@ -1,9 +1,10 @@
 """ Test curriculum synchronization across multiple processes. """
-import ray
-
-from syllabus.tests import SyncTestCurriculum
-from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum, MultiagentSharedCurriculumWrapper
-from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_pettingzoo_synctest_env
+from syllabus.core import (MultiagentSharedCurriculumWrapper,
+                           make_multiprocessing_curriculum,
+                           make_ray_curriculum)
+from syllabus.tests import (SyncTestCurriculum, create_pettingzoo_synctest_env,
+                            run_native_multiprocess, run_ray_multiprocess,
+                            run_single_process)
 
 N_ENVS = 8
 N_EPISODES = 10
