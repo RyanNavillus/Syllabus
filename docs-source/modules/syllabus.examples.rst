@@ -10,12 +10,6 @@ We currently have tested examples for the following libraries:
 - CartPole in RLLib
 - Procgen in CleanRL
 
-
-We also are working on the following experimental examples which you can reference may not be fully functional:
-- Procgen in Stable Baselines 3
-- Nethack in Torchbeast
-- PettingZoo Pistonball (multiagent) in CleanRL
-
 Subpackages
 -----------
 

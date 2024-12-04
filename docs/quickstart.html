@@ -161,7 +161,6 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="motivation.html">Motivation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="environments.html">Environment Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation/evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
@@ -255,22 +254,22 @@
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading">#</a></h1>
 <p>To use Syllabus with your existing training code you need to:</p>
 <ol class="arabic simple">
-<li><p>Define a <a class="reference internal" href="modules/syllabus.task_space.html#taskspace"><span class="std std-ref">Task Spaces</span></a> for your environment.</p></li>
-<li><p>Choose a Syllabus <a class="reference internal" href="modules/syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a>.</p></li>
-<li><p>Wrap the curriculum with a Syllabus <a class="reference internal" href="modules/syllabus.core.html#synchronization"><span class="std std-ref">synchronization wrapper</span></a>.</p></li>
-<li><p>Wrap your environment with a Syllabus <a class="reference internal" href="modules/syllabus.core.task_interface.html#taskinterface"><span class="std std-ref">TaskWrapper</span></a>.</p></li>
+<li><p>Define a <a class="reference internal" href="modules/syllabus.task_space.html#taskspace"><span class="std std-ref">Task Space</span></a> for your environment.</p></li>
+<li><p>Choose a <a class="reference internal" href="modules/syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a>.</p></li>
+<li><p>Wrap the curriculum with a <a class="reference internal" href="synchronization/curriculum_synchronization.html#curriculum-synchronization"><span class="std std-ref">synchronization wrapper</span></a>.</p></li>
+<li><p>Wrap your environment with a <a class="reference internal" href="modules/syllabus.core.task_interface.html#taskinterface"><span class="std std-ref">TaskWrapper</span></a>.</p></li>
+<li><p>Wrap your environment with a <a class="reference internal" href="synchronization/environment_synchronization.html#environment-synchronization"><span class="std std-ref">synchronization wrapper</span></a>.</p></li>
 </ol>
 <section id="define-a-task-space">
 <h2>Define a Task Space<a class="headerlink" href="#define-a-task-space" title="Permalink to this heading">#</a></h2>
-<p>The task space represents the range of tasks that you want your curriculum to sample from.
-For example, in procgen, the task space is usually a discrete set of 200 seeds.</p>
+<p>The task space represents the set of tasks that you want your curriculum to sample from. For example, in procgen, the task space is usually a discrete set of 200 seeds.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">DiscreteTaskSpace</span>
 <span class="n">task_space</span> <span class="o">=</span> <span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="creating-a-syllabus-curriculum">
-<h2>Creating a Syllabus Curriculum<a class="headerlink" href="#creating-a-syllabus-curriculum" title="Permalink to this heading">#</a></h2>
+<section id="creating-a-curriculum">
+<h2>Creating a Curriculum<a class="headerlink" href="#creating-a-curriculum" title="Permalink to this heading">#</a></h2>
 <p>Either use one of the curricula built into Syllabus, or create your own by extending the <a class="reference internal" href="modules/syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a> class.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.curricula</span> <span class="kn">import</span> <span class="n">DomainRandomization</span>
 <span class="n">curriculum</span> <span class="o">=</span> <span class="n">DomainRandomization</span><span class="p">(</span><span class="n">task_space</span><span class="p">)</span>
@@ -279,8 +278,7 @@ For example, in procgen, the task space is usually a discrete set of 200 seeds.<
 </section>
 <section id="synchronizing-the-curriculum">
 <h2>Synchronizing the Curriculum<a class="headerlink" href="#synchronizing-the-curriculum" title="Permalink to this heading">#</a></h2>
-<p>Use either the native multiprocessing or ray multiprocessing wrapper to synchronize the curriculum across environments.
-Syllabus creates a separate multiprocessing channel from your environments, so make sure to choose the same backend (either native or ray).</p>
+<p>Use either the native multiprocessing or ray multiprocessing wrapper to synchronize the curriculum across environments. Syllabus creates a separate, direct multiprocessing channel from your environments to the curriculum, so make sure to choose the same backend for each wrapper (either native or ray).</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Native Python Multiprocessing</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Ray Multiprocessing</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">make_multiprocessing_curriculum</span>
 <span class="n">curriculum</span> <span class="o">=</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">)</span>
@@ -323,7 +321,7 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
-<p>For more help setting up Syllabus, check out our <a class="reference internal" href="modules/syllabus.examples.html#examples"><span class="std std-ref">examples</span></a>  of how to integrate Syllabus with various popular RL libraries.</p>
+<p>For more help setting up Syllabus, check out our <a class="reference external" href="https://github.com/RyanNavillus/Syllabus/blob/main/syllabus/examples/training_scripts/cleanrl_procgen.py">example script</a> of how to use Syllabus with CleanRL to train Procgen agents.</p>
 </section>
 </section>
 
@@ -384,7 +382,7 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
             <ul>
 <li><a class="reference internal" href="#">Quickstart</a><ul>
 <li><a class="reference internal" href="#define-a-task-space">Define a Task Space</a></li>
-<li><a class="reference internal" href="#creating-a-syllabus-curriculum">Creating a Syllabus Curriculum</a></li>
+<li><a class="reference internal" href="#creating-a-curriculum">Creating a Curriculum</a></li>
 <li><a class="reference internal" href="#synchronizing-the-curriculum">Synchronizing the Curriculum</a></li>
 <li><a class="reference internal" href="#synchronizing-the-environment">Synchronizing the Environment</a></li>
 <li><a class="reference internal" href="#things-to-consider">Things to consider</a></li>

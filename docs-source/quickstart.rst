@@ -3,28 +3,29 @@ Quickstart
 
 To use Syllabus with your existing training code you need to:
 
-1. Define a :ref:`TaskSpace` for your environment.
+1. Define a :ref:`Task Space <TaskSpace>` for your environment.
 
-2. Choose a Syllabus :ref:`Curriculum API`.
+2. Choose a :ref:`Curriculum API`.
 
-3. Wrap the curriculum with a Syllabus :ref:`synchronization wrapper <Synchronization>`.
+3. Wrap the curriculum with a :ref:`synchronization wrapper <Curriculum-Synchronization>`.
 
-4. Wrap your environment with a Syllabus :ref:`TaskWrapper <TaskInterface>`.
+4. Wrap your environment with a :ref:`TaskWrapper <TaskInterface>`.
+
+5. Wrap your environment with a :ref:`synchronization wrapper <Environment-Synchronization>`.
 
 ^^^^^^^^^^^^^^^^^^^
 Define a Task Space
 ^^^^^^^^^^^^^^^^^^^
-The task space represents the range of tasks that you want your curriculum to sample from.
-For example, in procgen, the task space is usually a discrete set of 200 seeds.
+The task space represents the set of tasks that you want your curriculum to sample from. For example, in procgen, the task space is usually a discrete set of 200 seeds.
 
 .. code-block:: python
 
     from syllabus.task_space import DiscreteTaskSpace 
     task_space = DiscreteTaskSpace(200)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating a Syllabus Curriculum
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+Creating a Curriculum
+^^^^^^^^^^^^^^^^^^^^^
 Either use one of the curricula built into Syllabus, or create your own by extending the :ref:`Curriculum API` class.
 
 .. code-block:: python
@@ -32,11 +33,11 @@ Either use one of the curricula built into Syllabus, or create your own by exten
     from syllabus.curricula import DomainRandomization 
     curriculum = DomainRandomization(task_space)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Synchronizing the Curriculum
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Use either the native multiprocessing or ray multiprocessing wrapper to synchronize the curriculum across environments.
-Syllabus creates a separate multiprocessing channel from your environments, so make sure to choose the same backend (either native or ray).
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use either the native multiprocessing or ray multiprocessing wrapper to synchronize the curriculum across environments. Syllabus creates a separate, direct multiprocessing channel from your environments to the curriculum, so make sure to choose the same backend for each wrapper (either native or ray).
 
 .. tabs::
 
@@ -54,9 +55,9 @@ Syllabus creates a separate multiprocessing channel from your environments, so m
             from syllabus.core import make_ray_curriculum
             curriculum = make_ray_curriculum(curriculum)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Synchronizing the Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Use the matching native multiprocessing or ray multiprocessing wrapper for either gymnasium or pettingzoo to synchronize the environments.
 
 .. tabs::
@@ -105,4 +106,4 @@ Things to consider
 Examples
 ^^^^^^^^
 
-For more help setting up Syllabus, check out our :ref:`examples <Examples>`  of how to integrate Syllabus with various popular RL libraries. 
+For more help setting up Syllabus, check out our `example script <https://github.com/RyanNavillus/Syllabus/blob/main/syllabus/examples/training_scripts/cleanrl_procgen.py>`_ of how to use Syllabus with CleanRL to train Procgen agents.
