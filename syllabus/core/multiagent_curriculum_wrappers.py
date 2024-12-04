@@ -9,8 +9,10 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
         self.num_agents = len(possible_agents)
 
     def update_task_progress(self, task, progress, env_id=None):
-        for i in range(self.num_agents):
-            self.curriculum.update_task_progress(task, progress, env_id=(env_id * self.num_agents) + i)
+        for agent in self.possible_agents:
+            agent_index = self.possible_agents.index(agent)
+            env_index = env_id if self.joint_policy else (env_id * self.num_agents) + agent_index
+            self.curriculum.update_task_progress(task, progress, env_id=env_index)
 
     def update_on_step(self, task, obs, reward, term, trunc, info, progress, env_id: int = None) -> None:
         """
@@ -33,9 +35,11 @@ class MultiagentSharedCurriculumWrapper(CurriculumWrapper):
         """
         Update the curriculum with episode results from the environment.
         """
-        for i, agent in enumerate(episode_return.keys()):
+        for agent in episode_return.keys():
+            agent_index = self.possible_agents.index(agent)
+            env_index = env_id if self.joint_policy else (env_id * self.num_agents) + agent_index
             self.curriculum.update_on_episode(
-                episode_return[agent], length, task, progress, env_id=(env_id * self.num_agents) + i)
+                episode_return[agent], length, task, progress, env_id=env_index)
 
 
 class MultiagentIndependentCurriculumWrapper(CurriculumWrapper):

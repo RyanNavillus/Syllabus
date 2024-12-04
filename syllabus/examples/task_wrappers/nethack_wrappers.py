@@ -1,12 +1,11 @@
 """ Task wrapper for NLE that can change tasks at reset using the NLE's task definition format. """
-import time
 from typing import Any, Dict, List, Tuple
 
 import gymnasium as gym
 import numpy as np
 from nle import nethack
 from nle.env import base
-from nle.env.tasks import NetHackChallenge, NetHackEat, NetHackGold, NetHackScore, NetHackScout, NetHackStaircase, NetHackStaircasePet, TASK_ACTIONS
+from nle.env.tasks import TASK_ACTIONS, NetHackChallenge, NetHackGold, NetHackScore
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
 from syllabus.core import TaskWrapper
@@ -316,12 +315,10 @@ class NethackTaskWrapper(TaskWrapper):
         since very few tasks override reset. If new_task is provided, we change the task before
         calling the final reset.
         """
-        # # Change task if new one is provided
-        options = {}
+        # Change task if new one is provided
         if new_task is None:
-            new_task = kwargs.pop("options", None)
-        else:
-            options = kwargs.pop("options", {})
+            new_task = kwargs.get("options", None)
+        kwargs.pop("options", None)
 
         if new_task is not None:
             self.change_task(new_task)
@@ -329,7 +326,10 @@ class NethackTaskWrapper(TaskWrapper):
         self.done = False
         self.episode_return = 0
 
-        obs, info = self.env.reset(options=options, **kwargs)
+        obs, info = self.env.reset(**kwargs)
+        obs["prev_action"] = 0
+        obs["tty_cursor"] = self.task_space.encode(self.task)
+
         return self.observation(obs), info
 
     def change_task(self, new_task: int):
@@ -371,8 +371,6 @@ class NethackTaskWrapper(TaskWrapper):
         """
         # Add goal to observation
         # observation['goal'] = self._encode_goal()
-        # obs["prev_action"] = 0
-        # obs["tty_cursor"] = self.task_space.encode(self.task)
         return observation
 
     def _task_completion(self, obs, rew, term, trunc, info):
@@ -403,6 +401,8 @@ class NethackTaskWrapper(TaskWrapper):
         # self.episode_return += rew
         self.done = term or trunc
         info["task_completion"] = self._task_completion(obs, rew, term, trunc, info)
+        obs["prev_action"] = action
+        obs["tty_cursor"] = self.task_space.encode(self.task)
         return self.observation(obs), rew, term, trunc, info
 
 
@@ -457,18 +457,19 @@ class NethackSeedWrapper(TaskWrapper):
         calling the final reset.
         """
         # Change task if new one is provided
-        options = None
         if new_task is None:
-            new_task = kwargs.pop("options", None)
-        else:
-            options = kwargs.pop("options", None)
+            new_task = kwargs.get("options", None)
 
         if new_task is not None:
             self.change_task(new_task)
 
         self.episode_return = 0
 
-        obs, info = self.env.reset(options=options, **kwargs)
+        obs, info = self.env.reset(**kwargs)
+        obs["prev_action"] = 0
+        encoded_task = self.task_space.encode(self.task)
+        obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
+
         return self.observation(obs), info
 
     def change_task(self, new_task: int):
@@ -484,9 +485,6 @@ class NethackSeedWrapper(TaskWrapper):
         Parses current inventory and new items gained this timestep from the observation.
         Returns a modified observation.
         """
-        # observation["prev_action"] = 0
-        # encoded_task = self.task_space.encode(self.task)
-        # observation["tty_cursor"] = encoded_task if encoded_task is not None else -1
         return observation
 
     def step(self, action):
@@ -494,53 +492,7 @@ class NethackSeedWrapper(TaskWrapper):
         Step through environment and update task completion.
         """
         obs, rew, term, trunc, info = self.env.step(action)
+        obs["prev_action"] = action
+        encoded_task = self.task_space.encode(self.task)
+        obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
         return self.observation(obs), rew, term, trunc, info
-
-
-if __name__ == "__main__":
-    def run_episode(env, task: str = None, verbose=1):
-        env.reset(new_task=task)
-        task_name = type(env.unwrapped).__name__
-        term = trunc = False
-        ep_rew = 0
-        while not (term or trunc):
-            action = env.action_space.sample()
-            _, rew, term, trunc, _ = env.step(action)
-            ep_rew += rew
-        if verbose:
-            print(f"Episodic reward for {task_name}: {ep_rew}")
-
-    print("Testing NethackTaskWrapper")
-    N_EPISODES = 100
-
-    # Initialize NLE
-    nethack_env = NetHackScore()
-    nethack_env = GymV21CompatibilityV0(env=nethack_env)
-
-    nethack_task_env = NethackTaskWrapper(nethack_env)
-
-    task_list = [
-        NetHackScore,
-        NetHackStaircase,
-        NetHackStaircasePet,
-        NetHackOracle,
-        NetHackGold,
-        NetHackEat,
-        NetHackScout,
-    ]
-
-    start_time = time.time()
-
-    for _ in range(N_EPISODES):
-        run_episode(nethack_task_env, verbose=0)
-
-    end_time = time.time()
-    print(f"Run time same task: {end_time - start_time}")
-    start_time = time.time()
-
-    for i in range(N_EPISODES):
-        nethack_task = task_list[i % 7]
-        run_episode(nethack_task_env, task=nethack_task, verbose=0)
-
-    end_time = time.time()
-    print(f"Run time swapping tasks: {end_time - start_time}")

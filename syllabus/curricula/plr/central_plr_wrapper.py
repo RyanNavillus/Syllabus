@@ -111,7 +111,7 @@ class RolloutStorage():
             self.returns[step, env_idxs] = gae + self.value_preds[step, env_idxs]
 
 
-class CentralizedPrioritizedLevelReplay(Curriculum):
+class CentralPrioritizedLevelReplay(Curriculum):
     """ Prioritized Level Replay (PLR) Curriculum.
 
     Args:
@@ -127,8 +127,6 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(
         self,
@@ -180,7 +178,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
 
     def _validate_metrics(self, metrics: Dict):
         try:
-            masks = torch.Tensor(1 - metrics["dones"].int())
+            masks = torch.Tensor(1 - metrics["dones"]).int()
             tasks = metrics["tasks"]
             tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
@@ -239,7 +237,7 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
 
         # Update task sampler
         if any(self._rollouts.env_steps == self._rollouts.num_steps):
-            env_idxs = (self._rollouts.env_steps == self._rollouts.num_steps).nonzero()
+            env_idxs = (self._rollouts.env_steps == self._rollouts.num_steps).nonzero().flatten()
             if self._task_sampler.requires_value_buffers:
                 self._rollouts.compute_returns(self._gamma, self._gae_lambda)
             for idx in env_idxs:
@@ -247,9 +245,8 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
                     self._rollouts,
                     actor_id=idx,
                 )
-            self._task_sampler.update_with_rollouts(self._rollouts)
             self._rollouts.after_update()
-            self._task_sampler.after_update()
+            self._task_sampler.after_update(actor_indices=env_idxs)
 
     def _sample_distribution(self) -> List[float]:
         """

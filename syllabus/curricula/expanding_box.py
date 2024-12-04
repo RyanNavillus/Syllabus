@@ -7,12 +7,10 @@ from gymnasium.spaces import Box
 from syllabus.core import Curriculum
 
 
-class SimpleBoxCurriculum(Curriculum):
+class ExpandingBox(Curriculum):
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self,
                  *curriculum_args,
@@ -21,7 +19,7 @@ class SimpleBoxCurriculum(Curriculum):
                  required_successes: int = 10,
                  **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
-        assert isinstance(self.task_space.gym_space, Box), "SimpleBoxCurriculum only supports Box task spaces."
+        assert isinstance(self.task_space.gym_space, Box), "ExpandingBox only supports Box task spaces."
 
         self.success_threshold = success_threshold
         self.required_successes = required_successes

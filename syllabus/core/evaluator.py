@@ -159,7 +159,7 @@ class Evaluator:
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, Dict[str, Any]]: The action and additional information.
+            Tuple[torch.Tensor, LSTMState, Dict[str, Any]]: The action and additional information.
         """
         raise NotImplementedError
 
@@ -176,7 +176,7 @@ class Evaluator:
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
+            Tuple[torch.Tensor, LSTMState, Dict[str, Any]]: The value and additional information.
         """
         raise NotImplementedError
 
@@ -192,9 +192,11 @@ class Evaluator:
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]: The action, value, and additional information.
+            Tuple[torch.Tensor, torch.Tensor, LSTMState, Dict[str, Any]]: The action, value, and additional information.
         """
-        raise NotImplementedError
+        action, _, _ = self._get_action(state, lstm_state, done)
+        value, lstm_state, extras = self._get_value(state, lstm_state, done)
+        return action, value, lstm_state, extras
 
     def _prepare_state(self, state: Array) -> torch.Tensor:
         """
@@ -206,6 +208,11 @@ class Evaluator:
         Returns:
             torch.Tensor: The prepared state.
         """
+        state = torch.Tensor(np.stack(state))
+        if self.preprocess_obs is not None:
+            state = self.preprocess_obs(state)
+        if self.device is not None:
+            state = state.to(self.device)
         return state
 
     def _prepare_lstm(
@@ -283,7 +290,7 @@ class DummyEvaluator(Evaluator):
         return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
 
-class CleanRLDiscreteEvaluator(Evaluator):
+class CleanRLEvaluator(Evaluator):
     def __init__(self, agent, *args, is_lstm=False, **kwargs):
         super().__init__(agent, *args, **kwargs)
         self.is_lstm = is_lstm or hasattr(agent, "lstm")
@@ -314,14 +321,6 @@ class CleanRLDiscreteEvaluator(Evaluator):
             action, log_probs, entropy, value = self.agent.get_action_and_value(state)
             lstm_state = None
         return action, value, lstm_state, {"log_probs": log_probs, "entropy": entropy}
-
-    def _prepare_state(self, state: Array) -> torch.Tensor:
-        state = torch.Tensor(np.stack(state))
-        if self.preprocess_obs is not None:
-            state = self.preprocess_obs(state)
-        if self.device is not None:
-            state = state.to(self.device)
-        return state
 
     def _check_inputs(self, lstm_state, done):
         assert (

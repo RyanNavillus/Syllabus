@@ -3,12 +3,10 @@ from typing import Any, List, Union
 from syllabus.core import Curriculum
 
 
-class NoopCurriculum(Curriculum):
+class Constant(Curriculum):
     """
     Used to to test API without a curriculum.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, default_task, *curriculum_args, require_step_updates=False, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)

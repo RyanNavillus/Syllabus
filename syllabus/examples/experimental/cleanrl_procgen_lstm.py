@@ -15,7 +15,7 @@ import gymnasium as gym
 import numpy as np
 import procgen  # type: ignore # noqa: F401
 from procgen import ProcgenEnv
-from syllabus.curricula.plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
+from syllabus.curricula.plr.central_plr_wrapper import CentralPrioritizedLevelReplay
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -23,9 +23,9 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
-from syllabus.curricula.plr.simple_central_plr_wrapper import SimpleCentralizedPrioritizedLevelReplay
+from syllabus.core.evaluator import CleanRLEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgress, SequentialCurriculum
+from syllabus.curricula.plr.direct_plr_wrapper import DirectPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenLSTMAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            evaluator = CleanRLEvaluator(agent, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -273,7 +273,7 @@ if __name__ == "__main__":
                 record_stats=True,
             )
         elif args.curriculum_method == "centralplr":
-            curriculum = CentralizedPrioritizedLevelReplay(
+            curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
@@ -284,7 +284,7 @@ if __name__ == "__main__":
 
             )
         elif args.curriculum_method == "simpleplr":
-            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+            curriculum = DirectPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
@@ -303,8 +303,8 @@ if __name__ == "__main__":
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
-                                                    sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgress(eval_envs, make_action_fn(),
+                                          sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []

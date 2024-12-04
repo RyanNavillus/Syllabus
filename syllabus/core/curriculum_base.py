@@ -14,17 +14,14 @@ Agent = TypeVar("Agent")
 class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
-        TODO: Implement this in a way that works with any curriculum, maybe as a wrapper
         :param random_start_tasks: Number of uniform random tasks to sample before using the algorithm's sample method, defaults to 0
-        TODO: Use task space for this
         :param task_names: Names of the tasks in the task space, defaults to None
+        :param record_stats: Whether to record statistics for each task, defaults to False
         """
         assert isinstance(
             task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
@@ -43,7 +40,7 @@ class Curriculum:
 
         :return: True if the curriculum requires step updates, False otherwise
         """
-        return self.__class__.REQUIRES_STEP_UPDATES
+        return False
 
     @property
     def num_tasks(self) -> int:
@@ -73,7 +70,7 @@ class Curriculum:
     def update_on_step(self, task: Any, obs: Any, rew: float, term: bool, trunc: bool, info: dict, progress: Union[float, bool], env_id: int = None) -> None:
         """ Update the curriculum with the current step results from the environment.
 
-        :param obs: Observation from teh environment
+        :param obs: Observation from the environment
         :param rew: Reward from the environment
         :param term: True if the episode ended on this step, False otherwise
         :param trunc: True if the episode was truncated on this step, False otherwise
@@ -106,7 +103,6 @@ class Curriculum:
         :param task: Task for which the episode was completed
         :param progress: Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.
         :param env_id: Environment identifier
-        :raises NotImplementedError:
         """
         if self.stat_recorder is not None:
             self.stat_recorder.record(episode_return, length, task, env_id)
@@ -146,19 +142,16 @@ class Curriculum:
         :param k: Number of tasks to sample, defaults to 1
         :return: Either returns a single task if k=1, or a list of k tasks
         """
-        # assert self.num_tasks > 0, "Task space is empty. Please add tasks to the curriculum before sampling."
 
         if self._should_use_startup_sampling():
             return self._startup_sample()
 
         # Use list of indices because np.choice does not play nice with tuple tasks
-        # tasks = self.tasks
-        n_tasks = self.num_tasks
         task_dist = self._sample_distribution()
-        task_idx = np.random.choice(list(range(n_tasks)), size=k, p=task_dist)
+        task_idx = np.random.choice(list(range(self.num_tasks)), size=k, p=task_dist)
         return task_idx
 
-    def normalize(self, reward, task):
+    def normalize(self, reward: float, task: Any) -> float:
         """
         Normalize reward by task.
 
@@ -169,7 +162,7 @@ class Curriculum:
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
-    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+    def log_metrics(self, writer, logs: List[Dict], step: int = None, log_n_tasks: int = 1):
         """Log the task distribution to the provided writer.
 
         :param writer: Tensorboard summary writer or wandb object

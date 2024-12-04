@@ -13,7 +13,7 @@ N_EPISODES = 10
 def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_agents=2):
     stats = curriculum.get_stats()
     expected_reward = 100 * num_envs * N_EPISODES
-    # Multiply by 2 for the 2 agents in teh environment
+    # Multiply by 2 for the 2 agents in the environment
     assert stats["total_reward"] == expected_reward * \
         num_agents, f"Curriculum total reward is {stats['total_reward']}, expected {expected_reward}"
     for task, count in stats["task_counts"].items():

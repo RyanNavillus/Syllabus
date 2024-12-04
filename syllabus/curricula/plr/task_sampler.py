@@ -187,17 +187,16 @@ class TaskSampler:
 
                 task_idx_t = tasks[start_t, actor_index].item()
 
-                score = scores[start_t, actor_index].item()
-                num_steps = len(rollouts.tasks[start_t:t, actor_index])
+                score = scores[start_t:t, actor_index].mean().item()
+                num_steps = t - start_t
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
-
                 start_t = t.item()
             if start_t < self.num_steps:
                 task_idx_t = tasks[start_t, actor_index].item()
 
-                score = scores[start_t, actor_index].item()
+                score = scores[start_t:, actor_index].mean().item()
                 self._last_score = score
-                num_steps = len(rollouts.tasks[start_t:, actor_index])
+                num_steps = self.num_steps - start_t
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
     def _update_with_rollouts(self, rollouts, score_function, actor_index=None):
@@ -260,9 +259,10 @@ class TaskSampler:
                 num_steps = len(rollouts.tasks[start_t:, actor_index])
                 self._partial_update_task_score(actor_index, task_idx_t, score, num_steps)
 
-    def after_update(self):
+    def after_update(self, actor_indices=None):
         # Reset partial updates, since weights have changed, and thus logits are now stale
-        for actor_index in range(self.partial_task_scores.shape[0]):
+        actor_indices = range(self.partial_task_scores.shape[0]) if actor_indices is None else actor_indices
+        for actor_index in actor_indices:
             for task_idx in range(self.partial_task_scores.shape[1]):
                 if self.partial_task_scores[actor_index][task_idx] != 0:
                     self.update_task_score(actor_index, task_idx, 0, 0)

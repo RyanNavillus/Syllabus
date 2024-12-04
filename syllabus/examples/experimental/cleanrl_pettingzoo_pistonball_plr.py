@@ -14,7 +14,7 @@ from pettingzoo.butterfly import pistonball_v6
 from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
 from syllabus.core import (PettingZooSyncWrapper, TaskWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import CentralizedPrioritizedLevelReplay
+from syllabus.curricula import CentralPrioritizedLevelReplay
 from syllabus.examples import PistonballTaskWrapper
 from torch.distributions.categorical import Categorical
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     num_actions = action_space.n
     observation_size = sample_env.observation_space(sample_env.possible_agents[0]).shape
 
-    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(CentralizedPrioritizedLevelReplay,
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(CentralPrioritizedLevelReplay,
                                                                            sample_env.task_space,
                                                                            task_sampler_kwargs_dict={"strategy": "one_step_td_error",
                                                                                                      "rho": 0.01,

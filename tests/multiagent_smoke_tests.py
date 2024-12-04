@@ -4,7 +4,7 @@ import pytest
 from syllabus.core import MultiagentSharedCurriculumWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import DummyEvaluator
 from syllabus.curricula import (DomainRandomization,
-                                LearningProgressCurriculum, NoopCurriculum,
+                                LearningProgress, Constant,
                                 PrioritizedLevelReplay)
 from syllabus.tests import create_pistonball_env, run_native_multiprocess, run_single_process
 
@@ -16,7 +16,7 @@ default_task = pistonball_env.task_space.encode(1)
 evaluator = DummyEvaluator(pistonball_env.action_space("piston_0"))
 
 curricula = [
-    (NoopCurriculum, create_pistonball_env, (default_task, pistonball_env.task_space), {}),
+    (Constant, create_pistonball_env, (default_task, pistonball_env.task_space), {}),
     (DomainRandomization, create_pistonball_env, (pistonball_env.task_space,), {}),
     # (LearningProgressCurriculum, create_pistonball_env, (pistonball_env.task_space,), {}),
     (PrioritizedLevelReplay, create_pistonball_env, (pistonball_env.task_space, pistonball_env.observation_space), {
