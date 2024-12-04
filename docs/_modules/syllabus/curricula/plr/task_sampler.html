@@ -156,7 +156,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../motivation.html">Motivation</a></li>
@@ -176,9 +176,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -204,7 +209,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../modules/syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../modules/syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../modules/syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -251,7 +256,7 @@
 
 
 <div class="viewcode-block" id="TaskSampler">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler">[docs]</a>
 <span class="k">class</span> <span class="nc">TaskSampler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Task sampler for Prioritized Level Replay (PLR)</span>
 
@@ -324,7 +329,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="TaskSampler.update_with_rollouts">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_with_rollouts">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_with_rollouts">[docs]</a>
     <span class="k">def</span> <span class="nf">update_with_rollouts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rollouts</span><span class="p">,</span> <span class="n">actor_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
             <span class="k">return</span>
@@ -349,7 +354,7 @@
 
 
 <div class="viewcode-block" id="TaskSampler.update_task_score">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_task_score">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_task_score">[docs]</a>
     <span class="k">def</span> <span class="nf">update_task_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
         <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_update_task_score</span><span class="p">(</span><span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -513,7 +518,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_partial_update_task_score</span><span class="p">(</span><span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx_t</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TaskSampler.after_update">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.after_update">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.after_update">[docs]</a>
     <span class="k">def</span> <span class="nf">after_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># Reset partial updates, since weights have changed, and thus logits are now stale</span>
         <span class="n">actor_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_task_scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">actor_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">actor_indices</span>
@@ -549,7 +554,7 @@
         <span class="k">return</span> <span class="n">task_idx</span>
 
 <div class="viewcode-block" id="TaskSampler.sample">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">strategy</span><span class="p">:</span>
             <span class="n">strategy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span>
@@ -585,7 +590,7 @@
 
 
 <div class="viewcode-block" id="TaskSampler.sample_weights">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample_weights">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample_weights">[docs]</a>
     <span class="k">def</span> <span class="nf">sample_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score_transform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_scores</span><span class="p">)</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">unseen_task_weights</span><span class="p">)</span>  <span class="c1"># zero out unseen levels</span>
@@ -635,7 +640,7 @@
         <span class="k">return</span> <span class="n">weights</span>
 
 <div class="viewcode-block" id="TaskSampler.metrics">
-<a class="viewcode-back" href="../../../../modules/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.metrics">[docs]</a>
+<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;task_scores&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_scores</span><span class="p">,</span>

@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus.curricula package" href="syllabus.curricula.html" /><link rel="prev" title="Example Utils" href="syllabus.examples.utils.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Curricula" href="syllabus.curricula.html" /><link rel="prev" title="Example Utils" href="syllabus.examples.utils.html" />
 
     <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
         <title>syllabus.tests package - Syllabus 0.6 documentation</title>
@@ -157,7 +157,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
@@ -177,9 +177,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -205,7 +210,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -287,7 +292,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.tests.sync_test_curriculum.</span></span><span class="sig-name descname"><span class="pre">SyncTestCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/tests/sync_test_curriculum.html#SyncTestCurriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.tests.sync_test_curriculum.SyncTestCurriculum" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum" title="syllabus.curricula.sequential.SequentialCurriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../curricula/syllabus.curricula.sequential.html#syllabus.curricula.sequential.SequentialCurriculum" title="syllabus.curricula.sequential.SequentialCurriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a></p>
 <p>Base class and API for defining curricula to interface with Gym environments.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="syllabus.tests.sync_test_curriculum.SyncTestCurriculum.REQUIRES_CENTRAL_UPDATES">
@@ -634,7 +639,7 @@ to support curricula that rely on this metric.</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">syllabus.curricula package</div>
+                <div class="title">Curricula</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

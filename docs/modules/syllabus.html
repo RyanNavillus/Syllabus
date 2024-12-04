@@ -157,7 +157,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
@@ -177,9 +177,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -205,7 +210,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -405,78 +410,7 @@
 <li class="toctree-l2"><a class="reference internal" href="syllabus.tests.html#module-syllabus.tests">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.annealing_box">syllabus.curricula.annealing_box module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.sample"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.annealing_box.SimulatedAnnealing.update_on_episode"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.update_on_episode()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.noop">syllabus.curricula.noop module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.requires_step_updates</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_episode()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step_batch()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.noop.NoopCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.selfplay">syllabus.curricula.selfplay module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.add_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.get_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.log_metrics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.sample"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.update_winrate"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.update_winrate()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.add_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.get_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.log_metrics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.sample"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.update_winrate"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.update_winrate()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay"><code class="docutils literal notranslate"><span class="pre">SelfPlay</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">SelfPlay.add_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">SelfPlay.get_agent()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">SelfPlay.log_metrics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.sample"><code class="docutils literal notranslate"><span class="pre">SelfPlay.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.update_winrate"><code class="docutils literal notranslate"><span class="pre">SelfPlay.update_winrate()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.sequential">syllabus.curricula.sequential module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.check_stopping_conditions()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.current_curriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.current_curriculum</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.log_metrics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.requires_step_updates</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_episode()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_step()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_step_batch()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.sequential.SequentialCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula.simple_box">syllabus.curricula.simple_box module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.log_metrics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.sample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="syllabus.curricula.html#syllabus.curricula.simple_box.SimpleBoxCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.html">Curricula</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="syllabus.curricula.html#module-syllabus.curricula">Module contents</a></li>
 </ul>
 </li>

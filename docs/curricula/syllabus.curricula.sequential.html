@@ -1,0 +1,488 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Task Spaces" href="../modules/syllabus.task_space.html" /><link rel="prev" title="Self Play Curricula" href="syllabus.curricula.selfplay.html" />
+
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+        <title>Sequential Curriculum - Syllabus 0.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.curriculum.html">Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="co_player.html">Co-player Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented_curricula.html">Curriculum Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stat_recorder.html">Stat Recorder</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Sequential Curriculum</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">Example Models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.utils.html">Example Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.curricula.html">Curricula</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="sequential-curriculum">
+<span id="sequential"></span><h1>Sequential Curriculum<a class="headerlink" href="#sequential-curriculum" title="Link to this heading">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">Sequential</span></code> curriculum allows you to manually design a sequence of tasks and curricula to train on in order. It provides flexible stopping conditions for transitioning to the next curriculum, including episode count, step count, and mean return. This curriculum passes all update data to the current curriculum in the sequence and sample from it when generating tasks. Note that updates are not passed to inactive curricula in the sequence, so automatic methods will not have a headstart on tracking relevant metrics.</p>
+<p>The items in the sequence can be any <cite>&lt;Curriculum&gt;</cite> object, including <cite>&lt;constant&gt;</cite> for individual tasks. <code class="docutils literal notranslate"><span class="pre">Sequential</span></code> uses syntactic sugar to make it easier to define a sequence of curricula. It takes in a list of curricula <code class="docutils literal notranslate"><span class="pre">curriculum_list</span></code> and a list of stopping conditions <code class="docutils literal notranslate"><span class="pre">stopping_conditions</span></code>. The <code class="docutils literal notranslate"><span class="pre">curriculum_list</span></code> can contain any of the following objects:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">Curriculum</span></code> object - will be directly added to the sequence.</p></li>
+<li><p>A single task - will be wrapped in a <code class="docutils literal notranslate"><span class="pre">Constant</span></code> curriculum.</p></li>
+<li><p>A list of tasks - will be wrapped in a <code class="docutils literal notranslate"><span class="pre">DomainRandomization</span></code> curriculum.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">TaskSpace</span></code> object - will be wrapped in a <code class="docutils literal notranslate"><span class="pre">DomainRandomization</span></code> curriculum.</p></li>
+</ul>
+<p>Similarly, stopping conditions can be defined with a simple string format. These conditions are composed of metrics, comparison operators, the stopping value, and optional boolean operators to create composite conditions. The format supports the <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> comparison operators and the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code> boolean operators. The currently implemented metrics are:</p>
+<ul class="simple">
+<li><p><em>“steps”</em> - the number of steps taken in the environment during this stage of the sequential curriculum.</p></li>
+<li><p><em>“total_steps”</em> - the total number of steps taken in the environment during the entire sequential curriculum.</p></li>
+<li><p><em>“episodes”</em> - the number of episodes completed in the environment during this stage of the sequential curriculum.</p></li>
+<li><p><em>“total_episodes”</em> - the total number of episodes completed in the environment during the entire sequential curriculum.</p></li>
+<li><p><em>“tasks”</em> - the number of tasks completed in the environment during this stage of the sequential curriculum.</p></li>
+<li><p><em>“total_tasks”</em> - the total number of tasks completed in the environment during the entire sequential curriculum.</p></li>
+<li><p><em>“episode_return”</em> - the mean return of the environment during this stage of the sequential curriculum.</p></li>
+</ul>
+<p>During logging, the <code class="docutils literal notranslate"><span class="pre">Sequential</span></code> curriculum will accurately set the probability of tasks outside the current stage’s task space to 0.</p>
+<section id="id1">
+<h2>Sequential<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<dl class="py class" id="module-syllabus.curricula.sequential">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.sequential.</span></span><span class="sig-name descname"><span class="pre">SequentialCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopping_conditions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
+<p>Curriculum that iterates through a list of curricula based on stopping conditions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions">
+<span class="sig-name descname"><span class="pre">check_stopping_conditions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.check_stopping_conditions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.current_curriculum">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_curriculum</span></span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.current_curriculum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.log_metrics">
+<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.log_metrics" title="Link to this definition">¶</a></dt>
+<dd><p>Log the task distribution to the provided writer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>writer</strong> – Tensorboard summary writer or wandb object</p></li>
+<li><p><strong>logs</strong> – Cumulative list of logs to write</p></li>
+<li><p><strong>step</strong> – Global step number</p></li>
+<li><p><strong>log_n_tasks</strong> – Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated logs list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_step_updates</span></span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates" title="Link to this definition">¶</a></dt>
+<dd><p>Returns whether the curriculum requires step updates from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the curriculum requires step updates, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Choose the next k tasks from the list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_episode" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with episode results from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>episode_return</strong> – Episodic return</p></li>
+<li><p><strong>length</strong> – Length of the episode</p></li>
+<li><p><strong>task</strong> – Task for which the episode was completed</p></li>
+<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
+<li><p><strong>env_id</strong> – Environment identifier</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_on_step">
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_on_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with the current step results from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> – Observation from the environment</p></li>
+<li><p><strong>rew</strong> – Reward from the environment</p></li>
+<li><p><strong>term</strong> – True if the episode ended on this step, False otherwise</p></li>
+<li><p><strong>trunc</strong> – True if the episode was truncated on this step, False otherwise</p></li>
+<li><p><strong>info</strong> – Extra information from the environment</p></li>
+<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
+<li><p><strong>env_id</strong> – Environment identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch">
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with a batch of step results from the environment.</p>
+<p>This method can be overridden to provide a more efficient implementation. It is used
+as a convenience function and to optimize the multiprocessing message passing throughput.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step_results</strong> – List of step results</p></li>
+<li><p><strong>env_id</strong> – Environment identifier</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_task_progress">
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_task_progress" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with a task and its progress. This is used for binary tasks that can be completed mid-episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> – Task for which progress is being updated.</p></li>
+<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
+<li><p><strong>env_id</strong> – Environment identifier</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../modules/syllabus.task_space.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Task Spaces</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="syllabus.curricula.selfplay.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Self Play Curricula</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Ryan Sullivan
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Sequential Curriculum</a><ul>
+<li><a class="reference internal" href="#id1">Sequential</a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.check_stopping_conditions()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.current_curriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.current_curriculum</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.log_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.requires_step_updates</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_episode()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_step()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_step_batch()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_task_progress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=ec806d2c"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

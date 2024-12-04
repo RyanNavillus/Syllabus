@@ -157,7 +157,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
@@ -177,9 +177,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -205,7 +210,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -263,7 +268,7 @@
 <li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_episode" title="syllabus.core.curriculum_base.Curriculum.update_on_episode"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_on_episode</span></code></a> - will be called once for each completed episode by the environment synchronization wrapper. The default implementation of this method also updates the StatRecorder, so if you override it you should call <code class="docutils literal notranslate"><span class="pre">super().update_on_episode()</span></code> to maintain this functionality.</p></li>
 <li><p><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_task_progress" title="syllabus.core.curriculum_base.Curriculum.update_task_progress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">update_task_progress</span></code></a> - is called either after a task is completed. It receives a task and a boolean or float value indicating the current progress on the provided task. Values of True or 1.0 typically indicate a completed task. If you need to track task progress at each step or each episode you should instead implement <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code> or <code class="docutils literal notranslate"><span class="pre">update_on_episode</span></code> respectively. This method is used for tasks that complete mid-episode.</p></li>
 </ul>
-<p>Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. These methods also receive a unique indentifier for the environment that generated the update in case you need to track each environment individually. If your curriculum requires information from the main training process, such as TD errors or gradient magnitudes, you can define your own update method. However, you should make use of the existing update methods as much as possible to minimize the API surface of your method. Updates from the training process have to be implemented differently for each learning library, reducing interoperability. You can look at the different variants of <a class="reference internal" href="../modules/syllabus.curricula.plr.html#prioritized-level-replay"><span class="std std-ref">Prioritized Level Replay (PLR) Curriculum</span></a> for examples of how to implement these methods for different libraries.</p>
+<p>Your curriculum will probably only use one of these methods, so you can choose to only override the one that you need. These methods also receive a unique indentifier for the environment that generated the update in case you need to track each environment individually. If your curriculum requires information from the main training process, such as TD errors or gradient magnitudes, you can define your own update method. However, you should make use of the existing update methods as much as possible to minimize the API surface of your method. Updates from the training process have to be implemented differently for each learning library, reducing interoperability. You can look at the different variants of <a class="reference internal" href="syllabus.curricula.plr.html#prioritized-level-replay"><span class="std std-ref">Prioritized Level Replay</span></a> for examples of how to implement these methods for different libraries.</p>
 </section>
 <section id="recommended-methods">
 <h2>Recommended Methods<a class="headerlink" href="#recommended-methods" title="Link to this heading">¶</a></h2>

@@ -156,7 +156,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../motivation.html">Motivation</a></li>
@@ -176,9 +176,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -204,7 +209,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -251,7 +256,7 @@
 
 
 <div class="viewcode-block" id="DomainRandomization">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.DomainRandomization">[docs]</a>
 <span class="k">class</span> <span class="nc">DomainRandomization</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.&quot;&quot;&quot;</span>
 
@@ -265,7 +270,7 @@
 
 
 <div class="viewcode-block" id="BatchedDomainRandomization">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization">[docs]</a>
 <span class="k">class</span> <span class="nc">BatchedDomainRandomization</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.&quot;&quot;&quot;</span>
 
@@ -285,7 +290,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span>
 
 <div class="viewcode-block" id="BatchedDomainRandomization.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization.sample">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="n">tasks</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_batches</span><span class="p">:</span>
@@ -302,7 +307,7 @@
 
 
 <div class="viewcode-block" id="BatchedDomainRandomization.update_on_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization.update_on_episode">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.BatchedDomainRandomization.update_on_episode">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update_on_episode</span><span class="p">(</span><span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_batch_steps</span> <span class="o">+=</span> <span class="n">length</span></div>
@@ -311,7 +316,7 @@
 
 
 <div class="viewcode-block" id="SyncedBatchedDomainRandomization">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization">[docs]</a>
 <span class="k">class</span> <span class="nc">SyncedBatchedDomainRandomization</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple but strong baseline for curriculum learning that uniformly samples a task from the task space.&quot;&quot;&quot;</span>
 
@@ -333,7 +338,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span>
 
 <div class="viewcode-block" id="SyncedBatchedDomainRandomization.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.sample">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Sample k tasks from the curriculum.&quot;&quot;&quot;</span>
         <span class="n">tasks</span> <span class="o">=</span> <span class="kc">None</span>
@@ -355,7 +360,7 @@
 
 
 <div class="viewcode-block" id="SyncedBatchedDomainRandomization.update_batch">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.update_batch">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.domain_randomization.html#syllabus.curricula.domain_randomization.SyncedBatchedDomainRandomization.update_batch">[docs]</a>
     <span class="k">def</span> <span class="nf">update_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Update the current batch.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_should_update</span> <span class="o">=</span> <span class="kc">True</span>

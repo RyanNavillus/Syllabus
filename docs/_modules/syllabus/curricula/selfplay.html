@@ -156,7 +156,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../motivation.html">Motivation</a></li>
@@ -176,9 +176,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -204,7 +209,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../modules/syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -259,7 +264,7 @@
 
 
 <div class="viewcode-block" id="SelfPlay">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.SelfPlay">[docs]</a>
 <span class="k">class</span> <span class="nc">SelfPlay</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Self play curriculum for training agents against themselves.&quot;&quot;&quot;</span>
 
@@ -287,14 +292,14 @@
         <span class="p">}</span>
 
 <div class="viewcode-block" id="SelfPlay.add_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.add_agent">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.SelfPlay.add_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span></div>
 
 
 <div class="viewcode-block" id="SelfPlay.get_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.get_agent">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.SelfPlay.get_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">agent_id</span> <span class="o">=</span> <span class="mi">0</span>
@@ -309,13 +314,13 @@
         <span class="k">return</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="SelfPlay.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.sample">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.SelfPlay.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div>
 
 
 <div class="viewcode-block" id="SelfPlay.update_winrate">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.update_winrate">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.SelfPlay.update_winrate">[docs]</a>
     <span class="k">def</span> <span class="nf">update_winrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">reward</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uses an incremental mean to update an agent&#39;s winrate. This assumes that reward</span>
@@ -333,7 +338,7 @@
 
 
 <div class="viewcode-block" id="SelfPlay.log_metrics">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.SelfPlay.log_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.SelfPlay.log_metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Log metrics for the curriculum.&quot;&quot;&quot;</span>
         <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;winrate&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;winrate&quot;</span><span class="p">])</span>
@@ -344,7 +349,7 @@
 
 
 <div class="viewcode-block" id="FictitiousSelfPlay">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.FictitiousSelfPlay">[docs]</a>
 <span class="k">class</span> <span class="nc">FictitiousSelfPlay</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -382,7 +387,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_loaded_agents</span> <span class="o">=</span> <span class="n">max_loaded_agents</span>
 
 <div class="viewcode-block" id="FictitiousSelfPlay.add_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Saves the current agent instance to a pickle file.</span>
@@ -402,7 +407,7 @@
 
 
 <div class="viewcode-block" id="FictitiousSelfPlay.update_winrate">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.update_winrate">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.FictitiousSelfPlay.update_winrate">[docs]</a>
     <span class="k">def</span> <span class="nf">update_winrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opponent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">opponent_reward</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uses an incremental mean to update the opponent&#39;s winrate i.e. priority.</span>
@@ -420,7 +425,7 @@
 
 
 <div class="viewcode-block" id="FictitiousSelfPlay.get_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads an agent from the buffer of saved agents.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_agents</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -443,7 +448,7 @@
             <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_agents</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_loaded_agents</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="FictitiousSelfPlay.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.sample">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.FictitiousSelfPlay.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_distribution</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
@@ -454,7 +459,7 @@
 
 
 <div class="viewcode-block" id="FictitiousSelfPlay.log_metrics">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Log metrics for the curriculum.&quot;&quot;&quot;</span>
         <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;winrate&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;winrate&quot;</span><span class="p">])</span>
@@ -466,7 +471,7 @@
 
 
 <div class="viewcode-block" id="PrioritizedFictitiousSelfPlay">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay">[docs]</a>
 <span class="k">class</span> <span class="nc">PrioritizedFictitiousSelfPlay</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -503,7 +508,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_loaded_agents</span> <span class="o">=</span> <span class="n">max_loaded_agents</span>
 
 <div class="viewcode-block" id="PrioritizedFictitiousSelfPlay.add_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Saves the current agent instance to a pickle file and update</span>
@@ -523,7 +528,7 @@
 
 
 <div class="viewcode-block" id="PrioritizedFictitiousSelfPlay.update_winrate">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.update_winrate">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.update_winrate">[docs]</a>
     <span class="k">def</span> <span class="nf">update_winrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opponent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">opponent_reward</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uses an incremental mean to update the opponent&#39;s winrate i.e. priority.</span>
@@ -541,7 +546,7 @@
 
 
 <div class="viewcode-block" id="PrioritizedFictitiousSelfPlay.get_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Samples an agent id from the softmax distribution induced by winrates</span>
@@ -570,7 +575,7 @@
         <span class="k">return</span> <span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PrioritizedFictitiousSelfPlay.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.sample">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Samples k agents from the buffer of saved agents, prioritizing opponents with higher winrates.&quot;&quot;&quot;</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_distribution</span><span class="p">()</span>
@@ -582,7 +587,7 @@
 
 
 <div class="viewcode-block" id="PrioritizedFictitiousSelfPlay.log_metrics">
-<a class="viewcode-back" href="../../../modules/syllabus.curricula.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.selfplay.html#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Log metrics for the curriculum.&quot;&quot;&quot;</span>
         <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;winrate&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;winrate&quot;</span><span class="p">])</span>

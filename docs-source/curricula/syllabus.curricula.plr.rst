@@ -1,12 +1,9 @@
 .. _Prioritized Level Replay:
 
-Prioritized Level Replay (PLR) Curriculum
-=========================================
+Prioritized Level Replay
+========================
 
-Prioritized Level Replay is a simple, yet effective curriculum learning method introduced in https://arxiv.org/pdf/2010.03934.pdf. See this paper for additional information on the method.
-The implementation in this code base is based on the original implementation https://github.com/facebookresearch/level-replay/tree/main
-
-PLR has been successfully used to train agents in https://arxiv.org/pdf/2301.07608.pdf with a custom fitness function.
+A curriculum learning method that estimates an agent's regret on particular environment seed and uses a prioritized replay buffer to replay levels for which the agent has high regret. This implementation is based on the open-source original implementation at https://github.com/facebookresearch/level-replay, but has been modified to support Syllabus task spaces instead of just environment seeds. PLR has been used in multiple prominent RL works, such as `Human-Timescale Adaptation in an Open-Ended Task Space <https://arxiv.org/abs/2301.07608>`_. For more information you can read the original paper `Prioritized Level Replay (Jiang et al. 2021) <https://arxiv.org/abs/2010.03934.pdf>`_.
 
 Prioritized Level Replay  samples the next training level by prioritizing those with a higher estimated learning potential. The paper proposes multiple metrics for measuring learning progress, but suggest L1 Value loss or equivalently the Generalized Advantage Estimation (GAE) magnitude as the most effective metric. PLR also utilizes a staleness metric to ensure that every task's learning progress is occasionally updated based on the current policy's capabilities.
 
@@ -38,7 +35,7 @@ We recommend using ``PrioritizedLevelReplay`` for initial experiments and tests,
 
 
 Prioritized Level Replay
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 This asynchronous implementation of PLR runs automatically with no direct changes to the training code. Once it is configured and the :ref:`synchronization wrappers <Synchronization>` are applied, it will automatically begin sending high-priority tasks to the training environments. ``PrioritizedLevelReplay`` requires an :ref:`Evaluator <Evaluators>` to get the value predictions used to calcualte prioritization scores. This introduces some duplicate computation and in some cases can slow down training, especially in systems where agent inference is the bottleneck. If you need to train agents above 10,000 steps per second, we suggest looking at ``CentralPrioritizedLevelReplay`` or ``DirectPrioritizedLevelReplay``.
 
@@ -50,7 +47,7 @@ Below is an example of how you can set up ``PrioritizedLevelReplay`` in your pro
 
    from syllabus.curricula import PrioritizedLevelReplay
    from syllabus.evaluators import CleanRLEvaluator
-   from syllabus.core import make_multiprocessing_curriculum, PettingZooSyncWrapper
+   from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 
    # Initialize the environment
    env = Env()
@@ -63,13 +60,10 @@ Below is an example of how you can set up ``PrioritizedLevelReplay`` in your pro
    curriculum = make_multiprocessing_curriculum(curriculum)
 
    # Wrap the environment
-   env = PettingZooSyncWrapper(env, curriculum.components)
+   env = GymnasiumSyncWrapper(env, curriculum.components)
 
 
 For a complete example using ``PrioritizedLevelReplay`` with CleanRL's PPO, see `<https://github.com/RyanNavillus/Syllabus/blob/main/syllabus/examples/training_scripts/cleanrl_procgen.py>`_.
-
-Prioritized Level Replay
-------------------------------------------
 
 .. automodule:: syllabus.curricula.plr.plr_wrapper
    :members:
@@ -78,7 +72,7 @@ Prioritized Level Replay
 
 
 Central Prioritized Level Replay
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------
 
 This version of PLR does not require an evaluator but does require additional code to send data from the training loop to the curriculum. Below you can find examples of how to do this for some of the popular RL frameworks.
 
@@ -144,9 +138,6 @@ This version of PLR does not require an evaluator but does require additional co
 
       The exact code will depend on your version of RLLib, but you can use callbacks similar to Stable Baselines 3 to update the curriculum after each step `<https://docs.ray.io/en/latest/rllib/rllib-advanced-api.html#rllib-advanced-api-doc>`_.
 
-Central Update Prioritized Level Replay
----------------------------------------------------
-
 .. automodule:: syllabus.curricula.plr.central_plr_wrapper
    :members:
    :undoc-members:
@@ -154,7 +145,7 @@ Central Update Prioritized Level Replay
 
 
 Direct Prioritized Level Replay
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 This implementation of PLR allows you to directly compute your own scores used to prioritize tasks. This gives you the most control over the curriculum, but it can be tricky to implement a good scoring function. Below is an example of how to implement the Value L1 score in CleanRL's PPO. The full script can be found here `<https://github.com/RyanNavillus/Syllabus/blob/main/syllabus/examples/training_scripts/cleanrl_procgen.py>`_.
 
@@ -172,21 +163,16 @@ This implementation of PLR allows you to directly compute your own scores used t
 The ``tasks`` and ``dones`` arrays have the shape ``(num_steps, num_envs)`` and the ``scores`` array has the shape ``(num_steps + 1, num_envs)``. We need to expand the size of the value tensor to include the next value prediction, and the returns tensor to match. In some versions of PLR, the next values are also added to the final index of the returns tensor. This effectively removes the next values from the Value L1 score calculation, but allows them to still be used for GAE.
 
 
-Direct Score Prioritized Level Replay
------------------------------------------------------------
-
 .. automodule:: syllabus.curricula.plr.direct_plr_wrapper
    :members:
    :undoc-members:
    :show-inheritance:
 
 Task Sampler
-^^^^^^^^^^^^
+------------
 
 The task sampler is shared between the different PLR implementations. It is responsible for calculating and tracking scores, and sampling tasks. It has many different options for sampling strategies that can be configured by passing the ``task_sampler_kwargs`` dictionary to PLR's initializer.
 
-TaskSampler
--------------------------------------------
 .. _TaskSampler:
 
 .. automodule:: syllabus.curricula.plr.task_sampler

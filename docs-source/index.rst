@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Syllabus Documentation
-======================
+Overview
+========
 
 Syllabus is a library for using curriculum learning to train reinforcement learning agents. It provides a Curriculum API from
 defining curriculum learning algorithms, implementations of popular curriculum learning methods, and a framework for synchronizing 
@@ -49,9 +49,14 @@ It currently has support for environments run with Python native multiprocessing
    :maxdepth: 1
    :caption: Curriculum Methods:
 
-   modules/syllabus.curricula.plr
-   modules/syllabus.curricula.domain_randomization
-   modules/syllabus.curricula.learning_progress
+   curricula/syllabus.curricula.annealing
+   curricula/syllabus.curricula.constant
+   curricula/syllabus.curricula.domain_randomization
+   curricula/syllabus.curricula.expanding_box
+   curricula/syllabus.curricula.learning_progress
+   curricula/syllabus.curricula.plr
+   curricula/syllabus.curricula.selfplay
+   curricula/syllabus.curricula.sequential
 
 .. toctree::
    :maxdepth: 1

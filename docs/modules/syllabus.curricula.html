@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="syllabus.tests package" href="syllabus.tests.html" />
 
     <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
-        <title>syllabus.curricula package - Syllabus 0.6 documentation</title>
+        <title>Curricula - Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
@@ -157,7 +157,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
@@ -177,9 +177,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -205,7 +210,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">syllabus.curricula package</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -244,398 +249,8 @@
           </label>
         </div>
         <article role="main">
-          <section id="syllabus-curricula-package">
-<h1>syllabus.curricula package<a class="headerlink" href="#syllabus-curricula-package" title="Link to this heading">¶</a></h1>
-<section id="module-syllabus.curricula.annealing_box">
-<span id="syllabus-curricula-annealing-box-module"></span><h2>syllabus.curricula.annealing_box module<a class="headerlink" href="#module-syllabus.curricula.annealing_box" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.annealing_box.SimulatedAnnealing">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.annealing_box.</span></span><span class="sig-name descname"><span class="pre">SimulatedAnnealing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">SupportsFloat</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">SupportsFloat</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/annealing_box.html#SimulatedAnnealing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.annealing_box.SimulatedAnnealing" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<p>Curriculum that anneals a set of values from start_values to end_values over a set number of steps.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.annealing_box.SimulatedAnnealing.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/annealing_box.html#SimulatedAnnealing.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.annealing_box.SimulatedAnnealing.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Sample k tasks from the curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.annealing_box.SimulatedAnnealing.update_on_episode">
-<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/annealing_box.html#SimulatedAnnealing.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.annealing_box.SimulatedAnnealing.update_on_episode" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with episode results from the environment.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.curricula.noop">
-<span id="syllabus-curricula-noop-module"></span><h2>syllabus.curricula.noop module<a class="headerlink" href="#module-syllabus.curricula.noop" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.noop.</span></span><span class="sig-name descname"><span class="pre">NoopCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_step_updates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/noop.html#NoopCurriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<p>Used to to test API without a curriculum.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.requires_step_updates">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_step_updates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.requires_step_updates" title="Link to this definition">¶</a></dt>
-<dd><p>Returns whether the curriculum requires step updates from the environment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if the curriculum requires step updates, False otherwise</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/noop.html#NoopCurriculum.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Sample k tasks from the curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.update_on_episode">
-<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/noop.html#NoopCurriculum.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.update_on_episode" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with episode results from the environment.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.update_on_step">
-<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/noop.html#NoopCurriculum.update_on_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with the current step results from the environment.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.update_on_step_batch">
-<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/noop.html#NoopCurriculum.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step_batch" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with a batch of step results from the environment.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.noop.NoopCurriculum.update_task_progress">
-<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/noop.html#NoopCurriculum.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.noop.NoopCurriculum.update_task_progress" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with a task and its success probability upon
-success or failure.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.curricula.selfplay">
-<span id="syllabus-curricula-selfplay-module"></span><h2>syllabus.curricula.selfplay module<a class="headerlink" href="#module-syllabus.curricula.selfplay" title="Link to this heading">¶</a></h2>
-<p>Self play curricula for training agents against copies themselves. This is an experimental API and subject to change.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.FictitiousSelfPlay">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.selfplay.</span></span><span class="sig-name descname"><span class="pre">FictitiousSelfPlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_loaded_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#FictitiousSelfPlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.FictitiousSelfPlay" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent">
-<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#FictitiousSelfPlay.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent" title="Link to this definition">¶</a></dt>
-<dd><p>Saves the current agent instance to a pickle file.
-When the <cite>max_agents</cite> limit is met, older agent checkpoints are overwritten.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent">
-<span class="sig-name descname"><span class="pre">get_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#FictitiousSelfPlay.get_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent" title="Link to this definition">¶</a></dt>
-<dd><p>Loads an agent from the buffer of saved agents.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics">
-<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#FictitiousSelfPlay.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log metrics for the curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.FictitiousSelfPlay.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#FictitiousSelfPlay.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Sample k tasks from the curriculum.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>k</strong> – Number of tasks to sample, defaults to 1</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Either returns a single task if k=1, or a list of k tasks</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.FictitiousSelfPlay.update_winrate">
-<span class="sig-name descname"><span class="pre">update_winrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opponent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opponent_reward</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#FictitiousSelfPlay.update_winrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.update_winrate" title="Link to this definition">¶</a></dt>
-<dd><p>Uses an incremental mean to update the opponent’s winrate i.e. priority.
-This implies that sampling according to the winrates returns the most
-challenging opponents.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.selfplay.</span></span><span class="sig-name descname"><span class="pre">PrioritizedFictitiousSelfPlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_loaded_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#PrioritizedFictitiousSelfPlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent">
-<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#PrioritizedFictitiousSelfPlay.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent" title="Link to this definition">¶</a></dt>
-<dd><p>Saves the current agent instance to a pickle file and update
-its priority.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent">
-<span class="sig-name descname"><span class="pre">get_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#PrioritizedFictitiousSelfPlay.get_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent" title="Link to this definition">¶</a></dt>
-<dd><p>Samples an agent id from the softmax distribution induced by winrates
-then loads the selected agent from the buffer of saved agents.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics">
-<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#PrioritizedFictitiousSelfPlay.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log metrics for the curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#PrioritizedFictitiousSelfPlay.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Samples k agents from the buffer of saved agents, prioritizing opponents with higher winrates.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.update_winrate">
-<span class="sig-name descname"><span class="pre">update_winrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opponent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opponent_reward</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#PrioritizedFictitiousSelfPlay.update_winrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.update_winrate" title="Link to this definition">¶</a></dt>
-<dd><p>Uses an incremental mean to update the opponent’s winrate i.e. priority.
-This implies that sampling according to the winrates returns the most
-challenging opponents.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.selfplay.</span></span><span class="sig-name descname"><span class="pre">SelfPlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace" title="syllabus.task_space.task_space.TaskSpace"><span class="pre">TaskSpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#SelfPlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.SelfPlay" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<p>Self play curriculum for training agents against themselves.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay.add_agent">
-<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Agent</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#SelfPlay.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.SelfPlay.add_agent" title="Link to this definition">¶</a></dt>
-<dd><p>Add an agent to the curriculum.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>agent</strong> – Agent to add to the curriculum</p>
-</dd>
-<dt class="field-even">Return agent_id<span class="colon">:</span></dt>
-<dd class="field-even"><p>Identifier of the added agent</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay.get_agent">
-<span class="sig-name descname"><span class="pre">get_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#SelfPlay.get_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.SelfPlay.get_agent" title="Link to this definition">¶</a></dt>
-<dd><p>Load an agent from the buffer of saved agents.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>agent_id</strong> – Identifier of the agent to load</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Loaded agent</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay.log_metrics">
-<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#SelfPlay.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.SelfPlay.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log metrics for the curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#SelfPlay.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.SelfPlay.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Sample k tasks from the curriculum.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>k</strong> – Number of tasks to sample, defaults to 1</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Either returns a single task if k=1, or a list of k tasks</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay.update_winrate">
-<span class="sig-name descname"><span class="pre">update_winrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/selfplay.html#SelfPlay.update_winrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.selfplay.SelfPlay.update_winrate" title="Link to this definition">¶</a></dt>
-<dd><p>Uses an incremental mean to update an agent’s winrate. This assumes that reward
-is positive for a win and negative for a loss. Not used for sampling.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>agent_id</strong> – Identifier of the agent</p></li>
-<li><p><strong>reward</strong> – Reward received by the agent</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.curricula.sequential">
-<span id="syllabus-curricula-sequential-module"></span><h2>syllabus.curricula.sequential module<a class="headerlink" href="#module-syllabus.curricula.sequential" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.sequential.</span></span><span class="sig-name descname"><span class="pre">SequentialCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopping_conditions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<p>Curriculum that iterates through a list of curricula based on stopping conditions.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions">
-<span class="sig-name descname"><span class="pre">check_stopping_conditions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.check_stopping_conditions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.current_curriculum">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_curriculum</span></span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.current_curriculum" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.log_metrics">
-<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log the task distribution to the provided writer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>writer</strong> – Tensorboard summary writer or wandb object</p></li>
-<li><p><strong>logs</strong> – Cumulative list of logs to write</p></li>
-<li><p><strong>step</strong> – Global step number</p></li>
-<li><p><strong>log_n_tasks</strong> – Maximum number of tasks to log, defaults to 1. Use -1 to log all tasks.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Updated logs list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_step_updates</span></span><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates" title="Link to this definition">¶</a></dt>
-<dd><p>Returns whether the curriculum requires step updates from the environment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if the curriculum requires step updates, False otherwise</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Choose the next k tasks from the list.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_on_episode">
-<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_episode" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with episode results from the environment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>episode_return</strong> – Episodic return</p></li>
-<li><p><strong>length</strong> – Length of the episode</p></li>
-<li><p><strong>task</strong> – Task for which the episode was completed</p></li>
-<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
-<li><p><strong>env_id</strong> – Environment identifier</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_on_step">
-<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_on_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with the current step results from the environment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>obs</strong> – Observation from the environment</p></li>
-<li><p><strong>rew</strong> – Reward from the environment</p></li>
-<li><p><strong>term</strong> – True if the episode ended on this step, False otherwise</p></li>
-<li><p><strong>trunc</strong> – True if the episode was truncated on this step, False otherwise</p></li>
-<li><p><strong>info</strong> – Extra information from the environment</p></li>
-<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
-<li><p><strong>env_id</strong> – Environment identifier</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch">
-<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with a batch of step results from the environment.</p>
-<p>This method can be overridden to provide a more efficient implementation. It is used
-as a convenience function and to optimize the multiprocessing message passing throughput.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>step_results</strong> – List of step results</p></li>
-<li><p><strong>env_id</strong> – Environment identifier</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.sequential.SequentialCurriculum.update_task_progress">
-<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/sequential.html#SequentialCurriculum.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.sequential.SequentialCurriculum.update_task_progress" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with a task and its progress. This is used for binary tasks that can be completed mid-episode.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>task</strong> – Task for which progress is being updated.</p></li>
-<li><p><strong>progress</strong> – Progress toward completion or success rate of the given task. 1.0 or True typically indicates a complete task.</p></li>
-<li><p><strong>env_id</strong> – Environment identifier</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-syllabus.curricula.simple_box">
-<span id="syllabus-curricula-simple-box-module"></span><h2>syllabus.curricula.simple_box module<a class="headerlink" href="#module-syllabus.curricula.simple_box" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.curricula.simple_box.SimpleBoxCurriculum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.curricula.simple_box.</span></span><span class="sig-name descname"><span class="pre">SimpleBoxCurriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">curriculum_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_successes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">curriculum_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/simple_box.html#SimpleBoxCurriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curriculum</span></code></a></p>
-<p>Base class and API for defining curricula to interface with Gym environments.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics">
-<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/curricula/simple_box.html#SimpleBoxCurriculum.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics" title="Link to this definition">¶</a></dt>
-<dd><p>Log metrics to writer.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.simple_box.SimpleBoxCurriculum.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/simple_box.html#SimpleBoxCurriculum.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Sample k tasks from the curriculum.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.curricula.simple_box.SimpleBoxCurriculum.update_task_progress">
-<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/curricula/simple_box.html#SimpleBoxCurriculum.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.update_task_progress" title="Link to this definition">¶</a></dt>
-<dd><p>Update the curriculum with a task and its success probability upon
-success or failure.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
+          <section id="curricula">
+<h1>Curricula<a class="headerlink" href="#curricula" title="Link to this heading">¶</a></h1>
 <section id="module-syllabus.curricula">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.curricula" title="Link to this heading">¶</a></h2>
 </section>
@@ -688,78 +303,7 @@ success or failure.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">syllabus.curricula package</a><ul>
-<li><a class="reference internal" href="#module-syllabus.curricula.annealing_box">syllabus.curricula.annealing_box module</a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.annealing_box.SimulatedAnnealing"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.annealing_box.SimulatedAnnealing.sample"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.annealing_box.SimulatedAnnealing.update_on_episode"><code class="docutils literal notranslate"><span class="pre">SimulatedAnnealing.update_on_episode()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.curricula.noop">syllabus.curricula.noop module</a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.requires_step_updates</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_episode()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_on_step_batch()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.noop.NoopCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">NoopCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.curricula.selfplay">syllabus.curricula.selfplay module</a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.FictitiousSelfPlay"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.add_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.get_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.log_metrics()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.sample"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.FictitiousSelfPlay.update_winrate"><code class="docutils literal notranslate"><span class="pre">FictitiousSelfPlay.update_winrate()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.add_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.get_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.log_metrics()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.sample"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.PrioritizedFictitiousSelfPlay.update_winrate"><code class="docutils literal notranslate"><span class="pre">PrioritizedFictitiousSelfPlay.update_winrate()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.SelfPlay"><code class="docutils literal notranslate"><span class="pre">SelfPlay</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.SelfPlay.add_agent"><code class="docutils literal notranslate"><span class="pre">SelfPlay.add_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.SelfPlay.get_agent"><code class="docutils literal notranslate"><span class="pre">SelfPlay.get_agent()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.SelfPlay.log_metrics"><code class="docutils literal notranslate"><span class="pre">SelfPlay.log_metrics()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.SelfPlay.sample"><code class="docutils literal notranslate"><span class="pre">SelfPlay.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.selfplay.SelfPlay.update_winrate"><code class="docutils literal notranslate"><span class="pre">SelfPlay.update_winrate()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.curricula.sequential">syllabus.curricula.sequential module</a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.check_stopping_conditions"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.check_stopping_conditions()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.current_curriculum"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.current_curriculum</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.log_metrics()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.requires_step_updates</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_episode"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_episode()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_step()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_on_step_batch()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.sequential.SequentialCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">SequentialCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.curricula.simple_box">syllabus.curricula.simple_box module</a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.log_metrics"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.log_metrics()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.sample"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.sample()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.curricula.simple_box.SimpleBoxCurriculum.update_task_progress"><code class="docutils literal notranslate"><span class="pre">SimpleBoxCurriculum.update_task_progress()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Curricula</a><ul>
 <li><a class="reference internal" href="#module-syllabus.curricula">Module contents</a></li>
 </ul>
 </li>

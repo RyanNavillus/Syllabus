@@ -157,7 +157,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
@@ -177,9 +177,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -205,7 +210,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -263,7 +268,7 @@
 </div>
 <p><strong>Note</strong> the environment must be a TaskEnv or wrapped in a TaskWrapper immediately before the synchronization wrapper. When the synchronization wrapper calls the environment’s reset method, it must be able to accept a <cite>new_task</cite> keyword argument. You do not need to actually subclass TaskEnv or TaskWrapper, but you must follow the task interface API. See <a class="reference internal" href="syllabus.core.task_interface.html#taskinterface"><span class="std std-ref">Task Interface</span></a> for more information.</p>
 <p>Now that you’ve applied these wrappers, the environment will automatically receive tasks from the curriculum at the start of each episode, and the environment will automatically send feedback to the curriculum. The environment synchronization wrapper sends updates at the end of each episode, which tell the curriculum to sample another task. The episode return and length may also be used by the <code class="docutils literal notranslate"><span class="pre">StatRecorder</span></code> if it is enabled in the curriculum.</p>
-<p>You can also update the curriculum directly from the main learner process to incorporate training information. Since this doesn’t need multiprocessing synchronization, you can define the interface however you like. However, we suggest making these interfaces as simple as possible to promote portability to other RL libraries. You can read <a class="reference internal" href="../motivation.html#motivation"><span class="std std-ref">Motivation</span></a> for more information and see an example of these updates in <a class="reference internal" href="syllabus.curricula.plr.html#prioritized-level-replay-update"><span class="std std-ref">Prioritized Level Replay</span></a></p>
+<p>You can also update the curriculum directly from the main learner process to incorporate training information. Since this doesn’t need multiprocessing synchronization, you can define the interface however you like. However, we suggest making these interfaces as simple as possible to promote portability to other RL libraries. You can read <a class="reference internal" href="../motivation.html#motivation"><span class="std std-ref">Motivation</span></a> for more information and see an example of these updates in <a class="reference internal" href="../curricula/syllabus.curricula.plr.html#prioritized-level-replay-update"><span class="std std-ref">Prioritized Level Replay</span></a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">curriculum</span><span class="o">.</span><span class="n">custom_update</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>

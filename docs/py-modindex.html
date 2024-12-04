@@ -155,7 +155,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Syllabus Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="motivation.html">Motivation</a></li>
@@ -175,9 +175,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.curricula.plr.html">Prioritized Level Replay (PLR) Curriculum</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
 <ul>
@@ -203,7 +208,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="modules/syllabus.task_space.html">Task Spaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules/syllabus.tests.html">syllabus.tests package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modules/syllabus.curricula.html">syllabus.curricula package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules/syllabus.curricula.html">Curricula</a></li>
 </ul>
 </li>
 </ul>
@@ -335,67 +340,61 @@
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.html#module-syllabus.curricula.annealing_box"><code class="xref">syllabus.curricula.annealing_box</code></a></td><td>
+        <a href="curricula/syllabus.curricula.annealing.html#module-syllabus.curricula.annealing_box"><code class="xref">syllabus.curricula.annealing_box</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.domain_randomization.html#module-syllabus.curricula.domain_randomization"><code class="xref">syllabus.curricula.domain_randomization</code></a></td><td>
+        <a href="curricula/syllabus.curricula.domain_randomization.html#module-syllabus.curricula.domain_randomization"><code class="xref">syllabus.curricula.domain_randomization</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.learning_progress.html#module-syllabus.curricula.learning_progress"><code class="xref">syllabus.curricula.learning_progress</code></a></td><td>
+        <a href="curricula/syllabus.curricula.learning_progress.html#module-syllabus.curricula.learning_progress"><code class="xref">syllabus.curricula.learning_progress</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.html#module-syllabus.curricula.noop"><code class="xref">syllabus.curricula.noop</code></a></td><td>
+        <a href="curricula/syllabus.curricula.constant.html#module-syllabus.curricula.noop"><code class="xref">syllabus.curricula.noop</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.central_plr_wrapper"><code class="xref">syllabus.curricula.plr.central_plr_wrapper</code></a></td><td>
+        <a href="curricula/syllabus.curricula.plr.html#module-syllabus.curricula.plr.central_plr_wrapper"><code class="xref">syllabus.curricula.plr.central_plr_wrapper</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.direct_plr_wrapper"><code class="xref">syllabus.curricula.plr.direct_plr_wrapper</code></a></td><td>
+        <a href="curricula/syllabus.curricula.plr.html#module-syllabus.curricula.plr.direct_plr_wrapper"><code class="xref">syllabus.curricula.plr.direct_plr_wrapper</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.plr_wrapper"><code class="xref">syllabus.curricula.plr.plr_wrapper</code></a></td><td>
+        <a href="curricula/syllabus.curricula.plr.html#module-syllabus.curricula.plr.plr_wrapper"><code class="xref">syllabus.curricula.plr.plr_wrapper</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.plr.html#module-syllabus.curricula.plr.task_sampler"><code class="xref">syllabus.curricula.plr.task_sampler</code></a></td><td>
+        <a href="curricula/syllabus.curricula.plr.html#module-syllabus.curricula.plr.task_sampler"><code class="xref">syllabus.curricula.plr.task_sampler</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.html#module-syllabus.curricula.selfplay"><code class="xref">syllabus.curricula.selfplay</code></a></td><td>
+        <a href="curricula/syllabus.curricula.sequential.html#module-syllabus.curricula.sequential"><code class="xref">syllabus.curricula.sequential</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
     <td></td>
     <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.html#module-syllabus.curricula.sequential"><code class="xref">syllabus.curricula.sequential</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="modules/syllabus.curricula.html#module-syllabus.curricula.simple_box"><code class="xref">syllabus.curricula.simple_box</code></a></td><td>
+        <a href="curricula/syllabus.curricula.expanding_box.html#module-syllabus.curricula.simple_box"><code class="xref">syllabus.curricula.simple_box</code></a></td><td>
     <em></em></td>
   </tr>
   <tr class="cg-1">
