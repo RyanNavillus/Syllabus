@@ -2,7 +2,7 @@
 import ray
 
 from nle.env.tasks import NetHackScore
-from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, CentralPrioritizedLevelReplay, SimpleBoxCurriculum
+from syllabus.curricula import Constant, DomainRandomization, LearningProgress, CentralPrioritizedLevelReplay, SimpleBoxCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_nethack_env, create_cartpole_env
 

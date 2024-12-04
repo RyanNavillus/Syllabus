@@ -8,9 +8,9 @@ from syllabus.core.evaluator import DummyEvaluator
 from syllabus.curricula import (SimulatedAnnealing,
                                 CentralPrioritizedLevelReplay,
                                 DomainRandomization,
-                                LearningProgressCurriculum, NoopCurriculum,
+                                LearningProgress, Constant,
                                 PrioritizedLevelReplay, SequentialCurriculum,
-                                SimpleBoxCurriculum)
+                                ExpandingBox)
 from syllabus.tests import (create_cartpole_env, create_nethack_env,
                             get_test_values, get_test_actions, run_native_multiprocess,
                             run_ray_multiprocess, run_single_process)
@@ -27,9 +27,9 @@ eval_envs = gym.vector.SyncVectorEnv(
 evaluator = DummyEvaluator(nethack_env.action_space)
 
 curricula = [
-    (NoopCurriculum, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
+    (Constant, create_nethack_env, (NetHackScore, nethack_env.task_space), {}),
     (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
-    (LearningProgressCurriculum, create_nethack_env, (eval_envs, get_test_actions, nethack_env.task_space,), {}),
+    (LearningProgress, create_nethack_env, (eval_envs, get_test_actions, nethack_env.task_space,), {}),
     (CentralPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,),
      {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
     (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
@@ -38,7 +38,7 @@ curricula = [
         "num_processes": N_ENVS,
         "num_steps": 2048
     }),
-    (SimpleBoxCurriculum, create_cartpole_env, (cartpole_env.task_space,), {}),
+    (ExpandingBox, create_cartpole_env, (cartpole_env.task_space,), {}),
     (SimulatedAnnealing, create_cartpole_env, (cartpole_env.task_space,), {
         'start_values': [-0.02, 0.02],
         'end_values': [-0.3, 0.3],

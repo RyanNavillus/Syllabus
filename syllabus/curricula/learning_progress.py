@@ -10,7 +10,7 @@ from syllabus.core import Curriculum
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 
-class LearningProgressCurriculum(Curriculum):
+class LearningProgress(Curriculum):
     """
     Provides an interface for tracking success rates of discrete tasks and sampling tasks 
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     tasks = range(20)
     histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
 
-    curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
+    curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
     for i in range(len(histories[0][0])):
         for task in tasks:
             curriculum.update_task_progress(task, histories[task][0][i])
@@ -170,7 +170,7 @@ if __name__ == "__main__":
 
     tasks = [0]
     histories = {task: generate_history(n=200, center=75, curve=0.1) for task in tasks}
-    curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
+    curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
     lp_raw = []
     lp_reweight = []
     p_fast = []
@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
         # Z-score plot
         tasks = [i for i in range(50)]
-        curriculum = LearningProgressCurriculum(DiscreteTaskSpace(len(tasks)))
+        curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
         histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
         for i in range(len(histories[0][0])):
             for task in tasks:

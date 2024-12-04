@@ -7,7 +7,7 @@ import ray
 
 from nle.env.tasks import NetHackScore
 from syllabus.examples import NethackTaskWrapper
-from syllabus.curricula import LearningProgressCurriculum, PrioritizedLevelReplay
+from syllabus.curricula import LearningProgress, PrioritizedLevelReplay
 from syllabus.core import (GymnasiumSyncWrapper,
                            RayGymnasiumSyncWrapper,
                            RayCurriculumSyncWrapper,

@@ -22,7 +22,7 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.curricula import CentralPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
+from syllabus.curricula import CentralPrioritizedLevelReplay, DomainRandomization, SyncedBatchedDomainRandomization, LearningProgress, SequentialCurriculum
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -245,7 +245,7 @@ if __name__ == "__main__":
             curriculum = SyncedBatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            curriculum = LearningProgressCurriculum(sample_env.task_space)
+            curriculum = LearningProgress(sample_env.task_space)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
