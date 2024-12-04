@@ -194,6 +194,8 @@
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/curriculum_synchronization.html">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/environment_synchronization.html">Environment Synchronization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
@@ -265,7 +267,7 @@
 
 
 <div class="viewcode-block" id="GymnasiumSyncWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">GymnasiumSyncWrapper</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Wrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This wrapper is used to set the task on reset for a Gym environments running</span>
@@ -323,7 +325,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">put_update</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GymnasiumSyncWrapper.reset">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.reset">[docs]</a>
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_progress</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_length</span> <span class="o">=</span> <span class="mi">0</span>
@@ -341,7 +343,7 @@
 
 
 <div class="viewcode-block" id="GymnasiumSyncWrapper.step">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.step">[docs]</a>
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">step_api_compatibility</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">),</span> <span class="n">output_truncation_bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_task</span><span class="p">())</span>
@@ -415,7 +417,7 @@
         <span class="p">}]</span>
 
 <div class="viewcode-block" id="GymnasiumSyncWrapper.get_task">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.GymnasiumSyncWrapper.get_task">[docs]</a>
     <span class="k">def</span> <span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Allow user to reject task</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">):</span>
@@ -431,7 +433,7 @@
 
 
 <div class="viewcode-block" id="PettingZooSyncWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">PettingZooSyncWrapper</span><span class="p">(</span><span class="n">BaseParallelWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This wrapper is used to set the task on reset for a Gym environments running</span>
@@ -497,7 +499,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">put_update</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PettingZooSyncWrapper.reset">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.reset">[docs]</a>
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_progress</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_length</span> <span class="o">=</span> <span class="mi">0</span>
@@ -515,7 +517,7 @@
 
 
 <div class="viewcode-block" id="PettingZooSyncWrapper.step">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.step">[docs]</a>
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_length</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -597,7 +599,7 @@
             <span class="k">return</span> <span class="n">obs</span>
 
 <div class="viewcode-block" id="PettingZooSyncWrapper.get_task">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.PettingZooSyncWrapper.get_task">[docs]</a>
     <span class="k">def</span> <span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Allow user to reject task</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">):</span>
@@ -613,7 +615,7 @@
 
 
 <div class="viewcode-block" id="RayGymnasiumSyncWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">RayGymnasiumSyncWrapper</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Wrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This wrapper is used to set the task on reset for a Gym environments running</span>
@@ -638,7 +640,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">step_results</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="RayGymnasiumSyncWrapper.reset">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.reset">[docs]</a>
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_results</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -659,7 +661,7 @@
 
 
 <div class="viewcode-block" id="RayGymnasiumSyncWrapper.step">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.step">[docs]</a>
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
@@ -686,7 +688,7 @@
 
 
 <div class="viewcode-block" id="RayGymnasiumSyncWrapper.change_task">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayGymnasiumSyncWrapper.change_task">[docs]</a>
     <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Changes the task of the existing environment to the new_task.</span>
@@ -709,7 +711,7 @@
 
 
 <div class="viewcode-block" id="RayPettingZooSyncWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">RayPettingZooSyncWrapper</span><span class="p">(</span><span class="n">BaseParallelWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This wrapper is used to set the task on reset for a Gym environments running</span>
@@ -734,7 +736,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">step_results</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="RayPettingZooSyncWrapper.reset">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.reset">[docs]</a>
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_results</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -755,7 +757,7 @@
 
 
 <div class="viewcode-block" id="RayPettingZooSyncWrapper.change_task">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.change_task">[docs]</a>
     <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Changes the task of the existing environment to the new_task.</span>
@@ -771,7 +773,7 @@
 
 
 <div class="viewcode-block" id="RayPettingZooSyncWrapper.step">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/environment_synchronization.html#syllabus.core.environment_sync_wrapper.RayPettingZooSyncWrapper.step">[docs]</a>
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 

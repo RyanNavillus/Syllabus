@@ -1,0 +1,717 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Environment Synchronization" href="environment_synchronization.html" /><link rel="prev" title="Global Synchronization" href="../modules/syllabus.core.html" />
+
+    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+        <title>Curriculum Synchronization - Syllabus 0.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motivation.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">Environment Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/evaluation.html">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.curriculum.html">Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/custom_curricula.html">Creating Your Own Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/co_player.html">Co-player Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/implemented_curricula.html">Curriculum Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluators.html">Evaluators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stat_recorder.html">Stat Recorder</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Curriculum Methods:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.annealing.html">Simulated Annealing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.constant.html">Constant Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.domain_randomization.html">Domain Randomization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.expanding_box.html">Expanding Box Curriculum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.learning_progress.html">Learning Progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.plr.html">Prioritized Level Replay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.selfplay.html">Self Play Curricula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../curricula/syllabus.curricula.sequential.html">Sequential Curriculum</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Task Spaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.task_interface.html">Task Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environment_synchronization.html">Environment Synchronization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/RyanNavillus/Syllabus">Github</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/modules.html">syllabus</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of syllabus</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../modules/syllabus.html">syllabus package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of syllabus package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../modules/syllabus.examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.models.html">Example Models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.task_wrappers.html">Task Wrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modules/syllabus.examples.utils.html">Example Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.task_space.html">Task Spaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.tests.html">syllabus.tests package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../modules/syllabus.curricula.html">Curricula</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="curriculum-synchronization">
+<span id="id1"></span><h1>Curriculum Synchronization<a class="headerlink" href="#curriculum-synchronization" title="Link to this heading">¶</a></h1>
+<p>The curriculum synchronization wrapper routes update messages to the proper <a class="reference internal" href="../modules/syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a> methods and requests tasks from the Curriculum to send back to the environments. You can create a synchronized curriculum by calling the <code class="docutils literal notranslate"><span class="pre">make_multiprocessing_curriculum</span></code> or <code class="docutils literal notranslate"><span class="pre">make_ray_curriculum</span></code> functions. The ray method will wrap the curriculum in a ray actor, allowing it to communicate with the environments running as separate ray actors. The native multiprocessing method will wrap the curriculum in a wrapper class which has a <code class="docutils literal notranslate"><span class="pre">components</span></code> property. This contains all of the information that needs to be passed to the environment synchronization wrapper, including the task and update queues, methods for getting unique environment identifiers, and a method indicating whether the environment should send step updates. Passing these components to the environment synchronization wrapper will allow the curriculum to communicate with the environments. It is possible to have multiple separate curricula and sets of environments communicating via different components but that behavior is not officially supported.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">make_multiprocessing_curriculum</span></code> method has several options to provide control over the queue behavior. The <code class="docutils literal notranslate"><span class="pre">timeout</span></code> option controls how long each environment will wait for a new task before throwing an error. The remaining communication methods do not block and instead throw an error if a value is not immediately available. Updates are only requested after checking that the update queue is not empty, so this should never throw an error.  Placing updates or tasks into their respective queues will only error if the queue is full. If this happens, you can increase the <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> argument to increase the size of both queues, though this is likely indicative of the curriculum processing updates too slowly. If this happens, you can choose to limit the number of environments that are used to update the curriculum with the <code class="docutils literal notranslate"><span class="pre">max_envs</span></code> option. This causes the environment synchronization wrapper to only send step updates for at most <code class="docutils literal notranslate"><span class="pre">max_envs</span></code> environments. Task updates and environment updates are still sent because they are used to request new tasks from the curriculum, and they are sent at a much slower rate than step updates.</p>
+<dl class="py class" id="module-syllabus.core.curriculum_sync_wrapper">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">CurriculumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumSyncWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics">
+<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumSyncWrapper.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update">
+<span class="sig-name descname"><span class="pre">route_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumSyncWrapper.route_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with the specified update type.
+TODO: Change method header to not use dictionary, use enums?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>update_data</strong> (<em>Dictionary with &quot;update_type&quot; key which maps to one</em><em> of </em><em>[</em><em>&quot;step&quot;</em><em>, </em><em>&quot;step_batch&quot;</em><em>, </em><em>&quot;episode&quot;</em><em>, </em><em>&quot;on_demand&quot;</em><em>, </em><em>&quot;task_progress&quot;</em><em>, </em><em>&quot;noop&quot;</em><em>] </em><em>and &quot;args&quot; with a tuple</em><em> of </em><em>the appropriate arguments for the given &quot;update_type&quot;.</em>) – Dictionary</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumSyncWrapper.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.start" title="Link to this definition">¶</a></dt>
+<dd><p>Start the thread that reads the complete_queue and reads the task_queue.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumSyncWrapper.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.stop" title="Link to this definition">¶</a></dt>
+<dd><p>Stop the thread that reads the complete_queue and reads the task_queue.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">CurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper class for adding multiprocessing synchronization to a curriculum.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.count_tasks">
+<span class="sig-name descname"><span class="pre">count_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.count_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.count_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.get_tasks">
+<span class="sig-name descname"><span class="pre">get_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.get_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.get_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.log_metrics">
+<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.log_metrics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.normalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.normalize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.num_tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_tasks</span></span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.num_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.requires_step_updates">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_step_updates</span></span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.requires_step_updates" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.sample" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.tasks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tasks</span></span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_episode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step">
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.update_on_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step_batch">
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step_batch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_task_progress">
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#CurriculumWrapper.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_task_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">MultiProcessingComponents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requires_step_updates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_queue_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.close" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_id">
+<span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.get_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_metrics">
+<span class="sig-name descname"><span class="pre">get_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.get_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_metrics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_task">
+<span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.get_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_task" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_update">
+<span class="sig-name descname"><span class="pre">get_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.get_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.peek_id">
+<span class="sig-name descname"><span class="pre">peek_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.peek_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.peek_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_task">
+<span class="sig-name descname"><span class="pre">put_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.put_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_task" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_update">
+<span class="sig-name descname"><span class="pre">put_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.put_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.should_sync">
+<span class="sig-name descname"><span class="pre">should_sync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#MultiProcessingComponents.should_sync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.should_sync" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">RayCurriculumSyncWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actor_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'curriculum'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#RayCurriculumSyncWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+<p>Subclass of LearningProgress Curriculum that uses Ray to share tasks and receive feedback
+from the environment. The only change is the &#64;ray.remote decorator on the class.</p>
+<p>The &#64;decorate_all_functions(remote_call) annotation automatically forwards all functions not explicitly
+overridden here to the remote curriculum. This is intended to forward private functions of Curriculum subclasses
+for convenience.
+# TODO: Implement the Curriculum methods explicitly</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.count_tasks">
+<span class="sig-name descname"><span class="pre">count_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.count_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.get_tasks">
+<span class="sig-name descname"><span class="pre">get_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.get_tasks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.log_metrics">
+<span class="sig-name descname"><span class="pre">log_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_n_tasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.log_metrics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.normalize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#RayCurriculumSyncWrapper.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.sample" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_episode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step">
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step_batch">
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#RayCurriculumSyncWrapper.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step_batch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_task_progress">
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_task_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.make_multiprocessing_curriculum">
+<span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">make_multiprocessing_curriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#make_multiprocessing_curriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.make_multiprocessing_curriculum" title="Link to this definition">¶</a></dt>
+<dd><p>Helper function for creating a MultiProcessingCurriculumWrapper.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.make_ray_curriculum">
+<span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">make_ray_curriculum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actor_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'curriculum'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#make_ray_curriculum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.make_ray_curriculum" title="Link to this definition">¶</a></dt>
+<dd><p>Helper function for creating a RayCurriculumWrapper.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="syllabus.core.curriculum_sync_wrapper.remote_call">
+<span class="sig-prename descclassname"><span class="pre">syllabus.core.curriculum_sync_wrapper.</span></span><span class="sig-name descname"><span class="pre">remote_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/curriculum_sync_wrapper.html#remote_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.curriculum_sync_wrapper.remote_call" title="Link to this definition">¶</a></dt>
+<dd><p>Decorator for automatically forwarding calls to the curriculum via ray remote calls.</p>
+<p>Note that this causes functions to block, and should be only used for operations that do not require parallelization.</p>
+</dd></dl>
+
+<section id="multiagent-curriculum-synchronization">
+<h2>Multiagent Curriculum Synchronization<a class="headerlink" href="#multiagent-curriculum-synchronization" title="Link to this heading">¶</a></h2>
+<p>There are multiple valid ways to use curricula with multiagent environments. Each agent might be given a separate curriculum, or they may all update the same curriculum. A shared curriculum may be explicitly designed for multiagent environments, or they may be single agent curricula that simply use all of the agent’s data to update a single sampling distribution. In cases where the curriculum tracks environments individually, there is also a question of whether each agent from a given environment should be treated as the same data stream, or if each agent should be treated as a separate data stream, similar to a separate single agent environment.</p>
+<p>By default, Syllabus sends updates in the PettingZoo format, and therefore assumes that a curriculum is explicitly designed for multiagent environments. If you want to use a single agent curriculum instead, you can wrap the curriculum in the <code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper</span></code> which separates each agent’s data and calls the curriculum’s <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code> method. The <code class="docutils literal notranslate"><span class="pre">joint_policy</span></code> argument controls whether the wrapper will separate observations into individual agent observations, or keep the global observation such that a joint policy could select actions for all agents at once, and also creates a unique environment identifier for each agent in each environment. This is only important if you plan to use an <a class="reference external" href="Evaluator">Evaluator</a> with the observations, or if your curriculum uses the <code class="docutils literal notranslate"><span class="pre">env_id</span></code> argument of <code class="docutils literal notranslate"><span class="pre">update_on_step</span></code>.</p>
+<dl class="py class" id="module-syllabus.core.multiagent_curriculum_wrappers">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.multiagent_curriculum_wrappers.</span></span><span class="sig-name descname"><span class="pre">MultiagentIndependentCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">possible_agents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/multiagent_curriculum_wrappers.html#MultiagentIndependentCurriculumWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.multiagent_curriculum_wrappers.</span></span><span class="sig-name descname"><span class="pre">MultiagentSharedCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curriculum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">possible_agents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joint_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/multiagent_curriculum_wrappers.html#MultiagentSharedCurriculumWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/core/multiagent_curriculum_wrappers.html#MultiagentSharedCurriculumWrapper.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with episode results from the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step">
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/core/multiagent_curriculum_wrappers.html#MultiagentSharedCurriculumWrapper.update_on_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step" title="Link to this definition">¶</a></dt>
+<dd><p>Update the curriculum with the current step results from the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch">
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/syllabus/core/multiagent_curriculum_wrappers.html#MultiagentSharedCurriculumWrapper.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress">
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/multiagent_curriculum_wrappers.html#MultiagentSharedCurriculumWrapper.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<p>Additionally, if you have an competitive multiagent, multitask environment and want to design a curriculum over both opponents and tasks, you can use the <code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper</span></code> to combine an agent-based and task-based curriculum into a single curriculum that samples from both. For example, you can use <a class="reference external" href="Co-player">Self Play</a> with <a class="reference external" href="prioritized-level-replay">Prioritized Level Replay</a> to individually sample an opponent and seed for each episode. Internally it will send all episode and task updates to both curricula, and it will send step updates to any curriculum that requires them. It will sample tasks from each curriculum and then concatenate them into an <code class="docutils literal notranslate"><span class="pre">(agent,</span> <span class="pre">task)</span></code> tuple.</p>
+<dl class="py class" id="module-syllabus.core.dual_curriculum_wrapper">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.core.dual_curriculum_wrapper.</span></span><span class="sig-name descname"><span class="pre">DualCurriculumWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_curriculum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum" title="syllabus.core.curriculum_base.Curriculum"><span class="pre">Curriculum</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_agent_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper" title="syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a></p>
+<p>Curriculum wrapper containing both an agent and environment-based curriculum.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent">
+<span class="sig-name descname"><span class="pre">get_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AgentTask</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.get_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">EnvTask</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AgentTask</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Sets new tasks for the environment and agent curricula.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent">
+<span class="sig-name descname"><span class="pre">update_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Agent</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.update_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode">
+<span class="sig-name descname"><span class="pre">update_on_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.update_on_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step">
+<span class="sig-name descname"><span class="pre">update_on_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.update_on_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch">
+<span class="sig-name descname"><span class="pre">update_on_step_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.update_on_step_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress">
+<span class="sig-name descname"><span class="pre">update_task_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/core/dual_curriculum_wrapper.html#DualCurriculumWrapper.update_task_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="environment_synchronization.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Environment Synchronization</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../modules/syllabus.core.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Global Synchronization</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Ryan Sullivan
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Curriculum Synchronization</a><ul>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper.log_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper.route_update()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.start"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper.start()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.stop"><code class="docutils literal notranslate"><span class="pre">CurriculumSyncWrapper.stop()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.count_tasks"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.count_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.get_tasks"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.get_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.log_metrics"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.log_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.normalize"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.normalize()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.num_tasks"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.num_tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.requires_step_updates"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.requires_step_updates</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.sample"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.tasks"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.tasks</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.update_on_episode()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.update_on_step()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.update_on_step_batch()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_task_progress"><code class="docutils literal notranslate"><span class="pre">CurriculumWrapper.update_task_progress()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.close"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.close()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_id"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.get_id()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_metrics"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.get_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_task"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.get_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_update"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.get_update()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.peek_id"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.peek_id()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_task"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.put_task()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_update"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.put_update()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.should_sync"><code class="docutils literal notranslate"><span class="pre">MultiProcessingComponents.should_sync()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.count_tasks"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.count_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.get_tasks"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.get_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.log_metrics"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.log_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.normalize"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.normalize()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.sample"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.update_on_episode()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.update_on_step()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.update_on_step_batch()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_task_progress"><code class="docutils literal notranslate"><span class="pre">RayCurriculumSyncWrapper.update_task_progress()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.make_multiprocessing_curriculum"><code class="docutils literal notranslate"><span class="pre">make_multiprocessing_curriculum()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.make_ray_curriculum"><code class="docutils literal notranslate"><span class="pre">make_ray_curriculum()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.curriculum_sync_wrapper.remote_call"><code class="docutils literal notranslate"><span class="pre">remote_call()</span></code></a></li>
+<li><a class="reference internal" href="#multiagent-curriculum-synchronization">Multiagent Curriculum Synchronization</a><ul>
+<li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">MultiagentIndependentCurriculumWrapper</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper.update_on_episode()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper.update_on_step()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper.update_on_step_batch()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress"><code class="docutils literal notranslate"><span class="pre">MultiagentSharedCurriculumWrapper.update_task_progress()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper</span></code></a><ul>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.get_agent()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.sample()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_agent()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_episode()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_step()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_on_step_batch()</span></code></a></li>
+<li><a class="reference internal" href="#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress"><code class="docutils literal notranslate"><span class="pre">DualCurriculumWrapper.update_task_progress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=ec806d2c"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

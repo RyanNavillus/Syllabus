@@ -71,6 +71,8 @@ It currently has support for environments run with Python native multiprocessing
    :caption: Synchronization:
 
    modules/syllabus.core
+   synchronization/curriculum_synchronization
+   synchronization/environment_synchronization
 
 .. toctree::
    :maxdepth: 2

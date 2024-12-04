@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
-        <title>syllabus.tests.sync_test_curriculum - Syllabus 0.6 documentation</title>
+        <title>syllabus.curricula.constant - Syllabus 0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
@@ -249,94 +249,81 @@
           </label>
         </div>
         <article role="main">
-          <h1>Source code for syllabus.tests.sync_test_curriculum</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+          <h1>Source code for syllabus.curricula.constant</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">syllabus.curricula</span> <span class="kn">import</span> <span class="n">SequentialCurriculum</span>
+<span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">Curriculum</span>
 
 
-<div class="viewcode-block" id="SyncTestCurriculum">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum">[docs]</a>
-<span class="k">class</span> <span class="nc">SyncTestCurriculum</span><span class="p">(</span><span class="n">SequentialCurriculum</span><span class="p">):</span>
+<div class="viewcode-block" id="Constant">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.constant.html#syllabus.curricula.constant.Constant">[docs]</a>
+<span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class and API for defining curricula to interface with Gym environments.</span>
+<span class="sd">    Used to to test API without a curriculum.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">REQUIRES_STEP_UPDATES</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">REQUIRES_CENTRAL_UPDATES</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_envs</span><span class="p">,</span> <span class="n">num_episodes</span><span class="p">,</span> <span class="o">*</span><span class="n">curriculum_args</span><span class="p">,</span> <span class="o">**</span><span class="n">curriculum_kwargs</span><span class="p">):</span>
-        <span class="c1"># Create a manual curriculum with a new task per episode, repeated across all envs</span>
-        <span class="n">task_list</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;task </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_episodes</span><span class="p">)]</span>
-        <span class="n">stopping</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;tasks&gt;=</span><span class="si">{</span><span class="n">num_envs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_episodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">task_list</span><span class="p">,</span> <span class="n">stopping</span><span class="p">,</span> <span class="o">*</span><span class="n">curriculum_args</span><span class="p">,</span> <span class="o">**</span><span class="n">curriculum_kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span> <span class="o">=</span> <span class="n">num_envs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_episodes</span> <span class="o">=</span> <span class="n">num_episodes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">task_counts</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">task</span><span class="p">):</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">task_list</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">task_counts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c1"># Error task</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_dones</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">episode_rewards</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_task</span><span class="p">,</span> <span class="o">*</span><span class="n">curriculum_args</span><span class="p">,</span> <span class="n">require_step_updates</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">curriculum_kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">curriculum_args</span><span class="p">,</span> <span class="o">**</span><span class="n">curriculum_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">default_task</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_step_updates</span> <span class="o">=</span> <span class="n">require_step_updates</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">requires_step_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_step_updates</span>
 
-<div class="viewcode-block" id="SyncTestCurriculum.update_on_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_on_episode">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update_on_episode</span><span class="p">(</span><span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">+=</span> <span class="n">episode_return</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_dones</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">task_counts</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_rewards</span><span class="p">[</span>
-            <span class="n">env_id</span><span class="p">]</span> <span class="o">==</span> <span class="n">episode_return</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Episode return </span><span class="si">{</span><span class="n">episode_return</span><span class="si">}</span><span class="s2"> does not match expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_rewards</span><span class="p">[</span><span class="n">env_id</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">episode_rewards</span><span class="p">[</span><span class="n">env_id</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
-
-
-<div class="viewcode-block" id="SyncTestCurriculum.update_on_step">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_on_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">episode_rewards</span><span class="p">[</span><span class="n">env_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rew</span></div>
-
-
-<div class="viewcode-block" id="SyncTestCurriculum.update_on_step_batch">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.update_on_step_batch">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="c1"># print(step_results)</span>
-        <span class="n">tasks</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span><span class="p">,</span> <span class="n">progresses</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">step_results</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">te</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span><span class="p">,</span> <span class="n">progresses</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">te</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SyncTestCurriculum.get_stats">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.get_stats">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;total_reward&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span><span class="p">,</span>
-            <span class="s2">&quot;total_dones&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_dones</span><span class="p">,</span>
-            <span class="s2">&quot;task_counts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_counts</span>
-        <span class="p">}</span></div>
-
-
-<div class="viewcode-block" id="SyncTestCurriculum.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.sync_test_curriculum.SyncTestCurriculum.sample">[docs]</a>
+<div class="viewcode-block" id="Constant.sample">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.constant.html#syllabus.curricula.constant.Constant.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="n">remaining_tasks</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_episodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_tasks</span>
-        <span class="k">if</span> <span class="n">remaining_tasks</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
-            <span class="n">tasks</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">remaining_tasks</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">remaining_tasks</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">while</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">:</span>
-                <span class="n">tasks</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">)</span>
-                <span class="n">k</span> <span class="o">-=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">tasks</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tasks</span></div>
-</div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sample k tasks from the curriculum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">default_task</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="Constant.update_task_progress">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.constant.html#syllabus.curricula.constant.Constant.update_task_progress">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the curriculum with a task and its success probability upon</span>
+<span class="sd">        success or failure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Constant.update_on_step">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.constant.html#syllabus.curricula.constant.Constant.update_on_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the curriculum with the current step results from the environment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Constant.update_on_step_batch">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.constant.html#syllabus.curricula.constant.Constant.update_on_step_batch">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the curriculum with a batch of step results from the environment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Constant.update_on_episode">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.constant.html#syllabus.curricula.constant.Constant.update_on_episode">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the curriculum with episode results from the environment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_sample_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a sample distribution over the task space.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span><span class="p">)]</span>
+        <span class="n">dist</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">default_task</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">return</span> <span class="n">dist</span></div>
 
 </pre></div>
         </article>

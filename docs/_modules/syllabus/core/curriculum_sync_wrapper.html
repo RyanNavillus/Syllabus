@@ -194,6 +194,8 @@
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/curriculum_synchronization.html">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/environment_synchronization.html">Environment Synchronization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
@@ -267,7 +269,7 @@
 
 
 <div class="viewcode-block" id="CurriculumWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">CurriculumWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class for adding multiprocessing synchronization to a curriculum.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -285,7 +287,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">num_tasks</span>
 
 <div class="viewcode-block" id="CurriculumWrapper.count_tasks">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.count_tasks">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.count_tasks">[docs]</a>
     <span class="k">def</span> <span class="nf">count_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_space</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">count_tasks</span><span class="p">(</span><span class="n">gym_space</span><span class="o">=</span><span class="n">task_space</span><span class="p">)</span></div>
 
@@ -299,49 +301,49 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">requires_step_updates</span>
 
 <div class="viewcode-block" id="CurriculumWrapper.get_tasks">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.get_tasks">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.get_tasks">[docs]</a>
     <span class="k">def</span> <span class="nf">get_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_space</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">get_tasks</span><span class="p">(</span><span class="n">gym_space</span><span class="o">=</span><span class="n">task_space</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.sample">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.update_task_progress">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_task_progress">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_task_progress">[docs]</a>
     <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.update_on_step">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.log_metrics">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.log_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.log_metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="n">log_n_tasks</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.update_on_step_batch">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step_batch">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_step_batch">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_on_step_batch</span><span class="p">(</span><span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.update_on_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_episode">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.update_on_episode">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_on_episode</span><span class="p">(</span><span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CurriculumWrapper.normalize">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.normalize">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumWrapper.normalize">[docs]</a>
     <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">rewards</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span></div>
 
@@ -354,7 +356,7 @@
 
 
 <div class="viewcode-block" id="MultiProcessingComponents">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents">[docs]</a>
 <span class="k">class</span> <span class="nc">MultiProcessingComponents</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requires_step_updates</span><span class="p">,</span> <span class="n">max_queue_size</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">max_envs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">requires_step_updates</span> <span class="o">=</span> <span class="n">requires_step_updates</span>
@@ -369,13 +371,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="MultiProcessingComponents.peek_id">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.peek_id">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.peek_id">[docs]</a>
     <span class="k">def</span> <span class="nf">peek_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_count</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.get_id">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_id">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_id">[docs]</a>
     <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instance_lock</span><span class="p">:</span>
             <span class="n">instance_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_count</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -384,7 +386,7 @@
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.should_sync">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.should_sync">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.should_sync">[docs]</a>
     <span class="k">def</span> <span class="nf">should_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_id</span><span class="p">):</span>
         <span class="c1"># Only receive step updates from self.max_envs environments</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_envs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">env_id</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_envs</span><span class="p">:</span>
@@ -393,13 +395,13 @@
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.put_task">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_task">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_task">[docs]</a>
     <span class="k">def</span> <span class="nf">put_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.get_task">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_task">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_task">[docs]</a>
     <span class="k">def</span> <span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
@@ -413,20 +415,20 @@
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.put_update">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_update">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.put_update">[docs]</a>
     <span class="k">def</span> <span class="nf">put_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">update</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">update</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.get_update">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_update">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_update">[docs]</a>
     <span class="k">def</span> <span class="nf">get_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">update</span></div>
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.close">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.close">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.close">[docs]</a>
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_env_count</span><span class="o">.</span><span class="n">shm</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -440,7 +442,7 @@
 
 
 <div class="viewcode-block" id="MultiProcessingComponents.get_metrics">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.MultiProcessingComponents.get_metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">get_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">logs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;curriculum/updates_in_queue&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">()))</span>
@@ -451,7 +453,7 @@
 
 
 <div class="viewcode-block" id="CurriculumSyncWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">CurriculumSyncWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -468,7 +470,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">MultiProcessingComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">requires_step_updates</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CurriculumSyncWrapper.start">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.start">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.start">[docs]</a>
     <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Start the thread that reads the complete_queue and reads the task_queue.</span>
@@ -482,7 +484,7 @@
 
 
 <div class="viewcode-block" id="CurriculumSyncWrapper.stop">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.stop">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.stop">[docs]</a>
     <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop the thread that reads the complete_queue and reads the task_queue.</span>
@@ -522,7 +524,7 @@
                 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CurriculumSyncWrapper.route_update">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.route_update">[docs]</a>
     <span class="k">def</span> <span class="nf">route_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">update_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the curriculum with the specified update type.</span>
 <span class="sd">        TODO: Change method header to not use dictionary, use enums?</span>
@@ -551,7 +553,7 @@
 
 
 <div class="viewcode-block" id="CurriculumSyncWrapper.log_metrics">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.CurriculumSyncWrapper.log_metrics">[docs]</a>
     <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">logs</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">logs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">logs</span>
         <span class="n">logs</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">log_n_tasks</span><span class="o">=</span><span class="n">log_n_tasks</span><span class="p">)</span>
@@ -561,7 +563,7 @@
 
 
 <div class="viewcode-block" id="remote_call">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.remote_call">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.remote_call">[docs]</a>
 <span class="k">def</span> <span class="nf">remote_call</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Decorator for automatically forwarding calls to the curriculum via ray remote calls.</span>
@@ -583,7 +585,7 @@
 
 
 <div class="viewcode-block" id="make_multiprocessing_curriculum">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.make_multiprocessing_curriculum">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.make_multiprocessing_curriculum">[docs]</a>
 <span class="k">def</span> <span class="nf">make_multiprocessing_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function for creating a MultiProcessingCurriculumWrapper.</span>
@@ -606,7 +608,7 @@
 
 
 <div class="viewcode-block" id="RayCurriculumSyncWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper">[docs]</a>
 <span class="nd">@decorate_all_functions</span><span class="p">(</span><span class="n">remote_call</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">RayCurriculumSyncWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -629,13 +631,13 @@
     <span class="c1"># If you choose to override a function, you will need to forward the call to the remote curriculum.</span>
     <span class="c1"># This method is shown here as an example. If you remove it, the same functionality will be provided automatically.</span>
 <div class="viewcode-block" id="RayCurriculumSyncWrapper.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.sample">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">sample</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="RayCurriculumSyncWrapper.update_on_step_batch">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step_batch">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.RayCurriculumSyncWrapper.update_on_step_batch">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ray</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">_on_step_batch</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">step_results</span><span class="p">))</span></div>
 </div>
@@ -643,7 +645,7 @@
 
 
 <div class="viewcode-block" id="make_ray_curriculum">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.curriculum_sync_wrapper.make_ray_curriculum">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.curriculum_sync_wrapper.make_ray_curriculum">[docs]</a>
 <span class="k">def</span> <span class="nf">make_ray_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">,</span> <span class="n">actor_name</span><span class="o">=</span><span class="s2">&quot;curriculum&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function for creating a RayCurriculumWrapper.</span>

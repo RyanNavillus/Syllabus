@@ -195,6 +195,8 @@
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../synchronization/curriculum_synchronization.html">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../synchronization/environment_synchronization.html">Environment Synchronization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul class="current">
@@ -260,7 +262,7 @@
 <p>Similar to Gymnasiumn Spaces, we implement separate <code class="docutils literal notranslate"><span class="pre">TaskSpace</span></code> classes for different types of tasks, as well as composite <code class="docutils literal notranslate"><span class="pre">TaskSpace</span></code> objects for more complex task spaces.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<p>You can define a task space wherever you want, typically in the task wrapper or main training scipt. You will need to pass this task space to both the environment synchronization wrapper and the curriculum.</p>
+<p>You can define a task space wherever you want, typically in the task wrapper or main training script. You will need to pass this task space to both the environment synchronization wrapper and the curriculum.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">DiscreteTaskSpace</span>
 <span class="n">task_space</span> <span class="o">=</span> <span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>    <span class="c1"># 200 discrete tasks</span>
 </pre></div>

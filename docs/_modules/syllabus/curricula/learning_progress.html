@@ -194,6 +194,8 @@
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/curriculum_synchronization.html">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/environment_synchronization.html">Environment Synchronization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
@@ -260,9 +262,9 @@
 <span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">DiscreteTaskSpace</span><span class="p">,</span> <span class="n">MultiDiscreteTaskSpace</span>
 
 
-<div class="viewcode-block" id="LearningProgressCurriculum">
-<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum">[docs]</a>
-<span class="k">class</span> <span class="nc">LearningProgressCurriculum</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
+<div class="viewcode-block" id="LearningProgress">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress">[docs]</a>
+<span class="k">class</span> <span class="nc">LearningProgress</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Provides an interface for tracking success rates of discrete tasks and sampling tasks </span>
 <span class="sd">    based on their success rate using the method from https://arxiv.org/abs/2106.14876.</span>
@@ -315,8 +317,8 @@
 
         <span class="k">return</span> <span class="n">task_success_rates</span>
 
-<div class="viewcode-block" id="LearningProgressCurriculum.update_task_progress">
-<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.update_task_progress">[docs]</a>
+<div class="viewcode-block" id="LearningProgress.update_task_progress">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress.update_task_progress">[docs]</a>
     <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the success rate for the given task using a fast and slow exponential moving average.</span>
@@ -329,8 +331,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_p_slow</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p_fast</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p_slow</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="LearningProgressCurriculum.update_on_episode">
-<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgressCurriculum.update_on_episode">[docs]</a>
+<div class="viewcode-block" id="LearningProgress.update_on_episode">
+<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress.update_on_episode">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">completed_episodes</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">completed_steps</span> <span class="o">+=</span> <span class="n">length</span>
@@ -414,7 +416,7 @@
     <span class="n">tasks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
     <span class="n">histories</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="p">:</span> <span class="n">generate_history</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">curve</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">())</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">}</span>
 
-    <span class="n">curriculum</span> <span class="o">=</span> <span class="n">LearningProgressCurriculum</span><span class="p">(</span><span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)))</span>
+    <span class="n">curriculum</span> <span class="o">=</span> <span class="n">LearningProgress</span><span class="p">(</span><span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)))</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">histories</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])):</span>
         <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
             <span class="n">curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">histories</span><span class="p">[</span><span class="n">task</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
@@ -429,7 +431,7 @@
 
     <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">histories</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="p">:</span> <span class="n">generate_history</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">curve</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">}</span>
-    <span class="n">curriculum</span> <span class="o">=</span> <span class="n">LearningProgressCurriculum</span><span class="p">(</span><span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)))</span>
+    <span class="n">curriculum</span> <span class="o">=</span> <span class="n">LearningProgress</span><span class="p">(</span><span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)))</span>
     <span class="n">lp_raw</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">lp_reweight</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">p_fast</span> <span class="o">=</span> <span class="p">[]</span>
@@ -477,7 +479,7 @@
 
         <span class="c1"># Z-score plot</span>
         <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">)]</span>
-        <span class="n">curriculum</span> <span class="o">=</span> <span class="n">LearningProgressCurriculum</span><span class="p">(</span><span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)))</span>
+        <span class="n">curriculum</span> <span class="o">=</span> <span class="n">LearningProgress</span><span class="p">(</span><span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)))</span>
         <span class="n">histories</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="p">:</span> <span class="n">generate_history</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">curve</span><span class="o">=</span><span class="mf">0.09</span><span class="p">)</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">}</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">histories</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])):</span>
             <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>

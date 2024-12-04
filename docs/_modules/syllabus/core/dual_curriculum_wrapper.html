@@ -194,6 +194,8 @@
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/curriculum_synchronization.html">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../synchronization/environment_synchronization.html">Environment Synchronization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
@@ -258,7 +260,7 @@
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper">[docs]</a>
 <span class="k">class</span> <span class="nc">DualCurriculumWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Curriculum wrapper containing both an agent and environment-based curriculum.&quot;&quot;&quot;</span>
 
@@ -284,7 +286,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DualCurriculumWrapper.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.sample">[docs]</a>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EnvTask</span><span class="p">,</span> <span class="n">AgentTask</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets new tasks for the environment and agent curricula.&quot;&quot;&quot;</span>
         <span class="n">env_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_curriculum</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
@@ -295,26 +297,26 @@
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper.get_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.get_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">AgentTask</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_curriculum</span><span class="o">.</span><span class="n">get_opponent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper.update_agent">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_agent">[docs]</a>
     <span class="k">def</span> <span class="nf">update_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_curriculum</span><span class="o">.</span><span class="n">update_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper.update_on_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_episode">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env_curriculum</span><span class="o">.</span><span class="n">update_on_episode</span><span class="p">(</span><span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent_curriculum</span><span class="o">.</span><span class="n">update_on_episode</span><span class="p">(</span><span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper.update_on_step">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_curriculum</span><span class="o">.</span><span class="n">requires_step_updates</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">env_curriculum</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span>
@@ -327,7 +329,7 @@
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper.update_on_step_batch">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_on_step_batch">[docs]</a>
     <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">tasks</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">step_results</span>
         <span class="n">env_step_results</span> <span class="o">=</span> <span class="p">([</span><span class="n">task</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">],</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
@@ -339,7 +341,7 @@
 
 
 <div class="viewcode-block" id="DualCurriculumWrapper.update_task_progress">
-<a class="viewcode-back" href="../../../modules/syllabus.core.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress">[docs]</a>
+<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.dual_curriculum_wrapper.DualCurriculumWrapper.update_task_progress">[docs]</a>
     <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env_curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">task</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">progress</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent_curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">task</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">progress</span><span class="p">)</span></div>

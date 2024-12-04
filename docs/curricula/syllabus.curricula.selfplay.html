@@ -195,6 +195,8 @@
 <p class="caption" role="heading"><span class="caption-text">Synchronization:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../modules/syllabus.core.html">Global Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../synchronization/curriculum_synchronization.html">Curriculum Synchronization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../synchronization/environment_synchronization.html">Environment Synchronization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development:</span></p>
 <ul>
@@ -254,7 +256,7 @@
 <p>These curricula are designed to be used for 2-player competitive games. They save a history of previous agents and sample one to play against the current agent at the start of each episode. For more information on the co-player interface, see <a class="reference internal" href="co_player.html#co-player"><span class="std std-ref">Co-player Curricula</span></a>. For all of these methods, the user is required to have training code which supports self play already. These curricula provide the additional logic to store and sample from a history of agents.</p>
 <section id="self-play">
 <h2>Self Play<a class="headerlink" href="#self-play" title="Link to this heading">¶</a></h2>
-<p>A simple method for 2-player competitive games where the protagonist plays against a copy of itself. This produces an implicit curriculum of increasingly challenging opponents as the agent becomes more proficient at the game. However, because the opponent is always equally skilled at the game, it does not always produce the most useful reward signal. In addition, in transative games where it is not possible to strictly improve over a given strategy, Self Play can lead to oscillations in performance as the agent learns cyclical strategies to exploit its current behavior. The classic example of this is Rock Paper Scissors, where the agent will rotate between choosing rock, paper, and scissors over the course of training.</p>
+<p>A simple method for 2-player competitive games where the protagonist plays against a copy of itself. This produces an implicit curriculum of increasingly challenging opponents as the agent becomes more proficient at the game. However, because the opponent is always equally skilled at the game, it does not always produce the most useful reward signal. In addition, in non-transitive games where it is not possible to strictly improve over a given strategy, Self Play can lead to oscillations in performance as the agent learns cyclical strategies to exploit its current behavior. The classic example of this is Rock Paper Scissors, where the agent will rotate between choosing rock, paper, and scissors over the course of training.</p>
 <p>Note that this curriculum always returns the current agent’s identifier 0, so it does not add anything to existing self play code. It is included for completeness and to allow comparisons between the other self play algorithms with only a single change to the training code.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="syllabus.curricula.selfplay.SelfPlay">

@@ -7,7 +7,7 @@ Simulated annealing is an algorithm which slowly "anneals" continuous values tow
 
 **Note:** This implementation only updates the number of steps after each episode. For environments with extremely long episodes, this may not work as expected. However for most environments this should only result in a very small annealing delay.
 
-.. automodule:: syllabus.curricula.annealing_box
+.. automodule:: syllabus.curricula.simulated_annealing
    :members:
    :undoc-members:
    :show-inheritance:
