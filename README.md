@@ -132,13 +132,13 @@ Then you can view it at docs/html/index.html
 
 If you need to regenerate the module docs from scratch, you can use the following:
 ```
-sphinx-apidoc -o ./docs/modules ./syllabus
+sphinx-apidoc -o ./docs-modules ./syllabus
 ```
 Then manually merge the results with `./docs-source` as needed.
 
 You can also run a spell check for the documentation:
 ```
-sphinx-build -b spelling ./docs/source ./docs-spelling
+sphinx-build -b spelling ./docs-source ./docs-spelling
 ```
 
 ## Citing Syllabus
