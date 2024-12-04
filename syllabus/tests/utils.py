@@ -384,9 +384,10 @@ def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=F
 
     def thunk():
         env = NetHackScore(*env_args, **env_kwargs)
+        env = ExtractDictObservation(env, filter_key="blstats")
+
         # env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
-        # env = ExtractDictObservation(env, filter_key="blstats")
         env = NethackSeedWrapper(env)
 
         if sync_type == "queue":
