@@ -9,7 +9,7 @@ extras['all'] = extras['test'] + extras['docs']
 
 setup(
     name="syllabus-rl",
-    description="Protable curricula for RL agents",
+    description="Portable curricula for RL agents",
     long_description_content_type="text/markdown",
     version="0.6",
     packages=find_packages(),
@@ -36,6 +36,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
 )
