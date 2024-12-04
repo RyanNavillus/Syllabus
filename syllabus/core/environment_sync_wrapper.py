@@ -28,6 +28,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  remove_keys: list = None,
+                 change_task_on_completion: bool = False,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(
@@ -39,6 +40,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         self._latest_task = None
         self.batch_size = batch_size
         self.remove_keys = remove_keys if remove_keys is not None else []
+        self.change_task_on_completion = change_task_on_completion
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
         self._batch_step = 0
@@ -85,6 +87,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, rew, term, trunc, info = step_api_compatibility(self.env.step(action), output_truncation_bool=True)
+        info["task"] = self.task_space.encode(self.get_task())
         self.episode_length += 1
         self.episode_return += rew
         self.task_progress = info.get("task_completion", 0.0)
@@ -97,13 +100,25 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         if term or trunc:
             episode_update = {
                 "update_type": "episode",
-                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.env.task), self.task_progress),
+                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.get_task()), self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True
             }
             self.components.put_update([episode_update])
 
-        info["task"] = self.task_space.encode(self.get_task())
+        if self.change_task_on_completion and self.task_progress >= 1.0:
+            update = {
+                "update_type": "task_progress",
+                "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
+                "env_id": self.instance_id,
+                "request_sample": True
+            }
+
+            self.components.put_update(update)
+            message = self.components.get_task()    # Blocks until a task is available
+            next_task = self.task_space.decode(message["next_task"])
+            self.env.change_task(next_task)
+            self._latest_task = next_task
 
         return obs, rew, term, trunc, info
 
@@ -167,6 +182,7 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
                  batch_size: int = 100,
                  buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
                  remove_keys: list = None,
+                 change_task_on_completion: bool = False,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
         assert isinstance(
@@ -178,6 +194,7 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
         self._latest_task = None
         self.batch_size = batch_size
         self.remove_keys = remove_keys if remove_keys is not None else []
+        self.change_task_on_completion = change_task_on_completion
         self.global_task_completion = global_task_completion
         self._batch_step = 0
         self.instance_id = components.get_id()
@@ -252,6 +269,19 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
                 "request_sample": True
             }
             self.components.put_update([episode_update])
+
+        if self.change_task_on_completion and self.task_progress >= 1.0:
+            update = {
+                "update_type": "task_progress",
+                "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
+                "env_id": self.instance_id,
+                "request_sample": True
+            }
+
+            self.components.put_update(update)
+            message = self.components.get_task()    # Blocks until a task is available
+            next_task = self.task_space.decode(message["next_task"])
+            self.env.change_task(next_task)
 
         return obs, rews, terms, truncs, infos
 

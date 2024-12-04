@@ -4,14 +4,12 @@ from collections import deque
 from typing import Any, Callable, List, Union
 
 from syllabus.core import Curriculum
-from syllabus.curricula import DomainRandomization, NoopCurriculum
+from syllabus.curricula import DomainRandomization, Constant
 from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 
 
 class SequentialCurriculum(Curriculum):
     """ Curriculum that iterates through a list of curricula based on stopping conditions. """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
@@ -49,7 +47,7 @@ class SequentialCurriculum(Curriculum):
                 task_space = DiscreteTaskSpace(len(item), item)
                 parsed_list.append(DomainRandomization(task_space, task_names=self.task_names))
             elif self.task_space.contains(item):
-                parsed_list.append(NoopCurriculum(item, self.task_space, task_names=self.task_names))
+                parsed_list.append(Constant(item, self.task_space, task_names=self.task_names))
             else:
                 raise ValueError(f"Invalid curriculum item: {item}")
 

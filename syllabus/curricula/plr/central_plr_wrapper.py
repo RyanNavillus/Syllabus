@@ -111,7 +111,7 @@ class RolloutStorage():
             self.returns[step, env_idxs] = gae + self.value_preds[step, env_idxs]
 
 
-class CentralizedPrioritizedLevelReplay(Curriculum):
+class CentralPrioritizedLevelReplay(Curriculum):
     """ Prioritized Level Replay (PLR) Curriculum.
 
     Args:
@@ -127,8 +127,6 @@ class CentralizedPrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(
         self,

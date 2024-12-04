@@ -1,9 +1,10 @@
 """ Test curriculum synchronization across multiple processes. """
-import ray
-
-from syllabus.tests import SyncTestCurriculum
-from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum, MultiagentSharedCurriculumWrapper
-from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_pettingzoo_synctest_env
+from syllabus.core import (MultiagentSharedCurriculumWrapper,
+                           make_multiprocessing_curriculum,
+                           make_ray_curriculum)
+from syllabus.tests import (SyncTestCurriculum, create_pettingzoo_synctest_env,
+                            run_native_multiprocess, run_ray_multiprocess,
+                            run_single_process)
 
 N_ENVS = 8
 N_EPISODES = 10
@@ -12,7 +13,7 @@ N_EPISODES = 10
 def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_agents=2):
     stats = curriculum.get_stats()
     expected_reward = 100 * num_envs * N_EPISODES
-    # Multiply by 2 for the 2 agents in teh environment
+    # Multiply by 2 for the 2 agents in the environment
     assert stats["total_reward"] == expected_reward * \
         num_agents, f"Curriculum total reward is {stats['total_reward']}, expected {expected_reward}"
     for task, count in stats["task_counts"].items():

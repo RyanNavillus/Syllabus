@@ -4,7 +4,7 @@ from ray import train, tune
 from ray.air.integrations.wandb import WandbLoggerCallback, setup_wandb, _clean_log, _QueueItem
 from ray.tune.registry import register_env
 from syllabus.core import RayGymnasiumSyncWrapper, make_ray_curriculum
-from syllabus.curricula import SimpleBoxCurriculum, NoopCurriculum
+from syllabus.curricula import SimpleBoxCurriculum, Constant
 from syllabus.task_space import BoxTaskSpace
 
 from syllabus.examples.task_wrappers import CartPoleTaskWrapper
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     # Create the curriculum
     # curriculum = SimpleBoxCurriculum(task_space)
-    curriculum = NoopCurriculum((-0.3, 0.3), task_space)
+    curriculum = Constant((-0.3, 0.3), task_space)
 
     # Add the curriculum sync wrapper
     curriculum = make_ray_curriculum(curriculum)

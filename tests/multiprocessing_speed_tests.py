@@ -3,7 +3,7 @@ from nle.env.tasks import NetHackScore
 
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.core.evaluator import DummyEvaluator
-from syllabus.curricula import NoopCurriculum
+from syllabus.curricula import Constant
 from syllabus.curricula import PrioritizedLevelReplay
 from syllabus.tests import create_cartpole_env, create_nethack_env, create_procgen_env, run_native_multiprocess, run_ray_multiprocess
 import pytest
@@ -36,7 +36,7 @@ def test_native_speed(benchmark):
 @pytest.mark.benchmark(group="multiprocessing_speed")
 def test_native_syllabus_speed(benchmark):
     def wrapper():
-        curriculum = NoopCurriculum(default_task, sample_env.task_space)
+        curriculum = Constant(default_task, sample_env.task_space)
         curriculum = make_multiprocessing_curriculum(curriculum)
         return run_native_multiprocess(env_fn, env_args=env_args, env_kwargs=env_kwargs, curriculum=curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
 

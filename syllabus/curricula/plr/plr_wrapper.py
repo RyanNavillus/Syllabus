@@ -225,8 +225,6 @@ class PrioritizedLevelReplay(Curriculum):
         suppress_usage_warnings (bool): Whether to suppress warnings about improper usage.
         **curriculum_kwargs: Keyword arguments to pass to the curriculum.
     """
-    REQUIRES_STEP_UPDATES = True
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
@@ -286,6 +284,9 @@ class PrioritizedLevelReplay(Curriculum):
             device=device,
         )
         self._rollouts.to(device)
+
+    def requires_step_updates(self) -> bool:
+        return True
 
     def _sample_distribution(self) -> List[float]:
         """

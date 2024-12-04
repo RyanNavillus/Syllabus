@@ -7,8 +7,6 @@ from syllabus.core import Curriculum
 
 class DomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space."""
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def _sample_distribution(self) -> List[float]:
         """
@@ -20,8 +18,6 @@ class DomainRandomization(Curriculum):
 
 class BatchedDomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space."""
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, batch_size: int, task_space, warmup_batches: int = 5, **kwargs):
         super().__init__(task_space, **kwargs)
@@ -59,8 +55,6 @@ class BatchedDomainRandomization(Curriculum):
 
 class SyncedBatchedDomainRandomization(Curriculum):
     """A simple but strong baseline for curriculum learning that uniformly samples a task from the task space."""
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = True
 
     def __init__(self, batch_size: int, task_space, warmup_batches: int = 1, uniform_chance: float = 0.05, **kwargs):
         super().__init__(task_space, **kwargs)

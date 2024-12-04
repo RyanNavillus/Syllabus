@@ -22,8 +22,8 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator, DummyEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum, NoopCurriculum, SimpleCentralizedPrioritizedLevelReplay, CentralizedPrioritizedLevelReplay
+from syllabus.core.evaluator import CleanRLEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgress, SequentialCurriculum, Constant, DirectPrioritizedLevelReplay, CentralPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
@@ -266,7 +266,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device="cuda", copy_agent=True)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -281,7 +281,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "simpleplr":
             print("Using simple prioritized level replay.")
-            curriculum = SimpleCentralizedPrioritizedLevelReplay(
+            curriculum = DirectPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
@@ -290,7 +290,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "centralplr":
             print("Using centralized prioritized level replay.")
-            curriculum = CentralizedPrioritizedLevelReplay(
+            curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
@@ -306,15 +306,15 @@ if __name__ == "__main__":
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
         elif args.curriculum_method == "noop":
             print("Using noop curriculum.")
-            curriculum = NoopCurriculum(0, sample_env.task_space, require_step_updates=True)
+            curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
-                                                    sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgress(eval_envs, make_action_fn(),
+                                          sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -385,12 +385,12 @@ if __name__ == "__main__":
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
-            tasks[step] = torch.Tensor(envs.get_attr("task"))
 
             # TRY NOT TO MODIFY: execute the game and log data.
             next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
             done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
+            tasks[step] = torch.Tensor([i["task"] for i in info])
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
             completed_episodes += sum(done)
 
@@ -408,7 +408,7 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
-                current_task = envs.get_attr("task")
+                current_task = [i["task"] for i in info]
 
                 update = {
                     "value": value,

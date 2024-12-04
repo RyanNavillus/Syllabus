@@ -8,8 +8,6 @@ from syllabus.core import Curriculum
 
 class SimulatedAnnealing(Curriculum):
     """ Curriculum that anneals a set of values from start_values to end_values over a set number of steps."""
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,

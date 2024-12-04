@@ -15,9 +15,6 @@ from syllabus.task_space import TaskSpace  # noqa: E402
 
 class SelfPlay(Curriculum):
     """Self play curriculum for training agents against themselves."""
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
@@ -64,7 +61,7 @@ class SelfPlay(Curriculum):
     def update_winrate(self, agent_id: int, reward: int) -> None:
         """
         Uses an incremental mean to update an agent's winrate. This assumes that reward
-        is postive for a win and negative for a loss. Not used for sampling.
+        is positive for a win and negative for a loss. Not used for sampling.
 
         :param agent_id: Identifier of the agent
         :param reward: Reward received by the agent
@@ -84,9 +81,6 @@ class SelfPlay(Curriculum):
 
 
 class FictitiousSelfPlay(Curriculum):
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
@@ -191,9 +185,6 @@ class FictitiousSelfPlay(Curriculum):
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(
         self,
