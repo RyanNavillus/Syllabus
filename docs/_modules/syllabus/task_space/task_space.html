@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.task_space.task_space - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -261,9 +261,7 @@
 <span class="kn">from</span> <span class="nn">syllabus.utils</span> <span class="kn">import</span> <span class="n">UsageError</span>
 
 
-<div class="viewcode-block" id="TaskSpace">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace">[docs]</a>
-<span class="k">class</span> <span class="nc">TaskSpace</span><span class="p">:</span>
+<div class="viewcode-block" id="TaskSpace"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace">[docs]</a><span class="k">class</span> <span class="nc">TaskSpace</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    TaskSpace is an extension of gym spaces that allows for efficient encoding and decoding of tasks.</span>
 <span class="sd">    This is useful for environments that have a large number of tasks or require complex task representations.</span>
@@ -328,9 +326,7 @@
             <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">return</span> <span class="n">tasks</span>
 
-<div class="viewcode-block" id="TaskSpace.decode">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.decode">[docs]</a>
-    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<div class="viewcode-block" id="TaskSpace.decode"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert the task encoding to the original task representation.</span>
 <span class="sd">        This method provides generic decoding safety checks for all task spaces, and</span>
@@ -355,10 +351,7 @@
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">UsageError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to decode task encoding: </span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
-
-<div class="viewcode-block" id="TaskSpace.encode">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.encode">[docs]</a>
-    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<div class="viewcode-block" id="TaskSpace.encode"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert the task to an efficient encoding to speed up multiprocessing.</span>
 <span class="sd">        This method provides generic encoding safety checks for all task spaces,</span>
@@ -381,7 +374,6 @@
                 <span class="k">raise</span> <span class="n">UsageError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to encode task: </span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">UsageError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to encode task: </span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
-
 
     <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -407,9 +399,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-<div class="viewcode-block" id="TaskSpace.contains">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.contains">[docs]</a>
-    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="TaskSpace.contains"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the encoding is a valid task in the task space.</span>
 
@@ -419,7 +409,6 @@
 <span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">encoding</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_set</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_set</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -441,9 +430,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_task_list</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TaskSpace.task_name">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.task_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="TaskSpace.task_name"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TaskSpace.task_name">[docs]</a>    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the name of the task.</span>
 
@@ -452,14 +439,10 @@
 <span class="sd">        :return: Name of the task</span>
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">task</span><span class="p">))</span></div>
-</div>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">task</span><span class="p">))</span></div></div>
 
 
-
-<div class="viewcode-block" id="DiscreteTaskSpace">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace">[docs]</a>
-<span class="k">class</span> <span class="nc">DiscreteTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
+<div class="viewcode-block" id="DiscreteTaskSpace"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace">[docs]</a><span class="k">class</span> <span class="nc">DiscreteTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Task space for discrete tasks.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space_or_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Space</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">tasks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -528,9 +511,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_map</span><span class="p">[</span><span class="n">task</span><span class="p">]</span>
 
-<div class="viewcode-block" id="DiscreteTaskSpace.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="DiscreteTaskSpace.sample"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample a task from the task space.</span>
 
@@ -540,24 +521,17 @@
         <span class="n">sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="DiscreteTaskSpace.seed">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace.seed">[docs]</a>
-    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="DiscreteTaskSpace.seed"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.DiscreteTaskSpace.seed">[docs]</a>    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Seed the task space.</span>
 
 <span class="sd">        :param seed: Seed value</span>
 <span class="sd">        :type seed: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div>
-</div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div></div>
 
 
-
-<div class="viewcode-block" id="BoxTaskSpace">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace">[docs]</a>
-<span class="k">class</span> <span class="nc">BoxTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
+<div class="viewcode-block" id="BoxTaskSpace"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace">[docs]</a><span class="k">class</span> <span class="nc">BoxTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Task space for continuous tasks.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -586,9 +560,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">task</span>
 
-<div class="viewcode-block" id="BoxTaskSpace.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="BoxTaskSpace.sample"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample a task from the task space.</span>
 
@@ -598,10 +570,7 @@
         <span class="n">sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="BoxTaskSpace.seed">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.seed">[docs]</a>
-    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="BoxTaskSpace.seed"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.seed">[docs]</a>    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Seed the task space.</span>
 
@@ -609,7 +578,6 @@
 <span class="sd">        :type seed: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -631,9 +599,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 
-<div class="viewcode-block" id="BoxTaskSpace.task_name">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.task_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="BoxTaskSpace.task_name"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.task_name">[docs]</a>    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the name of the task.</span>
 
@@ -644,10 +610,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">task</span><span class="p">))</span></div>
 
-
-<div class="viewcode-block" id="BoxTaskSpace.contains">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.contains">[docs]</a>
-    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="BoxTaskSpace.contains"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.BoxTaskSpace.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return boolean specifying if encoding is a valid member of this space.</span>
 
@@ -664,9 +627,7 @@
 
         <span class="n">shape_check</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">bounds_check</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="n">encoding</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">low</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">encoding</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">high</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">shape_check</span> <span class="ow">and</span> <span class="n">bounds_check</span></div>
-</div>
-
+        <span class="k">return</span> <span class="n">shape_check</span> <span class="ow">and</span> <span class="n">bounds_check</span></div></div>
 
     <span class="c1"># def to_multidiscrete(self, grid_points: Union[int, List[int]]):</span>
     <span class="c1">#     # Convert to Box Task Space to MultiDiscrete Task Space</span>
@@ -675,9 +636,7 @@
     <span class="c1">#         print(self.gym_space.shape)</span>
 
 
-<div class="viewcode-block" id="MultiDiscreteTaskSpace">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.MultiDiscreteTaskSpace">[docs]</a>
-<span class="k">class</span> <span class="nc">MultiDiscreteTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiDiscreteTaskSpace"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.MultiDiscreteTaskSpace">[docs]</a><span class="k">class</span> <span class="nc">MultiDiscreteTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Task space for multi-discrete tasks.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space_or_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MultiDiscrete</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">tasks</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">flatten</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
@@ -746,9 +705,7 @@
             <span class="n">encoding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">nvec</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">encoding</span>
 
-<div class="viewcode-block" id="MultiDiscreteTaskSpace.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.MultiDiscreteTaskSpace.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiDiscreteTaskSpace.sample"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.MultiDiscreteTaskSpace.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample a task from the task space.</span>
 
@@ -760,10 +717,7 @@
             <span class="n">sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">nvec</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="MultiDiscreteTaskSpace.seed">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.MultiDiscreteTaskSpace.seed">[docs]</a>
-    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiDiscreteTaskSpace.seed"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.MultiDiscreteTaskSpace.seed">[docs]</a>    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Seed the task space.</span>
 
@@ -771,7 +725,6 @@
 <span class="sd">        :type seed: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -794,10 +747,7 @@
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gym_space</span><span class="o">.</span><span class="n">nvec</span><span class="p">))</span></div>
 
 
-
-<div class="viewcode-block" id="TupleTaskSpace">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace">[docs]</a>
-<span class="k">class</span> <span class="nc">TupleTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
+<div class="viewcode-block" id="TupleTaskSpace"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace">[docs]</a><span class="k">class</span> <span class="nc">TupleTaskSpace</span><span class="p">(</span><span class="n">TaskSpace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Task space for tuple tasks. Can be used to combine multiple task spaces into a single task space.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_spaces</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TaskSpace</span><span class="p">],</span> <span class="n">space_names</span><span class="p">:</span> <span class="n">Tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">flatten</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
@@ -872,9 +822,7 @@
             <span class="n">encoding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_nums</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">encoding</span>
 
-<div class="viewcode-block" id="TupleTaskSpace.contains">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.contains">[docs]</a>
-    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="TupleTaskSpace.contains"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the encoding is a valid task in the task space.</span>
 
@@ -888,10 +836,7 @@
                 <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-
-<div class="viewcode-block" id="TupleTaskSpace.sample">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="TupleTaskSpace.sample"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample a task from the task space.</span>
 
@@ -900,10 +845,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_spaces</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="TupleTaskSpace.seed">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.seed">[docs]</a>
-    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="TupleTaskSpace.seed"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.seed">[docs]</a>    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Seed all subspaces.</span>
 
@@ -912,7 +854,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_spaces</span><span class="p">:</span>
             <span class="n">space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -937,9 +878,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_task_nums</span><span class="p">))</span>
 
-<div class="viewcode-block" id="TupleTaskSpace.task_name">
-<a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.task_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="TupleTaskSpace.task_name"><a class="viewcode-back" href="../../../modules/syllabus.task_space.html#syllabus.task_space.task_space.TupleTaskSpace.task_name">[docs]</a>    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the name of the task.</span>
 
@@ -948,9 +887,7 @@
 <span class="sd">        :return: Name of the task</span>
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">task</span><span class="p">))</span></div>
-</div>
-
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">task</span><span class="p">))</span></div></div>
 </pre></div>
         </article>
       </div>
@@ -983,10 +920,10 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/tabs.js"></script>
     </body>
 </html>

@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.core.task_interface.task_wrapper - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -255,9 +255,7 @@
 <span class="kn">from</span> <span class="nn">pettingzoo.utils.wrappers.base_parallel</span> <span class="kn">import</span> <span class="n">BaseParallelWrapper</span>
 
 
-<div class="viewcode-block" id="TaskWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">TaskWrapper</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Wrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper">[docs]</a><span class="k">class</span> <span class="nc">TaskWrapper</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Wrapper</span><span class="p">):</span>
     <span class="c1"># TODO: Update to new TaskSpace API</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -265,9 +263,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="kc">None</span>    <span class="c1"># TODO: Would making this a property protect from accidental overriding?</span>
 
-<div class="viewcode-block" id="TaskWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">new_task</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;new_task&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">new_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">change_task</span><span class="p">(</span><span class="n">new_task</span><span class="p">)</span>
@@ -277,10 +273,7 @@
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="TaskWrapper.change_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.change_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskWrapper.change_task"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.change_task">[docs]</a>    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Changes the task of the existing environment to the new_task.</span>
 
@@ -292,7 +285,6 @@
 <span class="sd">        that it is not in the middle of an episode to avoid unexpected behavior.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span></div>
-
 
     <span class="k">def</span> <span class="nf">_task_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -310,9 +302,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="TaskWrapper.observation">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.observation">[docs]</a>
-    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskWrapper.observation"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.observation">[docs]</a>    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds the goal encoding to the observation.</span>
 <span class="sd">        Override to add additional task-specific observations.</span>
@@ -326,10 +316,7 @@
 
         <span class="k">return</span> <span class="n">observation</span></div>
 
-
-<div class="viewcode-block" id="TaskWrapper.step">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskWrapper.step"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.TaskWrapper.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
         <span class="c1"># Determine completion status of the current task</span>
@@ -339,7 +326,6 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span></div>
 
-
     <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="n">env_attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">env_attr</span><span class="p">:</span>
@@ -348,10 +334,7 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TaskWrapper and env do not have attribute </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="PettingZooTaskWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">PettingZooTaskWrapper</span><span class="p">(</span><span class="n">BaseParallelWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooTaskWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper">[docs]</a><span class="k">class</span> <span class="nc">PettingZooTaskWrapper</span><span class="p">(</span><span class="n">BaseParallelWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">pettingzoo</span><span class="o">.</span><span class="n">ParallelEnv</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="kc">None</span>
@@ -365,15 +348,10 @@
         <span class="k">if</span> <span class="n">env_attr</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">env_attr</span>
 
-<div class="viewcode-block" id="PettingZooTaskWrapper.get_current_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.get_current_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_current_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooTaskWrapper.get_current_task"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.get_current_task">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_task</span></div>
 
-
-<div class="viewcode-block" id="PettingZooTaskWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooTaskWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">new_task</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;new_task&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">new_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">change_task</span><span class="p">(</span><span class="n">new_task</span><span class="p">)</span>
@@ -384,10 +362,7 @@
             <span class="n">info</span><span class="p">[</span><span class="n">agent</span><span class="p">][</span><span class="s2">&quot;task_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="PettingZooTaskWrapper.change_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.change_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooTaskWrapper.change_task"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.change_task">[docs]</a>    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Changes the task of the existing environment to the new_task.</span>
 
@@ -400,10 +375,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-
-<div class="viewcode-block" id="PettingZooTaskWrapper.step">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooTaskWrapper.step"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
         <span class="c1"># Determine completion status of the current task</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_completion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_completion</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
@@ -414,10 +386,7 @@
             <span class="n">info</span><span class="p">[</span><span class="n">agent</span><span class="p">][</span><span class="s2">&quot;task_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span>
         <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="PettingZooTaskWrapper.observation">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.observation">[docs]</a>
-    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooTaskWrapper.observation"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.task_wrapper.PettingZooTaskWrapper.observation">[docs]</a>    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds the goal encoding to the observation.</span>
 <span class="sd">        Override to add additional task-specific observations.</span>
@@ -432,7 +401,6 @@
             <span class="n">observation</span><span class="p">[</span><span class="s1">&#39;goal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">goal_encoding</span>
 
         <span class="k">return</span> <span class="n">observation</span></div>
-
 
     <span class="k">def</span> <span class="nf">_encode_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -450,7 +418,6 @@
 <span class="sd">        # TODO: Support PettingZoo environments</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mf">0.0</span></div>
-
 </pre></div>
         </article>
       </div>
@@ -483,10 +450,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>

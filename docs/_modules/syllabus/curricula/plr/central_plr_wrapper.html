@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.curricula.plr.central_plr_wrapper - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -263,9 +263,7 @@
 <span class="kn">from</span> <span class="nn">.task_sampler</span> <span class="kn">import</span> <span class="n">TaskSampler</span>
 
 
-<div class="viewcode-block" id="RolloutStorage">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage">[docs]</a>
-<span class="k">class</span> <span class="nc">RolloutStorage</span><span class="p">():</span>
+<div class="viewcode-block" id="RolloutStorage"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage">[docs]</a><span class="k">class</span> <span class="nc">RolloutStorage</span><span class="p">():</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -298,9 +296,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">final_return_mean</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">first_value_mean</span> <span class="o">=</span> <span class="mf">0.0</span>
 
-<div class="viewcode-block" id="RolloutStorage.get_idxs">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.get_idxs">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_idxs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_ids</span><span class="p">):</span>
+<div class="viewcode-block" id="RolloutStorage.get_idxs"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.get_idxs">[docs]</a>    <span class="k">def</span> <span class="nf">get_idxs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_ids</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Map the environment ids to indices in the buffer. &quot;&quot;&quot;</span>
         <span class="n">idxs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">env_id</span> <span class="ow">in</span> <span class="n">env_ids</span><span class="p">:</span>
@@ -310,10 +306,7 @@
             <span class="n">idxs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_to_idx</span><span class="p">[</span><span class="n">env_id</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">idxs</span></div>
 
-
-<div class="viewcode-block" id="RolloutStorage.to">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.to">[docs]</a>
-    <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<div class="viewcode-block" id="RolloutStorage.to"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.to">[docs]</a>    <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requires_value_buffers</span><span class="p">:</span>
@@ -323,10 +316,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">action_log_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_log_dist</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="RolloutStorage.insert">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.insert">[docs]</a>
-    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">action_log_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_preds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rewards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">next_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="RolloutStorage.insert"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">action_log_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_preds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rewards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">next_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># Convert env_ids to indices in the buffer</span>
         <span class="k">if</span> <span class="n">env_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">env_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_processes</span><span class="p">))</span>
@@ -354,18 +344,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">[</span><span class="n">env_idxs</span><span class="p">],</span> <span class="n">env_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">env_idxs</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">[</span><span class="n">env_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">[</span><span class="n">env_idxs</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="RolloutStorage.after_update">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.after_update">[docs]</a>
-    <span class="k">def</span> <span class="nf">after_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RolloutStorage.after_update"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.after_update">[docs]</a>    <span class="k">def</span> <span class="nf">after_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">env_idxs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">[</span><span class="n">env_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">[</span><span class="n">env_idxs</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">])</span></div>
 
-
-<div class="viewcode-block" id="RolloutStorage.compute_returns">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.compute_returns">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_returns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">gae_lambda</span><span class="p">):</span>
+<div class="viewcode-block" id="RolloutStorage.compute_returns"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.RolloutStorage.compute_returns">[docs]</a>    <span class="k">def</span> <span class="nf">compute_returns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">gae_lambda</span><span class="p">):</span>
         <span class="n">env_idxs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requires_value_buffers</span><span class="p">,</span> <span class="s2">&quot;Selected strategy does not use compute_rewards.&quot;</span>
         <span class="n">gae</span> <span class="o">=</span> <span class="mi">0</span>
@@ -376,14 +360,10 @@
                 <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_preds</span><span class="p">[</span><span class="n">step</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="n">gae</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">gae_lambda</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span> <span class="o">*</span> <span class="n">gae</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">returns</span><span class="p">[</span><span class="n">step</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="n">gae</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_preds</span><span class="p">[</span><span class="n">step</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span></div>
-</div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">returns</span><span class="p">[</span><span class="n">step</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="n">gae</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_preds</span><span class="p">[</span><span class="n">step</span><span class="p">,</span> <span class="n">env_idxs</span><span class="p">]</span></div></div>
 
 
-
-<div class="viewcode-block" id="CentralPrioritizedLevelReplay">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay">[docs]</a>
-<span class="k">class</span> <span class="nc">CentralPrioritizedLevelReplay</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
+<div class="viewcode-block" id="CentralPrioritizedLevelReplay"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay">[docs]</a><span class="k">class</span> <span class="nc">CentralPrioritizedLevelReplay</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Prioritized Level Replay (PLR) Curriculum.</span>
 
 <span class="sd">    Args:</span>
@@ -489,9 +469,7 @@
 
         <span class="k">return</span> <span class="n">masks</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">action_log_dist</span><span class="p">,</span> <span class="n">next_value</span><span class="p">,</span> <span class="n">env_ids</span>
 
-<div class="viewcode-block" id="CentralPrioritizedLevelReplay.update">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.update">[docs]</a>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+<div class="viewcode-block" id="CentralPrioritizedLevelReplay.update"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the curriculum with arbitrary inputs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -522,26 +500,20 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_rollouts</span><span class="o">.</span><span class="n">after_update</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_task_sampler</span><span class="o">.</span><span class="n">after_update</span><span class="p">(</span><span class="n">actor_indices</span><span class="o">=</span><span class="n">env_idxs</span><span class="p">)</span></div>
 
-
     <span class="k">def</span> <span class="nf">_sample_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a sample distribution over the task space.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_sampler</span><span class="o">.</span><span class="n">sample_weights</span><span class="p">()</span>
 
-<div class="viewcode-block" id="CentralPrioritizedLevelReplay.sample">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="CentralPrioritizedLevelReplay.sample"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_use_startup_sampling</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startup_sample</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_task_sampler</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div>
 
-
-<div class="viewcode-block" id="CentralPrioritizedLevelReplay.log_metrics">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.log_metrics">[docs]</a>
-    <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="CentralPrioritizedLevelReplay.log_metrics"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.central_plr_wrapper.CentralPrioritizedLevelReplay.log_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Log the task distribution to the provided tensorboard writer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -559,9 +531,7 @@
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">idx</span><span class="p">)</span>
             <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;curriculum/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_score&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;task_scores&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">]))</span>
             <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;curriculum/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_staleness&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;task_staleness&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">]))</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="n">log_n_tasks</span><span class="p">)</span></div>
-</div>
-
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="n">log_n_tasks</span><span class="p">)</span></div></div>
 </pre></div>
         </article>
       </div>
@@ -594,10 +564,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>

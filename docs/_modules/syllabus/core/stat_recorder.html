@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.core.stat_recorder - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -264,9 +264,7 @@
 <span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">TaskSpace</span>
 
 
-<div class="viewcode-block" id="StatMean">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean">[docs]</a>
-<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<div class="viewcode-block" id="StatMean"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean">[docs]</a><span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span> <span class="nc">StatMean</span><span class="p">:</span>
     <span class="c1"># Compute using Welford&#39;d Online Algorithm</span>
     <span class="c1"># Algo: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</span>
@@ -275,27 +273,18 @@
     <span class="n">mu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">m2</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="StatMean.result">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.result">[docs]</a>
-    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="StatMean.result"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.result">[docs]</a>    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span></div>
 
-
-<div class="viewcode-block" id="StatMean.mean">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.mean">[docs]</a>
-    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="StatMean.mean"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.mean">[docs]</a>    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span></div>
 
-
-<div class="viewcode-block" id="StatMean.std">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.std">[docs]</a>
-    <span class="k">def</span> <span class="nf">std</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="StatMean.std"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.std">[docs]</a>    <span class="k">def</span> <span class="nf">std</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">StatMean</span><span class="p">)</span>
@@ -329,21 +318,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">new_n</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="StatMean.reset">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="StatMean.reset"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatMean.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">0</span></div>
-
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">())</span></div>
 
 
-
-<div class="viewcode-block" id="StatRecorder">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder">[docs]</a>
-<span class="k">class</span> <span class="nc">StatRecorder</span><span class="p">:</span>
+<div class="viewcode-block" id="StatRecorder"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder">[docs]</a><span class="k">class</span> <span class="nc">StatRecorder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Individual statistics tracking for each task.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -366,9 +349,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_returns</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="p">:</span> <span class="n">StatMean</span><span class="p">()</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_lengths</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="p">:</span> <span class="n">StatMean</span><span class="p">()</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">}</span>
 
-<div class="viewcode-block" id="StatRecorder.record">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.record">[docs]</a>
-    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_task</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="StatRecorder.record"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_task</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Record the length and return of an episode for a given task.</span>
 
@@ -382,10 +363,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_returns</span><span class="p">[</span><span class="n">episode_task</span><span class="p">]</span> <span class="o">+=</span> <span class="n">episode_return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_lengths</span><span class="p">[</span><span class="n">episode_task</span><span class="p">]</span> <span class="o">+=</span> <span class="n">episode_length</span></div>
 
-
-<div class="viewcode-block" id="StatRecorder.get_metrics">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.get_metrics">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="StatRecorder.get_metrics"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.get_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">get_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Log the statistics of the first 5 tasks to the provided tensorboard writer.</span>
 
 <span class="sd">        :param writer: Tensorboard summary writer.</span>
@@ -404,10 +382,7 @@
                 <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;tasks/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_episode_length&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_lengths</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
         <span class="k">return</span> <span class="n">logs</span></div>
 
-
-<div class="viewcode-block" id="StatRecorder.normalize">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.normalize">[docs]</a>
-    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+<div class="viewcode-block" id="StatRecorder.normalize"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Normalize reward by task.</span>
 
@@ -421,10 +396,7 @@
             <span class="n">normalized_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">reward_std</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">normalized_reward</span></div>
 
-
-<div class="viewcode-block" id="StatRecorder.save_statistics">
-<a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.save_statistics">[docs]</a>
-    <span class="k">def</span> <span class="nf">save_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
+<div class="viewcode-block" id="StatRecorder.save_statistics"><a class="viewcode-back" href="../../../stat_recorder.html#syllabus.core.stat_recorder.StatRecorder.save_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">save_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write task-specific statistics to file.</span>
 
@@ -436,9 +408,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span>
         <span class="n">stats</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_returns</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">convert_numpy</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;task_specific_stats.json&#39;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span></div>
-</div>
-
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span></div></div>
 </pre></div>
         </article>
       </div>
@@ -471,10 +441,10 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/tabs.js"></script>
     </body>
 </html>

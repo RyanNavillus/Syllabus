@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.examples.task_wrappers.cartpole_task_wrapper - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -256,9 +256,7 @@
 <span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">BoxTaskSpace</span><span class="p">,</span> <span class="n">DiscreteTaskSpace</span>
 
 
-<div class="viewcode-block" id="CartPoleTaskWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">CartPoleTaskWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="CartPoleTaskWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper">[docs]</a><span class="k">class</span> <span class="nc">CartPoleTaskWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">discretize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discretize</span> <span class="o">=</span> <span class="n">discretize</span>
@@ -270,9 +268,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="CartPoleTaskWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CartPoleTaskWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.cartpole_task_wrapper.CartPoleTaskWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="s2">&quot;new_task&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="n">new_task</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;new_task&quot;</span><span class="p">)</span>
@@ -284,12 +280,10 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">[</span><span class="mi">1</span><span class="p">])})</span></div>
 
-
     <span class="k">def</span> <span class="nf">_task_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="c1"># Return percent of optimal reward</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">+=</span> <span class="n">rew</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">/</span> <span class="mf">500.0</span></div>
-
 </pre></div>
         </article>
       </div>
@@ -322,10 +316,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>

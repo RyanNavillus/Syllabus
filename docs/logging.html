@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="./">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Benchmarks" href="benchmarks.html" /><link rel="prev" title="Evaluation" href="evaluation/evaluation.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>Logging - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -252,7 +252,7 @@
         </div>
         <article role="main">
           <section id="logging">
-<h1>Logging<a class="headerlink" href="#logging" title="Link to this heading">¶</a></h1>
+<h1>Logging<a class="headerlink" href="#logging" title="Permalink to this heading">#</a></h1>
 <p>Syllabus currently support logging through TensorBoard or Weights and Biases through the <a class="reference internal" href="modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics" title="syllabus.core.curriculum_base.Curriculum.log_metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">log_metrics</span></code></a> function for curricula. This method collects logs and passes them along to the base Curriculum class, which performs the actual logging. As such, you must call <code class="docutils literal notranslate"><span class="pre">super().log_metrics()</span></code> in your custom curriculum’s log_metrics function to ensure that the logs are propagated and saved.</p>
 <dl class="py function">
 <dt class="sig sig-object py">
@@ -324,9 +324,9 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/furo.js"></script>
     </body>
 </html>

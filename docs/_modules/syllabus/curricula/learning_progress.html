@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.curricula.learning_progress - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -262,19 +262,17 @@
 <span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">DiscreteTaskSpace</span><span class="p">,</span> <span class="n">MultiDiscreteTaskSpace</span>
 
 
-<div class="viewcode-block" id="LearningProgress">
-<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress">[docs]</a>
-<span class="k">class</span> <span class="nc">LearningProgress</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
+<div class="viewcode-block" id="LearningProgress"><a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress">[docs]</a><span class="k">class</span> <span class="nc">LearningProgress</span><span class="p">(</span><span class="n">Curriculum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Provides an interface for tracking success rates of discrete tasks and sampling tasks </span>
 <span class="sd">    based on their success rate using the method from https://arxiv.org/abs/2106.14876.</span>
 <span class="sd">    TODO: Support task spaces aside from Discrete</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_envs</span><span class="p">,</span> <span class="n">get_action</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">ema_alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">eval_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eval_interval_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_envs</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">ema_alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">eval_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eval_interval_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_envs</span> <span class="o">=</span> <span class="n">eval_envs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">get_action</span> <span class="o">=</span> <span class="n">get_action</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">evaluator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span> <span class="o">=</span> <span class="n">ema_alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_interval</span> <span class="o">=</span> <span class="n">eval_interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_interval_steps</span> <span class="o">=</span> <span class="n">eval_interval_steps</span>
@@ -297,7 +295,7 @@
             <span class="n">ep_counter</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">progress</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="k">while</span> <span class="n">ep_counter</span> <span class="o">&lt;</span> <span class="n">eval_eps</span><span class="p">:</span>
-                <span class="n">actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_action</span><span class="p">(</span><span class="n">obss</span><span class="p">)</span>
+                <span class="n">actions</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">get_action</span><span class="p">(</span><span class="n">obss</span><span class="p">)</span>
                 <span class="n">obss</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminateds</span><span class="p">,</span> <span class="n">truncateds</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_envs</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
                 <span class="n">dones</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">a</span> <span class="o">|</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">terminateds</span><span class="p">,</span> <span class="n">truncateds</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">done</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dones</span><span class="p">):</span>
@@ -317,9 +315,7 @@
 
         <span class="k">return</span> <span class="n">task_success_rates</span>
 
-<div class="viewcode-block" id="LearningProgress.update_task_progress">
-<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress.update_task_progress">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LearningProgress.update_task_progress"><a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress.update_task_progress">[docs]</a>    <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the success rate for the given task using a fast and slow exponential moving average.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -330,10 +326,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_p_fast</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">progress</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p_fast</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_p_slow</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p_fast</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p_slow</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ema_alpha</span><span class="p">))</span></div>
 
-
-<div class="viewcode-block" id="LearningProgress.update_on_episode">
-<a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress.update_on_episode">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="LearningProgress.update_on_episode"><a class="viewcode-back" href="../../../curricula/syllabus.curricula.learning_progress.html#syllabus.curricula.learning_progress.LearningProgress.update_on_episode">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">completed_episodes</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">completed_steps</span> <span class="o">+=</span> <span class="n">length</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_interval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed_episodes</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -341,7 +334,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_interval_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed_steps</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_interval_steps</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_all_tasks</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">completed_steps</span> <span class="o">=</span> <span class="mi">0</span></div>
-
 
     <span class="k">def</span> <span class="nf">_learning_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reweight</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -387,7 +379,6 @@
             <span class="c1"># If all tasks have 0 progress, return uniform distribution</span>
             <span class="n">task_dist</span> <span class="o">=</span> <span class="n">subprobs</span>
         <span class="k">return</span> <span class="n">task_dist</span></div>
-
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
@@ -526,10 +517,10 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/tabs.js"></script>
     </body>
 </html>

@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.examples.task_wrappers.nethack_wrappers - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -264,9 +264,7 @@
 <span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">DiscreteTaskSpace</span>
 
 
-<div class="viewcode-block" id="NetHackSeed">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed">[docs]</a>
-<span class="k">class</span> <span class="nc">NetHackSeed</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackSeed"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed">[docs]</a><span class="k">class</span> <span class="nc">NetHackSeed</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Environment for the NetHack Challenge.</span>
 
 <span class="sd">    The task is an augmentation of the standard NLE task. This is the NLE Score Task</span>
@@ -323,13 +321,10 @@
         <span class="c1"># If the in-game turn count doesn&#39;t change for 10_000 steps, we abort</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">no_progress_timeout</span> <span class="o">=</span> <span class="n">no_progress_timeout</span>
 
-<div class="viewcode-block" id="NetHackSeed.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackSeed.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSeed.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_turns</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_no_progress_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_check_abort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if time has stopped and no observations has changed long enough</span>
@@ -347,10 +342,7 @@
         <span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="NetHackDescend">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend">[docs]</a>
-<span class="k">class</span> <span class="nc">NetHackDescend</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackDescend"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend">[docs]</a><span class="k">class</span> <span class="nc">NetHackDescend</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Environment for &quot;staircase&quot; task.</span>
 
 <span class="sd">    This task requires the agent to get on top of a staircase down (&gt;).</span>
@@ -359,12 +351,9 @@
 <span class="sd">    function as defined by `NetHackScore`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="NetHackDescend.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wizkit_items</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackDescend.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackDescend.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wizkit_items</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_dungeon_level</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">wizkit_items</span><span class="o">=</span><span class="n">wizkit_items</span><span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_is_episode_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">StepStatus</span><span class="o">.</span><span class="n">RUNNING</span>
@@ -381,10 +370,7 @@
         <span class="k">return</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">time_penalty</span></div>
 
 
-
-<div class="viewcode-block" id="NetHackCollect">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect">[docs]</a>
-<span class="k">class</span> <span class="nc">NetHackCollect</span><span class="p">(</span><span class="n">NetHackGold</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackCollect"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect">[docs]</a><span class="k">class</span> <span class="nc">NetHackCollect</span><span class="p">(</span><span class="n">NetHackGold</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Environment for &quot;staircase&quot; task.</span>
 
 <span class="sd">    This task requires the agent to get on top of a staircase down (&gt;).</span>
@@ -397,15 +383,12 @@
         <span class="n">actions</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;actions&quot;</span><span class="p">,</span> <span class="n">TASK_ACTIONS</span> <span class="o">+</span> <span class="p">(</span><span class="n">nethack</span><span class="o">.</span><span class="n">Command</span><span class="o">.</span><span class="n">PICKUP</span><span class="p">,</span> <span class="n">nethack</span><span class="o">.</span><span class="n">Command</span><span class="o">.</span><span class="n">DROP</span><span class="p">))</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NetHackCollect.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wizkit_items</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackCollect.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackCollect.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wizkit_items</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">observation</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">wizkit_items</span><span class="o">=</span><span class="n">wizkit_items</span><span class="p">)</span>
         <span class="n">inventory</span> <span class="o">=</span> <span class="n">observation</span><span class="p">[</span><span class="s2">&quot;inv_glyphs&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">collected_items</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">inventory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inv_glphys_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_keys</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;inv_glyphs&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">observation</span></div>
-
 
     <span class="k">def</span> <span class="nf">_is_episode_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">StepStatus</span><span class="o">.</span><span class="n">RUNNING</span>
@@ -421,10 +404,7 @@
         <span class="k">return</span> <span class="n">item_reward</span> <span class="o">+</span> <span class="n">gold_reward</span></div>
 
 
-
-<div class="viewcode-block" id="NetHackSatiate">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSatiate">[docs]</a>
-<span class="k">class</span> <span class="nc">NetHackSatiate</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackSatiate"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackSatiate">[docs]</a><span class="k">class</span> <span class="nc">NetHackSatiate</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Environment for the &quot;eat&quot; task.</span>
 
 <span class="sd">    The task is similar to the one defined by `NetHackScore`, but the reward</span>
@@ -461,22 +441,16 @@
         <span class="k">return</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">time_penalty</span></div>
 
 
-
-<div class="viewcode-block" id="NetHackScoutClipped">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped">[docs]</a>
-<span class="k">class</span> <span class="nc">NetHackScoutClipped</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackScoutClipped"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped">[docs]</a><span class="k">class</span> <span class="nc">NetHackScoutClipped</span><span class="p">(</span><span class="n">NetHackScore</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Environment for the &quot;scout&quot; task.</span>
 
 <span class="sd">    The task is similar to the one defined by `NetHackScore`, but the score is</span>
 <span class="sd">    defined by the changes in glyphs discovered by the agent.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="NetHackScoutClipped.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NetHackScoutClipped.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NetHackScoutClipped.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dungeon_explored</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_reward_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">last_observation</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">end_status</span><span class="p">):</span>
         <span class="k">del</span> <span class="n">end_status</span>  <span class="c1"># Unused</span>
@@ -504,10 +478,7 @@
         <span class="k">return</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">time_penalty</span></div>
 
 
-
-<div class="viewcode-block" id="NethackTaskWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">NethackTaskWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackTaskWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper">[docs]</a><span class="k">class</span> <span class="nc">NethackTaskWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This wrapper allows you to change the task of an NLE environment.</span>
 
@@ -581,18 +552,13 @@
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NethackTaskWrapper.seed">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.seed">[docs]</a>
-    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackTaskWrapper.seed"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.seed">[docs]</a>    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">core</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="vm">__name__</span>
 
-<div class="viewcode-block" id="NethackTaskWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackTaskWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resets the environment along with all available tasks, and change the current task.</span>
 
@@ -618,10 +584,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="NethackTaskWrapper.change_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.change_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackTaskWrapper.change_task"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.change_task">[docs]</a>    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change task by directly editing environment class.</span>
 
@@ -643,7 +606,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nethack_env</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">=</span> <span class="n">new_task</span></div>
 
-
         <span class="c1"># If task requires reinitialization</span>
         <span class="c1"># if type(self._nethack_env).__init__ != NetHackScore.__init__:</span>
         <span class="c1">#     self._nethack_env.__init__(actions=nethack.ACTIONS, **self._init_kwargs)</span>
@@ -654,9 +616,7 @@
         <span class="n">goal_encoding</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">goal_encoding</span>
 
-<div class="viewcode-block" id="NethackTaskWrapper.observation">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.observation">[docs]</a>
-    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackTaskWrapper.observation"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.observation">[docs]</a>    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parses current inventory and new items gained this timestep from the observation.</span>
 <span class="sd">        Returns a modified observation.</span>
@@ -664,7 +624,6 @@
         <span class="c1"># Add goal to observation</span>
         <span class="c1"># observation[&#39;goal&#39;] = self._encode_goal()</span>
         <span class="k">return</span> <span class="n">observation</span></div>
-
 
     <span class="k">def</span> <span class="nf">_task_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
         <span class="c1"># TODO: Add real task completion metrics</span>
@@ -686,9 +645,7 @@
 
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">completion</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NethackTaskWrapper.step">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackTaskWrapper.step"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackTaskWrapper.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Step through environment and update task completion.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -698,14 +655,10 @@
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task_completion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_completion</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
         <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;prev_action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span>
         <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tty_cursor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span></div>
-</div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span></div></div>
 
 
-
-<div class="viewcode-block" id="NethackSeedWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">NethackSeedWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackSeedWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper">[docs]</a><span class="k">class</span> <span class="nc">NethackSeedWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This wrapper allows you to change the task of an NLE environment.</span>
 
@@ -737,21 +690,16 @@
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NethackSeedWrapper.seed">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.seed">[docs]</a>
-    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackSeedWrapper.seed"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.seed">[docs]</a>    <span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
         <span class="k">while</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">&quot;env&quot;</span><span class="p">):</span>
             <span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">env</span>
         <span class="n">env</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">core</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div>
 
-
     <span class="k">def</span> <span class="nf">_task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="vm">__name__</span>
 
-<div class="viewcode-block" id="NethackSeedWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackSeedWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resets the environment along with all available tasks, and change the current task.</span>
 
@@ -770,16 +718,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_return</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;prev_action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">encoded_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
-        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tty_cursor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoded_task</span> <span class="k">if</span> <span class="n">encoded_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;prev_action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">encoded_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+            <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tty_cursor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoded_task</span> <span class="k">if</span> <span class="n">encoded_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="NethackSeedWrapper.change_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.change_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackSeedWrapper.change_task"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.change_task">[docs]</a>    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change task by setting the seed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -787,30 +733,23 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">new_task</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="NethackSeedWrapper.observation">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.observation">[docs]</a>
-    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackSeedWrapper.observation"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.observation">[docs]</a>    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parses current inventory and new items gained this timestep from the observation.</span>
 <span class="sd">        Returns a modified observation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">observation</span></div>
 
-
-<div class="viewcode-block" id="NethackSeedWrapper.step">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<div class="viewcode-block" id="NethackSeedWrapper.step"><a class="viewcode-back" href="../../../../modules/syllabus.examples.task_wrappers.html#syllabus.examples.task_wrappers.nethack_wrappers.NethackSeedWrapper.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Step through environment and update task completion.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;prev_action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span>
-        <span class="n">encoded_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
-        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tty_cursor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoded_task</span> <span class="k">if</span> <span class="n">encoded_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span></div>
-</div>
-
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;prev_action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span>
+            <span class="n">encoded_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+            <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tty_cursor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoded_task</span> <span class="k">if</span> <span class="n">encoded_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span></div></div>
 </pre></div>
         </article>
       </div>
@@ -843,10 +782,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>

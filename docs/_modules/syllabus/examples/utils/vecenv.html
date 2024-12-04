@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.examples.utils.vecenv - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -256,9 +256,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="VecEnv">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv">[docs]</a>
-<span class="k">class</span> <span class="nc">VecEnv</span><span class="p">:</span>
+<div class="viewcode-block" id="VecEnv"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv">[docs]</a><span class="k">class</span> <span class="nc">VecEnv</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An abstract asynchronous, vectorized environment.</span>
 <span class="sd">    Used to batch data from multiple copies of an environment, so that</span>
@@ -277,9 +275,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">observation_space</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">action_space</span>
 
-<div class="viewcode-block" id="VecEnv.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset all the environments and return an array of</span>
 <span class="sd">        observations, or a dict of observation arrays.</span>
@@ -290,10 +286,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.step_async">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step_async">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.step_async"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step_async">[docs]</a>    <span class="k">def</span> <span class="nf">step_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tell all the environments to start taking a step</span>
 <span class="sd">        with the given actions.</span>
@@ -304,10 +297,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.step_wait">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step_wait">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.step_wait"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step_wait">[docs]</a>    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wait for the step taken with step_async().</span>
 
@@ -320,20 +310,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.close_extras">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.close_extras">[docs]</a>
-    <span class="k">def</span> <span class="nf">close_extras</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.close_extras"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.close_extras">[docs]</a>    <span class="k">def</span> <span class="nf">close_extras</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clean up the  extra resources, beyond what&#39;s in this base class.</span>
 <span class="sd">        Only runs when not self.closed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.close">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.close">[docs]</a>
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.close"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -341,10 +325,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">close_extras</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.step">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.step"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Step the environments synchronously.</span>
 
@@ -353,31 +334,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">step_async</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_wait</span><span class="p">()</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.step_env">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step_env">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">reset_random</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.step_env"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.step_env">[docs]</a>    <span class="k">def</span> <span class="nf">step_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">reset_random</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">reset_random</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">step_env_reset_random_async</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">step_env_async</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_wait</span><span class="p">()</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.render">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.render">[docs]</a>
-    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.render"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-
-<div class="viewcode-block" id="VecEnv.get_images">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.get_images">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.get_images"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.get_images">[docs]</a>    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return RGB images from each environment</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">unwrapped</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -386,20 +357,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="VecEnv.get_viewer">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.get_viewer">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_viewer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnv.get_viewer"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnv.get_viewer">[docs]</a>    <span class="k">def</span> <span class="nf">get_viewer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">gym.envs.classic_control</span> <span class="kn">import</span> <span class="n">rendering</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">viewer</span> <span class="o">=</span> <span class="n">rendering</span><span class="o">.</span><span class="n">SimpleImageViewer</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewer</span></div>
-</div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewer</span></div></div>
 
 
-
-<div class="viewcode-block" id="VecEnvWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">VecEnvWrapper</span><span class="p">(</span><span class="n">VecEnv</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper">[docs]</a><span class="k">class</span> <span class="nc">VecEnvWrapper</span><span class="p">(</span><span class="n">VecEnv</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An environment wrapper that applies to an entire batch</span>
 <span class="sd">    of environments at once.</span>
@@ -411,41 +376,23 @@
                         <span class="n">observation_space</span><span class="o">=</span><span class="n">observation_space</span> <span class="ow">or</span> <span class="n">venv</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span>
                         <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span> <span class="ow">or</span> <span class="n">venv</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VecEnvWrapper.step_async">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.step_async">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper.step_async"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.step_async">[docs]</a>    <span class="k">def</span> <span class="nf">step_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">step_async</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="VecEnvWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnvWrapper.step_wait">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.step_wait">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper.step_wait"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.step_wait">[docs]</a>    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnvWrapper.close">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.close">[docs]</a>
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper.close"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-
-<div class="viewcode-block" id="VecEnvWrapper.render">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.render">[docs]</a>
-    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper.render"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="VecEnvWrapper.get_images">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.get_images">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvWrapper.get_images"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvWrapper.get_images">[docs]</a>    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">get_images</span><span class="p">()</span></div>
-
 
     <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
@@ -453,19 +400,11 @@
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="VecEnvObservationWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">VecEnvObservationWrapper</span><span class="p">(</span><span class="n">VecEnvWrapper</span><span class="p">):</span>
-<div class="viewcode-block" id="VecEnvObservationWrapper.process">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.process">[docs]</a>
-    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvObservationWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper">[docs]</a><span class="k">class</span> <span class="nc">VecEnvObservationWrapper</span><span class="p">(</span><span class="n">VecEnvWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvObservationWrapper.process"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
-
-<div class="viewcode-block" id="VecEnvObservationWrapper.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvObservationWrapper.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">obs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="n">outputs</span>
@@ -473,39 +412,26 @@
             <span class="n">obs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">,</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">infos</span></div>
 
-
-<div class="viewcode-block" id="VecEnvObservationWrapper.step_wait">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.step_wait">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecEnvObservationWrapper.step_wait"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.step_wait">[docs]</a>    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">env_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">step_wait</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">env_outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
             <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="n">env_outputs</span>
             <span class="n">truncs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="n">env_outputs</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span></div>
-</div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span></div></div>
 
 
-
-<div class="viewcode-block" id="VecExtractDictObs">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecExtractDictObs">[docs]</a>
-<span class="k">class</span> <span class="nc">VecExtractDictObs</span><span class="p">(</span><span class="n">VecEnvObservationWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="VecExtractDictObs"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecExtractDictObs">[docs]</a><span class="k">class</span> <span class="nc">VecExtractDictObs</span><span class="p">(</span><span class="n">VecEnvObservationWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">venv</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">venv</span><span class="o">=</span><span class="n">venv</span><span class="p">,</span> <span class="n">observation_space</span><span class="o">=</span><span class="n">venv</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">spaces</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">])</span>
 
-<div class="viewcode-block" id="VecExtractDictObs.process">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecExtractDictObs.process">[docs]</a>
-    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">obs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span></div>
-</div>
+<div class="viewcode-block" id="VecExtractDictObs.process"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecExtractDictObs.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span></div></div>
 
 
-
-<div class="viewcode-block" id="VecNormalize">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecNormalize">[docs]</a>
-<span class="k">class</span> <span class="nc">VecNormalize</span><span class="p">(</span><span class="n">VecEnvWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="VecNormalize"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecNormalize">[docs]</a><span class="k">class</span> <span class="nc">VecNormalize</span><span class="p">(</span><span class="n">VecEnvWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A vectorized wrapper that normalizes the observations</span>
 <span class="sd">    and returns from an environment.</span>
@@ -521,9 +447,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
 
-<div class="viewcode-block" id="VecNormalize.step_wait">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecNormalize.step_wait">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecNormalize.step_wait"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecNormalize.step_wait">[docs]</a>    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">step_wait</span><span class="p">()</span>
         <span class="n">news</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ret</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">+</span> <span class="n">rews</span>
@@ -534,7 +458,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ret</span><span class="p">[</span><span class="n">news</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span></div>
 
-
     <span class="k">def</span> <span class="nf">_obfilt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ob_rms</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ob_rms</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
@@ -543,22 +466,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">obs</span>
 
-<div class="viewcode-block" id="VecNormalize.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecNormalize.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VecNormalize.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecNormalize.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">obs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">obs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obfilt</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">infos</span></div>
-</div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obfilt</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">infos</span></div></div>
 
 
-
-<div class="viewcode-block" id="VecMonitor">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecMonitor">[docs]</a>
-<span class="k">class</span> <span class="nc">VecMonitor</span><span class="p">(</span><span class="n">VecEnvWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="VecMonitor"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecMonitor">[docs]</a><span class="k">class</span> <span class="nc">VecMonitor</span><span class="p">(</span><span class="n">VecEnvWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">venv</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_buf</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">info_keywords</span><span class="o">=</span><span class="p">()):</span>
         <span class="n">VecEnvWrapper</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">venv</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eprets</span> <span class="o">=</span> <span class="kc">None</span>
@@ -572,9 +489,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">epret_buf</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">keep_buf</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">eplen_buf</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">keep_buf</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VecMonitor.reset">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecMonitor.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VecMonitor.reset"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecMonitor.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">obs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -583,10 +498,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">eplens</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_envs</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">infos</span></div>
 
-
-<div class="viewcode-block" id="VecMonitor.step_wait">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecMonitor.step_wait">[docs]</a>
-    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VecMonitor.step_wait"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.VecMonitor.step_wait">[docs]</a>    <span class="k">def</span> <span class="nf">step_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">venv</span><span class="o">.</span><span class="n">step_wait</span><span class="p">()</span>
         <span class="n">dones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eprets</span> <span class="o">+=</span> <span class="n">rews</span>
@@ -613,41 +525,28 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_writer</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">results_writer</span><span class="o">.</span><span class="n">write_row</span><span class="p">(</span><span class="n">epinfo</span><span class="p">)</span>
                 <span class="n">newinfos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span>
-        <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">newinfos</span></div>
-</div>
+        <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">newinfos</span></div></div>
 
 
-
-<div class="viewcode-block" id="RunningMeanStd">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd">[docs]</a>
-<span class="k">class</span> <span class="nc">RunningMeanStd</span><span class="p">():</span>
+<div class="viewcode-block" id="RunningMeanStd"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd">[docs]</a><span class="k">class</span> <span class="nc">RunningMeanStd</span><span class="p">():</span>
     <span class="c1"># https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">()):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="s1">&#39;float64&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="s1">&#39;float64&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">epsilon</span>
 
-<div class="viewcode-block" id="RunningMeanStd.update">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd.update">[docs]</a>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="RunningMeanStd.update"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">batch_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">batch_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">batch_count</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_from_moments</span><span class="p">(</span><span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="RunningMeanStd.update_from_moments">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd.update_from_moments">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_from_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">):</span>
+<div class="viewcode-block" id="RunningMeanStd.update_from_moments"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.RunningMeanStd.update_from_moments">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">update_mean_var_count_from_moments</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">)</span></div>
-</div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">)</span></div></div>
 
 
-
-<div class="viewcode-block" id="update_mean_var_count_from_moments">
-<a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.update_mean_var_count_from_moments">[docs]</a>
-<span class="k">def</span> <span class="nf">update_mean_var_count_from_moments</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">):</span>
+<div class="viewcode-block" id="update_mean_var_count_from_moments"><a class="viewcode-back" href="../../../../modules/syllabus.examples.utils.html#syllabus.examples.utils.vecenv.update_mean_var_count_from_moments">[docs]</a><span class="k">def</span> <span class="nf">update_mean_var_count_from_moments</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">batch_count</span><span class="p">):</span>
     <span class="n">delta</span> <span class="o">=</span> <span class="n">batch_mean</span> <span class="o">-</span> <span class="n">mean</span>
     <span class="n">tot_count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="n">batch_count</span>
 
@@ -659,7 +558,6 @@
     <span class="n">new_count</span> <span class="o">=</span> <span class="n">tot_count</span>
 
     <span class="k">return</span> <span class="n">new_mean</span><span class="p">,</span> <span class="n">new_var</span><span class="p">,</span> <span class="n">new_count</span></div>
-
 </pre></div>
         </article>
       </div>
@@ -692,10 +590,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>

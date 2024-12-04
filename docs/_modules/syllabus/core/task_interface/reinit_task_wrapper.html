@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.core.task_interface.reinit_task_wrapper - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -259,9 +259,7 @@
 <span class="kn">from</span> <span class="nn">.task_wrapper</span> <span class="kn">import</span> <span class="n">PettingZooTaskWrapper</span><span class="p">,</span> <span class="n">TaskWrapper</span>
 
 
-<div class="viewcode-block" id="ReinitTaskWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">ReinitTaskWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="ReinitTaskWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper">[docs]</a><span class="k">class</span> <span class="nc">ReinitTaskWrapper</span><span class="p">(</span><span class="n">TaskWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a general wrapper for tasks defined as subclasses of a base environment.</span>
 
@@ -278,9 +276,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span> <span class="o">=</span> <span class="n">task_space</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="ReinitTaskWrapper.change_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper.change_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+<div class="viewcode-block" id="ReinitTaskWrapper.change_task"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.ReinitTaskWrapper.change_task">[docs]</a>    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change task by directly editing environment class.</span>
 
@@ -295,14 +291,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">task_envs</span><span class="p">[</span><span class="n">new_task</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_fn</span><span class="p">(</span><span class="n">new_task</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_envs</span><span class="p">[</span><span class="n">new_task</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span></div>
-</div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span></div></div>
 
 
-
-<div class="viewcode-block" id="PettingZooReinitTaskWrapper">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.PettingZooReinitTaskWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">PettingZooReinitTaskWrapper</span><span class="p">(</span><span class="n">PettingZooTaskWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooReinitTaskWrapper"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.PettingZooReinitTaskWrapper">[docs]</a><span class="k">class</span> <span class="nc">PettingZooReinitTaskWrapper</span><span class="p">(</span><span class="n">PettingZooTaskWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a general wrapper for tasks defined as subclasses of a base environment.</span>
 
@@ -318,9 +310,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span> <span class="o">=</span> <span class="n">task_space</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="PettingZooReinitTaskWrapper.change_task">
-<a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.PettingZooReinitTaskWrapper.change_task">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="PettingZooReinitTaskWrapper.change_task"><a class="viewcode-back" href="../../../../modules/syllabus.core.task_interface.html#syllabus.core.task_interface.reinit_task_wrapper.PettingZooReinitTaskWrapper.change_task">[docs]</a>    <span class="k">def</span> <span class="nf">change_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_task</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change task by directly editing environment class.</span>
 
@@ -335,9 +325,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">task_envs</span><span class="p">[</span><span class="n">new_task</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_fn</span><span class="p">(</span><span class="n">new_task</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_envs</span><span class="p">[</span><span class="n">new_task</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span></div>
-</div>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">new_task</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
@@ -416,10 +404,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>

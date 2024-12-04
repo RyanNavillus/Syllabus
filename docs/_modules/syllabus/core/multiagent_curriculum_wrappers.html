@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.core.multiagent_curriculum_wrappers - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -253,27 +253,20 @@
 <span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">CurriculumWrapper</span>
 
 
-<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper">
-<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">MultiagentSharedCurriculumWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper"><a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper">[docs]</a><span class="k">class</span> <span class="nc">MultiagentSharedCurriculumWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curriculum</span><span class="p">,</span> <span class="n">possible_agents</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">joint_policy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">curriculum</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span> <span class="o">=</span> <span class="n">possible_agents</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">joint_policy</span> <span class="o">=</span> <span class="n">joint_policy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_agents</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_agents</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_task_progress">
-<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_task_progress"><a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_task_progress">[docs]</a>    <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">:</span>
             <span class="n">agent_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
             <span class="n">env_index</span> <span class="o">=</span> <span class="n">env_id</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">joint_policy</span> <span class="k">else</span> <span class="p">(</span><span class="n">env_id</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_agents</span><span class="p">)</span> <span class="o">+</span> <span class="n">agent_index</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_index</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_on_step">
-<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_on_step"><a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the curriculum with the current step results from the environment.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -285,18 +278,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span>
                 <span class="n">task</span><span class="p">,</span> <span class="n">maybe_joint_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">term</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">trunc</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="n">agent</span><span class="p">],</span> <span class="n">agent_progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_index</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_on_step_batch">
-<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_on_step_batch"><a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_step_batch">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">,</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">tasks</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span><span class="p">,</span> <span class="n">progresses</span> <span class="o">=</span> <span class="n">step_results</span>
         <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">te</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span><span class="p">,</span> <span class="n">progresses</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">te</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_on_episode">
-<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="MultiagentSharedCurriculumWrapper.update_on_episode"><a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentSharedCurriculumWrapper.update_on_episode">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the curriculum with episode results from the environment.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -304,19 +291,14 @@
             <span class="n">agent_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
             <span class="n">env_index</span> <span class="o">=</span> <span class="n">env_id</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">joint_policy</span> <span class="k">else</span> <span class="p">(</span><span class="n">env_id</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_agents</span><span class="p">)</span> <span class="o">+</span> <span class="n">agent_index</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">curriculum</span><span class="o">.</span><span class="n">update_on_episode</span><span class="p">(</span>
-                <span class="n">episode_return</span><span class="p">[</span><span class="n">agent</span><span class="p">],</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_index</span><span class="p">)</span></div>
-</div>
+                <span class="n">episode_return</span><span class="p">[</span><span class="n">agent</span><span class="p">],</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_index</span><span class="p">)</span></div></div>
 
 
-
-<div class="viewcode-block" id="MultiagentIndependentCurriculumWrapper">
-<a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper">[docs]</a>
-<span class="k">class</span> <span class="nc">MultiagentIndependentCurriculumWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiagentIndependentCurriculumWrapper"><a class="viewcode-back" href="../../../synchronization/curriculum_synchronization.html#syllabus.core.multiagent_curriculum_wrappers.MultiagentIndependentCurriculumWrapper">[docs]</a><span class="k">class</span> <span class="nc">MultiagentIndependentCurriculumWrapper</span><span class="p">(</span><span class="n">CurriculumWrapper</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curriculum</span><span class="p">,</span> <span class="n">possible_agents</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">curriculum</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span> <span class="o">=</span> <span class="n">possible_agents</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_agents</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_agents</span><span class="p">)</span></div>
-
 </pre></div>
         </article>
       </div>
@@ -349,10 +331,10 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/tabs.js"></script>
     </body>
 </html>

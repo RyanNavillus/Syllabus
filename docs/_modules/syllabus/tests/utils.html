@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.tests.utils - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -272,9 +272,7 @@
 <span class="kn">from</span> <span class="nn">syllabus.tests</span> <span class="kn">import</span> <span class="n">PettingZooSyncTestEnv</span><span class="p">,</span> <span class="n">SyncTestEnv</span>
 
 
-<div class="viewcode-block" id="evaluate_random_policy">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.evaluate_random_policy">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_random_policy</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="evaluate_random_policy"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.evaluate_random_policy">[docs]</a><span class="k">def</span> <span class="nf">evaluate_random_policy</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">ParallelEnv</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">evaluate_random_policy_pettingzoo</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="n">seeds</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="n">num_episodes</span><span class="p">)</span>
@@ -282,10 +280,7 @@
         <span class="k">return</span> <span class="n">evaluate_random_policy_gymnasium</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="n">seeds</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="n">num_episodes</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="evaluate_random_policy_gymnasium">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.evaluate_random_policy_gymnasium">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_random_policy_gymnasium</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="evaluate_random_policy_gymnasium"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.evaluate_random_policy_gymnasium">[docs]</a><span class="k">def</span> <span class="nf">evaluate_random_policy_gymnasium</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seeds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">seeds</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="c1"># Seed environment</span>
@@ -315,10 +310,7 @@
     <span class="k">return</span> <span class="n">avg_return</span><span class="p">,</span> <span class="n">episode_returns</span></div>
 
 
-
-<div class="viewcode-block" id="evaluate_random_policy_pettingzoo">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.evaluate_random_policy_pettingzoo">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_random_policy_pettingzoo</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="evaluate_random_policy_pettingzoo"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.evaluate_random_policy_pettingzoo">[docs]</a><span class="k">def</span> <span class="nf">evaluate_random_policy_pettingzoo</span><span class="p">(</span><span class="n">make_env</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seeds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">seeds</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="c1"># Seed environment</span>
@@ -350,10 +342,7 @@
     <span class="k">return</span> <span class="n">avg_return</span><span class="p">,</span> <span class="n">episode_returns</span></div>
 
 
-
-<div class="viewcode-block" id="run_pettingzoo_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_pettingzoo_episode">[docs]</a>
-<span class="k">def</span> <span class="nf">run_pettingzoo_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="run_pettingzoo_episode"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_pettingzoo_episode">[docs]</a><span class="k">def</span> <span class="nf">run_pettingzoo_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a single episode of the environment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">new_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">new_task</span><span class="o">=</span><span class="n">new_task</span><span class="p">)</span>
@@ -380,10 +369,7 @@
     <span class="k">return</span> <span class="n">ep_rew</span></div>
 
 
-
-<div class="viewcode-block" id="run_gymnasium_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_gymnasium_episode">[docs]</a>
-<span class="k">def</span> <span class="nf">run_gymnasium_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="run_gymnasium_episode"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_gymnasium_episode">[docs]</a><span class="k">def</span> <span class="nf">run_gymnasium_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a single episode of the environment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">new_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">new_task</span><span class="o">=</span><span class="n">new_task</span><span class="p">)</span>
@@ -396,9 +382,10 @@
         <span class="n">action</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">curriculum</span> <span class="ow">and</span> <span class="n">curriculum</span><span class="o">.</span><span class="n">requires_step_updates</span><span class="p">:</span>
+            <span class="n">task_completion</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task_completion&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;task_completion&quot;</span> <span class="ow">in</span> <span class="n">info</span> <span class="k">else</span> <span class="mf">0.0</span>
             <span class="n">curriculum</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">task</span><span class="p">),</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span>
-                                      <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task_completion&quot;</span><span class="p">],</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span>
-            <span class="n">curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">task</span><span class="p">),</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;task_completion&quot;</span><span class="p">],</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span>
+                                      <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">task_completion</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span>
+            <span class="n">curriculum</span><span class="o">.</span><span class="n">update_task_progress</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">task</span><span class="p">),</span> <span class="n">task_completion</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span>
         <span class="n">ep_rew</span> <span class="o">+=</span> <span class="n">rew</span>
         <span class="n">ep_len</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -407,20 +394,14 @@
     <span class="k">return</span> <span class="n">ep_rew</span></div>
 
 
-
-<div class="viewcode-block" id="run_episode">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_episode">[docs]</a>
-<span class="k">def</span> <span class="nf">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="run_episode"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_episode">[docs]</a><span class="k">def</span> <span class="nf">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">ParallelEnv</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">run_pettingzoo_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="p">,</span> <span class="n">curriculum</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">run_gymnasium_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">new_task</span><span class="p">,</span> <span class="n">curriculum</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="run_set_length">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_set_length">[docs]</a>
-<span class="k">def</span> <span class="nf">run_set_length</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">episodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">env_outputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="run_set_length"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_set_length">[docs]</a><span class="k">def</span> <span class="nf">run_set_length</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">episodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">env_outputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run environment for a set number of episodes or steps.&quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">episodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Must specify either episodes or steps.&quot;</span>
     <span class="k">assert</span> <span class="n">episodes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot specify both episodes and steps.&quot;</span>
@@ -454,10 +435,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">rew</span><span class="p">,</span> <span class="n">term</span><span class="p">,</span> <span class="n">trunc</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="run_episodes">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_episodes">[docs]</a>
-<span class="k">def</span> <span class="nf">run_episodes</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="run_episodes"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_episodes">[docs]</a><span class="k">def</span> <span class="nf">run_episodes</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run multiple episodes of the environment.&quot;&quot;&quot;</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">env_fn</span><span class="p">(</span><span class="n">env_args</span><span class="o">=</span><span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="n">env_kwargs</span><span class="p">)</span>
     <span class="n">ep_rews</span> <span class="o">=</span> <span class="p">[]</span>
@@ -471,17 +449,13 @@
     <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 
-
-<div class="viewcode-block" id="run_episodes_queue">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_episodes_queue">[docs]</a>
-<span class="k">def</span> <span class="nf">run_episodes_queue</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="n">curriculum_components</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="run_episodes_queue"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_episodes_queue">[docs]</a><span class="k">def</span> <span class="nf">run_episodes_queue</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="n">curriculum_components</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">env_fn</span><span class="p">(</span><span class="n">curriculum_components</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="n">env_kwargs</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="s2">&quot;queue&quot;</span><span class="p">,</span>
                  <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">sync</span> <span class="k">else</span> <span class="n">env_fn</span><span class="p">(</span><span class="n">env_args</span><span class="o">=</span><span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="n">env_kwargs</span><span class="p">)</span>
     <span class="n">ep_rews</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_episodes</span><span class="p">):</span>
         <span class="n">ep_rews</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">))</span>
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
-
 
 
 <span class="nd">@ray</span><span class="o">.</span><span class="n">remote</span>
@@ -494,9 +468,7 @@
     <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="run_single_process">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_single_process">[docs]</a>
-<span class="k">def</span> <span class="nf">run_single_process</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="run_single_process"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_single_process">[docs]</a><span class="k">def</span> <span class="nf">run_single_process</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_episodes</span><span class="p">):</span>
         <span class="c1"># Interleave episodes for each environment</span>
@@ -507,10 +479,7 @@
     <span class="k">return</span> <span class="n">native_speed</span></div>
 
 
-
-<div class="viewcode-block" id="run_native_multiprocess">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_native_multiprocess">[docs]</a>
-<span class="k">def</span> <span class="nf">run_native_multiprocess</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<div class="viewcode-block" id="run_native_multiprocess"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_native_multiprocess">[docs]</a><span class="k">def</span> <span class="nf">run_native_multiprocess</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="c1"># Choose multiprocessing and curriculum methods</span>
     <span class="k">if</span> <span class="n">curriculum</span><span class="p">:</span>
@@ -539,10 +508,7 @@
     <span class="k">return</span> <span class="n">native_speed</span></div>
 
 
-
-<div class="viewcode-block" id="run_ray_multiprocess">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_ray_multiprocess">[docs]</a>
-<span class="k">def</span> <span class="nf">run_ray_multiprocess</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="run_ray_multiprocess"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_ray_multiprocess">[docs]</a><span class="k">def</span> <span class="nf">run_ray_multiprocess</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">curriculum</span><span class="p">:</span>
         <span class="n">target</span> <span class="o">=</span> <span class="n">run_episodes_ray</span>
         <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">num_episodes</span><span class="p">)</span>
@@ -562,10 +528,7 @@
     <span class="k">return</span> <span class="n">ray_speed</span></div>
 
 
-
-<div class="viewcode-block" id="run_native_vecenv">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_native_vecenv">[docs]</a>
-<span class="k">def</span> <span class="nf">run_native_vecenv</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="run_native_vecenv"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.run_native_vecenv">[docs]</a><span class="k">def</span> <span class="nf">run_native_vecenv</span><span class="p">(</span><span class="n">env_fn</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">curriculum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_envs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_episodes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
     <span class="n">sample_env</span> <span class="o">=</span> <span class="n">env_fn</span><span class="p">(</span><span class="n">env_args</span><span class="o">=</span><span class="n">env_args</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="n">env_kwargs</span><span class="p">)</span>
     <span class="n">sample_env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
     <span class="n">envs</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">AsyncVectorEnv</span><span class="p">(</span>
@@ -587,25 +550,15 @@
     <span class="n">envs</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 
-
-<div class="viewcode-block" id="get_test_values">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.get_test_values">[docs]</a>
-<span class="k">def</span> <span class="nf">get_test_values</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="get_test_values"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.get_test_values">[docs]</a><span class="k">def</span> <span class="nf">get_test_values</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="get_test_actions">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.get_test_actions">[docs]</a>
-<span class="k">def</span> <span class="nf">get_test_actions</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="get_test_actions"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.get_test_actions">[docs]</a><span class="k">def</span> <span class="nf">get_test_actions</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span></div>
 
 
-
-<span class="c1"># Sync Test Environment</span>
-<div class="viewcode-block" id="ExtractDictObservation">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation">[docs]</a>
-<span class="k">class</span> <span class="nc">ExtractDictObservation</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">RecordConstructorArgs</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtractDictObservation"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation">[docs]</a><span class="k">class</span> <span class="nc">ExtractDictObservation</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">RecordConstructorArgs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract space from Dict observation space by the key.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">,</span> <span class="n">filter_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -623,12 +576,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> <span class="n">env</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_key</span> <span class="o">=</span> <span class="n">filter_key</span>
 
-<div class="viewcode-block" id="ExtractDictObservation.observation">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation.observation">[docs]</a>
-    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtractDictObservation.observation"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation.observation">[docs]</a>    <span class="k">def</span> <span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
         <span class="n">filter_observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_observation</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">filter_observation</span></div>
-
 
     <span class="k">def</span> <span class="nf">_filter_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -639,18 +589,13 @@
                 <span class="sa">f</span><span class="s2">&quot;Available keys are </span><span class="si">{</span><span class="n">observation</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
-<div class="viewcode-block" id="ExtractDictObservation.reset">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="ExtractDictObservation.reset"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.ExtractDictObservation.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span></div>
-</div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span></div></div>
 
 
-
-<div class="viewcode-block" id="create_gymnasium_synctest_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_gymnasium_synctest_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_gymnasium_synctest_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="c1"># Sync Test Environments</span>
+<div class="viewcode-block" id="create_gymnasium_synctest_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_gymnasium_synctest_env">[docs]</a><span class="k">def</span> <span class="nf">create_gymnasium_synctest_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">SyncTestEnv</span><span class="p">(</span><span class="o">*</span><span class="n">env_args</span><span class="p">,</span> <span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sync_type</span> <span class="o">==</span> <span class="s2">&quot;queue&quot;</span><span class="p">:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">GymnasiumSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">task_space</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -659,10 +604,7 @@
     <span class="k">return</span> <span class="n">env</span></div>
 
 
-
-<div class="viewcode-block" id="create_pettingzoo_synctest_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_pettingzoo_synctest_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_pettingzoo_synctest_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_pettingzoo_synctest_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_pettingzoo_synctest_env">[docs]</a><span class="k">def</span> <span class="nf">create_pettingzoo_synctest_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">PettingZooSyncTestEnv</span><span class="p">(</span><span class="o">*</span><span class="n">env_args</span><span class="p">,</span> <span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sync_type</span> <span class="o">==</span> <span class="s2">&quot;queue&quot;</span><span class="p">:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">PettingZooSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">task_space</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -671,11 +613,8 @@
     <span class="k">return</span> <span class="n">env</span></div>
 
 
-
 <span class="c1"># Cartpole Tests</span>
-<div class="viewcode-block" id="create_cartpole_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_cartpole_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_cartpole_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_cartpole_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_cartpole_env">[docs]</a><span class="k">def</span> <span class="nf">create_cartpole_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">thunk</span><span class="p">():</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">RecordEpisodeStatistics</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
@@ -689,22 +628,19 @@
     <span class="k">return</span> <span class="n">thunk</span> <span class="k">if</span> <span class="n">wrap</span> <span class="k">else</span> <span class="n">thunk</span><span class="p">()</span></div>
 
 
-
 <span class="c1"># Nethack Tests</span>
-<div class="viewcode-block" id="create_nethack_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_nethack_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_nethack_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_nethack_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_nethack_env">[docs]</a><span class="k">def</span> <span class="nf">create_nethack_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">nle.env.tasks</span> <span class="kn">import</span> <span class="n">NetHackScore</span>
 
-    <span class="kn">from</span> <span class="nn">syllabus.examples.task_wrappers.nethack_wrappers</span> <span class="kn">import</span> \
-        <span class="n">NethackTaskWrapper</span>
+    <span class="kn">from</span> <span class="nn">syllabus.examples.task_wrappers.nethack_wrappers</span> <span class="kn">import</span> <span class="n">NethackSeedWrapper</span>
 
     <span class="k">def</span> <span class="nf">thunk</span><span class="p">():</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">NetHackScore</span><span class="p">(</span><span class="o">*</span><span class="n">env_args</span><span class="p">,</span> <span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">GymV21CompatibilityV0</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">RecordEpisodeStatistics</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">NethackTaskWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">ExtractDictObservation</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">filter_key</span><span class="o">=</span><span class="s2">&quot;blstats&quot;</span><span class="p">)</span>
+
+        <span class="c1"># env = GymV21CompatibilityV0(env=env)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">RecordEpisodeStatistics</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">NethackSeedWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">sync_type</span> <span class="o">==</span> <span class="s2">&quot;queue&quot;</span><span class="p">:</span>
             <span class="n">env</span> <span class="o">=</span> <span class="n">GymnasiumSyncWrapper</span><span class="p">(</span>
@@ -716,11 +652,8 @@
     <span class="k">return</span> <span class="n">thunk</span> <span class="k">if</span> <span class="n">wrap</span> <span class="k">else</span> <span class="n">thunk</span><span class="p">()</span></div>
 
 
-
 <span class="c1"># Procgen Tests</span>
-<div class="viewcode-block" id="create_procgen_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_procgen_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_procgen_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_procgen_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_procgen_env">[docs]</a><span class="k">def</span> <span class="nf">create_procgen_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">procgen</span>
 
@@ -745,11 +678,8 @@
     <span class="k">return</span> <span class="n">thunk</span> <span class="k">if</span> <span class="n">wrap</span> <span class="k">else</span> <span class="n">thunk</span><span class="p">()</span></div>
 
 
-
 <span class="c1"># Minigrid Tests</span>
-<div class="viewcode-block" id="create_minigrid_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_minigrid_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_minigrid_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_minigrid_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_minigrid_env">[docs]</a><span class="k">def</span> <span class="nf">create_minigrid_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">gym_minigrid.envs</span> <span class="kn">import</span> <span class="n">DoorKeyEnv</span>  <span class="c1"># noqa: F401</span>
         <span class="kn">from</span> <span class="nn">gym_minigrid.register</span> <span class="kn">import</span> <span class="n">env_list</span>
@@ -769,11 +699,8 @@
     <span class="k">return</span> <span class="n">env</span></div>
 
 
-
 <span class="c1"># Pistonball Tests</span>
-<div class="viewcode-block" id="create_pistonball_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_pistonball_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_pistonball_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_pistonball_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_pistonball_env">[docs]</a><span class="k">def</span> <span class="nf">create_pistonball_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">pettingzoo.butterfly</span> <span class="kn">import</span> <span class="n">pistonball_v6</span>  <span class="c1"># noqa: F401</span>
 
@@ -790,11 +717,8 @@
     <span class="k">return</span> <span class="n">env</span></div>
 
 
-
 <span class="c1"># Simple Tag Tests</span>
-<div class="viewcode-block" id="create_simpletag_env">
-<a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_simpletag_env">[docs]</a>
-<span class="k">def</span> <span class="nf">create_simpletag_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_simpletag_env"><a class="viewcode-back" href="../../../modules/syllabus.tests.html#syllabus.tests.utils.create_simpletag_env">[docs]</a><span class="k">def</span> <span class="nf">create_simpletag_env</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sync_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">env_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">pettingzoo.mpe</span> <span class="kn">import</span> <span class="n">simple_tag_v3</span>  <span class="c1"># noqa: F401</span>
 
@@ -818,7 +742,6 @@
     <span class="k">elif</span> <span class="n">sync_type</span> <span class="o">==</span> <span class="s2">&quot;ray&quot;</span><span class="p">:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">RayPettingZooSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">task_space</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">env</span></div>
-
 </pre></div>
         </article>
       </div>
@@ -851,10 +774,10 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/tabs.js"></script>
     </body>
 </html>

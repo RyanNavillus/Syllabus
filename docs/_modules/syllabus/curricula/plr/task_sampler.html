@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="../../../../">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.3.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
         <title>syllabus.curricula.plr.task_sampler - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -257,9 +257,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 
 
-<div class="viewcode-block" id="TaskSampler">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler">[docs]</a>
-<span class="k">class</span> <span class="nc">TaskSampler</span><span class="p">:</span>
+<div class="viewcode-block" id="TaskSampler"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler">[docs]</a><span class="k">class</span> <span class="nc">TaskSampler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Task sampler for Prioritized Level Replay (PLR)</span>
 
 <span class="sd">    Args:</span>
@@ -330,9 +328,7 @@
                 <span class="s1">&#39;Must provide action space to PLR if using &quot;policy_entropy&quot;, &quot;least_confidence&quot;, or &quot;min_margin&quot; strategies&#39;</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="TaskSampler.update_with_rollouts">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_with_rollouts">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_with_rollouts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rollouts</span><span class="p">,</span> <span class="n">actor_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskSampler.update_with_rollouts"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_with_rollouts">[docs]</a>    <span class="k">def</span> <span class="nf">update_with_rollouts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rollouts</span><span class="p">,</span> <span class="n">actor_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -354,17 +350,13 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_with_rollouts</span><span class="p">(</span><span class="n">rollouts</span><span class="p">,</span> <span class="n">score_function</span><span class="p">,</span> <span class="n">actor_index</span><span class="o">=</span><span class="n">actor_id</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="TaskSampler.update_task_score">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_task_score">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_task_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskSampler.update_task_score"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.update_task_score">[docs]</a>    <span class="k">def</span> <span class="nf">update_task_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
         <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_update_task_score</span><span class="p">(</span><span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">unseen_task_weights</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># No longer unseen</span>
 
         <span class="n">old_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_scores</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_scores</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">old_score</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">score</span></div>
-
 
     <span class="k">def</span> <span class="nf">_partial_update_task_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">partial_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_task_scores</span><span class="p">[</span><span class="n">actor_index</span><span class="p">][</span><span class="n">task_idx</span><span class="p">]</span>
@@ -519,9 +511,7 @@
                 <span class="n">num_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rollouts</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">start_t</span><span class="p">:,</span> <span class="n">actor_index</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_partial_update_task_score</span><span class="p">(</span><span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx_t</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TaskSampler.after_update">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.after_update">[docs]</a>
-    <span class="k">def</span> <span class="nf">after_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskSampler.after_update"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.after_update">[docs]</a>    <span class="k">def</span> <span class="nf">after_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actor_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># Reset partial updates, since weights have changed, and thus logits are now stale</span>
         <span class="n">actor_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_task_scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">actor_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">actor_indices</span>
         <span class="k">for</span> <span class="n">actor_index</span> <span class="ow">in</span> <span class="n">actor_indices</span><span class="p">:</span>
@@ -530,7 +520,6 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">update_task_score</span><span class="p">(</span><span class="n">actor_index</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">partial_task_scores</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">partial_task_steps</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_update_staleness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_idx</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">staleness_coef</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -555,9 +544,7 @@
 
         <span class="k">return</span> <span class="n">task_idx</span>
 
-<div class="viewcode-block" id="TaskSampler.sample">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskSampler.sample"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">strategy</span><span class="p">:</span>
             <span class="n">strategy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span>
 
@@ -590,10 +577,7 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported replay schedule: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">replay_schedule</span><span class="si">}</span><span class="s2">. Must be &#39;fixed&#39; or &#39;proportionate&#39;.&quot;</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="TaskSampler.sample_weights">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample_weights">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskSampler.sample_weights"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.sample_weights">[docs]</a>    <span class="k">def</span> <span class="nf">sample_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score_transform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_scores</span><span class="p">)</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">unseen_task_weights</span><span class="p">)</span>  <span class="c1"># zero out unseen levels</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
@@ -613,7 +597,6 @@
                 <span class="n">staleness_weights</span> <span class="o">/=</span> <span class="n">z</span>
             <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">staleness_coef</span><span class="p">)</span> <span class="o">*</span> <span class="n">weights</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">staleness_coef</span> <span class="o">*</span> <span class="n">staleness_weights</span>
         <span class="k">return</span> <span class="n">weights</span></div>
-
 
     <span class="k">def</span> <span class="nf">_score_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
@@ -641,18 +624,14 @@
 
         <span class="k">return</span> <span class="n">weights</span>
 
-<div class="viewcode-block" id="TaskSampler.metrics">
-<a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.metrics">[docs]</a>
-    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TaskSampler.metrics"><a class="viewcode-back" href="../../../../curricula/syllabus.curricula.plr.html#syllabus.curricula.plr.task_sampler.TaskSampler.metrics">[docs]</a>    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;task_scores&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_scores</span><span class="p">,</span>
             <span class="s2">&quot;unseen_task_weights&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unseen_task_weights</span><span class="p">,</span>
             <span class="s2">&quot;task_staleness&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_staleness</span><span class="p">,</span>
             <span class="s2">&quot;proportion_seen&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unseen_task_weights</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span><span class="p">,</span>
             <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_score</span><span class="p">,</span>
-        <span class="p">}</span></div>
-</div>
-
+        <span class="p">}</span></div></div>
 </pre></div>
         </article>
       </div>
@@ -685,10 +664,10 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=ec806d2c"></script>
-    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../../../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    <script src="../../../../_static/tabs.js"></script>
     </body>
 </html>
