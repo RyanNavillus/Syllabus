@@ -3,7 +3,9 @@ import random
 import warnings
 from typing import Any, List, Union
 
+import gymnasium as gym
 import numpy as np
+import torch
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
@@ -42,16 +44,25 @@ class LearningProgress(Curriculum):
             obss, _ = self.eval_envs.reset(options=task)
             ep_counter = 0
             progress = 0.0
+            dones = [False] * self.eval_envs.num_envs
             while ep_counter < eval_eps:
+                print(ep_counter, any(dones))
                 actions, _, _ = self.evaluator.get_action(obss)
-                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
+                actions = torch.flatten(actions)
+                if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                    actions = actions.int()
+                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.numpy())
                 dones = tuple(a | b for a, b in zip(terminateds, truncateds))
                 for i, done in enumerate(dones):
                     if done:
-                        if isinstance(infos, list):
+                        # print(infos.keys())
+                        if isinstance(infos, list) and "final_info" in infos[i]:
+                            # print(infos[i])
                             task_progress = infos[i]["final_info"]['task_completion']
-                        elif isinstance(infos, dict):
+                        elif isinstance(infos, dict) and "final_info" in infos:
                             task_progress = infos["final_info"][i]['task_completion']
+                        else:
+                            task_progress = 0.0
                         progress += task_progress
                         ep_counter += 1
             task_progresses[task_idx] = progress

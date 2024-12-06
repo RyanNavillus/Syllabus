@@ -383,11 +383,11 @@ def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=F
     from syllabus.examples.task_wrappers.nethack_wrappers import NethackSeedWrapper
 
     def thunk():
-        env = NetHackScore(*env_args, **env_kwargs)
-        env = ExtractDictObservation(env, filter_key="blstats")
+        env = NetHackScore(*env_args, max_episode_steps=200, **env_kwargs)
 
         # env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
+        env = ExtractDictObservation(env, filter_key="blstats")
         env = NethackSeedWrapper(env)
 
         if sync_type == "queue":
