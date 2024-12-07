@@ -1,4 +1,5 @@
-""" An example applying Syllabus Prioritized Level Replay to Procgen. This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
+""" An example applying Syllabus Prioritized Level Replay to Procgen.
+This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
 
 NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
 we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
@@ -14,21 +15,24 @@ import gym as openai_gym
 import gymnasium as gym
 import numpy as np
 import procgen  # type: ignore # noqa: F401
-from procgen import ProcgenEnv
-from syllabus.curricula.plr.central_plr_wrapper import CentralPrioritizedLevelReplay
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgress, SequentialCurriculum
-from syllabus.curricula.plr.direct_plr_wrapper import DirectPrioritizedLevelReplay
+from syllabus.curricula import (BatchedDomainRandomization,
+                                CentralPrioritizedLevelReplay, Constant,
+                                DirectPrioritizedLevelReplay,
+                                DomainRandomization, LearningProgress,
+                                PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenLSTMAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
+from syllabus.examples.utils.vecenv import (VecExtractDictObs, VecMonitor,
+                                            VecNormalize)
 
 
 def parse_args():
@@ -100,7 +104,7 @@ def parse_args():
                         help="if toggled, this experiment will use curriculum learning")
     parser.add_argument("--curriculum-method", type=str, default="plr",
                         help="curriculum method to use")
-    parser.add_argument("--num-eval-episodes", type=int, default=8,
+    parser.add_argument("--num-eval-episodes", type=int, default=10,
                         help="the number of episodes to evaluate the agent on after each policy update.")
 
     args = parser.parse_args()
@@ -130,21 +134,20 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
 
-        if task_wrapper or curriculum is not None:
+        if task_wrapper or curriculum_components is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
-        if curriculum is not None:
+        if curriculum_components is not None:
             env = GymnasiumSyncWrapper(
                 env,
                 env.task_space,
-                curriculum.components,
-                update_on_step=curriculum.requires_step_updates,
+                curriculum_components,
                 batch_size=256,
             )
         return env
@@ -168,29 +171,30 @@ def level_replay_evaluate(
     policy.eval()
 
     eval_envs = ProcgenEnv(
-        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
     )
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
-    next_lstm_state = (
+    eval_episode_rewards = []
+    eval_next_lstm_state = (
         torch.zeros(agent.lstm.num_layers, args.num_eval_episodes, agent.lstm.hidden_size).to(device),
         torch.zeros(agent.lstm.num_layers, args.num_eval_episodes, agent.lstm.hidden_size).to(device),
     )  # hidden and cell states (see https://youtu.be/8HyCNIVRbSU)
-    terms = truncs = np.zeros(args.num_eval_episodes)
-    while -1 in eval_episode_rewards:
+    eval_terms = eval_truncs = np.zeros(args.num_eval_episodes)
+
+    while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
-            eval_action, _, _, _, next_lstm_state = policy.get_action_and_value(
-                torch.Tensor(eval_obs).to(device), next_lstm_state, torch.Tensor(np.logical_or(terms, truncs)).to(device), deterministic=False
-            )
+            eval_obs = torch.Tensor(eval_obs).to(device)
+            eval_dones = torch.Tensor(np.logical_or(eval_terms, eval_truncs)).to(device)
+            eval_action, _, _, _, eval_next_lstm_state = policy.get_action_and_value(
+                eval_obs, eval_next_lstm_state, eval_dones)
 
-        eval_obs, _, truncs, terms, eval_infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(eval_infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
+        eval_obs, _, eval_truncs, eval_terms, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        for info in eval_infos:
+            if 'episode' in info.keys():
+                eval_episode_rewards.append(info['episode']['r'])
 
-    # print(eval_episode_rewards)
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
@@ -213,9 +217,8 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
-            dir=args.logging_dir
+            dir=args.logging_dir,
         )
-        # wandb.run.log_code("./syllabus/examples")
 
     writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
     writer.add_text(
@@ -258,38 +261,37 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLEvaluator(agent, device=device)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
-                num_minibatches=1,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
                 lstm_size=256,
-                record_stats=True,
+                device="cuda",
+            )
+        elif args.curriculum_method == "simpleplr":
+            print("Using simple prioritized level replay.")
+            curriculum = DirectPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                device="cpu",
+                suppress_usage_warnings=False,
             )
         elif args.curriculum_method == "centralplr":
+            print("Using centralized prioritized level replay.")
             curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
-                record_stats=True,
-
-            )
-        elif args.curriculum_method == "simpleplr":
-            curriculum = DirectPrioritizedLevelReplay(
-                sample_env.task_space,
-                num_steps=args.num_steps,
-                num_processes=args.num_envs,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
-                record_stats=True,
+                task_sampler_kwargs_dict={"strategy": "value_l1"}
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -297,14 +299,19 @@ if __name__ == "__main__":
         elif args.curriculum_method == "bdr":
             print("Using batched domain randomization.")
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
+        elif args.curriculum_method == "constant":
+            print("Using constant curriculum.")
+            curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgress(eval_envs, make_action_fn(),
-                                          sample_env.task_space, eval_interval_steps=409600)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            curriculum = LearningProgress(
+                eval_envs, evaluator, sample_env.task_space, eval_interval_steps=25 * args.batch_size
+            )
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -318,7 +325,6 @@ if __name__ == "__main__":
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
         curriculum = make_multiprocessing_curriculum(curriculum)
-        del sample_env
 
     # env setup
     print("Creating env")
@@ -327,13 +333,17 @@ if __name__ == "__main__":
             make_env(
                 args.env_id,
                 args.seed + i,
-                curriculum=curriculum if args.curriculum else None,
-                num_levels=1 if args.curriculum else 0
+                curriculum_components=curriculum.components if args.curriculum else None,
+                num_levels=1 if args.curriculum else 0,
             )
             for i in range(args.num_envs)
         ]
     )
     envs = wrap_vecenv(envs)
+
+    # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
+    if args.curriculum:
+        del sample_env
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -384,7 +394,7 @@ if __name__ == "__main__":
             next_done = np.logical_or(terminations, truncations)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
-            tasks[step] = torch.Tensor(envs.get_attr("task"))
+            tasks[step] = torch.Tensor([i["task"] for i in infos])
 
             for item in infos:
                 if "episode" in item.keys():
@@ -393,26 +403,23 @@ if __name__ == "__main__":
                     writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
                     writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
                     if curriculum is not None:
-                        curriculum.log_metrics(writer, [], step=global_step)
+                        curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                     break
 
             # Syllabus curriculum update
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
                     next_value, _ = agent.get_value(next_obs, next_lstm_state, next_done)
-                current_tasks = envs.get_attr("task")
+                current_tasks = tasks[step]
 
-                update = {
-                    "update_type": "on_demand",
-                    "metrics": {
-                        "value": value,
-                        "next_value": next_value,
-                        "rew": reward,
-                        "dones": next_done,
-                        "tasks": current_tasks,
-                    },
+                plr_update = {
+                    "value": value,
+                    "next_value": next_value,
+                    "rew": reward,
+                    "dones": next_done,
+                    "tasks": current_tasks,
                 }
-                curriculum.update(update)
+                curriculum.update(plr_update)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -420,7 +427,8 @@ if __name__ == "__main__":
                 next_obs,
                 next_lstm_state,
                 next_done,
-            ).reshape(1, -1)
+            )
+            next_value = next_value.reshape(1, -1)
             advantages = torch.zeros_like(rewards).to(device)
             lastgaelam = 0
             for t in reversed(range(args.num_steps)):
@@ -433,6 +441,15 @@ if __name__ == "__main__":
                 delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
                 advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
             returns = advantages + values
+        if args.curriculum and args.curriculum_method == "simpleplr":
+            a, b = returns.shape
+            new_returns = torch.zeros((a + 1, b))
+            new_returns[:-1, :] = returns
+            new_values = torch.zeros((a + 1, b))
+            new_values[:-1, :] = values
+            new_values[-1, :] = next_value
+            scores = (new_returns - new_values).abs()
+            curriculum.update(tasks, scores, dones)
 
         # flatten the batch
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
@@ -442,7 +459,6 @@ if __name__ == "__main__":
         b_advantages = advantages.reshape(-1)
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
-        b_tasks = tasks.reshape(-1)
 
         # Optimizing the policy and value network
         assert args.num_envs % args.num_minibatches == 0
@@ -450,7 +466,7 @@ if __name__ == "__main__":
         envinds = np.arange(args.num_envs)
         flatinds = np.arange(args.batch_size).reshape(args.num_steps, args.num_envs)
         clipfracs = []
-        for epoch in range(args.update_epochs):
+        for _ in range(args.update_epochs):
             np.random.shuffle(envinds)
             for start in range(0, args.num_envs, envsperbatch):
                 end = start + envsperbatch
@@ -495,23 +511,6 @@ if __name__ == "__main__":
                     v_loss = 0.5 * v_loss_max.mean()
                 else:
                     v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
-
-                # Syllabus curriculum update
-                if args.curriculum and args.curriculum_method == "simpleplr":
-                    current_tasks = tasks[:, mbenvinds]
-                    current_dones = dones[:, mbenvinds]
-                    scores = (b_returns[mb_inds].cpu() - newvalue.cpu()).abs().view(args.num_steps, envsperbatch).cpu()
-
-                    update = {
-                        "update_type": "on_demand",
-                        "metrics": {
-                            "scores": scores,
-                            "dones": current_dones,
-                            "tasks": current_tasks,
-                            "actors": mbenvinds
-                        },
-                    }
-                    curriculum.update(update)
 
                 entropy_loss = entropy.mean()
                 loss = pg_loss - args.ent_coef * entropy_loss + v_loss * args.vf_coef

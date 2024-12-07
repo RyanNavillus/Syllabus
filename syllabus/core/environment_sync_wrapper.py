@@ -1,6 +1,4 @@
-import copy
-import time
-import torch
+import warnings
 from typing import Any, Callable, Dict
 
 import gymnasium as gym
@@ -26,7 +24,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                  task_space: TaskSpace,
                  components: MultiProcessingComponents,
                  batch_size: int = 100,
-                 buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
+                 buffer_size: int = 1,  # Having an extra task in the buffer minimizes wait time at reset
                  remove_keys: list = None,
                  change_task_on_completion: bool = False,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
@@ -59,6 +57,10 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             self._infos = [None] * self.batch_size
             self._tasks = [None] * self.batch_size
             self._task_progresses = np.zeros(self.batch_size, dtype=np.float32)
+
+        if buffer_size > 2:
+            warnings.warn(
+                "Buffer size greater than 2 can cause some automatic curriculum learning methods to perform worse.", stacklevel=2)
 
         # Request initial task
         assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."

@@ -239,14 +239,15 @@ class ResNetBase(NNBase):
 
 
 class ProcgenAgent(nn.Module):
-    def __init__(self, obs_shape, num_actions, arch='small', base_kwargs=None):
+    def __init__(self, obs_shape, num_actions, base_kwargs=None, detach_critic=False):
         super(ProcgenAgent, self).__init__()
 
         if base_kwargs is None:
             base_kwargs = {}
-
+        self.detach_critic = detach_critic
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.critic = init_(nn.Linear(256, 1))
+        self.aux_critic = init_(nn.Linear(256, 1))
         self.actor = Categorical(256, num_actions)
 
         apply_init_(self.modules())
@@ -266,7 +267,7 @@ class ProcgenAgent(nn.Module):
     def get_action_and_value(self, inputs, action=None, deterministic=False):
         new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
         hidden = self.base(new_inputs)
-        value = self.critic(hidden)
+        value = self.critic(hidden.detach()) if self.detach_critic else self.critic(hidden)
         dist = self.actor(hidden)
 
         if action is None:
@@ -276,19 +277,31 @@ class ProcgenAgent(nn.Module):
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value
 
+    def get_pi(self, inputs):
+        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
+        hidden = self.base(new_inputs)
+        return torch.distributions.Categorical(logits=self.actor(hidden).logits)
+
+    def get_pi_value_and_aux_value(self, inputs):
+        new_inputs = inputs.permute((0, 3, 1, 2)) / 255.0
+        hidden = self.base(new_inputs)
+        value = self.critic(hidden.detach()) if self.detach_critic else self.critic(hidden)
+        return torch.distributions.Categorical(logits=self.actor(hidden).logits), value, self.aux_critic(hidden)
+
 
 class ProcgenLSTMAgent(nn.Module):
-    def __init__(self, obs_shape, num_actions, base_kwargs=None):
+    def __init__(self, obs_shape, num_actions, base_kwargs=None, detach_critic=False):
         super(ProcgenLSTMAgent, self).__init__()
 
         if base_kwargs is None:
             base_kwargs = {}
 
         hidden_size = base_kwargs.get("hidden_size", 256)
-
+        self.detach_critic = detach_critic
         self.base = ResNetBase(obs_shape[2], **base_kwargs)
         self.lstm = nn.LSTM(hidden_size, hidden_size)
         self.critic = init_(nn.Linear(hidden_size, 1))
+        self.aux_critic = init_(nn.Linear(256, 1))
         self.actor = layer_init(nn.Linear(hidden_size, num_actions), std=0.01)
 
         apply_init_(self.modules())
@@ -326,8 +339,7 @@ class ProcgenLSTMAgent(nn.Module):
 
     def get_action_and_value(self, inputs, lstm_state, done, action=None, deterministic=False):
         hidden, lstm_state = self.get_states(inputs, lstm_state, done)
-
-        value = self.critic(hidden)
+        value = self.critic(hidden.detach()) if self.detach_critic else self.critic(hidden)
         dist = torch.distributions.categorical.Categorical(logits=self.actor(hidden))
 
         if action is None:
@@ -336,3 +348,12 @@ class ProcgenLSTMAgent(nn.Module):
         dist_entropy = dist.entropy()
 
         return torch.squeeze(action), action_log_probs, dist_entropy, value, lstm_state
+
+    def get_pi(self, inputs, lstm_state, done):
+        hidden, lstm_state = self.get_states(inputs, lstm_state, done)
+        return torch.distributions.Categorical(logits=self.actor(hidden))
+
+    def get_pi_value_and_aux_value(self, inputs, lstm_state, done):
+        hidden, lstm_state = self.get_states(inputs, lstm_state, done)
+        value = self.critic(hidden.detach()) if self.detach_critic else self.critic(hidden)
+        return torch.distributions.Categorical(logits=self.actor(hidden)), value, self.aux_critic(hidden)
