@@ -80,7 +80,7 @@ class RolloutStorage():
                 self.value_preds[self.env_steps[env_idxs] + 1,
                                  env_idxs] = torch.as_tensor(next_values).reshape((len(env_idxs), 1)).cpu()
             self.rewards[self.env_steps[env_idxs], env_idxs] = torch.as_tensor(
-                rewards).reshape((len(env_idxs), 1)).cpu()
+                rewards).reshape((len(env_idxs), 1)).cpu().float()
             self.masks[self.env_steps[env_idxs] + 1,
                        env_idxs] = torch.IntTensor(masks.cpu()).reshape((len(env_idxs), 1))
         else:
@@ -180,7 +180,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
         try:
             masks = torch.Tensor(1 - metrics["dones"]).int()
             tasks = metrics["tasks"]
-            tasks = [self._task2index[t] for t in tasks]
+            tasks = [self._task2index[int(t)] for t in tasks]
         except KeyError as e:
             raise KeyError(
                 "Missing or malformed PLR update. Must include 'masks', and 'tasks', and all tasks must be in the task space"
