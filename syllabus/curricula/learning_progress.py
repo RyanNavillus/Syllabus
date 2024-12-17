@@ -19,13 +19,15 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, eval_envs, evaluator, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
+    def __init__(self, eval_envs, evaluator, *args, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.eval_envs = eval_envs
         self.evaluator = evaluator
         self.ema_alpha = ema_alpha
+        self.lstm_shape = rnn_shape
         self.eval_interval = eval_interval
         self.eval_interval_steps = eval_interval_steps
+        self.eval_eps = eval_eps
         assert self.eval_interval is None or self.eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.completed_episodes = 0
         self.completed_steps = 0
@@ -35,24 +37,41 @@ class LearningProgress(Curriculum):
         ), f"LearningProgressCurriculum only supports Discrete and MultiDiscrete task spaces. Got {self.task_space.__class__.__name__}."
         self._p_fast = np.zeros(self.num_tasks)
         self._p_slow = np.zeros(self.num_tasks)
+        self.task_rates = None
 
-        self._evaluate_all_tasks()
+        self._evaluate = eval_fn if eval_fn is not None else self._evaluate_all_tasks
+        self._evaluate(self.eval_eps)
+
+    def eval_and_update(self, eval_eps=1):
+        task_success_rates = self._evaluate(eval_eps=eval_eps)
+
+        # Update task scores
+        self._p_fast = (task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
+        self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+
+        self.task_rates = task_success_rates    # Logging only
+
+        return task_success_rates
 
     def _evaluate_all_tasks(self, eval_eps=1):
         task_progresses = np.zeros(self.task_space.num_tasks)
+        lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
         for task_idx, task in enumerate(self.task_space.tasks):
             obss, _ = self.eval_envs.reset(options=task)
             ep_counter = 0
             progress = 0.0
             dones = [False] * self.eval_envs.num_envs
+            step = 0
             while ep_counter < eval_eps:
-                print(ep_counter, any(dones))
-                actions, _, _ = self.evaluator.get_action(obss)
+                print("Task:", task_idx, "Episode:", ep_counter, "Step:", step)
+                actions, lstm_state, _ = self.evaluator.get_action(obss, lstm_state=lstm_state, done=dones)
                 actions = torch.flatten(actions)
                 if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
                     actions = actions.int()
-                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.numpy())
+                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
+                step += 1
                 dones = tuple(a | b for a, b in zip(terminateds, truncateds))
+                print(dones)
                 for i, done in enumerate(dones):
                     if done:
                         # print(infos.keys())
@@ -67,11 +86,6 @@ class LearningProgress(Curriculum):
                         ep_counter += 1
             task_progresses[task_idx] = progress
         task_success_rates = np.divide(task_progresses, float(eval_eps))
-
-        # Update task scores
-        self._p_fast = (task_progresses * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
-        self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
-
         return task_success_rates
 
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
@@ -89,9 +103,9 @@ class LearningProgress(Curriculum):
         self.completed_episodes += 1
         self.completed_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
-            self._evaluate_all_tasks()
+            self._evaluate(eval_eps=self.eval_eps)
         if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:
-            self._evaluate_all_tasks()
+            self._evaluate(eval_eps=self.eval_eps)
             self.completed_steps = 0
 
     def _learning_progress(self, reweight: bool = True) -> float:
@@ -138,6 +152,24 @@ class LearningProgress(Curriculum):
             # If all tasks have 0 progress, return uniform distribution
             task_dist = subprobs
         return task_dist
+
+    def log_metrics(self, writer, logs, step, log_n_tasks=1):
+        logs = [] if logs is None else logs
+        learning_progresses = self._learning_progress()
+        logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
+        logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
+
+        tasks = range(self.num_tasks)
+        if self.num_tasks > log_n_tasks and log_n_tasks != -1:
+            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.", stacklevel=2)
+            tasks = tasks[:log_n_tasks]
+
+        for idx in tasks:
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_slow", self._p_slow[idx]))
+            logs.append((f"curriculum/{name}_fast", self._p_fast[idx]))
+            logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
 
 if __name__ == "__main__":
