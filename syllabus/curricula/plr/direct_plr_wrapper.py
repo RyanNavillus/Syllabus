@@ -39,6 +39,7 @@ class RolloutStorage(object):
         # self.scores[actor_steps + steps, actors] = scores.cpu()[steps]
         self.actor_steps[actors] += steps
         self.actors.update(actors)
+        del tasks, masks, scores, actors
 
     def after_update(self):
         self.masks[0].copy_(self.masks[-1])
@@ -118,9 +119,6 @@ class DirectPrioritizedLevelReplay(Curriculum):
 
         self.num_updates += 1
         masks = torch.Tensor(1 - dones.int())
-        print(tasks.shape)
-        print(masks.shape)
-        print(scores.shape)
 
         # Update rollouts
         self._rollouts.insert(tasks, masks, scores, actors)

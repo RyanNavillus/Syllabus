@@ -327,7 +327,7 @@ if __name__ == "__main__":
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum = make_multiprocessing_curriculum(curriculum)
+        curriculum = make_multiprocessing_curriculum(curriculum, use_simple_queues=True)
 
     # env setup
     print("Creating env")
