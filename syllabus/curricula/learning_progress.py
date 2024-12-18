@@ -19,7 +19,7 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, eval_envs, evaluator, *args, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, **kwargs):
+    def __init__(self, eval_envs, evaluator, *args, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.eval_envs = eval_envs
         self.evaluator = evaluator
@@ -35,22 +35,37 @@ class LearningProgress(Curriculum):
         assert isinstance(
             self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
         ), f"LearningProgressCurriculum only supports Discrete and MultiDiscrete task spaces. Got {self.task_space.__class__.__name__}."
-        self._p_fast = np.zeros(self.num_tasks)
-        self._p_slow = np.zeros(self.num_tasks)
+        self.random_baseline = None
+        self._p_fast = None
+        self._p_slow = None
         self.task_rates = None
+        self._stale_dist = True
 
         self._evaluate = eval_fn if eval_fn is not None else self._evaluate_all_tasks
-        self.eval_and_update(self.eval_eps)
+        self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps else eval_eps)
 
     def eval_and_update(self, eval_eps=1):
         print("Syllabus Evaluating Tasks")
         task_success_rates = self._evaluate(eval_episodes=eval_eps)
+        if self.random_baseline is None:
+            self.random_baseline = task_success_rates
 
         # Update task scores
-        self._p_fast = (task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
-        self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+        normalized_task_success_rates = np.maximum(
+            task_success_rates - self.random_baseline, np.zeros(task_success_rates.shape)) / (1.0 - self.random_baseline)
+
+        if self._p_fast is None:
+            # Initial values
+            self._p_fast = normalized_task_success_rates
+            self._p_slow = normalized_task_success_rates
+        else:
+            # Exponential moving average
+            self._p_fast = (normalized_task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
+            self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
 
         self.task_rates = task_success_rates    # Logging only
+        self._stale_dist = True
+        self.task_dist = None
 
         return task_success_rates
 
@@ -113,8 +128,9 @@ class LearningProgress(Curriculum):
         """
         Compute the learning progress metric for the given task.
         """
-        slow = self._reweight(self._p_slow) if reweight else self._p_slow
         fast = self._reweight(self._p_fast) if reweight else self._p_fast
+        slow = self._reweight(self._p_slow) if reweight else self._p_slow
+
         return abs(fast - slow)
 
     def _reweight(self, p: np.ndarray, p_theta: float = 0.1) -> float:
@@ -131,27 +147,31 @@ class LearningProgress(Curriculum):
 
     def _sample_distribution(self) -> List[float]:
         """ Return sampling distribution over the task space based on the learning progress."""
-        if self.num_tasks == 0:
-            return []
+        if not self._stale_dist:
+            # No changes since distribution was last computed
+            return self.task_dist
 
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
-        task_lps = self._learning_progress()
-        posidxs = [i for i, lp in enumerate(task_lps) if lp > 0]
-        zeroout = len(posidxs) > 0
+        learning_progress = self._learning_progress()
+        posidxs = [i for i, lp in enumerate(learning_progress) if lp > 0]
+        any_progress = len(posidxs) > 0
 
-        subprobs = task_lps[posidxs] if zeroout else task_lps
+        subprobs = learning_progress[posidxs] if any_progress else learning_progress
         std = np.std(subprobs)
         subprobs = (subprobs - np.mean(subprobs)) / (std if std else 1)  # z-score
         subprobs = self._sigmoid(subprobs)  # sigmoid
         subprobs = subprobs / np.sum(subprobs)  # normalize
-        if zeroout:
+        if any_progress:
             # If some tasks have nonzero progress, zero out the rest
-            task_dist = np.zeros(len(task_lps))
+            task_dist = np.zeros(len(learning_progress))
             task_dist[posidxs] = subprobs
         else:
             # If all tasks have 0 progress, return uniform distribution
             task_dist = subprobs
+
+        self.task_dist = task_dist
+        self._stale_dist = False
         return task_dist
 
     def log_metrics(self, writer, logs, step, log_n_tasks=1):
