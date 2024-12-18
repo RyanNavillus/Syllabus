@@ -30,7 +30,7 @@ class LearningProgress(Curriculum):
         self.eval_eps = eval_eps
         assert self.eval_interval is None or self.eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.completed_episodes = 0
-        self.completed_steps = 0
+        self.current_steps = 0
 
         assert isinstance(
             self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
@@ -40,10 +40,11 @@ class LearningProgress(Curriculum):
         self.task_rates = None
 
         self._evaluate = eval_fn if eval_fn is not None else self._evaluate_all_tasks
-        self._evaluate(self.eval_eps)
+        self.eval_and_update(self.eval_eps)
 
     def eval_and_update(self, eval_eps=1):
-        task_success_rates = self._evaluate(eval_eps=eval_eps)
+        print("Syllabus Evaluating Tasks")
+        task_success_rates = self._evaluate(eval_episodes=eval_eps)
 
         # Update task scores
         self._p_fast = (task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
@@ -53,7 +54,7 @@ class LearningProgress(Curriculum):
 
         return task_success_rates
 
-    def _evaluate_all_tasks(self, eval_eps=1):
+    def _evaluate_all_tasks(self, eval_episodes=1):
         task_progresses = np.zeros(self.task_space.num_tasks)
         lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
         for task_idx, task in enumerate(self.task_space.tasks):
@@ -62,7 +63,7 @@ class LearningProgress(Curriculum):
             progress = 0.0
             dones = [False] * self.eval_envs.num_envs
             step = 0
-            while ep_counter < eval_eps:
+            while ep_counter < eval_episodes:
                 print("Task:", task_idx, "Episode:", ep_counter, "Step:", step)
                 actions, lstm_state, _ = self.evaluator.get_action(obss, lstm_state=lstm_state, done=dones)
                 actions = torch.flatten(actions)
@@ -85,7 +86,7 @@ class LearningProgress(Curriculum):
                         progress += task_progress
                         ep_counter += 1
             task_progresses[task_idx] = progress
-        task_success_rates = np.divide(task_progresses, float(eval_eps))
+        task_success_rates = np.divide(task_progresses, float(eval_episodes))
         return task_success_rates
 
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
@@ -101,12 +102,12 @@ class LearningProgress(Curriculum):
 
     def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
-        self.completed_steps += length
+        self.current_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
-            self._evaluate(eval_eps=self.eval_eps)
-        if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:
-            self._evaluate(eval_eps=self.eval_eps)
-            self.completed_steps = 0
+            self.eval_and_update(eval_eps=self.eval_eps)
+        if self.eval_interval_steps is not None and self.current_steps > self.eval_interval_steps:
+            self.eval_and_update(eval_eps=self.eval_eps)
+            self.current_steps = 0
 
     def _learning_progress(self, reweight: bool = True) -> float:
         """
@@ -157,7 +158,8 @@ class LearningProgress(Curriculum):
         logs = [] if logs is None else logs
         learning_progresses = self._learning_progress()
         logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
-        logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
+        if self.task_rates is not None:
+            logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
 
         tasks = range(self.num_tasks)
         if self.num_tasks > log_n_tasks and log_n_tasks != -1:
