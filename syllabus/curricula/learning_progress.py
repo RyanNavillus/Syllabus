@@ -38,6 +38,7 @@ class LearningProgress(Curriculum):
         self.random_baseline = None
         self._p_fast = None
         self._p_slow = None
+        self._p_true = None
         self.task_rates = None
         self._stale_dist = True
 
@@ -58,10 +59,12 @@ class LearningProgress(Curriculum):
             # Initial values
             self._p_fast = normalized_task_success_rates
             self._p_slow = normalized_task_success_rates
+            self._p_true = task_success_rates
         else:
             # Exponential moving average
             self._p_fast = (normalized_task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
             self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+            self._p_true = (task_success_rates * self.ema_alpha) + (self._p_true * (1.0 - self.ema_alpha))
 
         self.task_rates = task_success_rates    # Logging only
         self._stale_dist = True
@@ -154,7 +157,7 @@ class LearningProgress(Curriculum):
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
         learning_progress = self._learning_progress()
-        posidxs = [i for i, lp in enumerate(learning_progress) if lp > 0]
+        posidxs = [i for i, lp in enumerate(learning_progress) if lp > 0 or self._p_true[i] > 0]
         any_progress = len(posidxs) > 0
 
         subprobs = learning_progress[posidxs] if any_progress else learning_progress
