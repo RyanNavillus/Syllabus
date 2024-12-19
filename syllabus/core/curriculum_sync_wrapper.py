@@ -107,8 +107,10 @@ class MultiProcessingComponents:
     def get_task(self):
         try:
             if self.started and self.task_queue.empty():
-                warnings.warn(
-                    f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
+                q_size = self.task_queue.qsize()
+                if q_size == 0:
+                    warnings.warn(
+                        f"Task queue capacity is {q_size} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
             task = self.task_queue.get(block=True, timeout=self.timeout)
             return task
         except Empty as e:
