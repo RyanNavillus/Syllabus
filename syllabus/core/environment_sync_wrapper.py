@@ -108,7 +108,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             }
             self.components.put_update([episode_update])
 
-        if self.change_task_on_completion and self.task_progress >= 1.0 or self.task_progress < 0.0:
+        if self.change_task_on_completion and (self.task_progress >= 1.0 or self.task_progress < 0.0):
             update = {
                 "update_type": "task_progress",
                 "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
