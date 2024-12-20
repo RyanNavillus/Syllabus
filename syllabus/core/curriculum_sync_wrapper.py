@@ -49,11 +49,11 @@ class CurriculumWrapper:
     def sample(self, k=1):
         return self.curriculum.sample(k=k)
 
-    def update_task_progress(self, task, progress):
-        self.curriculum.update_task_progress(task, progress)
+    def update_task_progress(self, task, progress, env_id=None):
+        self.curriculum.update_task_progress(task, progress, env_id=env_id)
 
-    def update_on_step(self, task, obs, reward, term, trunc, info, progress):
-        self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress)
+    def update_on_step(self, task, obs, reward, term, trunc, info, progress, env_id=None):
+        self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress, env_id=env_id)
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         return self.curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)

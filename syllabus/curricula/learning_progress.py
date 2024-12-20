@@ -43,7 +43,7 @@ class LearningProgress(Curriculum):
         self._stale_dist = True
 
         self._evaluate = eval_fn if eval_fn is not None else self._evaluate_all_tasks
-        self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps else eval_eps)
+        self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
 
     def eval_and_update(self, eval_eps=1):
         print("Syllabus Evaluating Tasks")
@@ -111,12 +111,7 @@ class LearningProgress(Curriculum):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
-        if task is None or progress == 0.0:
-            return
         super().update_task_progress(task, progress)
-
-        self._p_fast[task] = (progress * self.ema_alpha) + (self._p_fast[task] * (1.0 - self.ema_alpha))
-        self._p_slow[task] = (self._p_fast[task] * self.ema_alpha) + (self._p_slow[task] * (1.0 - self.ema_alpha))
 
     def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
