@@ -93,7 +93,7 @@ class Args:
     """N_pi: the number of policy update in the policy phase """
     e_policy: int = 1
     """E_pi: the number of policy update in the policy phase """
-    v_value: int = 1
+    e_value: int = 1
     """E_V: the number of policy update in the policy phase """
     e_auxiliary: int = 6
     """E_aux:the K epochs to update the policy"""
