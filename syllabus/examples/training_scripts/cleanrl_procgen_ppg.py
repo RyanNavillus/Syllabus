@@ -97,9 +97,9 @@ class Args:
     n_iteration: int = 32
     """N_pi: the number of policy update in the policy phase """
     e_policy: int = 1
-    """E_pi: the number of policy update in the policy phase """
-    v_value: int = 1
-    """E_V: the number of policy update in the policy phase """
+    """E_pi: the number of policy updates in the policy phase """
+    e_value: int = 1
+    """E_V: the number of critic updates in the policy phase """
     e_auxiliary: int = 6
     """E_aux:the K epochs to update the policy"""
     beta_clone: float = 1.0
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     args.num_iterations = args.total_timesteps // args.batch_size
     args.num_phases = int(args.num_iterations // args.n_iteration)
     args.aux_batch_rollouts = int(args.num_envs * args.n_iteration)
-    assert args.v_value == 1, "Multiple value epoch (v_value != 1) is not supported yet"
+    # assert args.e_value == 1, "Multiple value epoch (v_value != 1) is not supported yet"
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
     if args.track:
         import wandb
@@ -279,7 +279,12 @@ if __name__ == "__main__":
         base_kwargs={'hidden_size': 256},
         detach_critic=True,
     ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    policy_optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    if args.e_policy == args.e_value:
+        value_optimizer = policy_optimizer
+    else:
+        value_optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    aux_optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # Curriculum setup
     curriculum = None
@@ -405,7 +410,9 @@ if __name__ == "__main__":
             if args.anneal_lr:
                 frac = 1.0 - (update - 1.0) / args.num_iterations
                 lrnow = frac * args.learning_rate
-                optimizer.param_groups[0]["lr"] = lrnow
+                policy_optimizer.param_groups[0]["lr"] = lrnow
+                value_optimizer.param_groups[0]["lr"] = lrnow
+                aux_optimizer.param_groups[0]["lr"] = lrnow
 
             for step in range(0, args.num_steps):
                 global_step += 1 * args.num_envs
@@ -500,7 +507,7 @@ if __name__ == "__main__":
                     end = start + args.minibatch_size
                     mb_inds = b_inds[start:end]
 
-                    _, newlogprob, entropy, newvalue = agent.get_action_and_value(
+                    _, newlogprob, entropy, _ = agent.get_action_and_value(
                         b_obs[mb_inds], b_actions.long()[mb_inds])
                     logratio = newlogprob - b_logprobs[mb_inds]
                     ratio = logratio.exp()
@@ -518,6 +525,23 @@ if __name__ == "__main__":
                     pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - args.clip_coef, 1 + args.clip_coef)
                     pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
+                    entropy_loss = entropy.mean()
+                    loss = pg_loss - args.ent_coef * entropy_loss
+
+                    policy_optimizer.zero_grad()
+                    loss.backward()
+                    nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
+                    policy_optimizer.step()
+
+            for epoch in range(args.e_value):
+                np.random.shuffle(b_inds)
+                for start in range(0, args.batch_size, args.minibatch_size):
+                    end = start + args.minibatch_size
+                    mb_inds = b_inds[start:end]
+
+                    _, _, _, newvalue = agent.get_action_and_value(
+                        b_obs[mb_inds], b_actions.long()[mb_inds])
+
                     # Value loss
                     newvalue = newvalue.view(-1)
                     if args.clip_vloss:
@@ -533,13 +557,12 @@ if __name__ == "__main__":
                     else:
                         v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
 
-                    entropy_loss = entropy.mean()
-                    loss = pg_loss - args.ent_coef * entropy_loss + v_loss * args.vf_coef
+                    loss = v_loss * args.vf_coef
 
-                    optimizer.zero_grad()
+                    value_optimizer.zero_grad()
                     loss.backward()
                     nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
-                    optimizer.step()
+                    value_optimizer.step()
 
                 if args.target_kl is not None and approx_kl > args.target_kl:
                     break
@@ -557,7 +580,7 @@ if __name__ == "__main__":
             )
 
             # TRY NOT TO MODIFY: record rewards for plotting purposes
-            writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+            writer.add_scalar("charts/learning_rate", policy_optimizer.param_groups[0]["lr"], global_step)
             writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
             writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
             writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
@@ -629,8 +652,8 @@ if __name__ == "__main__":
 
                     if (i + 1) % args.n_aux_grad_accum == 0:
                         nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
-                        optimizer.step()
-                        optimizer.zero_grad()  # This cannot be outside, else gradients won't accumulate
+                        aux_optimizer.step()
+                        aux_optimizer.zero_grad()  # This cannot be outside, else gradients won't accumulate
 
                 except RuntimeError as e:
                     raise Exception(
