@@ -274,9 +274,9 @@ class ConvSequence(nn.Module):
 
 
 class Agent(nn.Module):
-    def __init__(self, envs):
+    def __init__(self, observation_shape, n_actions):
         super().__init__()
-        h, w, c = envs.single_observation_space.shape
+        h, w, c = observation_shape
         shape = (c, h, w)
         conv_seqs = []
         chans = [16, 32, 32]
@@ -295,7 +295,7 @@ class Agent(nn.Module):
             nn.ReLU(),
         ]
         self.network = nn.Sequential(*conv_seqs)
-        self.actor = layer_init_normed(nn.Linear(256, envs.single_action_space.n), norm_dim=1, scale=0.1)
+        self.actor = layer_init_normed(nn.Linear(256, n_actions), norm_dim=1, scale=0.1)
         self.critic = layer_init_normed(nn.Linear(256, 1), norm_dim=1, scale=0.1)
         self.aux_critic = layer_init_normed(nn.Linear(256, 1), norm_dim=1, scale=0.1)
 
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     args.num_iterations = args.total_timesteps // args.batch_size
     args.num_phases = int(args.num_iterations // args.n_iteration)
     args.aux_batch_rollouts = int(args.num_envs * args.n_iteration)
-    assert args.v_value == 1, "Multiple value epoch (v_value != 1) is not supported yet"
+    # assert args.v_value == 1, "Multiple value epoch (v_value != 1) is not supported yet"
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
     if args.track:
         import wandb
@@ -368,11 +368,9 @@ if __name__ == "__main__":
     # Agent setup
     assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
-    agent = ProcgenAgent(
+    agent = Agent(
         single_observation_space.shape,
         single_action_space.n,
-        base_kwargs={'hidden_size': 256},
-        detach_critic=True,
     ).to(device)
     policy_optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
     if args.e_policy == args.e_value:
@@ -628,6 +626,9 @@ if __name__ == "__main__":
                     nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
                     policy_optimizer.step()
 
+                if args.target_kl is not None and approx_kl > args.target_kl:
+                    break
+
             for epoch in range(args.e_value):
                 np.random.shuffle(b_inds)
                 for start in range(0, args.batch_size, args.minibatch_size):
@@ -658,9 +659,6 @@ if __name__ == "__main__":
                     loss.backward()
                     nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
                     value_optimizer.step()
-
-                if args.target_kl is not None and approx_kl > args.target_kl:
-                    break
 
             y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
             var_y = np.var(y_true)
