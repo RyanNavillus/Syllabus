@@ -26,7 +26,8 @@ evaluator = DummyEvaluator(nethack_env.action_space)
 curricula = [
     (Constant, create_nethack_env, (0, nethack_env.task_space), {}),
     (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
-    (LearningProgress, create_nethack_env, (eval_envs, evaluator, nethack_env.task_space,), {}),
+    (LearningProgress, create_nethack_env, (nethack_env.task_space, ),
+     {"eval_envs": eval_envs, "evaluator": evaluator, "eval_eps": 100}),
     (CentralPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,),
      {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
     (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {

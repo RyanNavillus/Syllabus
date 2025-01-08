@@ -81,6 +81,8 @@ class LearningProgress(Curriculum):
         return task_success_rates
 
     def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
+        if verbose:
+            print("Evaluating tasks for {eval_episodes} episodes.")
         task_success_rates = np.zeros(self.task_space.num_tasks)
         lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
         obss, _ = self.eval_envs.reset()
