@@ -19,7 +19,7 @@ N_EPISODES = 2
 nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
 eval_envs = gym.vector.SyncVectorEnv(
-    [create_nethack_env for _ in range(8)]
+    [create_nethack_env(wrap=True, eval=True) for _ in range(8)]
 )
 evaluator = DummyEvaluator(nethack_env.action_space)
 

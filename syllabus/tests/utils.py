@@ -14,7 +14,7 @@ from syllabus.core import (GymnasiumSyncWrapper,
                            PettingZooSyncWrapper,
                            RayPettingZooSyncWrapper,
                            PettingZooReinitTaskWrapper, RayGymnasiumSyncWrapper,
-                           ReinitTaskWrapper)
+                           ReinitTaskWrapper, GymnasiumEvaluationWrapper)
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 from syllabus.tests import PettingZooSyncTestEnv, SyncTestEnv
@@ -377,7 +377,7 @@ def create_cartpole_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=
 
 
 # Nethack Tests
-def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, **kwargs):
+def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, eval=False, **kwargs):
     from nle.env.tasks import NetHackScore
 
     from syllabus.examples.task_wrappers.nethack_wrappers import NethackSeedWrapper
@@ -389,6 +389,9 @@ def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=F
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = ExtractDictObservation(env, filter_key="blstats")
         env = NethackSeedWrapper(env)
+
+        if eval:
+            env = GymnasiumEvaluationWrapper(env)
 
         if sync_type == "queue":
             env = GymnasiumSyncWrapper(

@@ -11,8 +11,11 @@ class TaskWrapper(gym.Wrapper):
         self.task_space = None
         self.task = None    # TODO: Would making this a property protect from accidental overriding?
 
-    def reset(self, **kwargs):
-        new_task = kwargs.pop("new_task", None)
+    def reset(self, new_task=None, **kwargs):
+        # Change task if new one is provided
+        if new_task is None:
+            new_task = kwargs.pop("options", None)
+
         if new_task is not None:
             self.change_task(new_task)
 

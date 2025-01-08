@@ -57,7 +57,13 @@ class LearningProgress(Curriculum):
         task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
 
         if self.random_baseline is None:
-            self.random_baseline = task_success_rates
+            # Assume that any perfect success rate is actually 75% due to evaluation precision.
+            # Prevents NaN probabilities and prevents task from being completely ignored.
+            high_success_idxs = np.where(task_success_rates > 0.75)
+            high_success_rates = task_success_rates[high_success_idxs]
+            warnings.warn(
+                f"Tasks {high_success_idxs} had very high success rates {high_success_rates} for random baseline. Consider removing them from the training set of tasks.")
+            self.random_baseline = np.minimum(task_success_rates, 0.75)
 
         # Update task scores
         normalized_task_success_rates = np.maximum(
@@ -107,6 +113,8 @@ class LearningProgress(Curriculum):
                     if abs(completion) >= 1.0:
                         task_counts[task] += 1
                         task_successes[task] += math.floor(max(completion, 0.0))
+            else:
+                warnings.warn("Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
 
             for done in dones:
                 if done:
@@ -121,8 +129,6 @@ class LearningProgress(Curriculum):
 
         task_counts = np.maximum(task_counts, np.ones_like(task_counts))
         task_success_rates = np.divide(task_successes, task_counts)
-        # TODO: Debug NaN in probabilities when not evaluating dummy tasks
-        print(task_success_rates)
         return task_success_rates
 
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
