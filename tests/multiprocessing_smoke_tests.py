@@ -19,14 +19,15 @@ N_EPISODES = 2
 nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
 eval_envs = gym.vector.SyncVectorEnv(
-    [create_nethack_env for _ in range(8)]
+    [create_nethack_env(wrap=True, eval=True) for _ in range(8)]
 )
 evaluator = DummyEvaluator(nethack_env.action_space)
 
 curricula = [
     (Constant, create_nethack_env, (0, nethack_env.task_space), {}),
     (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {}),
-    # (LearningProgress, create_nethack_env, (eval_envs, get_test_actions, nethack_env.task_space,), {}),
+    (LearningProgress, create_nethack_env, (nethack_env.task_space, ),
+     {"eval_envs": eval_envs, "evaluator": evaluator, "eval_eps": 100}),
     (CentralPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,),
      {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
     (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {

@@ -8,6 +8,11 @@ import gymnasium as gym
 import numpy as np
 import torch
 from torch import Tensor
+from gymnasium.vector import AsyncVectorEnv, SyncVectorEnv
+
+from syllabus.core.curriculum_sync_wrapper import make_multiprocessing_curriculum
+from syllabus.core.environment_sync_wrapper import GymnasiumSyncWrapper
+from syllabus.task_space.task_space import TaskSpace
 
 Array = Union[np.ndarray, Tensor]
 LSTMState = Tuple[Array, Array]
@@ -384,3 +389,43 @@ class MoolibEvaluator(Evaluator):
 
     def _set_train_mode(self):
         self.agent.train()
+
+
+class GymnasiumEvaluationWrapper(gym.Wrapper):
+    def __init__(
+        self,
+        *args,
+        task_space: TaskSpace = None,
+        change_task_on_completion: bool = False,
+        eval_only_n_tasks: bool = None,
+        ignore_seed: bool = False,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.change_task_on_completion = change_task_on_completion
+        self.task_space = task_space if task_space is not None else self.env.task_space
+        self.tidx = 0
+        eval_only_n_tasks = eval_only_n_tasks if eval_only_n_tasks is not None else self.task_space.num_tasks
+        self.random_tasks = copy.deepcopy(self.task_space.tasks[:eval_only_n_tasks])
+        if ignore_seed:
+            rng = np.random.default_rng()
+            rng.shuffle(self.random_tasks)
+        else:
+            np.random.shuffle(self.random_tasks)
+
+    def reset(self, **kwargs):
+        new_task = self.random_tasks[self.tidx]
+
+        # Repeat task list when done
+        self.tidx = (self.tidx + 1) % len(self.random_tasks)
+
+        obs, info = self.env.reset(new_task=new_task, **kwargs)
+        return obs, info
+
+    def step(self, action):
+        obs, rew, term, trunc, info = self.env.step(action)
+        if "task_completion" in info and (info["task_completion"] >= 1.0 or info["task_completion"] < 0) and self.change_task_on_completion and not (term or trunc):
+            new_task = self.random_tasks[self.tidx]
+            self.tidx = (self.tidx + 1) % len(self.random_tasks)
+            self.env.change_task(new_task)
+        return obs, rew, term, trunc, info
