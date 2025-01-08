@@ -14,21 +14,30 @@ from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 class LearningProgress(Curriculum):
     """
-    Provides an interface for tracking success rates of discrete tasks and sampling tasks 
+    Provides an interface for tracking success rates of discrete tasks and sampling tasks
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, eval_envs, evaluator, *args, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.eval_envs = eval_envs
-        self.evaluator = evaluator
+        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
+        # Decide evaluation method
+        if eval_fn is None:
+            self.custom_eval = False
+            self.eval_envs = eval_envs
+            self.evaluator = evaluator
+            self._evaluate = self._evaluate_all_tasks
+        else:
+            self.custom_eval = True
+            self._evaluate = eval_fn
+
         self.ema_alpha = ema_alpha
         self.lstm_shape = rnn_shape
         self.eval_interval = eval_interval
+        assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
         self.eval_eps = eval_eps
-        assert self.eval_interval is None or self.eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.completed_episodes = 0
         self.current_steps = 0
 
@@ -42,12 +51,11 @@ class LearningProgress(Curriculum):
         self.task_rates = None
         self._stale_dist = True
 
-        self._evaluate = eval_fn if eval_fn is not None else self._evaluate_all_tasks
         self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
 
     def eval_and_update(self, eval_eps=1):
-        print("Syllabus Evaluating Tasks")
-        task_success_rates = self._evaluate(eval_episodes=eval_eps)
+        task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
+
         if self.random_baseline is None:
             self.random_baseline = task_success_rates
 
@@ -72,39 +80,47 @@ class LearningProgress(Curriculum):
 
         return task_success_rates
 
-    def _evaluate_all_tasks(self, eval_episodes=1):
-        task_progresses = np.zeros(self.task_space.num_tasks)
+    def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
+        task_success_rates = np.zeros(self.task_space.num_tasks)
         lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
-        for task_idx, task in enumerate(self.task_space.tasks):
-            obss, _ = self.eval_envs.reset(options=task)
-            ep_counter = 0
-            progress = 0.0
-            dones = [False] * self.eval_envs.num_envs
-            step = 0
-            while ep_counter < eval_episodes:
-                print("Task:", task_idx, "Episode:", ep_counter, "Step:", step)
-                actions, lstm_state, _ = self.evaluator.get_action(obss, lstm_state=lstm_state, done=dones)
-                actions = torch.flatten(actions)
-                if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
-                    actions = actions.int()
-                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
-                step += 1
-                dones = tuple(a | b for a, b in zip(terminateds, truncateds))
-                print(dones)
-                for i, done in enumerate(dones):
-                    if done:
-                        # print(infos.keys())
-                        if isinstance(infos, list) and "final_info" in infos[i]:
-                            # print(infos[i])
-                            task_progress = infos[i]["final_info"]['task_completion']
-                        elif isinstance(infos, dict) and "final_info" in infos:
-                            task_progress = infos["final_info"][i]['task_completion']
-                        else:
-                            task_progress = 0.0
-                        progress += task_progress
-                        ep_counter += 1
-            task_progresses[task_idx] = progress
-        task_success_rates = np.divide(task_progresses, float(eval_episodes))
+        obss, _ = self.eval_envs.reset()
+        ep_counter = 0
+        dones = [False] * self.eval_envs.num_envs
+        task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
+        task_successes = np.zeros(self.task_space.num_tasks)
+
+        while ep_counter < eval_episodes:
+            actions, lstm_state, _ = self.evaluator.get_action(obss, lstm_state=lstm_state, done=dones)
+            actions = torch.flatten(actions)
+            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                actions = actions.int()
+            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
+            dones = tuple(a | b for a, b in zip(terminateds, truncateds))
+
+            if "task_completion" in infos:
+                task_completions = infos["task_completion"]
+                task_idx = infos["task"]
+
+                for task, completion, done in zip(task_idx, task_completions, dones):
+                    if abs(completion) >= 1.0:
+                        task_counts[task] += 1
+                        task_successes[task] += math.floor(max(completion, 0.0))
+
+            for done in dones:
+                if done:
+                    ep_counter += 1
+                    if verbose and ep_counter % 100 == 0:
+                        print([f"{f}/{g}" for f, g in zip(task_successes, task_counts)])
+
+        # Warn user if any task_counts are 0
+        if np.any(task_counts == 0):
+            warnings.warn(
+                f"Tasks {np.where(task_counts == 0)} were not attempted during evaluation. Consider increasing eval episodes.")
+
+        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
+        task_success_rates = np.divide(task_successes, task_counts)
+        # TODO: Debug NaN in probabilities when not evaluating dummy tasks
+        print(task_success_rates)
         return task_success_rates
 
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
