@@ -299,21 +299,30 @@ class Agent(nn.Module):
         self.critic = layer_init_normed(nn.Linear(256, 1), norm_dim=1, scale=0.1)
         self.aux_critic = layer_init_normed(nn.Linear(256, 1), norm_dim=1, scale=0.1)
 
-    def get_action_and_value(self, x, action=None):
+    def get_action_and_value(self, x, action=None, detach=True):
         hidden = self.network(x.permute((0, 3, 1, 2)) / 255.0)  # "bhwc" -> "bchw"
         logits = self.actor(hidden)
         probs = Categorical(logits=logits)
         if action is None:
             action = probs.sample()
-        return action, probs.log_prob(action), probs.entropy(), self.critic(hidden.detach())
+        if detach:
+            hidden = hidden.detach()
+        return action, probs.log_prob(action), probs.entropy(), self.critic(hidden)
 
     def get_value(self, x):
         return self.critic(self.network(x.permute((0, 3, 1, 2)) / 255.0))  # "bhwc" -> "bchw"
+    
+    def get_aux_value(self, x):
+        return self.aux_critic(self.network(x.permute((0, 3, 1, 2)) / 255.0))   # "bhwc" -> "bchw"
 
     # PPG logic:
     def get_pi_value_and_aux_value(self, x):
         hidden = self.network(x.permute((0, 3, 1, 2)) / 255.0)
         return Categorical(logits=self.actor(hidden)), self.critic(hidden.detach()), self.aux_critic(hidden)
+
+    def get_pi_and_aux_value(self, x):
+        hidden = self.network(x.permute((0, 3, 1, 2)) / 255.0)
+        return Categorical(logits=self.actor(hidden)), self.aux_critic(hidden)
 
     def get_pi(self, x):
         return Categorical(logits=self.actor(self.network(x.permute((0, 3, 1, 2)) / 255.0)))
@@ -516,6 +525,7 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     action, logprob, _, value = agent.get_action_and_value(next_obs)
                     values[step] = value.flatten()
+                    aux_value = agent.get_aux_value(next_obs)
                 actions[step] = action
                 logprobs[step] = logprob
 
@@ -541,11 +551,11 @@ if __name__ == "__main__":
                 # Syllabus curriculum update
                 if args.curriculum and args.curriculum_method == "centralplr":
                     with torch.no_grad():
-                        next_value = agent.get_value(next_obs)
+                        next_value = agent.get_aux_value(next_obs)
                     current_task = tasks[step]
 
                     plr_update = {
-                        "value": value,
+                        "value": aux_value,
                         "next_value": next_value,
                         "rew": reward,
                         "dones": done,
@@ -636,7 +646,7 @@ if __name__ == "__main__":
                     mb_inds = b_inds[start:end]
 
                     _, _, _, newvalue = agent.get_action_and_value(
-                        b_obs[mb_inds], b_actions.long()[mb_inds])
+                        b_obs[mb_inds], b_actions.long()[mb_inds], detach=False)
 
                     # Value loss
                     newvalue = newvalue.view(-1)
@@ -728,19 +738,20 @@ if __name__ == "__main__":
                     m_aux_returns = aux_returns[:, aux_minibatch_ind].to(torch.float32).to(device)
                     m_aux_returns = flatten01(m_aux_returns)
 
-                    new_pi, new_values, new_aux_values = agent.get_pi_value_and_aux_value(m_aux_obs)
+                    new_pi, new_aux_values = agent.get_pi_and_aux_value(m_aux_obs)
+                    # new_pi, new_values, new_aux_values = agent.get_pi_value_and_aux_value(m_aux_obs)
 
-                    new_values = new_values.view(-1)
+                    # new_values = new_values.view(-1)
                     new_aux_values = new_aux_values.view(-1)
                     old_pi_logits = flatten01(aux_pi[:, aux_minibatch_ind]).to(device)
                     old_pi = Categorical(logits=old_pi_logits)
                     kl_loss = td.kl_divergence(old_pi, new_pi).mean()
 
-                    real_value_loss = 0.5 * ((new_values - m_aux_returns) ** 2).mean()
+                    # real_value_loss = 0.5 * ((new_values - m_aux_returns) ** 2).mean()
                     aux_value_loss = 0.5 * ((new_aux_values - m_aux_returns) ** 2).mean()
                     joint_loss = aux_value_loss + args.beta_clone * kl_loss
 
-                    loss = (joint_loss + real_value_loss) / args.n_aux_grad_accum
+                    loss = joint_loss / args.n_aux_grad_accum
                     loss.backward()
 
                     if (i + 1) % args.n_aux_grad_accum == 0:
@@ -756,7 +767,7 @@ if __name__ == "__main__":
                 del m_aux_obs, m_aux_returns
         writer.add_scalar("losses/aux/kl_loss", kl_loss.mean().item(), global_step)
         writer.add_scalar("losses/aux/aux_value_loss", aux_value_loss.item(), global_step)
-        writer.add_scalar("losses/aux/real_value_loss", real_value_loss.item(), global_step)
+        # writer.add_scalar("losses/aux/real_value_loss", real_value_loss.item(), global_step)
 
     envs.close()
     writer.close()
