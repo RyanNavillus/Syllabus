@@ -49,11 +49,11 @@ class CurriculumWrapper:
     def sample(self, k=1):
         return self.curriculum.sample(k=k)
 
-    def update_task_progress(self, task, progress):
-        self.curriculum.update_task_progress(task, progress)
+    def update_task_progress(self, task, progress, env_id=None):
+        self.curriculum.update_task_progress(task, progress, env_id=env_id)
 
-    def update_on_step(self, task, obs, reward, term, trunc, info, progress):
-        self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress)
+    def update_on_step(self, task, obs, reward, term, trunc, info, progress, env_id=None):
+        self.curriculum.update_on_step(task, obs, reward, term, trunc, info, progress, env_id=env_id)
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         return self.curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
@@ -107,8 +107,10 @@ class MultiProcessingComponents:
     def get_task(self):
         try:
             if self.started and self.task_queue.empty():
-                warnings.warn(
-                    f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
+                q_size = self.task_queue.qsize()
+                if q_size == 0:
+                    warnings.warn(
+                        f"Task queue capacity is {q_size} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
             task = self.task_queue.get(block=True, timeout=self.timeout)
             return task
         except Empty as e:
