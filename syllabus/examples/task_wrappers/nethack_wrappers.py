@@ -456,21 +456,9 @@ class NethackSeedWrapper(TaskWrapper):
         since very few tasks override reset. If new_task is provided, we change the task before
         calling the final reset.
         """
-        # Change task if new one is provided
-        if new_task is None:
-            new_task = kwargs.get("options", None)
-
-        if new_task is not None:
-            self.change_task(new_task)
-
-        self.episode_return = 0
-
-        obs, info = self.env.reset(**kwargs)
+        obs, info = super().reset(new_task=new_task, **kwargs)
         if isinstance(obs, dict):
             obs["prev_action"] = 0
-            encoded_task = self.task_space.encode(self.task)
-            obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
-
         return self.observation(obs), info
 
     def change_task(self, new_task: int):
@@ -486,15 +474,17 @@ class NethackSeedWrapper(TaskWrapper):
         Parses current inventory and new items gained this timestep from the observation.
         Returns a modified observation.
         """
+        if isinstance(observation, dict):
+            encoded_task = self.task_space.encode(self.task)
+            observation["tty_cursor"] = encoded_task if encoded_task is not None else -1
+
         return observation
 
     def step(self, action):
         """
         Step through environment and update task completion.
         """
-        obs, rew, term, trunc, info = self.env.step(action)
+        obs, rew, term, trunc, info = super().step(action)
         if isinstance(obs, dict):
             obs["prev_action"] = action
-            encoded_task = self.task_space.encode(self.task)
-            obs["tty_cursor"] = encoded_task if encoded_task is not None else -1
-        return self.observation(obs), rew, term, trunc, info
+        return obs, rew, term, trunc, info

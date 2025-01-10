@@ -9,4 +9,4 @@ from .curriculum_sync_wrapper import (CurriculumWrapper, MultiProcessingComponen
 from .environment_sync_wrapper import GymnasiumSyncWrapper, RayGymnasiumSyncWrapper, PettingZooSyncWrapper, RayPettingZooSyncWrapper
 from .multiagent_curriculum_wrappers import MultiagentSharedCurriculumWrapper, MultiagentIndependentCurriculumWrapper
 from .stat_recorder import StatRecorder
-from .evaluator import Evaluator, DummyEvaluator, CleanRLEvaluator, MoolibEvaluator
+from .evaluator import Evaluator, DummyEvaluator, CleanRLEvaluator, MoolibEvaluator, GymnasiumEvaluationWrapper
