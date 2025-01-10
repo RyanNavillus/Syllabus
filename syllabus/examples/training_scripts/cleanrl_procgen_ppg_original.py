@@ -603,6 +603,39 @@ if __name__ == "__main__":
 
             # Optimizing the policy and value network
             b_inds = np.arange(args.batch_size)
+
+            for epoch in range(args.e_value):
+                np.random.shuffle(b_inds)
+                for start in range(0, args.batch_size, args.minibatch_size):
+                    end = start + args.minibatch_size
+                    mb_inds = b_inds[start:end]
+
+                    _, _, _, newvalue = agent.get_action_and_value(
+                        b_obs[mb_inds], b_actions.long()[mb_inds], detach=True)
+
+                    # Value loss
+                    newvalue = newvalue.view(-1)
+                    if args.clip_vloss:
+                        v_loss_unclipped = (newvalue - b_returns[mb_inds]) ** 2
+                        v_clipped = b_values[mb_inds] + torch.clamp(
+                            newvalue - b_values[mb_inds],
+                            -args.clip_coef,
+                            args.clip_coef,
+                        )
+                        v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
+                        v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
+                        v_loss = 0.5 * v_loss_max.mean()
+                    else:
+                        v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
+
+                    loss = v_loss * args.vf_coef
+
+                    value_optimizer.zero_grad()
+                    loss.backward()
+                    nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
+                    value_optimizer.step()
+                    value_optimizer.zero_grad()
+
             clipfracs = []
             for epoch in range(args.e_policy):
                 np.random.shuffle(b_inds)
@@ -638,37 +671,6 @@ if __name__ == "__main__":
 
                 if args.target_kl is not None and approx_kl > args.target_kl:
                     break
-
-            for epoch in range(args.e_value):
-                np.random.shuffle(b_inds)
-                for start in range(0, args.batch_size, args.minibatch_size):
-                    end = start + args.minibatch_size
-                    mb_inds = b_inds[start:end]
-
-                    _, _, _, newvalue = agent.get_action_and_value(
-                        b_obs[mb_inds], b_actions.long()[mb_inds], detach=False)
-
-                    # Value loss
-                    newvalue = newvalue.view(-1)
-                    if args.clip_vloss:
-                        v_loss_unclipped = (newvalue - b_returns[mb_inds]) ** 2
-                        v_clipped = b_values[mb_inds] + torch.clamp(
-                            newvalue - b_values[mb_inds],
-                            -args.clip_coef,
-                            args.clip_coef,
-                        )
-                        v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
-                        v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
-                        v_loss = 0.5 * v_loss_max.mean()
-                    else:
-                        v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
-
-                    loss = v_loss * args.vf_coef
-
-                    value_optimizer.zero_grad()
-                    loss.backward()
-                    nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
-                    value_optimizer.step()
 
             y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
             var_y = np.var(y_true)
