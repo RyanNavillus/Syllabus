@@ -125,7 +125,7 @@ class FictitiousSelfPlay(Curriculum):
         joblib.dump(
             agent,
             filename=(
-                f"{self.storage_path}/{self.name}_{self.seed}_agent_checkpoint_"
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
                 f"{self.current_agent_index % self.max_agents}.pkl"
             ),
         )
