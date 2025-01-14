@@ -80,7 +80,7 @@ class LearningProgress(Curriculum):
             self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
             self._p_true = (task_success_rates * self.ema_alpha) + (self._p_true * (1.0 - self.ema_alpha))
 
-        self.task_rates = task_success_rates    # Logging only
+        self.task_rates = task_success_rates    # Used for logging and OMNI
         self._stale_dist = True
         self.task_dist = None
 
@@ -88,7 +88,7 @@ class LearningProgress(Curriculum):
 
     def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
         if verbose:
-            print("Evaluating tasks for {eval_episodes} episodes.")
+            print(f"Evaluating tasks for {eval_episodes} episodes.")
         task_success_rates = np.zeros(self.task_space.num_tasks)
         lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
         obss, _ = self.eval_envs.reset()

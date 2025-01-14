@@ -2,6 +2,7 @@ import sys
 
 from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
 from .learning_progress import LearningProgress
+from .omni import OMNI
 from .constant import Constant
 from .plr.central_plr_wrapper import CentralPrioritizedLevelReplay
 from .plr.direct_plr_wrapper import DirectPrioritizedLevelReplay
