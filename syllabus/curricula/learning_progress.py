@@ -9,7 +9,7 @@ import torch
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
-from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace
 
 
 class LearningProgress(Curriculum):
@@ -51,7 +51,7 @@ class LearningProgress(Curriculum):
         self.task_rates = None
         self._stale_dist = True
 
-        self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
+        self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
 
     def eval_and_update(self, eval_eps=1):
         task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
@@ -214,6 +214,29 @@ class LearningProgress(Curriculum):
             logs.append((f"curriculum/{name}_fast", self._p_fast[idx]))
             logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
+
+
+class StratifiedLearningProgress(LearningProgress):
+    def __init__(self, *args, selection_metric="success", **kwargs):
+        super().__init__(*args, **kwargs)
+        assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
+        assert selection_metric in ["success", "progress"]
+        self.selection_metric = selection_metric
+
+    def _sample_distribution(self) -> List[float]:
+        # Prioritize tasks by learning progress first
+        lp_dist = super()._sample_distribution()
+        selection_weight = np.ones(len(lp_dist)) * 0.0001
+        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+
+        # Find the highest success rate task in each strata
+        for strata in self.task_space.strata:
+            task_idx = np.argsort(metric[np.array(list(strata))])[-1]
+            selection_weight[strata[task_idx]] = 1.0
+        # Scale and normalize
+        stratified_dist = lp_dist * selection_weight
+        stratified_dist = stratified_dist / np.sum(stratified_dist)
+        return stratified_dist
 
 
 if __name__ == "__main__":

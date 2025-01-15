@@ -1,8 +1,8 @@
 import sys
 
 from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
-from .learning_progress import LearningProgress
-from .omni import OMNI
+from .learning_progress import LearningProgress, StratifiedLearningProgress
+from .omni import OMNI, interestingness_from_json
 from .constant import Constant
 from .plr.central_plr_wrapper import CentralPrioritizedLevelReplay
 from .plr.direct_plr_wrapper import DirectPrioritizedLevelReplay
