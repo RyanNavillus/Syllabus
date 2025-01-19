@@ -10,6 +10,7 @@ from scipy.stats import norm
 
 from syllabus.core import Curriculum
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
+from syllabus.utils import UsageError
 
 
 class LearningProgress(Curriculum):
@@ -19,7 +20,7 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, continuous_progress=False, **kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
         # Decide evaluation method
@@ -38,6 +39,7 @@ class LearningProgress(Curriculum):
         assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
         self.eval_eps = eval_eps
+        self.continuous_progress = continuous_progress
         self.completed_episodes = 0
         self.current_steps = 0
 
@@ -51,7 +53,7 @@ class LearningProgress(Curriculum):
         self.task_rates = None
         self._stale_dist = True
 
-        self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
+        self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
 
     def eval_and_update(self, eval_eps=1):
         task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
@@ -88,7 +90,7 @@ class LearningProgress(Curriculum):
 
     def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
         if verbose:
-            print("Evaluating tasks for {eval_episodes} episodes.")
+            print(f"Evaluating tasks for {eval_episodes} episodes.")
         task_success_rates = np.zeros(self.task_space.num_tasks)
         lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
         obss, _ = self.eval_envs.reset()
@@ -108,19 +110,29 @@ class LearningProgress(Curriculum):
             if "task_completion" in infos:
                 task_completions = infos["task_completion"]
                 task_idx = infos["task"]
+                # print(task_completions)
 
                 for task, completion, done in zip(task_idx, task_completions, dones):
-                    if abs(completion) >= 1.0:
-                        task_counts[task] += 1
-                        task_successes[task] += math.floor(max(completion, 0.0))
+                    # Completion < 0 is considered a failure
+                    if self.continuous_progress:
+                        # Continuous progress can only be measured at the end of the episode
+                        if done:
+                            task_counts[task] += 1
+                            task_successes[task] += max(completion, 0.0)
+                    else:
+                        # Binary success/failure can be measured at each step.
+                        # Assumes that success will only be 1.0 or -1.0 for 1 step
+                        if abs(completion) >= 1.0:
+                            task_counts[task] += 1
+                            task_successes[task] += math.floor(max(completion, 0.0))
             else:
-                warnings.warn("Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
+                raise UsageError("Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
 
             for done in dones:
                 if done:
                     ep_counter += 1
-                    if verbose and ep_counter % 100 == 0:
-                        print([f"{f}/{g}" for f, g in zip(task_successes, task_counts)])
+                    if verbose and ep_counter % 1000 == 0:
+                        print([f"{f:.1f}/{g:.0f}" for f, g in zip(task_successes, task_counts)])
 
         # Warn user if any task_counts are 0
         if np.any(task_counts == 0):
@@ -210,8 +222,7 @@ class LearningProgress(Curriculum):
 
         for idx in tasks:
             name = self.task_names(self.tasks[idx], idx)
-            logs.append((f"curriculum/{name}_slow", self._p_slow[idx]))
-            logs.append((f"curriculum/{name}_fast", self._p_fast[idx]))
+            logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
             logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 

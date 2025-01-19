@@ -39,7 +39,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        self.env.gym_env.unwrapped._venv.seed(int(seed), 0)
+        self.env.unwrapped.gym_env.unwrapped._venv.seed(int(seed), 0)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -51,13 +51,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         calling the final reset.
         """
         self.episode_return = 0.0
-
-        # Change task if new one is provided
-        if new_task is not None:
-            self.change_task(new_task)
-
-        obs, info = self.env.reset(**kwargs)
-        return self.observation(obs), info
+        return super().reset(new_task=new_task, **kwargs)
 
     def change_task(self, new_task: int):
         """
@@ -73,15 +67,15 @@ class ProcgenTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, term, trunc, info = self.env.step(action)
+        obs, rew, term, trunc, info = super().step(action)
         self.episode_return += rew
-
-        env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
-        normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
-        clipped_return = 1 if normalized_return > 0.1 else 0    # Binary progress
-        info["task_completion"] = clipped_return
-
         return self.observation(obs), rew, term, trunc, info
 
-    def observation(self, obs):
-        return obs
+    def _task_completion(self, obs, rew, term, trunc, info) -> float:
+        env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
+        normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
+        # clipped_return = 1 if normalized_return > 0.1 else 0    # Binary progress
+        return normalized_return
+
+    def observation(self, observation):
+        return observation
