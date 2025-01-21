@@ -85,6 +85,7 @@ class MultiProcessingComponents:
         self.max_envs = max_envs
         self._maxsize = max_queue_size
         self.started = False
+        self._task_times = []
 
     def peek_id(self):
         return self._env_count[0]
@@ -106,12 +107,15 @@ class MultiProcessingComponents:
 
     def get_task(self):
         try:
+            start = time.time()
             if self.started and self.task_queue.empty():
                 q_size = self.task_queue.qsize()
                 if q_size == 0:
                     warnings.warn(
                         f"Task queue capacity is {q_size} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
             task = self.task_queue.get(block=True, timeout=self.timeout)
+            end = time.time()
+            self._task_times.append(end - start)
             return task
         except Empty as e:
             raise UsageError(
@@ -139,6 +143,8 @@ class MultiProcessingComponents:
         logs = []
         logs.append(("curriculum/updates_in_queue", self.update_queue.qsize()))
         logs.append(("curriculum/tasks_in_queue", self.task_queue.qsize()))
+        logs.append(("curriculum/get_task_time_s", sum(self._task_times) / len(self._task_times)))
+        self._task_times = []
         return logs
 
 

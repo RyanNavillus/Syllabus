@@ -131,7 +131,7 @@ class LearningProgress(Curriculum):
             for done in dones:
                 if done:
                     ep_counter += 1
-                    if verbose and ep_counter % 1000 == 0:
+                    if verbose and ep_counter % 100 == 0:
                         print([f"{f:.1f}/{g:.0f}" for f, g in zip(task_successes, task_counts)])
 
         # Warn user if any task_counts are 0

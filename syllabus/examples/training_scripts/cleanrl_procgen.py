@@ -309,9 +309,9 @@ if __name__ == "__main__":
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
-                eval_interval_steps=25 * args.batch_size,
-                eval_eps=20 * 200,
-                continuous_progress=True)
+                eval_interval_steps=10 * args.batch_size,
+                eval_eps=10 * 200,
+                continuous_progress=False)
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
             eval_envs = gym.vector.AsyncVectorEnv(
