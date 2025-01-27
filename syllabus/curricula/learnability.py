@@ -20,7 +20,7 @@ class Learnability(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, buffer_size=1000, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, buffer_size=1000, learnable_prob=0.5 ** kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
         # Decide evaluation method
@@ -43,6 +43,7 @@ class Learnability(Curriculum):
         self.current_steps = 0
         self.normalize_success = normalize_success
         self.buffer_size = buffer_size
+        self.learnable_prob = learnable_prob
         self.continuous_progress = continuous_progress
 
         assert isinstance(
@@ -160,13 +161,15 @@ class Learnability(Curriculum):
             # No changes since distribution was last computed
             return self.task_dist
 
-        task_dist = np.zeros(self.num_tasks) / self.num_tasks
         learnability = self._learnability()
         highest_learnability_tasks = np.argsort(learnability)[::-1]
         top_k = highest_learnability_tasks[:self.buffer_size]
 
-        for task in top_k:
-            task_dist[task] = 1.0
+        learnable_task_dist = np.zeros(self.num_tasks)
+        learnable_task_dist[top_k] = 1.0 / self.buffer_size
+
+        uniform_task_dist = np.ones(self.num_tasks) / self.num_tasks
+        task_dist = self.learnable_prob * learnable_task_dist + (1 - self.learnable_prob) * uniform_task_dist
 
         task_dist = task_dist / np.sum(task_dist)
         self.task_dist = task_dist
