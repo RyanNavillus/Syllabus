@@ -20,7 +20,7 @@ class Learnability(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, buffer_size=1000, learnable_prob=1.0, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, buffer_size=1000, learnable_prob=1.0, sampling="topk", **kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
         # Decide evaluation method
@@ -45,6 +45,7 @@ class Learnability(Curriculum):
         self.buffer_size = buffer_size
         self.learnable_prob = learnable_prob
         self.continuous_progress = continuous_progress
+        self.sampling = sampling
 
         assert isinstance(
             self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
@@ -152,7 +153,7 @@ class Learnability(Curriculum):
         """
         Compute the learning progress metric for the given task.
         """
-        success_rates = self.normalized_task_success_rates if self.normalize_success is not None else self.task_rates
+        success_rates = self.normalized_task_success_rates if self.normalize_success else self.task_rates
         return success_rates * (1 - success_rates)
 
     def _sample_distribution(self) -> List[float]:
@@ -162,14 +163,17 @@ class Learnability(Curriculum):
             return self.task_dist
 
         learnability = self._learnability()
-        highest_learnability_tasks = np.argsort(learnability)[::-1]
-        top_k = highest_learnability_tasks[:self.buffer_size]
+        if self.sampling == "topk":
+            highest_learnability_tasks = np.argsort(learnability)[::-1]
+            top_k = highest_learnability_tasks[:self.buffer_size]
 
-        learnable_task_dist = np.zeros(self.num_tasks)
-        learnable_task_dist[top_k] = 1.0 / self.buffer_size
+            learnable_task_dist = np.zeros(self.num_tasks)
+            learnable_task_dist[top_k] = 1.0 / self.buffer_size
 
-        uniform_task_dist = np.ones(self.num_tasks) / self.num_tasks
-        task_dist = self.learnable_prob * learnable_task_dist + (1 - self.learnable_prob) * uniform_task_dist
+            uniform_task_dist = np.ones(self.num_tasks) / self.num_tasks
+            task_dist = self.learnable_prob * learnable_task_dist + (1 - self.learnable_prob) * uniform_task_dist
+        elif self.sampling == "dist":
+            task_dist = learnability if np.sum(learnability) > 0 else np.ones(self.num_tasks)
 
         task_dist = task_dist / np.sum(task_dist)
         self.task_dist = task_dist
