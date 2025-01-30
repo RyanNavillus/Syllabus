@@ -72,10 +72,13 @@ class ProcgenTaskWrapper(TaskWrapper):
         return self.observation(obs), rew, term, trunc, info
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
+        if not (term or trunc):
+            return 0.0
         env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
         normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
-        clipped_return = 1 if normalized_return > 0.5 else 0    # Binary progress
-        return clipped_return
+        return normalized_return
+        # clipped_return = 1 if normalized_return > 0.5 else 0    # Binary progress
+        # return clipped_return
 
     def observation(self, observation):
         return observation

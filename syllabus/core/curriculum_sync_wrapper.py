@@ -143,7 +143,7 @@ class MultiProcessingComponents:
         logs = []
         logs.append(("curriculum/updates_in_queue", self.update_queue.qsize()))
         logs.append(("curriculum/tasks_in_queue", self.task_queue.qsize()))
-        logs.append(("curriculum/get_task_time_s", sum(self._task_times) / len(self._task_times)))
+        logs.append(("curriculum/get_task_time_s", sum(self._task_times) / max(len(self._task_times), 1)))
         self._task_times = []
         return logs
 

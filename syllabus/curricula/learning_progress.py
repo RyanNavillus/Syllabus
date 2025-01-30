@@ -106,27 +106,31 @@ class LearningProgress(Curriculum):
                 actions = actions.int()
             obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
             dones = tuple(a | b for a, b in zip(terminateds, truncateds))
-
-            if "task_completion" in infos:
-                task_completions = infos["task_completion"]
-                task_idx = infos["task"]
-                # print(task_completions)
-
-                for task, completion, done in zip(task_idx, task_completions, dones):
-                    # Completion < 0 is considered a failure
-                    if self.continuous_progress:
-                        # Continuous progress can only be measured at the end of the episode
-                        if done:
+            if self.continuous_progress:
+                # Continuous progress can only be measured at the end of the episode
+                if "final_info" in infos:
+                    for final_info in infos["final_info"]:
+                        if final_info is not None and "task_completion" in final_info:
+                            # print(final_info)
+                            completion = final_info["task_completion"]
+                            task = final_info["task"]
                             task_counts[task] += 1
                             task_successes[task] += max(completion, 0.0)
-                    else:
+            else:
+                if "task_completion" in infos:
+                    task_completions = infos["task_completion"]
+                    task_idx = infos["task"]
+                    # print(task_completions)
+
+                    for task, completion, done in zip(task_idx, task_completions, dones):
                         # Binary success/failure can be measured at each step.
                         # Assumes that success will only be 1.0 or -1.0 for 1 step
                         if abs(completion) >= 1.0:
                             task_counts[task] += 1
                             task_successes[task] += math.floor(max(completion, 0.0))
-            else:
-                raise UsageError("Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
+                else:
+                    raise UsageError(
+                        "Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
 
             for done in dones:
                 if done:

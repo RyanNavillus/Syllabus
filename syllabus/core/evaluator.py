@@ -418,7 +418,6 @@ class GymnasiumEvaluationWrapper(gym.Wrapper):
 
         # Repeat task list when done
         self.tidx = (self.tidx + 1) % len(self.random_tasks)
-
         obs, info = self.env.reset(new_task=new_task, **kwargs)
         return obs, info
 

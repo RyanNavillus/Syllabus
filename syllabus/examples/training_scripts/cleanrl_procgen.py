@@ -310,8 +310,8 @@ if __name__ == "__main__":
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
                 eval_interval_steps=10 * args.batch_size,
-                eval_eps=10 * 200,
-                continuous_progress=False)
+                eval_eps=20 * 200,
+                continuous_progress=True)
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -401,17 +401,29 @@ if __name__ == "__main__":
             next_obs, reward, term, trunc, infos = envs.step(action.cpu().numpy())
             next_done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
-            tasks[step] = torch.Tensor(infos["task"])
+            if args.curriculum:
+                tasks[step] = torch.Tensor(infos["task"])
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
             completed_episodes += sum(next_done)
 
-            if "episode" in infos.keys():
-                for i in range(len(infos["episode"]["r"])):
-                    if next_done[i]:
-                        episode_rewards.append(infos["episode"]['r'][i])
-                        print(f"global_step={global_step}, episodic_return={infos["episode"]["r"][i]}")
-                        writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
-                        writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
+            # if "episode" in infos.keys():
+            #     for i in range(len(infos["episode"]["r"])):
+            #         if next_done[i]:
+            # episode_rewards.append(infos["episode"]['r'][i])
+            # print(f"global_step={global_step}, episodic_return={infos['episode']['r'][i]}")
+            # writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
+            # writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
+            # if curriculum is not None:
+            #     curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
+            # break
+
+            if "final_info" in infos:
+                for info in infos["final_info"]:
+                    if info and "episode" in info:
+                        episode_rewards.append(info["episode"]['r'])
+                        print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
+                        writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                        writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
                         if curriculum is not None:
                             curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                         break

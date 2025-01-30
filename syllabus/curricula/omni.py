@@ -123,11 +123,20 @@ class OMNILearnability(Learnability):
                 interesting_tasks.add(task_idx)
 
                 # Add tasks that are boring given proficiency at the successful task to the boring set.
-                for task_idx, task in enumerate(self.tasks):
-                    if (task not in self.post_task_interestingness
-                        or (task_idx not in interesting_tasks and task_idx not in boring_tasks
-                            and not self.post_task_interestingness[self.tasks[task_idx]][task])):
-                        boring_tasks.add(task_idx)
+                for idx, task in enumerate(self.tasks):
+                    if self.tasks[task_idx] not in self.post_task_interestingness:
+                        # warnings.warn(
+                        #     f"Task {self.tasks[task_idx]} not found in interestingness dictionary")
+                        continue
+
+                    if task not in self.post_task_interestingness[self.tasks[task_idx]]:
+                        # warnings.warn(
+                        #     f"Task {task} not found in interestingness dictionary for task {self.tasks[task_idx]}")
+                        boring_tasks.add(idx)
+                        continue
+
+                    if idx not in interesting_tasks and idx not in boring_tasks and not self.post_task_interestingness[self.tasks[task_idx]][task]:
+                        boring_tasks.add(idx)
 
         # Scale LP sampling probabilities by 1.0 for interesting tasks, 0.001 for boring tasks.
         moi_weight = np.ones(len(lp_dist))
