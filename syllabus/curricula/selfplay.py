@@ -35,8 +35,6 @@ class WinrateBuffer:
         self.initialized_agents = np.zeros(max_agents)
 
     def update_winrate(self, agent_id: int, reward: float):
-        print(reward)
-        print(agent_id)
         reward = reward == 1  # converts rewards {-1;1} to winrate {0;1}
         self.buffer[agent_id].put(reward)
         if self.buffer[agent_id].full():
@@ -239,7 +237,6 @@ class WinrateBuffer:
         # uninitialized agents will be masked from the sampling distribution
         if not self.initialized_agents[agent_id]:
             self.initialized_agents[agent_id] = 1
-        print("winrate", self)
 
     def get_winrate(self, agent_id: int):
         # TODO: should we return a winrate if the queue is not full?
@@ -512,7 +509,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
 
         # pad loss rates and agent keys if the buffer is not full
         if n_stored_agents < self.max_agents:
-            pad = lambda x: np.pad(
+            def pad(x): return np.pad(
                 x,
                 pad_width=(0, self.max_agents - n_stored_agents),
                 constant_values=0.0,
@@ -547,7 +544,6 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             sampling_distribution = np.zeros(self.max_agents)
             sampling_distribution[0] = 1.0
 
-        print(sampling_distribution.shape, len(loaded_agent_keys))
         return list(
             np.random.choice(
                 loaded_agent_keys,
