@@ -12,7 +12,146 @@ from scipy.special import softmax
 from queue import Queue
 
 from syllabus.core import Agent, Curriculum  # noqa: E402
-from syllabus.task_space import TaskSpace  # noqa: E402
+from syllabus.task_space import DiscreteTaskSpace  # noqa: E402
+
+
+class WinrateBuffer:
+    """
+    Stores the winrate of each agent in a queue and provides a sampling distribution.
+    """
+
+    def __init__(
+        self,
+        max_agents: int,
+        entropy_parameter: float,
+        smoothing_constant: int,
+        buffer_size: int = 128,
+    ):
+        self.max_agents = max_agents
+        self.buffer_size = buffer_size
+        self.buffer = {i: Queue(maxsize=buffer_size) for i in range(max_agents)}
+        self.entropy_parameter = entropy_parameter
+        self.smoothing_constant = smoothing_constant
+        self.initialized_agents = np.zeros(max_agents)
+
+    def update_winrate(self, agent_id: int, reward: float):
+        print(reward)
+        print(agent_id)
+        reward = reward == 1  # converts rewards {-1;1} to winrate {0;1}
+        self.buffer[agent_id].put(reward)
+        if self.buffer[agent_id].full():
+            self.buffer[agent_id].get()
+
+        # mark agent as initialized
+        # unitiliazed agents will be masked from the sampling distribution
+        if not self.initialized_agents[agent_id]:
+            self.initialized_agents[agent_id] = 1
+
+    def get_winrate(self, agent_id: int):
+        # TODO: should we return a winrate if the queue is not full?
+        if self.buffer[agent_id].empty():
+            return 0.0
+        return np.mean(self.buffer[agent_id].queue)
+
+    def _apply_entropy(self, winrate: float):
+        if np.isnan(winrate):
+            return 0.0
+        return winrate**self.entropy_parameter
+
+    def get_sampling_distribution(self):
+        """
+        Return a sampling distribution reflecting the difficulty of each opponent.
+        Uninitialized agents are masked and not included in the distribution.
+        """
+        loss_rates = np.array([1 - self.get_winrate(i) for i in range(self.max_agents)])
+
+        # mask uninitialized agents
+        masked_loss_rates = np.ma.masked_array(
+            loss_rates, mask=self.initialized_agents == 0
+        )
+
+        # apply the entropy function, smoothing and normalization to all valid loss rates
+        masked_loss_rates = np.ma.array(
+            [self._apply_entropy(winrate) for winrate in masked_loss_rates]
+        )
+        masked_loss_rates += self.smoothing_constant
+        masked_sampling_distribution = masked_loss_rates / masked_loss_rates.sum()
+
+        # unmask and set masked values to 0
+        sampling_distribution = np.where(
+            masked_sampling_distribution.mask, 0, masked_sampling_distribution
+        )
+
+        # if no agents are initialized, sample the first agent
+        # this happens when the first agent has not yet receiveda reward
+        if sampling_distribution.sum() == 0:
+            sampling_distribution = np.zeros(self.max_agents)
+            sampling_distribution[0] = 1.0
+
+        return sampling_distribution
+
+    def __repr__(self):
+        return {i: self.get_winrate(i) for i in range(self.max_agents)}.__repr__()
+
+    def __getitem__(self, agent_id):
+        return self.get_winrate(agent_id)
+
+
+class FIFOAgentBuffer:
+    """
+    First-In-First-Out buffer implemented as an OrderedDict.
+    """
+
+    def __init__(
+        self,
+        max_agents: int,
+        curriculum_name: str,
+        device: str,
+        storage_path: str,
+        seed: int,
+    ):
+        self.max_agents = max_agents
+        self.curriculum_name = curriculum_name
+        self.device = device
+        self.storage_path = storage_path
+        self.seed = seed
+        self.buffer = OrderedDict()
+
+    def add_agent(self, agent_id: int, agent: Agent) -> None:
+        # Remove first item so that buffer length does not exceed max_agents
+        if len(self.buffer) >= self.max_agents:
+            self.buffer.popitem(last=False)
+        self.buffer[agent_id] = agent
+        # Move recently accessed agent to end of buffer (last to be removed)
+        self.buffer.move_to_end(agent_id)
+
+    def get_agent(self, agent_id: int) -> Agent:
+        if agent_id not in self.buffer:
+            # Delete first so that buffer length does not exceed max_agents
+            if len(self.buffer) >= self.max_agents:
+                self.buffer.popitem(last=False)
+            print(
+                "load agent",
+                agent_id,
+                f"{self.storage_path}/{self.curriculum_name}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
+            )
+            self.buffer[agent_id] = joblib.load(
+                f"{self.storage_path}/{self.curriculum_name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
+            ).to(self.device)
+
+        return self.buffer[agent_id]
+
+    def __getitem__(self, agent_id):
+        return self.buffer.get(agent_id, None)
+
+    def __contains__(self, key):
+        return key in self.buffer
+
+    def __len__(self):
+        return len(self.buffer)
+
+    def __repr__(self):
+        return self.buffer.__repr__()
 
 
 class FILOAgentBuffer:
@@ -125,7 +264,7 @@ class SelfPlay(Curriculum):
 
     def __init__(
         self,
-        task_space: TaskSpace,
+        task_space: DiscreteTaskSpace,
         agent: Agent,
         device: str,
     ):
@@ -135,24 +274,25 @@ class SelfPlay(Curriculum):
         :param agent: The initial agent to play against
         :param device: The device to run the agent on
         """
+        # Self play can only return agent_id == 0
+        assert (
+            isinstance(task_space, DiscreteTaskSpace) and task_space.num_tasks == 1
+        ), "Self play only supports DiscreteTaskSpaces with a single element."
         super().__init__(task_space)
         self.device = device
         self.agent = deepcopy(agent).to(self.device)
-        self.task_space = TaskSpace(
-            spaces.Discrete(1)
-        )  # SelfPlay can only return agent_id = 0
+        self.task_space = DiscreteTaskSpace(1)  # SelfPlay can only return agent_id = 0
         self.history = {
             "winrate": 0,
             "n_games": 0,
         }
 
     def add_agent(self, agent: Agent) -> int:
+        # TODO: Perform copy in RAM instead of VRAM
         self.agent = deepcopy(agent).to(self.device)
         return 0
 
     def get_agent(self, agent_id: int) -> Agent:
-        if agent_id is None:
-            agent_id = 0
         assert agent_id == 0, (
             f"Self play only tracks the current agent."
             f"Expected agent id 0, got {agent_id}"
@@ -177,7 +317,9 @@ class SelfPlay(Curriculum):
         self.history["n_games"] += 1
         old_winrate = self.history["winrate"]
         n = self.history["n_games"]
-
+        # TODO: Is this formula correct?
+        # I think it should be ((old_winrate * n) + win) / (n+1) (where n is the value before you add 1)
+        # old_winrate * n is the old # of wins. Then add win to get the new number of wins. Divide by the new number of games.
         self.history["winrate"] = old_winrate + (win - old_winrate) / n
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
@@ -191,7 +333,7 @@ class FictitiousSelfPlay(Curriculum):
 
     def __init__(
         self,
-        task_space: TaskSpace,
+        task_space: DiscreteTaskSpace,
         agent: Agent,
         device: str,
         storage_path: str,
@@ -210,10 +352,14 @@ class FictitiousSelfPlay(Curriculum):
 
         self.current_agent_index = 0
         self.max_agents = max_agents
-        self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
-        self.loaded_agents = FILOAgentBuffer(
+        self.task_space = DiscreteTaskSpace(self.max_agents)
+        self.loaded_agents = FIFOAgentBuffer(
             max_loaded_agents, self.__class__.__name__, device, storage_path, seed
         )
+        self.history = {
+            "winrate": 0,
+            "n_games": 0,
+        }
         self.max_loaded_agents = max_loaded_agents
         self.add_agent(agent)  # creates the initial opponent
 
@@ -240,15 +386,19 @@ class FictitiousSelfPlay(Curriculum):
         return self.loaded_agents.get_agent(agent_id)
 
     def _sample_distribution(self) -> List[float]:
-        return [
-            1.0 / len(self.loaded_agents) for _ in range(len(self.loaded_agents))
-        ] + [0.0 for _ in range(self.max_agents - len(self.loaded_agents))]
+        # Number of saved agents up to max_agents
+        n_agents = min(self.current_agent_index, self.max_agents)
+        return [1.0 / n_agents for _ in range(n_agents)] + [
+            0.0 for _ in range(self.max_agents - n_agents)
+        ]
 
     def sample(self, k=1):
         probs = self._sample_distribution()
+        # max_agents below the highest agent index, but not below 0
+        min_agent_id = max(0, self.current_agent_index - self.max_agents)
         sample = list(
             np.random.choice(
-                np.arange(self.max_agents),
+                np.arange(min_agent_id, min_agent_id + self.max_agents),
                 p=probs,
                 size=k,
             )
@@ -267,7 +417,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
 
     def __init__(
         self,
-        task_space: TaskSpace,
+        task_space: DiscreteTaskSpace,
         agent: Agent,
         device: str,
         storage_path: str,
@@ -287,13 +437,17 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
 
         self.current_agent_index = 0
         self.max_agents = max_agents
-        self.task_space = TaskSpace(spaces.Discrete(self.max_agents))
+        self.task_space = DiscreteTaskSpace(self.max_agents)
         self.winrate_buffer = WinrateBuffer(
             max_agents, entropy_parameter, smoothing_constant
         )
-        self.loaded_agents = FILOAgentBuffer(
+        self.loaded_agents = FIFOAgentBuffer(
             max_loaded_agents, self.__class__.__name__, device, storage_path, seed
         )
+        self.history = {
+            "winrate": 0,
+            "n_games": 0,
+        }
         self.max_loaded_agents = max_loaded_agents
         self.add_agent(agent)  # creates the initial opponent
 
