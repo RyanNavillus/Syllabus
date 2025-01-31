@@ -20,7 +20,7 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, continuous_progress=False, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, **kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
         # Decide evaluation method
@@ -39,9 +39,11 @@ class LearningProgress(Curriculum):
         assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
         self.eval_eps = eval_eps
-        self.continuous_progress = continuous_progress
         self.completed_episodes = 0
         self.current_steps = 0
+        self.normalize_success = normalize_success
+        self.continuous_progress = continuous_progress
+        self.normalized_task_success_rates = None
 
         assert isinstance(
             self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
@@ -51,6 +53,7 @@ class LearningProgress(Curriculum):
         self._p_slow = None
         self._p_true = None
         self.task_rates = None
+        self.task_dist = None
         self._stale_dist = True
 
         self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
@@ -68,17 +71,19 @@ class LearningProgress(Curriculum):
             self.random_baseline = np.minimum(task_success_rates, 0.75)
 
         # Update task scores
-        normalized_task_success_rates = np.maximum(
+        self.normalized_task_success_rates = np.maximum(
             task_success_rates - self.random_baseline, np.zeros(task_success_rates.shape)) / (1.0 - self.random_baseline)
+
+        task_rates = self.normalized_task_success_rates if self.normalize_success else task_success_rates
 
         if self._p_fast is None:
             # Initial values
-            self._p_fast = normalized_task_success_rates
-            self._p_slow = normalized_task_success_rates
+            self._p_fast = task_rates
+            self._p_slow = task_rates
             self._p_true = task_success_rates
         else:
             # Exponential moving average
-            self._p_fast = (normalized_task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
+            self._p_fast = (task_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
             self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
             self._p_true = (task_success_rates * self.ema_alpha) + (self._p_true * (1.0 - self.ema_alpha))
 
@@ -106,6 +111,7 @@ class LearningProgress(Curriculum):
                 actions = actions.int()
             obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
             dones = tuple(a | b for a, b in zip(terminateds, truncateds))
+
             if self.continuous_progress:
                 # Continuous progress can only be measured at the end of the episode
                 if "final_info" in infos:

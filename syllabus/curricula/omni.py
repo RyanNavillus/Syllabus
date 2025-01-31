@@ -1,5 +1,6 @@
 
 import json
+import time
 import warnings
 import numpy as np
 
@@ -35,6 +36,10 @@ class OMNI(LearningProgress):
         self.post_task_interestingness = interestingness
 
     def _sample_distribution(self) -> List[float]:
+        if not self._stale_dist:
+            # No changes since distribution was last computed
+            return self.task_dist
+
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
 
@@ -72,6 +77,7 @@ class OMNI(LearningProgress):
         # Scale and normalize
         omni_dist = lp_dist * moi_weight
         omni_dist = omni_dist / np.sum(omni_dist)
+        self.task_dist = omni_dist
         return omni_dist
 
 
@@ -109,6 +115,10 @@ class OMNILearnability(Learnability):
         self.post_task_interestingness = interestingness
 
     def _sample_distribution(self) -> List[float]:
+        if not self._stale_dist:
+            # No changes since distribution was last computed
+            return self.task_dist
+
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
 

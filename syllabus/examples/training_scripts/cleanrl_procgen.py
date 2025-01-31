@@ -310,7 +310,7 @@ if __name__ == "__main__":
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
                 eval_interval_steps=10 * args.batch_size,
-                eval_eps=20 * 200,
+                eval_eps=10 * 200,
                 continuous_progress=True)
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
@@ -324,7 +324,7 @@ if __name__ == "__main__":
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
                 eval_interval_steps=25 * args.batch_size,
-                eval_eps=20 * 200,
+                eval_eps=10 * 200,
                 continuous_progress=True)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")

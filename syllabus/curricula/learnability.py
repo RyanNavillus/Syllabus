@@ -42,10 +42,11 @@ class Learnability(Curriculum):
         self.completed_episodes = 0
         self.current_steps = 0
         self.normalize_success = normalize_success
+        self.continuous_progress = continuous_progress
         self.buffer_size = buffer_size
         self.learnable_prob = learnable_prob
-        self.continuous_progress = continuous_progress
         self.sampling = sampling
+        self.normalized_task_success_rates = None
 
         assert isinstance(
             self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
@@ -179,6 +180,8 @@ class Learnability(Curriculum):
             task_dist = self.learnable_prob * learnable_task_dist + (1 - self.learnable_prob) * uniform_task_dist
         elif self.sampling == "dist":
             task_dist = learnability if np.sum(learnability) > 0 else np.ones(self.num_tasks)
+        else:
+            raise UsageError(f"Sampling method {self.sampling} not recognized. Use 'topk' or 'dist'.")
 
         task_dist = task_dist / np.sum(task_dist)
         self.task_dist = task_dist
@@ -199,6 +202,7 @@ class Learnability(Curriculum):
 
         for idx in tasks:
             name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
             logs.append((f"curriculum/{name}_lp", learnability[idx]))
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
