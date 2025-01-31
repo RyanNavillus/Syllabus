@@ -153,6 +153,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
                 env.task_space,
                 curriculum_components,
                 batch_size=256,
+                buffer_size=2,
             )
         return env
     return thunk
@@ -309,9 +310,10 @@ if __name__ == "__main__":
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
-                eval_interval_steps=10 * args.batch_size,
-                eval_eps=10 * 200,
-                continuous_progress=True)
+                eval_interval_steps=25 * args.batch_size,
+                eval_eps=20 * 200,
+                continuous_progress=True,
+                normalize_success=True)
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -324,8 +326,9 @@ if __name__ == "__main__":
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
                 eval_interval_steps=25 * args.batch_size,
-                eval_eps=10 * 200,
-                continuous_progress=True)
+                eval_eps=20 * 200,
+                continuous_progress=True,
+                normalize_success=True)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -338,7 +341,7 @@ if __name__ == "__main__":
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum = make_multiprocessing_curriculum(curriculum, timeout=300)
+        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000)
 
     # env setup
     print("Creating env")
