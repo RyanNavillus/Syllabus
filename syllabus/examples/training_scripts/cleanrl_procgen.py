@@ -106,6 +106,8 @@ def parse_args():
                         help="curriculum method to use")
     parser.add_argument("--num-eval-episodes", type=int, default=10,
                         help="the number of episodes to evaluate the agent on after each policy update.")
+    parser.add_argument("--normalize-success-rates", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="if toggled, the success rates will be normalized")
 
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
@@ -313,7 +315,7 @@ if __name__ == "__main__":
                 eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
-                normalize_success=True)
+                normalize_success=args.normalize_success_rates)
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -328,7 +330,7 @@ if __name__ == "__main__":
                 eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
-                normalize_success=True)
+                normalize_success=args.normalize_success_rates)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
