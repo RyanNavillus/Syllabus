@@ -331,6 +331,23 @@ if __name__ == "__main__":
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates)
+        elif args.curriculum_method == "learnability_top10":
+            print("Using learnability top 10.")
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            )
+            lp_eval_envs = wrap_vecenv(eval_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            curriculum = Learnability(
+                sample_env.task_space,
+                eval_envs=lp_eval_envs,
+                evaluator=evaluator,
+                eval_interval_steps=25 * args.batch_size,
+                eval_eps=20 * 200,
+                continuous_progress=True,
+                normalize_success=args.normalize_success_rates,
+                sampling="topk",
+                k_tasks=10)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []

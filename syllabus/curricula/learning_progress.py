@@ -163,6 +163,81 @@ class LearningProgress(Curriculum):
         task_success_rates = np.divide(task_successes, task_counts)
         return task_success_rates
 
+    def _multiagent_evaluate_all_tasks(self, eval_episodes=1, verbose=True):
+        if verbose:
+            print(f"Evaluating tasks for {eval_episodes} episodes.")
+        task_success_rates = np.zeros(self.task_space.num_tasks)
+        num_envs = self.eval_envs.num_envs
+        if self.recurrent_method == "lstm":
+            recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
+                               torch.zeros(1, num_envs, self.recurrent_size))
+        elif self.recurrent_method == "rnn":
+            recurrent_state = torch.zeros(num_envs, self.recurrent_size)
+        obss, _ = self.eval_envs.reset()
+        ep_counter = 0
+        dones = [False] * num_envs
+        task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
+        task_successes = np.zeros(self.task_space.num_tasks)
+
+        while ep_counter < eval_episodes:
+            actions, recurrent_state, _ = self.evaluator.get_action(obss, lstm_state=recurrent_state, done=dones)
+            # actions = torch.flatten(actions)
+            # if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+            #     actions = actions.int()
+
+            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
+            dones = tuple(
+                {k: a or b for k, a, b in zip(term.keys(), term.values(), trunc.values())}
+                for term, trunc in zip(terminateds, truncateds)
+            )
+            all_dones = [all(list(done.values())) for done in dones]
+
+            if self.continuous_progress:
+                # Continuous progress can only be measured at the end of the episode
+                if isinstance(infos, list) and "task_completion" in infos[0]:
+                    task_completions = [i["task_completion"] for i in infos]
+                    task_idx = [i["task"] for i in infos]
+                    for i, done in enumerate(all_dones):
+                        if done:
+                            task = task_idx[i]
+                            task_counts[task] += 1
+                            task_successes[task] += max(task_completions[i], 0.0)
+            else:
+                if isinstance(infos, list) and "task_completion" in infos[0]:
+
+                    task_completions = [i["task_completion"] for i in infos]
+                    task_idx = [i["task"] for i in infos]
+
+                    for task, completion, done in zip(task_idx, task_completions, dones):
+                        # Binary success/failure can be measured at each step.
+                        # Assumes that success will only be 1.0 or -1.0 for 1 step
+                        if abs(completion) >= 1.0:
+                            task_counts[task] += 1
+                            task_successes[task] += math.floor(max(completion, 0.0))
+                elif isinstance(infos, list) and "task_completion" in infos[0]:
+                    task_completions = [info["task_completion"] for info in infos]
+                    task_idx = [info["task"] for info in infos]
+
+                else:
+                    raise UsageError(
+                        "Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
+
+            for done in all_dones:
+                if done:
+                    ep_counter += 1
+                    print(ep_counter)
+                    if verbose and ep_counter % 100 == 0:
+                        print([f"{f:.1f}/{g:.0f}" for f, g in zip(task_successes, task_counts)])
+
+        # Warn user if any task_counts are 0
+        if np.any(task_counts == 0):
+            warnings.warn(
+                f"Tasks {np.where(task_counts == 0)} were not attempted during evaluation. Consider increasing eval episodes.")
+
+        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
+        task_success_rates = np.divide(task_successes, task_counts)
+        return task_success_rates
+
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
