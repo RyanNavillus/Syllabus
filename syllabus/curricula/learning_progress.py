@@ -20,9 +20,13 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, **kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
+        if recurrent_method is not None:
+            assert recurrent_method in ["lstm", "rnn"], f"Recurrent method {recurrent_method} not supported."
+            assert recurrent_size is not None, "Recurrent size must be provided if recurrent method is set."
+
         # Decide evaluation method
         if eval_fn is None:
             self.custom_eval = False
@@ -34,7 +38,8 @@ class LearningProgress(Curriculum):
             self._evaluate = eval_fn
 
         self.ema_alpha = ema_alpha
-        self.lstm_shape = rnn_shape
+        self.recurrent_size = recurrent_size
+        self.recurrent_method = recurrent_method
         self.eval_interval = eval_interval
         assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
@@ -55,8 +60,7 @@ class LearningProgress(Curriculum):
         self.task_rates = None
         self.task_dist = None
         self._stale_dist = True
-
-        self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
+        self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
     def eval_and_update(self, eval_eps=1):
         task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
@@ -97,19 +101,25 @@ class LearningProgress(Curriculum):
         if verbose:
             print(f"Evaluating tasks for {eval_episodes} episodes.")
         task_success_rates = np.zeros(self.task_space.num_tasks)
-        lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
+        num_envs = self.eval_envs.num_envs
+        if self.recurrent_method == "lstm":
+            recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
+                               torch.zeros(1, num_envs, self.recurrent_size))
+        elif self.recurrent_method == "rnn":
+            recurrent_state = torch.zeros(num_envs, self.recurrent_size)
         obss, _ = self.eval_envs.reset()
         ep_counter = 0
-        dones = [False] * self.eval_envs.num_envs
+        dones = [False] * num_envs
         task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
         task_successes = np.zeros(self.task_space.num_tasks)
 
         while ep_counter < eval_episodes:
-            actions, lstm_state, _ = self.evaluator.get_action(obss, lstm_state=lstm_state, done=dones)
-            actions = torch.flatten(actions)
-            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
-                actions = actions.int()
-            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
+            actions, recurrent_state, _ = self.evaluator.get_action(obss, lstm_state=recurrent_state, done=dones)
+            # actions = torch.flatten(actions)
+            # if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+            #     actions = actions.int()
+
+            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
             dones = tuple(a | b for a, b in zip(terminateds, truncateds))
 
             if self.continuous_progress:
@@ -194,6 +204,9 @@ class LearningProgress(Curriculum):
         if not self._stale_dist:
             # No changes since distribution was last computed
             return self.task_dist
+
+        if self.task_rates is None:
+            self.eval_and_update(self._baseline_eval_eps)
 
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
