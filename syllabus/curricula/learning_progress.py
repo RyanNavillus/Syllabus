@@ -20,7 +20,7 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, multiagent=False, **kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
         if recurrent_method is not None:
@@ -32,7 +32,7 @@ class LearningProgress(Curriculum):
             self.custom_eval = False
             self.eval_envs = eval_envs
             self.evaluator = evaluator
-            self._evaluate = self._evaluate_all_tasks
+            self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
         else:
             self.custom_eval = True
             self._evaluate = eval_fn
@@ -136,7 +136,6 @@ class LearningProgress(Curriculum):
                 if "task_completion" in infos:
                     task_completions = infos["task_completion"]
                     task_idx = infos["task"]
-                    # print(task_completions)
 
                     for task, completion, done in zip(task_idx, task_completions, dones):
                         # Binary success/failure can be measured at each step.

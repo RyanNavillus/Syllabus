@@ -1,4 +1,7 @@
 import copy
+from threading import Lock
+from multiprocessing.shared_memory import ShareableList
+
 import warnings
 from collections import defaultdict
 from io import BytesIO
@@ -392,6 +395,9 @@ class MoolibEvaluator(Evaluator):
 
 
 class GymnasiumEvaluationWrapper(gym.Wrapper):
+    instance_lock = Lock()
+    env_count = ShareableList([0])
+
     def __init__(
         self,
         *args,
@@ -399,19 +405,26 @@ class GymnasiumEvaluationWrapper(gym.Wrapper):
         change_task_on_completion: bool = False,
         eval_only_n_tasks: bool = None,
         ignore_seed: bool = False,
+        randomize_order: bool = True,
+        start_index_spacing: int = 0,
         **kwargs
     ):
+        with GymnasiumEvaluationWrapper.instance_lock:
+            instance_id = GymnasiumEvaluationWrapper.env_count[0]
+            GymnasiumEvaluationWrapper.env_count[0] += 1
+
         super().__init__(*args, **kwargs)
         self.change_task_on_completion = change_task_on_completion
         self.task_space = task_space if task_space is not None else self.env.task_space
-        self.tidx = 0
+        self.tidx = start_index_spacing * instance_id
         eval_only_n_tasks = eval_only_n_tasks if eval_only_n_tasks is not None else self.task_space.num_tasks
         self.random_tasks = copy.deepcopy(self.task_space.tasks[:eval_only_n_tasks])
-        if ignore_seed:
-            rng = np.random.default_rng()
-            rng.shuffle(self.random_tasks)
-        else:
-            np.random.shuffle(self.random_tasks)
+        if randomize_order:
+            if ignore_seed:
+                rng = np.random.default_rng()
+                rng.shuffle(self.random_tasks)
+            else:
+                np.random.shuffle(self.random_tasks)
 
     def reset(self, **kwargs):
         new_task = self.random_tasks[self.tidx]
