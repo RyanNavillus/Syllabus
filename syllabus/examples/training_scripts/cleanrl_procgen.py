@@ -109,6 +109,18 @@ def parse_args():
     parser.add_argument("--normalize-success-rates", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, the success rates will be normalized")
 
+    # Learning Progress arguments
+    parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
+                        help="the alpha parameter for the EMA")
+
+    # Learnability arguments
+    parser.add_argument("--learnability-top-k", type=int, default=10,
+                        help="the number of top tasks to sample from")
+    parser.add_argument("--learnability-sampling-prob", type=float, default=0.5,
+                        help="the probability of sampling from the top tasks")
+
+
+
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
@@ -330,7 +342,8 @@ if __name__ == "__main__":
                 eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
-                normalize_success=args.normalize_success_rates)
+                normalize_success=args.normalize_success_rates,
+                ema_alpha=args.lp_ema_alpha)
         elif args.curriculum_method == "learnability_top10":
             print("Using learnability top 10.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -347,7 +360,8 @@ if __name__ == "__main__":
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
                 sampling="topk",
-                k_tasks=10)
+                k_tasks=args.learnability_top_k,
+                learnable_prob=args.learnability_sampling_prob)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
