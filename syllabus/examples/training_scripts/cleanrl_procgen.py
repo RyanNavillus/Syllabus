@@ -327,7 +327,9 @@ if __name__ == "__main__":
                 eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
-                normalize_success=args.normalize_success_rates)
+                normalize_success=args.normalize_success_rates,
+                ema_alpha=args.lp_ema_alpha
+            )
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -343,7 +345,7 @@ if __name__ == "__main__":
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
-                ema_alpha=args.lp_ema_alpha)
+            )
         elif args.curriculum_method == "learnability_top10":
             print("Using learnability top 10.")
             eval_envs = gym.vector.AsyncVectorEnv(
@@ -361,7 +363,8 @@ if __name__ == "__main__":
                 normalize_success=args.normalize_success_rates,
                 sampling="topk",
                 k_tasks=args.learnability_top_k,
-                learnable_prob=args.learnability_sampling_prob)
+                learnable_prob=args.learnability_sampling_prob
+            )
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
