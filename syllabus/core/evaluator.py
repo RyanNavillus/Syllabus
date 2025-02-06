@@ -416,7 +416,7 @@ class GymnasiumEvaluationWrapper(gym.Wrapper):
         super().__init__(*args, **kwargs)
         self.change_task_on_completion = change_task_on_completion
         self.task_space = task_space if task_space is not None else self.env.task_space
-        self.tidx = start_index_spacing * instance_id
+        self.tidx = (start_index_spacing * instance_id) % len(self.task_space.tasks)
         eval_only_n_tasks = eval_only_n_tasks if eval_only_n_tasks is not None else self.task_space.num_tasks
         self.random_tasks = copy.deepcopy(self.task_space.tasks[:eval_only_n_tasks])
         if randomize_order:

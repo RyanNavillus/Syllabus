@@ -115,11 +115,10 @@ class LearningProgress(Curriculum):
 
         while ep_counter < eval_episodes:
             actions, recurrent_state, _ = self.evaluator.get_action(obss, lstm_state=recurrent_state, done=dones)
-            # actions = torch.flatten(actions)
-            # if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
-            #     actions = actions.int()
-
-            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
+            actions = torch.flatten(actions)
+            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                actions = actions.int()
+            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
             dones = tuple(a | b for a, b in zip(terminateds, truncateds))
 
             if self.continuous_progress:

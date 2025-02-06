@@ -55,8 +55,7 @@ class Learnability(Curriculum):
         self.task_rates = None
         self.task_dist = None
         self._stale_dist = True
-
-        self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
+        self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
     def eval_and_update(self, eval_eps=1):
         task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
@@ -113,7 +112,6 @@ class Learnability(Curriculum):
                 if "task_completion" in infos:
                     task_completions = infos["task_completion"]
                     task_idx = infos["task"]
-                    # print(task_completions)
 
                     for task, completion, done in zip(task_idx, task_completions, dones):
                         # Binary success/failure can be measured at each step.
@@ -167,6 +165,9 @@ class Learnability(Curriculum):
         if not self._stale_dist:
             # No changes since distribution was last computed
             return self.task_dist
+
+        if self.task_rates is None:
+            self.eval_and_update(self._baseline_eval_eps)
 
         learnability = self._learnability()
         if self.sampling == "topk":
