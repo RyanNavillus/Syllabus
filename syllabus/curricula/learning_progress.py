@@ -102,6 +102,7 @@ class LearningProgress(Curriculum):
             print(f"Evaluating tasks for {eval_episodes} episodes.")
         task_success_rates = np.zeros(self.task_space.num_tasks)
         num_envs = self.eval_envs.num_envs
+        recurrent_state = None
         if self.recurrent_method == "lstm":
             recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
                                torch.zeros(1, num_envs, self.recurrent_size))

@@ -159,7 +159,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
         if eval:
-            env = GymnasiumEvaluationWrapper(env, ignore_seed=True)
+            env = GymnasiumEvaluationWrapper(env, start_index_spacing=3, randomize_order=False)
 
         if curriculum_components is not None:
             env = GymnasiumSyncWrapper(
@@ -377,7 +377,7 @@ if __name__ == "__main__":
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000)
+        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000, start=False)
 
     # env setup
     print("Creating env")
@@ -397,6 +397,7 @@ if __name__ == "__main__":
     # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
     if args.curriculum:
         del sample_env
+        curriculum.start()
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
