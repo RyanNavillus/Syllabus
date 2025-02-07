@@ -173,7 +173,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
 
     def _validate_metrics(self, metrics: Dict):
         try:
-            masks = torch.Tensor(1 - metrics["dones"]).int()
+            masks = 1 - torch.Tensor(metrics["dones"]).int()
             tasks = metrics["tasks"]
             tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
