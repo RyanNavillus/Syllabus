@@ -1,5 +1,6 @@
 import math
 import random
+import time
 import warnings
 from typing import Any, List, Union
 
@@ -68,10 +69,11 @@ class LearningProgress(Curriculum):
         if self.random_baseline is None:
             # Assume that any perfect success rate is actually 75% due to evaluation precision.
             # Prevents NaN probabilities and prevents task from being completely ignored.
-            high_success_idxs = np.where(task_success_rates > 0.75)
+            high_success_idxs = np.where(task_success_rates > 0.75)[0]
             high_success_rates = task_success_rates[high_success_idxs]
-            warnings.warn(
-                f"Tasks {high_success_idxs} had very high success rates {high_success_rates} for random baseline. Consider removing them from the training set of tasks.")
+            if len(high_success_idxs) > 0:
+                warnings.warn(
+                    f"Tasks {high_success_idxs} had very high success rates {high_success_rates} for random baseline. Consider removing them from the training set of tasks.")
             self.random_baseline = np.minimum(task_success_rates, 0.75)
 
         # Update task scores
@@ -94,7 +96,6 @@ class LearningProgress(Curriculum):
         self.task_rates = task_success_rates    # Used for logging and OMNI
         self._stale_dist = True
         self.task_dist = None
-
         return task_success_rates
 
     def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
@@ -156,7 +157,7 @@ class LearningProgress(Curriculum):
         # Warn user if any task_counts are 0
         if np.any(task_counts == 0):
             warnings.warn(
-                f"Tasks {np.where(task_counts == 0)} were not attempted during evaluation. Consider increasing eval episodes.")
+                f"Tasks {np.where(task_counts == 0)[0].tolist()} were not attempted during evaluation. Consider increasing eval episodes.")
 
         task_counts = np.maximum(task_counts, np.ones_like(task_counts))
         task_success_rates = np.divide(task_successes, task_counts)
@@ -224,14 +225,13 @@ class LearningProgress(Curriculum):
             for done in all_dones:
                 if done:
                     ep_counter += 1
-                    print(ep_counter)
                     if verbose and ep_counter % 100 == 0:
                         print([f"{f:.1f}/{g:.0f}" for f, g in zip(task_successes, task_counts)])
 
         # Warn user if any task_counts are 0
         if np.any(task_counts == 0):
             warnings.warn(
-                f"Tasks {np.where(task_counts == 0)} were not attempted during evaluation. Consider increasing eval episodes.")
+                f"Tasks {np.where(task_counts == 0)[0].tolist()} were not attempted during evaluation. Consider increasing eval episodes.")
 
         task_counts = np.maximum(task_counts, np.ones_like(task_counts))
         task_success_rates = np.divide(task_successes, task_counts)

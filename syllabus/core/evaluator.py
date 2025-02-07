@@ -374,9 +374,12 @@ class MoolibEvaluator(Evaluator):
 
     def _prepare_state(self, state) -> torch.Tensor:
         full_dict = defaultdict(list)
-        for obs_dict in state:
-            for k, v in obs_dict.items():
-                full_dict[k].append(v)
+        if isinstance(state, list):
+            for obs_dict in state:
+                for k, v in obs_dict.items():
+                    full_dict[k].append(v)
+        elif isinstance(state, dict):
+            full_dict = state
         tensor_dict = {key: torch.unsqueeze(torch.Tensor(np.stack(val_list)), 0).to(self.device)
                        for key, val_list in full_dict.items()}
         return tensor_dict

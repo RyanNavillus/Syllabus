@@ -438,6 +438,10 @@ class NethackSeedWrapper(TaskWrapper):
         if seed is not None:
             self.seed(seed)
 
+        observation_dict = {key: space for key, space in self.env.observation_space.spaces.items()}
+        observation_dict["prev_action"] = gym.spaces.Discrete(1)
+        self.observation_space = gym.spaces.Dict(spaces=observation_dict)
+
     def seed(self, seed):
         env = self.env
         while hasattr(env, "env"):
@@ -456,6 +460,7 @@ class NethackSeedWrapper(TaskWrapper):
         since very few tasks override reset. If new_task is provided, we change the task before
         calling the final reset.
         """
+        self.episode_return = 0
         obs, info = super().reset(new_task=new_task, **kwargs)
         if isinstance(obs, dict):
             obs["prev_action"] = 0
@@ -480,11 +485,15 @@ class NethackSeedWrapper(TaskWrapper):
 
         return observation
 
+    def _task_completion(self, obs, rew, term, trunc, info):
+        return min(max(self.episode_return / 1000, 0.0), 1.0)
+
     def step(self, action):
         """
         Step through environment and update task completion.
         """
         obs, rew, term, trunc, info = super().step(action)
+        self.episode_return += rew
         if isinstance(obs, dict):
             obs["prev_action"] = action
         return obs, rew, term, trunc, info
