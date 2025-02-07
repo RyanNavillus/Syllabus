@@ -1,4 +1,5 @@
-""" An example applying Syllabus Prioritized Level Replay to Procgen. This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
+""" An example applying Syllabus Prioritized Level Replay to Procgen.
+This code is based on https://github.com/facebookresearch/level-replay/blob/main/train.py
 
 NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
 we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
@@ -14,19 +15,24 @@ import gym as openai_gym
 import gymnasium as gym
 import numpy as np
 import procgen  # type: ignore # noqa: F401
-from procgen import ProcgenEnv
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLEvaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgress, SequentialCurriculum, Constant, DirectPrioritizedLevelReplay, CentralPrioritizedLevelReplay
+from syllabus.curricula import (BatchedDomainRandomization,
+                                CentralPrioritizedLevelReplay, Constant,
+                                DirectPrioritizedLevelReplay,
+                                DomainRandomization, LearningProgress,
+                                PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.utils.vecenv import VecMonitor, VecNormalize, VecExtractDictObs
+from syllabus.examples.utils.vecenv import (VecExtractDictObs, VecMonitor,
+                                            VecNormalize)
 
 
 def parse_args():
@@ -42,7 +48,7 @@ def parse_args():
                         help="if toggled, cuda will be enabled by default")
     parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, this experiment will be tracked with Weights and Biases")
-    parser.add_argument("--wandb-project-name", type=str, default="syllabus",
+    parser.add_argument("--wandb-project-name", type=str, default="syllabus-testing",
                         help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None,
                         help="the entity (team) of wandb's project")
@@ -143,7 +149,6 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
                 env.task_space,
                 curriculum_components,
                 batch_size=256,
-                buffer_size=4,
             )
         return env
     return thunk
@@ -166,7 +171,7 @@ def level_replay_evaluate(
     policy.eval()
 
     eval_envs = ProcgenEnv(
-        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
     )
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
@@ -175,10 +180,10 @@ def level_replay_evaluate(
 
     while len(eval_episode_rewards) < num_episodes:
         with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
+            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device))
 
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for info in infos:
+        eval_obs, _, _, _, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        for info in eval_infos:
             if 'episode' in info.keys():
                 eval_episode_rewards.append(info['episode']['r'])
 
@@ -188,23 +193,6 @@ def level_replay_evaluate(
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
     policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
-
-
-def make_value_fn():
-    def get_value(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            return agent.get_value(torch.Tensor(obs).to(device))
-    return get_value
-
-
-def make_action_fn():
-    def get_action(obs):
-        obs = np.array(obs)
-        with torch.no_grad():
-            action, _, _, _ = agent.get_action_and_value(torch.Tensor(obs).to(device))
-            return action.to("cpu").numpy()
-    return get_action
 
 
 if __name__ == "__main__":
@@ -221,9 +209,8 @@ if __name__ == "__main__":
             name=run_name,
             monitor_gym=True,
             save_code=True,
-            dir=args.logging_dir
+            dir=args.logging_dir,
         )
-        # wandb.run.log_code("./syllabus/examples")
 
     writer = SummaryWriter(os.path.join(args.logging_dir, f"./runs/{run_name}"))
     writer.add_text(
@@ -277,7 +264,6 @@ if __name__ == "__main__":
                 task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
                 device="cuda",
-                record_stats=True,
             )
         elif args.curriculum_method == "simpleplr":
             print("Using simple prioritized level replay.")
@@ -304,8 +290,8 @@ if __name__ == "__main__":
         elif args.curriculum_method == "bdr":
             print("Using batched domain randomization.")
             curriculum = BatchedDomainRandomization(args.batch_size, sample_env.task_space)
-        elif args.curriculum_method == "noop":
-            print("Using noop curriculum.")
+        elif args.curriculum_method == "constant":
+            print("Using constant curriculum.")
             curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
@@ -313,8 +299,10 @@ if __name__ == "__main__":
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgress(eval_envs, make_action_fn(),
-                                          sample_env.task_space, eval_interval_steps=409600)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            curriculum = LearningProgress(
+                eval_envs, evaluator, sample_env.task_space, eval_interval_steps=25 * args.batch_size
+            )
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -388,11 +376,11 @@ if __name__ == "__main__":
 
             # TRY NOT TO MODIFY: execute the game and log data.
             next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
-            done = np.logical_or(term, trunc)
+            next_done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             tasks[step] = torch.Tensor([i["task"] for i in info])
-            next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
-            completed_episodes += sum(done)
+            next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
+            completed_episodes += sum(next_done)
 
             for item in info:
                 if "episode" in item.keys():
@@ -408,16 +396,16 @@ if __name__ == "__main__":
             if args.curriculum and args.curriculum_method == "centralplr":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
-                current_task = [i["task"] for i in info]
+                current_tasks = tasks[step]
 
-                update = {
+                plr_update = {
                     "value": value,
                     "next_value": next_value,
                     "rew": reward,
-                    "dones": done,
-                    "tasks": current_task,
+                    "dones": next_done,
+                    "tasks": current_tasks,
                 }
-                curriculum.update(update)
+                curriculum.update(plr_update)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -516,9 +504,8 @@ if __name__ == "__main__":
                 nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
                 optimizer.step()
 
-            if args.target_kl is not None:
-                if approx_kl > args.target_kl:
-                    break
+            if args.target_kl is not None and approx_kl > args.target_kl:
+                break
 
         y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
         var_y = np.var(y_true)
