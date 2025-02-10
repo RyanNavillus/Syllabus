@@ -476,12 +476,12 @@ class NethackSeedWrapper(TaskWrapper):
 
     def observation(self, observation):
         """
-        Parses current inventory and new items gained this timestep from the observation.
         Returns a modified observation.
         """
         if isinstance(observation, dict):
             encoded_task = self.task_space.encode(self.task)
-            observation["tty_cursor"] = encoded_task if encoded_task is not None else -1
+            cursor = (encoded_task, 0) if encoded_task is not None else (-1, 0)
+            observation["tty_cursor"] = np.asarray(cursor, dtype=np.uint8)
 
         return observation
 
