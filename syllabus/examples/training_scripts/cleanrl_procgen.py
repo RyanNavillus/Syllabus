@@ -362,7 +362,7 @@ if __name__ == "__main__":
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
                 sampling="topk",
-                k_tasks=args.learnability_top_k,
+                topk=args.learnability_top_k,
                 learnable_prob=args.learnability_sampling_prob
             )
         elif args.curriculum_method == "sq":

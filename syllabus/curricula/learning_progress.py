@@ -21,17 +21,24 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, multiagent=False, **kwargs):
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, multiagent=False, **kwargs):
         super().__init__(*args, **kwargs)
-        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
+        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None or create_env is not None, "One of create_env and evaluator, eval_envs and evaluator, or eval_fn must be provided."
         if recurrent_method is not None:
             assert recurrent_method in ["lstm", "rnn"], f"Recurrent method {recurrent_method} not supported."
             assert recurrent_size is not None, "Recurrent size must be provided if recurrent method is set."
 
         # Decide evaluation method
-        if eval_fn is None:
+        self.eval_envs = None
+        if eval_fn is not None:
             self.custom_eval = False
             self.eval_envs = eval_envs
+            self.evaluator = evaluator
+            self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
+        elif create_env is not None:
+            self.custom_eval = False
+            self.create_env = create_env
+            self.num_eval_envs = num_eval_envs
             self.evaluator = evaluator
             self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
         else:
@@ -39,6 +46,7 @@ class LearningProgress(Curriculum):
             self._evaluate = eval_fn
 
         self.ema_alpha = ema_alpha
+        self.p_theta = p_theta
         self.recurrent_size = recurrent_size
         self.recurrent_method = recurrent_method
         self.eval_interval = eval_interval
@@ -101,26 +109,36 @@ class LearningProgress(Curriculum):
     def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
         if verbose:
             print(f"Evaluating tasks for {eval_episodes} episodes.")
-        task_success_rates = np.zeros(self.task_space.num_tasks)
-        num_envs = self.eval_envs.num_envs
+
+        # Prepare evaluation environments
+        if self.eval_envs is not None:
+            eval_envs = self.eval_envs
+        elif self.create_env is not None:
+            eval_envs = gym.vector.AsyncVectorEnv([self.create_env for _ in range(self.num_eval_envs)])
+        else:
+            raise UsageError("No evaluation environment provided.")
+        obs, _ = eval_envs.reset()
+        num_envs = eval_envs.num_envs
+
+        # Initialize recurrent state
         recurrent_state = None
         if self.recurrent_method == "lstm":
             recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
                                torch.zeros(1, num_envs, self.recurrent_size))
         elif self.recurrent_method == "rnn":
             recurrent_state = torch.zeros(num_envs, self.recurrent_size)
-        obss, _ = self.eval_envs.reset()
+
         ep_counter = 0
         dones = [False] * num_envs
         task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
         task_successes = np.zeros(self.task_space.num_tasks)
 
         while ep_counter < eval_episodes:
-            actions, recurrent_state, _ = self.evaluator.get_action(obss, lstm_state=recurrent_state, done=dones)
+            actions, recurrent_state, _ = self.evaluator.get_action(obs, lstm_state=recurrent_state, done=dones)
             actions = torch.flatten(actions)
-            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+            if isinstance(eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
                 actions = actions.int()
-            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
+            obs, rewards, terminateds, truncateds, infos = eval_envs.step(actions.cpu().numpy())
             dones = tuple(a | b for a, b in zip(terminateds, truncateds))
 
             if self.continuous_progress:
@@ -161,19 +179,35 @@ class LearningProgress(Curriculum):
 
         task_counts = np.maximum(task_counts, np.ones_like(task_counts))
         task_success_rates = np.divide(task_successes, task_counts)
+
+        # Close env to prevent resource leaks
+        if self.create_env is not None:
+            eval_envs.close()
+
         return task_success_rates
 
     def _multiagent_evaluate_all_tasks(self, eval_episodes=1, verbose=True):
         if verbose:
             print(f"Evaluating tasks for {eval_episodes} episodes.")
-        task_success_rates = np.zeros(self.task_space.num_tasks)
-        num_envs = self.eval_envs.num_envs
+
+        # Prepare evaluation environments
+        if self.eval_envs is not None:
+            eval_envs = self.eval_envs
+        elif self.create_env is not None:
+            eval_envs = gym.vector.AsyncVectorEnv([self.create_env for _ in range(self.num_eval_envs)])
+        else:
+            raise UsageError("No evaluation environment provided.")
+        obs, _ = eval_envs.reset()
+        num_envs = eval_envs.num_envs
+
+        # Initialize recurrent state
+        recurrent_state = None
         if self.recurrent_method == "lstm":
             recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
                                torch.zeros(1, num_envs, self.recurrent_size))
         elif self.recurrent_method == "rnn":
             recurrent_state = torch.zeros(num_envs, self.recurrent_size)
-        obss, _ = self.eval_envs.reset()
+
         ep_counter = 0
         dones = [False] * num_envs
         task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
@@ -235,6 +269,11 @@ class LearningProgress(Curriculum):
 
         task_counts = np.maximum(task_counts, np.ones_like(task_counts))
         task_success_rates = np.divide(task_successes, task_counts)
+
+        # Close env to prevent resource leaks
+        if self.create_env is not None:
+            eval_envs.close()
+
         return task_success_rates
 
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
@@ -261,12 +300,12 @@ class LearningProgress(Curriculum):
 
         return abs(fast - slow)
 
-    def _reweight(self, p: np.ndarray, p_theta: float = 0.1) -> float:
+    def _reweight(self, p: np.ndarray) -> float:
         """
         Reweight the given success rate using the reweighting function from the paper.
         """
-        numerator = p * (1.0 - p_theta)
-        denominator = p + p_theta * (1.0 - 2.0 * p)
+        numerator = p * (1.0 - self.p_theta)
+        denominator = p + self.p_theta * (1.0 - 2.0 * p)
         return numerator / denominator
 
     def _sigmoid(self, x: np.ndarray):

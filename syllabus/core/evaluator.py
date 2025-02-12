@@ -30,6 +30,7 @@ class Evaluator:
         device: Optional[torch.device] = None,
         preprocess_obs: Optional[Callable] = None,
         copy_agent: bool = True,
+        simple_copy: bool = False,
     ):
         """
         Initialize the Evaluator.
@@ -46,7 +47,7 @@ class Evaluator:
         self._copy_agent = copy_agent   # Save to skip update if possible
 
         # Make cpu copy of model
-        if copy_agent:
+        if copy_agent and not simple_copy:
             try:
                 # Save agent in memory
                 model_data_in_memory = BytesIO()
@@ -58,11 +59,14 @@ class Evaluator:
                 model_data_in_memory.close()
             except RuntimeError as e:
                 warnings.warn(str(e), stacklevel=2)
-                agent.to(self.device)
-                self.agent = copy.deepcopy(agent).to(self.device)
-                agent.to("cuda")
+                simple_copy = True
 
-        else:
+        if copy_agent and simple_copy:
+            agent.to(self.device)
+            self.agent = copy.deepcopy(agent).to(self.device)
+            agent.to("cuda")
+
+        if not simple_copy:
             self.agent = self._agent_reference
 
     def _update_agent(self):
