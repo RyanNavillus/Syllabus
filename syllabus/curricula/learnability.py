@@ -29,7 +29,8 @@ class Learnability(Curriculum):
 
         # Decide evaluation method
         self.eval_envs = None
-        if eval_fn is not None:
+        self.create_env = None
+        if eval_envs is not None:
             self.custom_eval = False
             self.eval_envs = eval_envs
             self.evaluator = evaluator
