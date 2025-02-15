@@ -416,14 +416,15 @@ class GymnasiumEvaluationWrapper(gym.Wrapper):
         start_index_spacing: int = 0,
         **kwargs
     ):
-        with GymnasiumEvaluationWrapper.instance_lock:
-            instance_id = GymnasiumEvaluationWrapper.env_count[0]
-            GymnasiumEvaluationWrapper.env_count[0] += 1
+        if start_index_spacing > 0:
+            with GymnasiumEvaluationWrapper.instance_lock:
+                instance_id = GymnasiumEvaluationWrapper.env_count[0]
+                GymnasiumEvaluationWrapper.env_count[0] += 1
 
         super().__init__(*args, **kwargs)
         self.change_task_on_completion = change_task_on_completion
         self.task_space = task_space if task_space is not None else self.env.task_space
-        self.tidx = (start_index_spacing * instance_id) % len(self.task_space.tasks)
+        self.tidx = (start_index_spacing * instance_id) % len(self.task_space.tasks) if start_index_spacing > 0 else 0
         eval_only_n_tasks = eval_only_n_tasks if eval_only_n_tasks is not None else self.task_space.num_tasks
         self.random_tasks = copy.deepcopy(self.task_space.tasks[:eval_only_n_tasks])
         if randomize_order:
