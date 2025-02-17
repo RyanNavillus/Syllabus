@@ -199,12 +199,12 @@ class Learnability(Curriculum):
         task_successes = np.zeros(self.task_space.num_tasks)
 
         while ep_counter < eval_episodes:
-            actions, recurrent_state, _ = self.evaluator.get_action(obss, lstm_state=recurrent_state, done=dones)
+            actions, recurrent_state, _ = self.evaluator.get_action(obs, lstm_state=recurrent_state, done=dones)
             # actions = torch.flatten(actions)
             # if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
             #     actions = actions.int()
 
-            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
+            obs, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
             dones = tuple(
                 {k: a or b for k, a, b in zip(term.keys(), term.values(), trunc.values())}
                 for term, trunc in zip(terminateds, truncateds)
