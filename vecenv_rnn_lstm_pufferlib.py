@@ -703,7 +703,7 @@ if __name__ == "__main__":
                     joint_actions.numpy()
                 )
                 agent_tasks = np.array([i["agent_id"] for i in info])
-                print(len(agent_tasks))
+                # print(len(agent_tasks))
                 rewards[step] = torch.tensor(reward[agent_indices]).to(device).view(-1)
                 next_obs = torch.Tensor(next_obs).to(device)
                 next_done = torch.Tensor(next_done[agent_indices]).to(device)
@@ -713,18 +713,31 @@ if __name__ == "__main__":
 
                 cumulative_rewards = cumulative_rewards + reward
 
+                if args.track:
+                    writer.add_scalar(
+                        "train/average_return",
+                        np.mean(cumulative_rewards),
+                        global_step,
+                    )
+                    writer.add_scalar(
+                        "train/std_return",
+                        np.std(cumulative_rewards),
+                        global_step,
+                    )
+
                 if args.agent_curriculum == "PFSP" and any(next_done.cpu().numpy()):
                     agent_reward = reward[agent_indices]
                     agents_to_update = np.where(agent_reward != 0)[0]
-                    print("agent_reward", agent_reward)
-                    print("agents_to_update", agents_to_update)
-                    print("agents_to_update", agents_to_update)
                     for agent_to_update in agents_to_update:
-                        opponent_id = agent_tasks[agent_to_update]
-                        print("opponent_id", opponent_id)
-                        agent_curriculum.update_winrate(
-                            opponent_id, agent_reward[agent_to_update]
-                        )
+                        try:
+                            opponent_id = agent_tasks[agent_to_update]
+                            print("opponent_id", opponent_id)
+                            agent_curriculum.update_winrate(
+                                opponent_id, agent_reward[agent_to_update]
+                            )
+                        except IndexError as e:
+                            print(f"{Fore.RED}{e}{Style.RESET_ALL}")
+                            print(opponent_id, len(agent_tasks))
                     print(agent_curriculum.winrate_buffer)
 
             # generalized advantage estimation (for the learning agent only)
@@ -856,7 +869,14 @@ if __name__ == "__main__":
             )
 
             if args.track:
-                ...
+                writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+                writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
+                writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
+                writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
+                writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), global_step)
+                writer.add_scalar("losses/approx_kl", approx_kl.item(), global_step)
+                writer.add_scalar("losses/clipfrac", np.mean(clipfracs), global_step)
+                writer.add_scalar("losses/explained_variance", explained_var, global_step)
 
             print(
                 f"{Fore.WHITE}{Style.BRIGHT} Steps per second:",
