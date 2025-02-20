@@ -215,33 +215,28 @@ class WinrateBuffer:
 
     def __init__(
         self,
-        max_agents: int,
         entropy_parameter: float,
         smoothing_constant: int,
         buffer_size: int = 128,
     ):
-        self.max_agents = max_agents
         self.buffer_size = buffer_size
-        self.buffer = {i: Queue(maxsize=buffer_size) for i in range(max_agents)}
+        self.buffer = {}
         self.entropy_parameter = entropy_parameter
         self.smoothing_constant = smoothing_constant
-        self.initialized_agents = np.zeros(max_agents)
 
     def update_winrate(self, agent_id: int, reward: float):
+        if agent_id not in self.buffer:
+            self.buffer[agent_id] = Queue(maxsize=self.buffer_size)
+
         reward = reward == 1  # converts rewards {-1;1} to winrate {0;1}
         self.buffer[agent_id].put(reward)
         if self.buffer[agent_id].full():
             self.buffer[agent_id].get()
 
-        # mark agent as initialized
-        # uninitialized agents will be masked from the sampling distribution
-        if not self.initialized_agents[agent_id]:
-            self.initialized_agents[agent_id] = 1
-
     def get_winrate(self, agent_id: int):
-        # TODO: should we return a winrate if the queue is not full?
-        if self.buffer[agent_id].empty():
+        if agent_id not in self.buffer:
             return 0.0
+
         return np.mean(self.buffer[agent_id].queue)
 
     def _apply_entropy(self, winrate: float):
@@ -250,7 +245,7 @@ class WinrateBuffer:
         return winrate**self.entropy_parameter
 
     def __repr__(self):
-        return {i: self.get_winrate(i) for i in range(self.max_agents)}.__repr__()
+        return {i: self.get_winrate(i) for i in range(len(self.buffer))}.__repr__()
 
     def __getitem__(self, agent_id):
         return self.get_winrate(agent_id)
@@ -435,9 +430,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = DiscreteTaskSpace(self.max_agents)
-        self.winrate_buffer = WinrateBuffer(
-            max_agents, entropy_parameter, smoothing_constant
-        )
+        self.winrate_buffer = WinrateBuffer(entropy_parameter, smoothing_constant)
         self.loaded_agents = FIFOAgentBuffer(
             max_loaded_agents, self.__class__.__name__, device, storage_path, seed
         )
@@ -518,16 +511,16 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             loaded_agent_keys = pad(loaded_agent_keys)
 
         # mask uninitialized agents
-        masked_loss_rates = np.ma.masked_array(
-            loss_rates,
-            mask=[self.winrate_buffer.initialized_agents == 0][:n_stored_agents],
-        )
+        # masked_loss_rates = np.ma.masked_array(
+        #     loss_rates,
+        #     mask=[self.winrate_buffer.initialized_agents == 0][:n_stored_agents],
+        # )
 
         # apply the entropy function, smoothing and normalization to all valid loss rates
         masked_loss_rates = np.ma.array(
             [
                 self.winrate_buffer._apply_entropy(winrate)
-                for winrate in masked_loss_rates
+                for winrate in loss_rates
             ]
         )
         masked_loss_rates += self.winrate_buffer.smoothing_constant
