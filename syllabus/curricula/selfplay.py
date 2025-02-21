@@ -22,77 +22,35 @@ class WinrateBuffer:
 
     def __init__(
         self,
-        max_agents: int,
         entropy_parameter: float,
         smoothing_constant: int,
         buffer_size: int = 128,
     ):
-        self.max_agents = max_agents
         self.buffer_size = buffer_size
-        self.buffer = {i: Queue(maxsize=buffer_size) for i in range(max_agents)}
+        self.buffer = {}
         self.entropy_parameter = entropy_parameter
         self.smoothing_constant = smoothing_constant
-        self.initialized_agents = np.zeros(max_agents)
 
     def update_winrate(self, agent_id: int, reward: float):
+        if agent_id not in self.buffer:
+            self.buffer[agent_id] = Queue(maxsize=self.buffer_size)
+
         reward = reward == 1  # converts rewards {-1;1} to winrate {0;1}
         self.buffer[agent_id].put(reward)
         if self.buffer[agent_id].full():
             self.buffer[agent_id].get()
 
-        # mark agent as initialized
-        # unitiliazed agents will be masked from the sampling distribution
-        if not self.initialized_agents[agent_id]:
-            self.initialized_agents[agent_id] = 1
+    def available_agents(self):
+        if self.buffer == {}:
+            return [0]
+        else:
+            return list(self.buffer.keys())
 
     def get_winrate(self, agent_id: int):
-        # TODO: should we return a winrate if the queue is not full?
-        if self.buffer[agent_id].empty():
+        if agent_id not in self.buffer:
             return 0.0
+
         return np.mean(self.buffer[agent_id].queue)
-
-    def _apply_entropy(self, winrate: float):
-        if np.isnan(winrate):
-            return 0.0
-        return winrate**self.entropy_parameter
-
-    def get_sampling_distribution(self):
-        """
-        Return a sampling distribution reflecting the difficulty of each opponent.
-        Uninitialized agents are masked and not included in the distribution.
-        """
-        loss_rates = np.array([1 - self.get_winrate(i) for i in range(self.max_agents)])
-
-        # mask uninitialized agents
-        masked_loss_rates = np.ma.masked_array(
-            loss_rates, mask=self.initialized_agents == 0
-        )
-
-        # apply the entropy function, smoothing and normalization to all valid loss rates
-        masked_loss_rates = np.ma.array(
-            [self._apply_entropy(winrate) for winrate in masked_loss_rates]
-        )
-        masked_loss_rates += self.smoothing_constant
-        masked_sampling_distribution = masked_loss_rates / masked_loss_rates.sum()
-
-        # unmask and set masked values to 0
-        sampling_distribution = np.where(
-            masked_sampling_distribution.mask, 0, masked_sampling_distribution
-        )
-
-        # if no agents are initialized, sample the first agent
-        # this happens when the first agent has not yet receiveda reward
-        if sampling_distribution.sum() == 0:
-            sampling_distribution = np.zeros(self.max_agents)
-            sampling_distribution[0] = 1.0
-
-        return sampling_distribution
-
-    def __repr__(self):
-        return {i: self.get_winrate(i) for i in range(self.max_agents)}.__repr__()
-
-    def __getitem__(self, agent_id):
-        return self.get_winrate(agent_id)
 
 
 class FIFOAgentBuffer:
@@ -150,105 +108,6 @@ class FIFOAgentBuffer:
 
     def __repr__(self):
         return self.buffer.__repr__()
-
-
-class FILOAgentBuffer:
-    """
-    First-In-Last-Out buffer implemented as an OrderedDict.
-    """
-
-    def __init__(
-        self,
-        max_agents: int,
-        curriculum_name: str,
-        device: str,
-        storage_path: str,
-        seed: int,
-    ):
-        self.max_agents = max_agents
-        self.curriculum_name = curriculum_name
-        self.device = device
-        self.storage_path = storage_path
-        self.seed = seed
-        self.buffer = OrderedDict()
-
-    def add_agent(self, agent_id: int, agent: Agent) -> None:
-        if agent_id in self.buffer:
-            del self.buffer[agent_id]
-        elif len(self.buffer) >= self.max_agents:
-            self.buffer.popitem(last=False)
-        self.buffer[agent_id] = agent
-
-    def get_agent(self, agent_id: int) -> Agent:
-        if agent_id not in self.buffer:
-            print(
-                "load agent",
-                agent_id,
-                f"{self.storage_path}/{self.curriculum_name}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
-            )
-            self.buffer.add(
-                agent_id,
-                joblib.load(
-                    f"{self.storage_path}/{self.curriculum_name}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
-                ).to(self.device),
-            )
-
-        return self.buffer[agent_id]
-
-    def __getitem__(self, agent_id):
-        return self.buffer.get(agent_id, None)
-
-    def __contains__(self, key):
-        return key in self.buffer
-
-    def __len__(self):
-        return len(self.buffer)
-
-    def __repr__(self):
-        return self.buffer.__repr__()
-
-
-class WinrateBuffer:
-    """
-    Stores the winrate of each agent in a queue and provides a sampling distribution.
-    """
-
-    def __init__(
-        self,
-        entropy_parameter: float,
-        smoothing_constant: int,
-        buffer_size: int = 128,
-    ):
-        self.buffer_size = buffer_size
-        self.buffer = {}
-        self.entropy_parameter = entropy_parameter
-        self.smoothing_constant = smoothing_constant
-
-    def update_winrate(self, agent_id: int, reward: float):
-        if agent_id not in self.buffer:
-            self.buffer[agent_id] = Queue(maxsize=self.buffer_size)
-
-        reward = reward == 1  # converts rewards {-1;1} to winrate {0;1}
-        self.buffer[agent_id].put(reward)
-        if self.buffer[agent_id].full():
-            self.buffer[agent_id].get()
-
-    def get_winrate(self, agent_id: int):
-        if agent_id not in self.buffer:
-            return 0.0
-
-        return np.mean(self.buffer[agent_id].queue)
-
-    def _apply_entropy(self, winrate: float):
-        if np.isnan(winrate):
-            return 0.0
-        return winrate**self.entropy_parameter
-
-    def __repr__(self):
-        return {i: self.get_winrate(i) for i in range(len(self.buffer))}.__repr__()
-
-    def __getitem__(self, agent_id):
-        return self.get_winrate(agent_id)
 
 
 class SelfPlay(Curriculum):
@@ -309,10 +168,7 @@ class SelfPlay(Curriculum):
         self.history["n_games"] += 1
         old_winrate = self.history["winrate"]
         n = self.history["n_games"]
-        # TODO: Is this formula correct?
-        # I think it should be ((old_winrate * n) + win) / (n+1) (where n is the value before you add 1)
-        # old_winrate * n is the old # of wins. Then add win to get the new number of wins. Divide by the new number of games.
-        self.history["winrate"] = old_winrate + (win - old_winrate) / n
+        self.history["winrate"] = ((old_winrate * (n - 1)) + win) / n
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """Log metrics for the curriculum."""
@@ -430,6 +286,8 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = DiscreteTaskSpace(self.max_agents)
+        self.entropy_parameter = entropy_parameter
+        self.smoothing_constant = smoothing_constant
         self.winrate_buffer = WinrateBuffer(entropy_parameter, smoothing_constant)
         self.loaded_agents = FIFOAgentBuffer(
             max_loaded_agents, self.__class__.__name__, device, storage_path, seed
@@ -490,56 +348,21 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         Samples k agents from the buffer of saved agents, prioritizing opponents with higher winrates.
         Uninitialized agents are masked and not included in the distribution.
         """
-        loss_rates = np.array(
-            [
-                1 - self.winrate_buffer.get_winrate(i)
-                for i in self.loaded_agents.buffer.keys()
-            ]
-        )
+        compute_loss_rate = lambda winrate: (1 - winrate)**self.entropy_parameter + self.smoothing_constant
 
-        n_stored_agents = len(loss_rates)
-        loaded_agent_keys = list(self.loaded_agents.buffer.keys())
-
-        # pad loss rates and agent keys if the buffer is not full
-        if n_stored_agents < self.max_agents:
-            def pad(x): return np.pad(
-                x,
-                pad_width=(0, self.max_agents - n_stored_agents),
-                constant_values=0.0,
-            )
-            loss_rates = pad(loss_rates)
-            loaded_agent_keys = pad(loaded_agent_keys)
-
-        # mask uninitialized agents
-        # masked_loss_rates = np.ma.masked_array(
-        #     loss_rates,
-        #     mask=[self.winrate_buffer.initialized_agents == 0][:n_stored_agents],
-        # )
-
-        # apply the entropy function, smoothing and normalization to all valid loss rates
-        masked_loss_rates = np.ma.array(
-            [
-                self.winrate_buffer._apply_entropy(winrate)
-                for winrate in loss_rates
-            ]
-        )
-        masked_loss_rates += self.winrate_buffer.smoothing_constant
-        masked_sampling_distribution = masked_loss_rates / masked_loss_rates.sum()
-
-        # unmask and set masked values to 0
-        sampling_distribution = np.where(
-            masked_sampling_distribution.mask, 0, masked_sampling_distribution
-        )
+        available_agents = self.winrate_buffer.available_agents()
+        loss_rates = np.array([compute_loss_rate(self.winrate_buffer.get_winrate(i)) for i in available_agents])
+        sampling_distribution = loss_rates / loss_rates.sum()
 
         # if no agents are initialized, sample the first agent
-        # this happens when the first agent has not yet receiveda reward
+        # this happens when the first agent has not yet received a reward
         if sampling_distribution.sum() == 0:
-            sampling_distribution = np.zeros(self.max_agents)
+            sampling_distribution = np.zeros(len(self.winrate_buffer.buffer))
             sampling_distribution[0] = 1.0
 
         return list(
             np.random.choice(
-                loaded_agent_keys,
+                available_agents,
                 p=sampling_distribution,
                 size=k,
             )

@@ -93,10 +93,9 @@ class Config:
     env_curriculum: str = "DR"
     n_env_tasks: int = 4000
     max_agents: int = 10
-    agent_update_frequency: int = 8000  # TODO: use in curriculum
-    checkpoint_frequency: int = 4000
+    checkpoint_frequency: int = 8000
     smoothing_constant: float = 0.01
-    entropy_parameter: float = 1.5
+    entropy_parameter: float = 2.0
 
 
 def parse_args() -> Config:
@@ -156,7 +155,7 @@ def evaluate_agent(agent, eval_env, step):
                 _,
                 _,
                 lstm_state,
-            ) = selected_agent.get_action_and_value(obs, lstm_state, next_done)
+            ) = selected_opp.get_action_and_value(obs, lstm_state, next_done)
 
             opponent_actions = torch.randint(0, 5, (args.num_workers,))
             joint_actions = reconstruct_batch(
@@ -349,7 +348,9 @@ class LasertagParallelWrapper(PettingZooTaskWrapper):
         self.env.seed(seed)
         obs = self.env.reset_random()  # random level generation
         pz_obs = self._np_array_to_pz_dict(obs["image"])
-        return pz_obs, {}
+        infos = {agent: {"solved": 0.0} for agent in self.possible_agents}
+        infos["agent_id"] = self.task[1] if self.task is not None else 0
+        return pz_obs, infos
 
     def step(
         self,
@@ -413,7 +414,7 @@ def make_env_fn(components=None):
         if components is not None:
             env = PettingZooSyncWrapper(
                 env,
-                MultiDiscreteTaskSpace([args.n_env_tasks, args.max_agents]),
+                MultiDiscreteTaskSpace([args.n_env_tasks, 1000]),
                 components,
                 buffer_size=2,
             )
@@ -589,6 +590,7 @@ if __name__ == "__main__":
 
     num_updates = int(args.total_timesteps // args.batch_size)
     env_tasks, agent_tasks = [], np.zeros(args.num_workers)
+    latest_agent_task = 0
 
     cumulative_rewards = np.zeros(args.num_workers * 2)
     next_obs, info = envs.reset()
@@ -615,9 +617,17 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     agent_obs, opp_obs = split_batch(next_obs)
 
-                    # iterate over agent_tasks
                     for task in set(agent_tasks):
-                        selected_agent = curriculum.get_agent(int(task))
+                        if latest_agent_task < task:
+                            latest_agent_task = task
+
+                        # iterate over agent_tasks
+                        # if the agent task points to the latest agent
+                        # load the protagonist agent (pure self-play)
+                        if task == latest_agent_task:
+                            selected_opp = agent
+                        else: 
+                            selected_opp = curriculum.get_agent(int(task))
 
                         # create batches for each task
                         agent_task_indices = np.where(agent_tasks == task)[0]
@@ -652,7 +662,7 @@ if __name__ == "__main__":
                             _,
                             agent_value_batch,
                             new_lstm_state_batch,
-                        ) = selected_agent.get_action_and_value(
+                        ) = agent.get_action_and_value(
                             agent_obs_batch, lstm_state_batch, next_done_batch
                         )
 
@@ -663,8 +673,8 @@ if __name__ == "__main__":
                             _,
                             _,
                             new_lstm_state_opp_batch,
-                        ) = selected_agent.get_action_and_value(
-                            agent_obs_batch, lstm_state_opp_batch, next_done_batch
+                        ) = selected_opp.get_action_and_value(
+                            opp_obs_batch, lstm_state_opp_batch, next_done_batch
                         )
 
                         # reconstruct data from batches
@@ -703,7 +713,7 @@ if __name__ == "__main__":
                     joint_actions.numpy()
                 )
                 agent_tasks = np.array([i["agent_id"] for i in info])
-                # print(len(agent_tasks))
+
                 rewards[step] = torch.tensor(reward[agent_indices]).to(device).view(-1)
                 next_obs = torch.Tensor(next_obs).to(device)
                 next_done = torch.Tensor(next_done[agent_indices]).to(device)
@@ -724,21 +734,34 @@ if __name__ == "__main__":
                         np.std(cumulative_rewards),
                         global_step,
                     )
+                # Syllabus curriculum update
+                if args.curriculum and args.curriculum_method == "centralplr":
+                    next_value = None
+                    if step == args.num_steps - 1:
+                        # TODO: Get value prediction from current agents
+                        with torch.no_grad():
+                            next_value = agent.get_value(next_obs)
+
+                    current_tasks = np.array([i["task"] for i in info])
+
+                    plr_update = {
+                        "value": values[step],
+                        "next_value": next_value,
+                        "rew": rewards[step],
+                        "dones": next_done,
+                        "tasks": current_tasks,
+                    }
+                    curriculum.update(plr_update)
 
                 if args.agent_curriculum == "PFSP" and any(next_done.cpu().numpy()):
                     agent_reward = reward[agent_indices]
                     agents_to_update = np.where(agent_reward != 0)[0]
                     for agent_to_update in agents_to_update:
-                        try:
-                            opponent_id = agent_tasks[agent_to_update]
-                            print("opponent_id", opponent_id)
-                            agent_curriculum.update_winrate(
-                                opponent_id, agent_reward[agent_to_update]
-                            )
-                        except IndexError as e:
-                            print(f"{Fore.RED}{e}{Style.RESET_ALL}")
-                            print(opponent_id, len(agent_tasks))
-                    print(agent_curriculum.winrate_buffer)
+                        opponent_id = agent_tasks[agent_to_update]
+                        agent_curriculum.update_winrate(
+                            opponent_id, agent_reward[agent_to_update]
+                        )
+                    # print(agent_curriculum.winrate_buffer)
 
             # generalized advantage estimation (for the learning agent only)
             with torch.no_grad():
