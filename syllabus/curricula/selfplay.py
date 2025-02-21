@@ -73,7 +73,7 @@ class FIFOAgentBuffer:
         self.seed = seed
         self.buffer = OrderedDict()
 
-    def add_agent(self, agent_id: int, agent: Agent) -> None:
+    def set_agent(self, agent_id: int, agent: Agent) -> None:
         # Remove first item so that buffer length does not exceed max_agents
         if len(self.buffer) >= self.max_agents:
             self.buffer.popitem(last=False)
@@ -126,12 +126,12 @@ class SelfPlay(Curriculum):
         :param device: The device to run the agent on
         """
         # Self play can only return agent_id == 0
-        assert (
-            isinstance(task_space, DiscreteTaskSpace) and task_space.num_tasks == 1
-        ), "Self play only supports DiscreteTaskSpaces with a single element."
+        # assert (
+        #     isinstance(task_space, DiscreteTaskSpace) and task_space.num_tasks == 1
+        # ), "Self play only supports DiscreteTaskSpaces with a single element."
         super().__init__(task_space)
         self.device = device
-        self.agent = deepcopy(agent).to(self.device)
+        self.agent = agent
         self.task_space = DiscreteTaskSpace(1)  # SelfPlay can only return agent_id = 0
         self.history = {
             "winrate": 0,
@@ -139,11 +139,10 @@ class SelfPlay(Curriculum):
         }
 
     def add_agent(self, agent: Agent) -> int:
-        # TODO: Perform copy in RAM instead of VRAM
-        self.agent = deepcopy(agent).to(self.device)
+        self.agent = agent
         return 0
 
-    def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
+    def get_agent(self, agent_id: int, agent: Agent = None) -> Agent:
         assert agent_id == 0, (
             f"Self play only tracks the current agent."
             f"Expected agent id 0, got {agent_id}"
@@ -172,9 +171,9 @@ class SelfPlay(Curriculum):
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """Log metrics for the curriculum."""
-        logs.append("winrate", self.history["winrate"])
-        logs.append("n_games", self.history["n_games"])
-        super().log_metrics(writer, logs, step, log_n_tasks)
+        logs.append(("winrate", self.history["winrate"]))
+        logs.append(("n_games", self.history["n_games"]))
+        return super().log_metrics(writer, logs, step, log_n_tasks)
 
 
 class FictitiousSelfPlay(Curriculum):
@@ -198,6 +197,7 @@ class FictitiousSelfPlay(Curriculum):
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
+        self.agent = None
         self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = DiscreteTaskSpace(self.max_agents)
@@ -217,26 +217,27 @@ class FictitiousSelfPlay(Curriculum):
         When the `max_agents` limit is met, older agent checkpoints are overwritten.
         """
         # TODO: Check that this doesn't move original agent to cpu
-        agent = agent.to("cpu")
-        joblib.dump(
-            agent,
-            filename=(
-                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
-                f"{self.current_agent_index}.pkl"
-            ),
-        )
-        agent = agent.to(self.device)
-        self.loaded_agents.add_agent(self.current_agent_index, agent)
-        self.agent = deepcopy(agent).to(self.device)
+        if self.agent is not None:
+            # Freeze the current online agent and save to file
+            save_agent = self.agent.to("cpu")
+            joblib.dump(
+                save_agent,
+                filename=(
+                    f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
+                    f"{self.current_agent_index-1}.pkl"
+                ),
+            )
+            self.loaded_agents.set_agent(self.current_agent_index - 1, deepcopy(save_agent).to(self.device))
+        self.agent = agent.to(self.device)  # No copy, most recent agent will continue to update
         self.current_agent_index += 1
 
-    def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
+    def get_agent(self, agent_id: int) -> Agent:
         """Loads an agent from the buffer of saved agents."""
 
-        # if the latest agent is sampled, return the training agent
-        if agent_id == self.current_agent_index and agent is not None:
-            return agent
-        
+        # If the latest agent is sampled, return the training agent
+        if agent_id == self.current_agent_index - 1:
+            return self.agent
+
         if self.loaded_agents[agent_id] is None:
             if len(self.loaded_agents) >= self.max_loaded_agents:
                 pass
@@ -245,7 +246,7 @@ class FictitiousSelfPlay(Curriculum):
                 agent_id,
                 f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
             )
-            self.loaded_agents.add_agent(
+            self.loaded_agents.set_agent(
                 agent_id,
                 joblib.load(
                     f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
@@ -276,10 +277,15 @@ class FictitiousSelfPlay(Curriculum):
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """Log metrics for the curriculum."""
-        logs.append("winrate", self.history["winrate"])
-        logs.append("games_played", self.history["n_games"])
-        logs.append("stored_agents", len(self.loaded_agents))
-        super().log_metrics(writer, logs, step, log_n_tasks)
+        logs.append(("winrate", self.history["winrate"]))
+        logs.append(("games_played", self.history["n_games"]))
+        logs.append(("stored_agents", len(self.loaded_agents)))
+
+        for idx in range(log_n_tasks):
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_winrate", self.winrate_buffer.get_winrate(idx)))
+
+        return super().log_metrics(writer, logs, step, log_n_tasks)
 
 
 class PrioritizedFictitiousSelfPlay(Curriculum):
@@ -305,6 +311,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
+        self.agent = None
         self.current_agent_index = 0
         self.max_agents = max_agents
         self.task_space = DiscreteTaskSpace(self.max_agents)
@@ -327,28 +334,30 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         When the `max_agents` limit is met, older agent checkpoints are overwritten.
         """
         # TODO: Check that this doesn't move original agent to cpu
-        agent = agent.to("cpu")
-        joblib.dump(
-            agent,
-            filename=(
-                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
-                f"{self.current_agent_index}.pkl"
-            ),
-        )
-        agent = agent.to(self.device)
-        self.agent = deepcopy(agent).to(self.device)
-        self.loaded_agents.add_agent(self.current_agent_index, agent)
+        if self.agent is not None:
+            # Freeze the current online agent and save to file
+            save_agent = self.agent.to("cpu")
+            joblib.dump(
+                save_agent,
+                filename=(
+                    f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
+                    f"{self.current_agent_index-1}.pkl"
+                ),
+            )
+            self.loaded_agents.set_agent(self.current_agent_index - 1, deepcopy(save_agent).to(self.device))
+        self.agent = agent.to(self.device)  # No copy, most recent agent will continue to update
         self.current_agent_index += 1
 
     def update_winrate(self, opponent_id: int, learner_reward: int) -> None:
         self.winrate_buffer.update_winrate(opponent_id, learner_reward)
 
-    def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
+    def get_agent(self, agent_id: int) -> Agent:
+        """Loads an agent from the buffer of saved agents."""
 
-        # if the latest agent is sampled, return the training agent
-        if agent_id == self.current_agent_index and agent is not None:
-            return agent
-        
+        # If the latest agent is sampled, return the training agent
+        if agent_id == self.current_agent_index - 1:
+            return self.agent
+
         # TODO: add sampling from the distribution
         if self.loaded_agents[agent_id] is None:
             if len(self.loaded_agents) >= self.max_loaded_agents:
@@ -358,7 +367,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
                 agent_id,
                 f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
             )
-            self.loaded_agents.add_agent(
+            self.loaded_agents.set_agent(
                 agent_id,
                 joblib.load(
                     f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
@@ -367,34 +376,50 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
 
         return self.loaded_agents[agent_id]
 
-    def sample(self, k=1):
-        """
-        Samples k agents from the buffer of saved agents, prioritizing opponents with higher winrates.
-        Uninitialized agents are masked and not included in the distribution.
-        """
-        compute_loss_rate = lambda winrate: (1 - winrate)**self.entropy_parameter + self.smoothing_constant
+    def _sample_distribution(self):
+        def compute_loss_rate(winrate):
+            return (1 - winrate) ** self.entropy_parameter + self.smoothing_constant
 
-        available_agents = self.winrate_buffer.available_agents()
-        loss_rates = np.array([compute_loss_rate(self.winrate_buffer.get_winrate(i)) for i in available_agents])
+        # Number of saved agents up to max_agents
+        n_agents = min(self.current_agent_index, self.max_agents)
+        # Get loss rates for any saved agents
+        loss_rates = [compute_loss_rate(self.winrate_buffer.get_winrate(i)) for i in range(n_agents)]
+        # Set remaining probabilities to 0.0
+        loss_rates = np.array(loss_rates + [0.0 for _ in range(self.max_agents - n_agents)])
         sampling_distribution = loss_rates / loss_rates.sum()
 
         # if no agents are initialized, sample the first agent
         # this happens when the first agent has not yet received a reward
         if sampling_distribution.sum() == 0:
-            sampling_distribution = np.zeros(len(self.winrate_buffer.buffer))
+            sampling_distribution = np.zeros(self.max_agents)
             sampling_distribution[0] = 1.0
+
+        return sampling_distribution
+
+    def sample(self, k=1):
+        """
+        Samples k agents from the buffer of saved agents, prioritizing opponents with higher winrates.
+        Uninitialized agents are masked and not included in the distribution.
+        """
+        min_agent_id = max(0, self.current_agent_index - self.max_agents)
 
         return list(
             np.random.choice(
-                available_agents,
-                p=sampling_distribution,
+                np.arange(min_agent_id, min_agent_id + self.max_agents),
+                p=self._sample_distribution(),
                 size=k,
             )
         )
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """Log metrics for the curriculum."""
-        logs.append("winrate", self.history["winrate"])
-        logs.append("games_played", self.history["n_games"])
-        logs.append("stored_agents", len(self.loaded_agents))
-        super().log_metrics(writer, logs, step, log_n_tasks)
+        print("logging")
+        logs.append(("winrate", self.history["winrate"]))
+        logs.append(("games_played", self.history["n_games"]))
+        logs.append(("stored_agents", len(self.loaded_agents)))
+
+        for idx in range(log_n_tasks):
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_winrate", self.winrate_buffer.get_winrate(idx)))
+
+        return super().log_metrics(writer, logs, step, log_n_tasks)

@@ -79,3 +79,8 @@ class DualCurriculumWrapper():
             raise AttributeError(
                 f"'{self.__class__.__name__}' object has no attribute '{name}'"
             )
+
+    def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
+        new_logs = self.env_curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
+        new_logs += self.agent_curriculum.log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
+        return new_logs

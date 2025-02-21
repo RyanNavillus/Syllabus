@@ -200,6 +200,6 @@ class Curriculum:
                     writer.add_scalar(name, prob, step)
         except Exception as e:
             # No need to crash over logging :)
-            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error {e}", stacklevel=2)
+            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error: \n{e.message}", stacklevel=2)
 
         return logs
