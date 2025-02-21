@@ -281,10 +281,6 @@ class FictitiousSelfPlay(Curriculum):
         logs.append(("games_played", self.history["n_games"]))
         logs.append(("stored_agents", len(self.loaded_agents)))
 
-        for idx in range(log_n_tasks):
-            name = self.task_names(self.tasks[idx], idx)
-            logs.append((f"curriculum/{name}_winrate", self.winrate_buffer.get_winrate(idx)))
-
         return super().log_metrics(writer, logs, step, log_n_tasks)
 
 
