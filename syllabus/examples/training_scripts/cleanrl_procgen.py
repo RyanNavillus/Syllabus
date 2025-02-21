@@ -112,6 +112,8 @@ def parse_args():
     # Learning Progress arguments
     parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
                         help="the alpha parameter for the EMA")
+    parser.add_argument("--lp-ptheta", type=float, default=0.1,
+                        help="the ptheta parameter for reweighting")
 
     # Learnability arguments
     parser.add_argument("--learnability-top-k", type=int, default=10,
@@ -319,7 +321,7 @@ if __name__ == "__main__":
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
             lp_eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
             curriculum = LearningProgress(
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
@@ -328,7 +330,8 @@ if __name__ == "__main__":
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
-                ema_alpha=args.lp_ema_alpha
+                ema_alpha=args.lp_ema_alpha,
+                p_theta=args.lp_ptheta
             )
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
@@ -336,7 +339,7 @@ if __name__ == "__main__":
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
             lp_eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
             curriculum = Learnability(
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
@@ -417,7 +420,7 @@ if __name__ == "__main__":
     num_updates = args.total_timesteps // args.batch_size
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
-
+    torch.autograd.set_detect_anomaly(True)
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
@@ -617,5 +620,7 @@ if __name__ == "__main__":
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
+    if args.curriculum:
+        curriculum.stop()
     envs.close()
     writer.close()
