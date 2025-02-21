@@ -618,16 +618,8 @@ if __name__ == "__main__":
                     agent_obs, opp_obs = split_batch(next_obs)
 
                     for task in set(agent_tasks):
-                        if latest_agent_task < task:
-                            latest_agent_task = task
-
                         # iterate over agent_tasks
-                        # if the agent task points to the latest agent
-                        # load the protagonist agent (pure self-play)
-                        if task == latest_agent_task:
-                            selected_opp = agent
-                        else: 
-                            selected_opp = curriculum.get_agent(int(task))
+                        selected_opp = curriculum.get_agent(int(task), agent)
 
                         # create batches for each task
                         agent_task_indices = np.where(agent_tasks == task)[0]

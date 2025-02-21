@@ -227,11 +227,32 @@ class FictitiousSelfPlay(Curriculum):
         )
         agent = agent.to(self.device)
         self.loaded_agents.add_agent(self.current_agent_index, agent)
+        self.agent = deepcopy(agent).to(self.device)
         self.current_agent_index += 1
 
-    def get_agent(self, agent_id: int) -> Agent:
+    def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
         """Loads an agent from the buffer of saved agents."""
-        return self.loaded_agents.get_agent(agent_id)
+
+        # if the latest agent is sampled, return the training agent
+        if agent_id == self.current_agent_index and agent is not None:
+            return agent
+        
+        if self.loaded_agents[agent_id] is None:
+            if len(self.loaded_agents) >= self.max_loaded_agents:
+                pass
+            print(
+                "get agent",
+                agent_id,
+                f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl",
+            )
+            self.loaded_agents.add_agent(
+                agent_id,
+                joblib.load(
+                    f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_{agent_id}.pkl"
+                ).to(self.device),
+            )
+
+        return self.loaded_agents[agent_id]
 
     def _sample_distribution(self) -> List[float]:
         # Number of saved agents up to max_agents
@@ -280,6 +301,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         self.device = device
         self.storage_path = storage_path
         self.seed = seed
+
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path, exist_ok=True)
 
@@ -314,17 +336,19 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
             ),
         )
         agent = agent.to(self.device)
+        self.agent = deepcopy(agent).to(self.device)
         self.loaded_agents.add_agent(self.current_agent_index, agent)
         self.current_agent_index += 1
 
     def update_winrate(self, opponent_id: int, learner_reward: int) -> None:
         self.winrate_buffer.update_winrate(opponent_id, learner_reward)
 
-    def get_agent(self, agent_id: int) -> Agent:
-        """
-        Samples an agent id from the softmax distribution induced by winrates
-        then loads the selected agent from the buffer of saved agents.
-        """
+    def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
+        
+        # if the latest agent is sampled, return the training agent
+        if agent_id == self.current_agent_index and agent is not None:
+            return agent
+        
         # TODO: add sampling from the distribution
         if self.loaded_agents[agent_id] is None:
             if len(self.loaded_agents) >= self.max_loaded_agents:
