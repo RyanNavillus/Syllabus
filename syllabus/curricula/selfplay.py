@@ -143,7 +143,7 @@ class SelfPlay(Curriculum):
         self.agent = deepcopy(agent).to(self.device)
         return 0
 
-    def get_agent(self, agent_id: int) -> Agent:
+    def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
         assert agent_id == 0, (
             f"Self play only tracks the current agent."
             f"Expected agent id 0, got {agent_id}"
@@ -344,7 +344,7 @@ class PrioritizedFictitiousSelfPlay(Curriculum):
         self.winrate_buffer.update_winrate(opponent_id, learner_reward)
 
     def get_agent(self, agent_id: int, agent:Agent=None) -> Agent:
-        
+
         # if the latest agent is sampled, return the training agent
         if agent_id == self.current_agent_index and agent is not None:
             return agent
