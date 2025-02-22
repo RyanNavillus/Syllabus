@@ -118,6 +118,9 @@ class SelfPlay(Curriculum):
         task_space: DiscreteTaskSpace,
         agent: Agent,
         device: str,
+        save_agents: bool = False,
+        storage_path: str = None,
+        seed: int = 0,
     ):
         """Initialize the self play curriculum.
 
@@ -131,15 +134,35 @@ class SelfPlay(Curriculum):
         # ), "Self play only supports DiscreteTaskSpaces with a single element."
         super().__init__(task_space)
         self.device = device
-        self.agent = agent
+        self.agent = None
         self.task_space = DiscreteTaskSpace(1)  # SelfPlay can only return agent_id = 0
         self.history = {
             "winrate": 0,
             "n_games": 0,
         }
+        self.save_agents = save_agents
+        if save_agents:
+            self.current_agent_index = 0
+            assert storage_path is not None, "storage_path must be provided to save agents"
+            self.storage_path = storage_path
+            self.seed = seed
+            if not os.path.exists(self.storage_path):
+                os.makedirs(self.storage_path, exist_ok=True)
+
+        self.add_agent(agent)
 
     def add_agent(self, agent: Agent) -> int:
-        self.agent = agent
+        if self.save_agents and self.agent is not None:
+            save_agent = self.agent.to("cpu")
+            joblib.dump(
+                save_agent,
+                filename=(
+                    f"{self.storage_path}/{self.__class__.__name__}_{self.seed}_agent_checkpoint_"
+                    f"{self.current_agent_index-1}.pkl"
+                ),
+            )
+        self.agent = agent.to(self.device)
+        self.current_agent_index += 1
         return 0
 
     def get_agent(self, agent_id: int, agent: Agent = None) -> Agent:
