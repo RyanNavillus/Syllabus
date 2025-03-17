@@ -1,7 +1,7 @@
 import math
 import random
-import time
 import warnings
+from itertools import groupby
 from typing import Any, List, Union
 
 import gymnasium as gym
@@ -12,6 +12,16 @@ from scipy.stats import norm
 from syllabus.core import Curriculum
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace
 from syllabus.utils import UsageError
+
+
+def compress_ranges(nums):
+    nums = sorted(set(nums))
+    ranges = []
+    for _, group in groupby(enumerate(nums), lambda x: x[1] - x[0]):
+        group = list(group)
+        start, end = group[0][1], group[-1][1]
+        ranges.append(f"{start}" if start == end else f"{start}-{end}")
+    return ", ".join(ranges)
 
 
 class LearningProgress(Curriculum):
@@ -176,7 +186,7 @@ class LearningProgress(Curriculum):
         # Warn user if any task_counts are 0
         if np.any(task_counts == 0):
             warnings.warn(
-                f"Tasks {np.where(task_counts == 0)[0].tolist()} were not attempted during evaluation. Consider increasing eval episodes.")
+                f"Tasks {compress_ranges(np.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
 
         task_counts = np.maximum(task_counts, np.ones_like(task_counts))
         task_success_rates = np.divide(task_successes, task_counts)
@@ -381,9 +391,44 @@ class StratifiedLearningProgress(LearningProgress):
         for strata in self.task_space.strata:
             task_idx = np.argsort(metric[np.array(list(strata))])[-1]
             selection_weight[strata[task_idx]] = 1.0
+
         # Scale and normalize
         stratified_dist = lp_dist * selection_weight
         stratified_dist = stratified_dist / np.sum(stratified_dist)
+        return stratified_dist
+
+
+class StratifiedDomainRandomization(LearningProgress):
+    def __init__(self, *args, selection_metric="success", **kwargs):
+        super().__init__(*args, **kwargs)
+        assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
+        assert selection_metric in ["success", "progress"]
+        self.selection_metric = selection_metric
+
+    def _sample_distribution(self) -> List[float]:
+        if not self._stale_dist:
+            # No changes since distribution was last computed
+            return self.task_dist
+
+        if self.task_rates is None:
+            self.eval_and_update(self._baseline_eval_eps)
+
+        # Prioritize tasks by learning progress first
+        uni_dist = np.ones(self.num_tasks) / self.num_tasks
+        selection_weight = np.ones(len(uni_dist)) * 0.0001
+        metric = self.task_rates if self.selection_metric == "success" else uni_dist
+
+        # Find the highest success rate task in each strata
+        for strata in self.task_space.strata:
+            task_idx = np.argsort(metric[np.array(list(strata))])[-1]
+            selection_weight[strata[task_idx]] = 1.0
+
+        # Scale and normalize
+        stratified_dist = uni_dist * selection_weight
+        stratified_dist = stratified_dist / np.sum(stratified_dist)
+
+        self.task_dist = stratified_dist
+        self._stale_dist = False
         return stratified_dist
 
 

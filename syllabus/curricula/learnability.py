@@ -348,6 +348,7 @@ class StratifiedLearnability(Learnability):
         for strata in self.task_space.strata:
             task_idx = np.argsort(metric[np.array(list(strata))])[-1]
             selection_weight[strata[task_idx]] = 1.0
+
         # Scale and normalize
         stratified_dist = lp_dist * selection_weight
         stratified_dist = stratified_dist / np.sum(stratified_dist)
