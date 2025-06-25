@@ -374,6 +374,190 @@ class LearningProgress(Curriculum):
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
 
+class OnlineLearningProgress(Curriculum):
+    """
+    Provides an interface for tracking success rates of discrete tasks and sampling tasks
+    based on their success rate using the method from https://arxiv.org/abs/2106.14876.
+    TODO: Support task spaces aside from Discrete
+    """
+
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, multiagent=False, uniform_prob=0.25, **kwargs):
+        super().__init__(*args, **kwargs)
+        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None or create_env is not None, "One of create_env and evaluator, eval_envs and evaluator, or eval_fn must be provided."
+        if recurrent_method is not None:
+            assert recurrent_method in ["lstm", "rnn"], f"Recurrent method {recurrent_method} not supported."
+            assert recurrent_size is not None, "Recurrent size must be provided if recurrent method is set."
+
+        self.ema_alpha = ema_alpha
+        self.p_theta = p_theta
+        self.recurrent_size = recurrent_size
+        self.recurrent_method = recurrent_method
+        self.eval_interval = eval_interval
+        assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
+        self.eval_interval_steps = eval_interval_steps
+        self.eval_eps = eval_eps
+        self.completed_episodes = 0
+        self.current_steps = 0
+        self.normalize_success = normalize_success
+        self.continuous_progress = continuous_progress
+        self.normalized_task_success_rates = None
+        self.uniform_prob = uniform_prob
+        self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.int_)
+        self.current_task_counts = np.zeros(self.num_tasks, dtype=np.int_)
+
+        assert isinstance(
+            self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
+        ), f"LearningProgressCurriculum only supports Discrete and MultiDiscrete task spaces. Got {self.task_space.__class__.__name__}."
+        self.random_baseline = None
+        self._p_fast = None
+        self._p_slow = None
+        self._p_true = None
+        self.task_rates = None
+        self.task_dist = None
+        self._stale_dist = True
+        self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
+
+    def eval_and_update(self, eval_eps=1):
+        safe_task_counts = np.maximum(
+            self.current_task_counts, np.ones_like(self.current_task_counts)
+        )
+        task_success_rates = self.current_task_success_rates / safe_task_counts
+
+        if self.random_baseline is None:
+            # Assume that any perfect success rate is actually 75% due to evaluation precision.
+            # Prevents NaN probabilities and prevents task from being completely ignored.
+            high_success_idxs = np.where(task_success_rates > 0.75)[0]
+            high_success_rates = task_success_rates[high_success_idxs]
+            if len(high_success_idxs) > 0:
+                warnings.warn(
+                    f"Tasks {high_success_idxs} had very high success rates {high_success_rates} for random baseline. Consider removing them from the training set of tasks.")
+            self.random_baseline = np.minimum(task_success_rates, 0.75)
+
+        # Update task scores
+        self.normalized_task_success_rates = np.maximum(
+            task_success_rates - self.random_baseline, np.zeros(task_success_rates.shape)) / (1.0 - self.random_baseline)
+
+        task_rates = self.normalized_task_success_rates if self.normalize_success else task_success_rates
+
+        if self._p_fast is None:
+            # Initial values
+            self._p_fast = task_rates
+            self._p_slow = task_rates
+            self._p_true = task_success_rates
+        else:
+            # Exponential moving average
+            self._p_fast = (task_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
+            self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+            self._p_true = (task_success_rates * self.ema_alpha) + (self._p_true * (1.0 - self.ema_alpha))
+
+        self.task_rates = task_success_rates    # Used for logging and OMNI
+        self._stale_dist = True
+        self.current_task_success_rates = np.zeros(self.num_tasks)
+        self.current_task_counts = np.zeros(self.num_tasks)
+        self.task_dist = None
+        return task_success_rates
+
+    def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
+        """
+        Update the success rate for the given task using a fast and slow exponential moving average.
+        """
+        print(f"Updating task {task} with progress {progress}")
+        self.current_task_success_rates[task] += math.floor(max(progress, 0.0))
+        self.current_task_counts[task] += 1
+        safe_task_counts = np.maximum(
+            self.current_task_counts, np.ones_like(self.current_task_counts)
+        )
+        task_success_rates = self.current_task_success_rates / safe_task_counts
+        print(task_success_rates)
+        super().update_task_progress(task, progress)
+
+    def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
+        self.completed_episodes += 1
+        self.current_steps += length
+        if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
+            self.eval_and_update(eval_eps=self.eval_eps)
+        if self.eval_interval_steps is not None and self.current_steps > self.eval_interval_steps:
+            self.eval_and_update(eval_eps=self.eval_eps)
+            self.current_steps = 0
+
+    def _learning_progress(self, reweight: bool = True) -> float:
+        """
+        Compute the learning progress metric for the given task.
+        """
+        fast = self._reweight(self._p_fast) if reweight else self._p_fast
+        slow = self._reweight(self._p_slow) if reweight else self._p_slow
+
+        return abs(fast - slow)
+
+    def _reweight(self, p: np.ndarray) -> float:
+        """
+        Reweight the given success rate using the reweighting function from the paper.
+        """
+        numerator = p * (1.0 - self.p_theta)
+        denominator = p + self.p_theta * (1.0 - 2.0 * p)
+        return numerator / denominator
+
+    def _sigmoid(self, x: np.ndarray):
+        """ Sigmoid function for reweighting the learning progress."""
+        return 1 / (1 + np.exp(-x))
+
+    def _sample_distribution(self) -> List[float]:
+        """ Return sampling distribution over the task space based on the learning progress."""
+        if not self._stale_dist:
+            # No changes since distribution was last computed
+            return self.task_dist
+
+        if self.task_rates is None:
+            self.eval_and_update(self._baseline_eval_eps)
+
+        task_dist = np.ones(self.num_tasks) / self.num_tasks
+
+        learning_progress = self._learning_progress()
+        posidxs = [i for i, lp in enumerate(learning_progress) if lp > 0 or self._p_true[i] > 0]
+        any_progress = len(posidxs) > 0
+
+        subprobs = learning_progress[posidxs] if any_progress else learning_progress
+        std = np.std(subprobs)
+        subprobs = (subprobs - np.mean(subprobs)) / (std if std else 1)  # z-score
+        subprobs = self._sigmoid(subprobs)  # sigmoid
+        subprobs = subprobs / np.sum(subprobs)  # normalize
+        if any_progress:
+            # If some tasks have nonzero progress, zero out the rest
+            task_dist = np.zeros(len(learning_progress))
+            task_dist[posidxs] = subprobs
+        else:
+            # If all tasks have 0 progress, return uniform distribution
+            task_dist = subprobs
+
+        # Mix with uniform distribution
+        task_dist = (1 - self.uniform_prob) * task_dist + self.uniform_prob * (np.ones(self.num_tasks) / self.num_tasks)
+        # Ensure the distribution sums to 1
+        task_dist = task_dist / np.sum(task_dist)
+        print(task_dist)
+
+        self.task_dist = task_dist
+        self._stale_dist = False
+        return task_dist
+
+    def log_metrics(self, writer, logs, step, log_n_tasks=1):
+        logs = [] if logs is None else logs
+        learning_progresses = self._learning_progress()
+        logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
+        if self.task_rates is not None:
+            logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
+
+        tasks = range(self.num_tasks)
+        if self.num_tasks > log_n_tasks and log_n_tasks != -1:
+            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.", stacklevel=2)
+            tasks = tasks[:log_n_tasks]
+
+        for idx in tasks:
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
+            logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
+
+
 class StratifiedLearningProgress(LearningProgress):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
