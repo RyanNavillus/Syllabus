@@ -381,25 +381,17 @@ class OnlineLearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, multiagent=False, uniform_prob=0.25, **kwargs):
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, **kwargs):
         super().__init__(*args, **kwargs)
-        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None or create_env is not None, "One of create_env and evaluator, eval_envs and evaluator, or eval_fn must be provided."
-        if recurrent_method is not None:
-            assert recurrent_method in ["lstm", "rnn"], f"Recurrent method {recurrent_method} not supported."
-            assert recurrent_size is not None, "Recurrent size must be provided if recurrent method is set."
 
         self.ema_alpha = ema_alpha
         self.p_theta = p_theta
-        self.recurrent_size = recurrent_size
-        self.recurrent_method = recurrent_method
         self.eval_interval = eval_interval
         assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
-        self.eval_eps = eval_eps
         self.completed_episodes = 0
         self.current_steps = 0
         self.normalize_success = normalize_success
-        self.continuous_progress = continuous_progress
         self.normalized_task_success_rates = None
         self.uniform_prob = uniform_prob
         self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.int_)
@@ -415,9 +407,8 @@ class OnlineLearningProgress(Curriculum):
         self.task_rates = None
         self.task_dist = None
         self._stale_dist = True
-        self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
-    def eval_and_update(self, eval_eps=1):
+    def eval_and_update(self):
         safe_task_counts = np.maximum(
             self.current_task_counts, np.ones_like(self.current_task_counts)
         )
@@ -461,23 +452,17 @@ class OnlineLearningProgress(Curriculum):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
-        print(f"Updating task {task} with progress {progress}")
         self.current_task_success_rates[task] += math.floor(max(progress, 0.0))
         self.current_task_counts[task] += 1
-        safe_task_counts = np.maximum(
-            self.current_task_counts, np.ones_like(self.current_task_counts)
-        )
-        task_success_rates = self.current_task_success_rates / safe_task_counts
-        print(task_success_rates)
         super().update_task_progress(task, progress)
 
     def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
         self.current_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
-            self.eval_and_update(eval_eps=self.eval_eps)
+            self.eval_and_update()
         if self.eval_interval_steps is not None and self.current_steps > self.eval_interval_steps:
-            self.eval_and_update(eval_eps=self.eval_eps)
+            self.eval_and_update()
             self.current_steps = 0
 
     def _learning_progress(self, reweight: bool = True) -> float:
@@ -508,7 +493,7 @@ class OnlineLearningProgress(Curriculum):
             return self.task_dist
 
         if self.task_rates is None:
-            self.eval_and_update(self._baseline_eval_eps)
+            self.eval_and_update()
 
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
@@ -533,7 +518,6 @@ class OnlineLearningProgress(Curriculum):
         task_dist = (1 - self.uniform_prob) * task_dist + self.uniform_prob * (np.ones(self.num_tasks) / self.num_tasks)
         # Ensure the distribution sums to 1
         task_dist = task_dist / np.sum(task_dist)
-        print(task_dist)
 
         self.task_dist = task_dist
         self._stale_dist = False
