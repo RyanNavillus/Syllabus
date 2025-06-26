@@ -381,7 +381,7 @@ class OnlineLearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, **kwargs):
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, save_last=False**kwargs):
         super().__init__(*args, **kwargs)
 
         self.ema_alpha = ema_alpha
@@ -394,6 +394,7 @@ class OnlineLearningProgress(Curriculum):
         self.normalize_success = normalize_success
         self.normalized_task_success_rates = None
         self.uniform_prob = uniform_prob
+        self.save_last = save_last
         self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.int_)
         self.current_task_counts = np.zeros(self.num_tasks, dtype=np.int_)
 
@@ -443,8 +444,13 @@ class OnlineLearningProgress(Curriculum):
 
         self.task_rates = task_success_rates    # Used for logging and OMNI
         self._stale_dist = True
-        self.current_task_success_rates = np.zeros(self.num_tasks)
-        self.current_task_counts = np.zeros(self.num_tasks)
+        if self.save_last:
+            # Save the last task success rates for the next evaluation
+            self.current_task_success_rates = task_success_rates
+            self.current_task_counts = np.ones(self.num_tasks, dtype=np.int_)
+        else:
+            self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.float32)
+            self.current_task_counts = np.zeros(self.num_tasks, dtype=np.int_)
         self.task_dist = None
         return task_success_rates
 
