@@ -59,7 +59,16 @@ class Evaluator:
                 self.agent = copy.deepcopy(agent).to(self.device)
                 agent.to("cuda")
 
+<<<<<<< Updated upstream
         else:
+=======
+        if copy_agent and simple_copy:
+            agent.to(self.device)
+            self.agent = copy.deepcopy(agent).to(self.device).detach()
+            agent.to("cuda")
+
+        if not simple_copy:
+>>>>>>> Stashed changes
             self.agent = self._agent_reference
 
     def _update_agent(self):
