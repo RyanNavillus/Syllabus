@@ -381,7 +381,7 @@ class OnlineLearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, save_last=False**kwargs):
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, save_last=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.ema_alpha = ema_alpha
