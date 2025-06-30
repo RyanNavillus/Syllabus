@@ -1,7 +1,7 @@
 import sys
 
 from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
-from .learning_progress import LearningProgress, OnlineLearningProgress, StratifiedLearningProgress, StratifiedDomainRandomization
+from .learning_progress import LearningProgress, OnlineLearningProgress, StratifiedLearningProgress, StratifiedOnlineLearningProgress, StratifiedDomainRandomization
 from .learnability import Learnability, StratifiedLearnability
 from .omni import OMNI, OMNILearnability, interestingness_from_json
 from .constant import Constant

@@ -572,6 +572,30 @@ class StratifiedLearningProgress(LearningProgress):
         return stratified_dist
 
 
+class StratifiedOnlineLearningProgress(OnlineLearningProgress):
+    def __init__(self, *args, selection_metric="success", **kwargs):
+        super().__init__(*args, **kwargs)
+        assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
+        assert selection_metric in ["success", "progress"]
+        self.selection_metric = selection_metric
+
+    def _sample_distribution(self) -> List[float]:
+        # Prioritize tasks by learning progress first
+        lp_dist = super()._sample_distribution()
+        selection_weight = np.ones(len(lp_dist)) * 0.0001
+        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+
+        # Find the highest success rate task in each strata
+        for strata in self.task_space.strata:
+            task_idx = np.argsort(metric[np.array(list(strata))])[-1]
+            selection_weight[strata[task_idx]] = 1.0
+
+        # Scale and normalize
+        stratified_dist = lp_dist * selection_weight
+        stratified_dist = stratified_dist / np.sum(stratified_dist)
+        return stratified_dist
+
+
 class StratifiedDomainRandomization(LearningProgress):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
