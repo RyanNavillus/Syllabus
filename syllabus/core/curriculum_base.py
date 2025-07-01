@@ -221,12 +221,14 @@ class Curriculum:
 
         try:
             task_dist = self._sample_distribution()
+            task_dist = np.nan_to_num(task_dist)  # Convert NaN to 0
+            log_task_dist = task_dist
             if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
                 warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
-                task_dist = task_dist[:log_n_tasks]
+                log_task_dist = task_dist[:log_n_tasks]
 
             # Add basic logs
-            for idx, prob in enumerate(task_dist):
+            for idx, prob in enumerate(log_task_dist):
                 name = self.task_names(self.tasks[idx], idx)
                 logs.append((f"curriculum/{name}_prob", prob))
 
@@ -249,8 +251,11 @@ class Curriculum:
                 key=lambda x: x[1],
                 reverse=True
             )[:10]
+            print(self.tasks)
+            print(task_dist)
             top_10_tasks, top_10_probs = zip(*top_10)
-            print(top_10_tasks, top_10_probs)
+            print(top_10_tasks)
+            print(top_10_probs)
             # Log top tasks to wandb table
             try:
                 import wandb
