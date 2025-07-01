@@ -1,12 +1,12 @@
 import warnings
 from typing import Any, Callable, Dict, List, Tuple, TypeVar, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from syllabus.task_space import TaskSpace
 
 from .stat_recorder import StatRecorder
-
 
 Agent = TypeVar("Agent")
 
@@ -33,6 +33,13 @@ class Curriculum:
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.", stacklevel=2)
+
+        # Log wandb table
+        try:
+            import wandb
+            self.wandb_table = wandb.Table(columns=["global_step", "Top tasks", "Probabilities"], log_mode='MUTABLE')
+        except ImportError:
+            pass
 
     @property
     def requires_step_updates(self) -> bool:
@@ -162,7 +169,38 @@ class Curriculum:
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
-    def log_metrics(self, writer, logs: List[Dict], step: int = None, log_n_tasks: int = 1):
+    def plot_pie_chart(self, task_dist, log_n_tasks: int = 1):
+        # Identify tasks above the 1% threshold
+        threshold = 0.01
+        eligible_indices = [i for i, p in enumerate(task_dist) if p > threshold]
+
+        # Sort eligible tasks by probability, descending
+        sorted_idx = sorted(
+            eligible_indices,
+            key=lambda i: task_dist[i],
+            reverse=True
+        )
+
+        top_indices = sorted_idx[:log_n_tasks] if log_n_tasks != -1 else sorted_idx
+
+        # Gather the top-n probs and corresponding labels
+        top_probs = [task_dist[i] for i in top_indices]
+        top_labels = [self.task_names(self.tasks[i], i) for i in top_indices]
+
+        # Compute other probability
+        other_prob = max(0.0, 1.0 - sum(top_probs))
+        if other_prob > 0:
+            top_probs.append(other_prob)
+            top_labels.append("Other")
+
+        # Generate task distribution pie chart
+        fig, ax = plt.subplots()
+        ax.pie(top_probs, labels=top_labels, autopct="%1.1f%%", startangle=0)
+        ax.set_title("Task Sampling Distribution")
+        plt.savefig('tmp_syllabus_fig.png')
+        return fig
+
+    def log_metrics(self, writer, logs: List[Dict], step: int = None, log_n_tasks: int = -1):
         """Log the task distribution to the provided writer.
 
         :param writer: Tensorboard summary writer or wandb object
@@ -192,14 +230,42 @@ class Curriculum:
                 name = self.task_names(self.tasks[idx], idx)
                 logs.append((f"curriculum/{name}_prob", prob))
 
+            # Count task with nonzero probability
+            nonzero_probs = np.sum(np.nonzero(task_dist))
+            logs.append(("curriculum/nonzero_probability_tasks", nonzero_probs))
+
+            # Log entropy
+            logp = np.log(task_dist)
+            entropy = np.sum(-task_dist * logp)
+            logs.append(("curriculum/entropy", entropy))
+
+            # Generate task distribution pie chart
+            self.plot_pie_chart(task_dist, log_n_tasks=log_n_tasks)
+            wandb.log({"curriculum/task_distribution": wandb.Image("tmp_syllabus_fig.png"), "global_step": step})
+
+            # Get top tasks
+            top_10 = sorted(
+                zip(self.tasks, task_dist),
+                key=lambda x: x[1],
+                reverse=True
+            )[:10]
+            top_10_tasks, top_10_probs = zip(*top_10)
+            print(top_10_tasks, top_10_probs)
+            # Log top tasks to wandb table
+            try:
+                import wandb
+                self.wandb_table.add_data(step, "\n".join(top_10_tasks), "\n".join([f"{t:.3f}" for t in top_10_probs]))
+                wandb.log({"curriculum/top_tasks": self.wandb_table, "global_step": step})
+            except ImportError:
+                pass
+
             # Write logs
             for name, prob in logs:
                 if use_wandb:
-                    writer.log({name: prob, "global_step": step})
+                    writer.log({name: prob})
                 else:
                     writer.add_scalar(name, prob, step)
         except Exception as e:
             # No need to crash over logging :)
-            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error {e}", stacklevel=2)
-
+            warnings.warn(f"Failed to log curriculum stats to wandb. Ignoring error: {e}", stacklevel=2)
         return logs

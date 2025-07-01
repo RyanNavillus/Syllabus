@@ -355,7 +355,7 @@ class LearningProgress(Curriculum):
         self._stale_dist = False
         return task_dist
 
-    def log_metrics(self, writer, logs, step, log_n_tasks=1):
+    def log_metrics(self, writer, logs, step, log_n_tasks=-1):
         logs = [] if logs is None else logs
         learning_progresses = self._learning_progress()
         logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
@@ -529,7 +529,7 @@ class OnlineLearningProgress(Curriculum):
         self._stale_dist = False
         return task_dist
 
-    def log_metrics(self, writer, logs, step, log_n_tasks=1):
+    def log_metrics(self, writer, logs, step, log_n_tasks=-1):
         logs = [] if logs is None else logs
         learning_progresses = self._learning_progress()
         logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
