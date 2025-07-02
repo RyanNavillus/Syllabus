@@ -233,12 +233,13 @@ class Curriculum:
                 logs.append((f"curriculum/{name}_prob", prob))
 
             # Count task with nonzero probability
-            nonzero_probs = np.sum(np.nonzero(task_dist))
+            nonzero_probs = np.count_nonzero(task_dist)
             logs.append(("curriculum/nonzero_probability_tasks", nonzero_probs))
 
             # Log entropy
-            logp = np.log(task_dist)
-            entropy = np.sum(-task_dist * logp)
+            entropy_task_dist = np.where(task_dist > 0, task_dist, 1e-5)  # Avoid log(0)
+            logp = np.log(entropy_task_dist)
+            entropy = np.sum(-entropy_task_dist * logp)
             logs.append(("curriculum/entropy", entropy))
 
             # Generate task distribution pie chart
@@ -251,11 +252,8 @@ class Curriculum:
                 key=lambda x: x[1],
                 reverse=True
             )[:10]
-            print(self.tasks)
-            print(task_dist)
             top_10_tasks, top_10_probs = zip(*top_10)
-            print(top_10_tasks)
-            print(top_10_probs)
+
             # Log top tasks to wandb table
             try:
                 import wandb

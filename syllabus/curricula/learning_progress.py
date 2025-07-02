@@ -558,7 +558,7 @@ class StratifiedLearningProgress(LearningProgress):
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
-        selection_weight = np.ones(len(lp_dist)) * 0.0001
+        selection_weight = np.ones(len(lp_dist)) * 0.001
         metric = self.task_rates if self.selection_metric == "success" else lp_dist
 
         # Find the highest success rate task in each strata
@@ -582,7 +582,7 @@ class StratifiedOnlineLearningProgress(OnlineLearningProgress):
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
-        selection_weight = np.ones(len(lp_dist)) * 0.0001
+        selection_weight = np.ones(len(lp_dist)) * 0.001
         metric = self.task_rates if self.selection_metric == "success" else lp_dist
 
         # Find the highest success rate task in each strata
