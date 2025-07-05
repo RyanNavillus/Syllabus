@@ -120,6 +120,9 @@ class TaskSampler:
 
         self._last_score = 0.0
 
+        # Offline evaluation
+        self.offline_queue = []
+
     def _init_task_index(self, tasks):
         if tasks:
             self.tasks = np.array(tasks, dtype=np.int64)
@@ -549,33 +552,29 @@ class TaskSampler:
             self.task_staleness[selected_idx] = 0
 
     def sample_replay_decision(self):
+        proportion_seen = self._proportion_filled
         if self.sample_full_distribution:
-            proportion_filled = self._proportion_filled
             if self.task_buffer_size > 0:
                 if self.replay_schedule == "fixed":
-                    if proportion_filled >= self.rho and np.random.rand() < self.nu:
+                    if proportion_seen >= self.rho and np.random.rand() < self.nu:
                         return True
                     return False
                 else:
-                    if proportion_filled >= self.rho and np.random.rand() < min(proportion_filled, self.nu):
+                    if proportion_seen >= self.rho and np.random.rand() < min(proportion_seen, self.nu):
                         return True
                     return False
             return False
         elif self.replay_schedule == "fixed":
-            proportion_seen = self._proportion_filled
+            # Sample random level until we have seen enough tasks
             if proportion_seen >= self.rho:
-                if np.random.rand() < self.nu or not proportion_seen < 1.0:
+                # Sample replay level with fixed replay_prob OR if all levels seen
+                if np.random.rand() < self.nu or proportion_seen >= 1.0:
                     return True
             return False
         else:
-            proportion_seen = self._proportion_filled
             if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
                 return True
             return False
-
-    @property
-    def is_warm(self):
-        return self._proportion_filled >= self.rho
 
     def observe_external_unseen_sample(self, tasks, solvable=None):
         for i, t_ in enumerate(tasks):
@@ -638,7 +637,15 @@ class TaskSampler:
                 return int(self.tasks[task_idx])
 
         replay_decision = self.sample_replay_decision()
-        if replay_decision:
+        print(f"Sampling replay decision {self._proportion_filled}")
+
+        # If we have seen enough tasks to sample a replay level, stop training on them and only evaluate
+        if self._proportion_filled >= self.rho:
+            # Add random levels to an evaluation queue until we sample a replay level
+            while not replay_decision:
+                self.offline_queue.append(self._sample_unseen_level())
+                replay_decision = self.sample_replay_decision()
+                print("Replay decision:", "Replay" if replay_decision else "Random")
             return self._sample_replay_level()
         else:
             return self._sample_unseen_level()
