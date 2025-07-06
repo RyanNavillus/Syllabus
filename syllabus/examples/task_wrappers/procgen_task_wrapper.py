@@ -28,6 +28,7 @@ class ProcgenTaskWrapper(TaskWrapper):
     """
     This wrapper allows you to change the task of an NLE environment.
     """
+
     def __init__(self, env: gym.Env, env_id, seed=0):
         super().__init__(env)
         self.task_space = TaskSpace(gym.spaces.Discrete(200), list(np.arange(0, 200)))
@@ -53,8 +54,13 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.episode_return = 0.0
 
         # Change task if new one is provided
+        # TODO: Move logic to TaskWrapper and refactor all task wrapper examples
+        options = kwargs.pop("options", None)   # Gym environments don't support options
+        seed = kwargs.get("seed", None)
         if new_task is not None:
             self.change_task(new_task)
+        elif options is not None and "seed_task" in options and seed is not None:
+            self.change_task(seed)
 
         obs, info = self.env.reset(**kwargs)
         return self.observation(obs), info
@@ -65,6 +71,7 @@ class ProcgenTaskWrapper(TaskWrapper):
 
         Ignores requests for unknown tasks or task changes outside of a reset.
         """
+        print("New task", new_task)
         seed = int(new_task)
         self.task = seed
         self.seed(seed)

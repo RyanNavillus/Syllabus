@@ -216,11 +216,8 @@ class PrioritizedLevelReplay(Curriculum):
         gamma: float = 0.999,
         gae_lambda: float = 0.95,
         suppress_usage_warnings=False,
-        get_value=null,
-        get_action_log_dist=null,
         robust_plr: bool = False,  # Option to use RobustPLR
         eval_envs=None,
-        action_value_fn=None,
         evaluator: Evaluator = None,
         **curriculum_kwargs,
     ):
@@ -250,10 +247,9 @@ class PrioritizedLevelReplay(Curriculum):
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._robust_plr = robust_plr
         self._eval_envs = eval_envs
-        self.action_value_fn = action_value_fn
 
-        self._task_sampler = TaskSampler(self.tasks, self._num_steps, task_space=task_space, action_space=action_space,
-                                         robust_plr=robust_plr, eval_envs=eval_envs, action_value_fn=action_value_fn, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(self.tasks, self._num_steps, num_processes=self._num_processes, task_space=task_space,
+                                         action_space=action_space, robust_plr=robust_plr, evaluator=evaluator, **task_sampler_kwargs_dict)
 
         self._rollouts = RolloutStorage(
             self._num_steps,

@@ -133,6 +133,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, n
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
 
         if task_wrapper or curriculum is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
@@ -151,42 +152,37 @@ def make_env(env_id, seed, task_wrapper=False, curriculum=None, start_level=0, n
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    # TODO: Replace
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
 def level_replay_evaluate(
-    env_name,
-    policy,
-    num_episodes,
-    device,
+    env_name: str,
+    evaluator: Evaluator,
+    num_episodes: int,
+    device: torch.device,
     num_levels=0
 ):
-    policy.eval()
-
-    eval_envs = ProcgenEnv(
-        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy", paint_vel_info=False
+    eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(
+                env_name,
+                args.seed + i,
+                num_levels=num_levels,
+                start_level=0
+            )
+            for i in range(num_episodes)
+        ]
     )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
-    eval_obs, _ = eval_envs.reset()
-    eval_episode_rewards = [-1] * num_episodes
 
-    while -1 in eval_episode_rewards:
-        with torch.no_grad():
-            eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device), deterministic=False)
-
-        eval_obs, _, truncs, terms, infos = eval_envs.step(eval_action.cpu().numpy())
-        for i, info in enumerate(infos):
-            if 'episode' in info.keys() and eval_episode_rewards[i] == -1:
-                eval_episode_rewards[i] = info['episode']['r']
+    eval_episode_rewards = evaluator.evaluate_agent(eval_envs=eval_envs)
 
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
@@ -239,30 +235,21 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
+    # Agent setup
     print("Creating agent")
     agent = ProcgenAgent(
         (64, 64, 3),
         15,
-        arch="large",
-        base_kwargs={'recurrent': False, 'hidden_size': 256}
-    ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-
-    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
-    sample_envs = wrap_vecenv(sample_envs)
-    single_action_space = sample_envs.single_action_space
-    single_observation_space = sample_envs.single_observation_space
-    sample_envs.close()
-
-    # Agent setup
-    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
-    print("Creating agent")
-    agent = ProcgenAgent(
-        single_observation_space.shape,
-        single_action_space.n,
         base_kwargs={'hidden_size': 256}
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    eval_env_fn = make_env(
+        args.env_id,
+        args.seed,
+        num_levels=200,
+        task_wrapper=True,
+    )
+    evaluator = CleanRLDiscreteEvaluator(agent, make_eval_env=eval_env_fn, device=device, num_eval_processes=64)
 
     # Curriculum setup
     curriculum = None
@@ -275,9 +262,7 @@ if __name__ == "__main__":
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
 
-            plr_eval_env = make_env(args.env_id, args.seed, num_levels=200)()
-            plr_eval_env = ProcgenTaskWrapper(plr_eval_env, args.env_id, seed=args.seed)
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            plr_eval_env = make_env(args.env_id, args.seed, num_levels=200, task_wrapper=True)()
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -286,11 +271,8 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1", "replay_schedule": "fixed"},
-                get_value=make_value_fn(agent),
                 robust_plr=True,
                 eval_envs=plr_eval_env,
-                action_value_fn=make_action_value_fn(agent),
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
                 evaluator=evaluator,
             )
         elif args.curriculum_method == "dr":
@@ -305,7 +287,8 @@ if __name__ == "__main__":
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
             )
             eval_envs = wrap_vecenv(eval_envs)
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(),
+                                                    sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -374,21 +357,22 @@ if __name__ == "__main__":
             logprobs[step] = logprob
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
+            next_obs, reward, term, trunc, infos = envs.step(action.cpu().numpy())
             done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(done).to(device)
             completed_episodes += sum(done)
 
-            for item in info:
-                if "episode" in item.keys():
-                    episode_rewards.append(item['episode']['r'])
-                    print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
-                    writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
-                    writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
-                    if curriculum is not None:
-                        curriculum.log_metrics(writer, global_step)
-                    break
+            if "final_info" in infos:
+                for info in infos["final_info"]:
+                    if info and "episode" in info:
+                        episode_rewards.append(info['episode']['r'])
+                        print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
+                        writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                        writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
+                        if curriculum is not None:
+                            curriculum.log_metrics(writer, global_step)
+                        break
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -487,10 +471,10 @@ if __name__ == "__main__":
 
         # Evaluate agent
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+            args.env_id, evaluator, args.num_eval_episodes, device, num_levels=0
         )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+            args.env_id, evaluator, args.num_eval_episodes, device, num_levels=200
         )
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes

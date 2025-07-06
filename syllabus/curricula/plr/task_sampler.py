@@ -1,17 +1,14 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and original PLR paper: https://arxiv.org/abs/2010.03934
 
+from typing import List
+
 import gymnasium as gym
 import numpy as np
 import torch
-from typing import List
-
 from syllabus.curricula.plr.storage import RolloutStorage
+from syllabus.core.evaluator import Evaluator
 from syllabus.task_space.task_space import TaskSpace
-
-
-def null(x):
-    return None
 
 
 class TaskSampler:
@@ -51,7 +48,6 @@ class TaskSampler:
         rho: float = 1.0,
         nu: float = 0.5,
         alpha: float = 1.0,
-        num_steps: int = 256,
         num_processes: int = 1,
         gamma: float = 0.999,
         gae_lambda: float = 0.95,
@@ -61,8 +57,7 @@ class TaskSampler:
 
         robust_plr: bool = False,
         eval_envs=None,
-        action_value_fn=None,
-        get_value=None,
+        evaluator: Evaluator = None,
         observation_space=None,
 
     ):
@@ -87,10 +82,9 @@ class TaskSampler:
         self.staleness_temperature = staleness_temperature
         self.robust_plr = robust_plr
         self.eval_envs = eval_envs
-        self.action_value_fn = action_value_fn
         self.num_steps = num_steps
         self.num_processes = num_processes
-        self._get_values = get_value
+        self.evaluator = evaluator
         self.observation_space = observation_space
 
         self.unseen_task_weights = np.array([1.0] * self.num_tasks)
@@ -314,37 +308,37 @@ class TaskSampler:
     def _evaluate_unseen_level(self):
         sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
-        tasks = np.array(self.tasks)
-        task = tasks[task_idx]
+        task = self.tasks[task_idx]
 
-        episode_data = self.evaluate_task(task, self.eval_envs, self.action_value_fn)
+        episode_data = self.evaluate_task(task)
         self.update_with_episode_data(episode_data)
 
         self._update_staleness(task_idx)
 
-    def evaluate_task(self, task, env, action_value_fn):
-        if env is None:
-            raise ValueError("Environment object is None. Please ensure it is properly initialized.")
-
-        obs, info = env.reset(new_task=task)
+    def evaluate_task(self, task):
+        # TODO: Set task for evaluator envs
+        task_encoded = self.task_space.encode(task)
+        eval_envs = self.evaluator.create_eval_envs()
+        obs, _ = eval_envs.reset(seed=list(range(eval_envs.num_envs)), options={"seed_task": True})
         done = False
-
+        # TODO: Support any number of eval processes
+        # TODO: Figure out how to generate roughly 1 episode of data for each task?
         while not done:
-            action, value = action_value_fn(obs)
+            action, value, _ = self.evaluator.get_action_and_value(obs)
+            obs, rew, term, trunc, infos = eval_envs.step(action)
 
-            obs, rew, term, trunc, _ = env.step(action)
-
-            task_encoded = self.task_space.encode(task)
-
-            mask = torch.FloatTensor([0.0] if term or trunc else [1.0])
-            self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor([
-                                         rew]), tasks=torch.Tensor([task_encoded]))
+            mask = -torch.Tensor(np.logical_or(term, trunc)).unsqueeze(-1)
+            self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor(
+                rew).unsqueeze(-1), tasks=torch.Tensor([task_encoded]))
 
             # Check if the episode is done
-            if term or trunc:
-                done = True
+            if "final_info" in infos:
+                for i, info in enumerate(infos["final_info"]):
+                    if info and "episode" in info:
+                        print(info["episode"])
+                        assert False
 
-        _, next_value = action_value_fn(obs)
+        next_value = self.evaluator.get_value(obs)
         self._robust_rollouts.compute_returns(next_value, self.gamma, self.gae_lambda)
         return {
             "tasks": self._robust_rollouts.tasks,
@@ -411,6 +405,7 @@ class TaskSampler:
         total_steps, num_actors = tasks.shape[:2]
 
         for actor_index in range(num_actors):
+            # TODO: Track episode_length in episode_data and only update up to end of episode. Or write single episode update funtion
             done_steps = done[:, actor_index].nonzero()[:total_steps, 0]
             start_t = 0
 
@@ -438,7 +433,6 @@ class TaskSampler:
                     score_function_kwargs["episode_logits"] = torch.log_softmax(episode_logits, -1)
                 score = score_function(**score_function_kwargs)
                 num_steps = len(episode_data["tasks"][start_t:t, actor_index])
-                # TODO: Check that task_idx_t is correct
                 self.update_task_score(actor_index, task_idx_t, score, num_steps)
 
                 start_t = t.item()
@@ -446,7 +440,6 @@ class TaskSampler:
                 # If there is only 1 step, we can't calculate the one-step td error
                 if self.strategy == "one_step_td_error" and start_t == total_steps - 1:
                     continue
-                # TODO: Check this too
                 task_idx_t = tasks[start_t, actor_index].item()
 
                 # Store kwargs for score function
