@@ -216,7 +216,7 @@ class VecNormalize(VecEnvWrapper):
 
     def reset(self, seed=None, options=None):
         self.ret = np.zeros(self.num_envs)
-        if seed is not None:
+        if seed is not None or options is not None:
             obs, infos = self.venv.reset(seed=seed, options=options)
         else:
             obs, infos = self.venv.reset()

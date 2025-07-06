@@ -1,4 +1,5 @@
 """ Test curriculum synchronization across multiple processes. """
+import gym
 import gymnasium as gym
 import pytest
 
@@ -14,7 +15,6 @@ from syllabus.tests import create_cartpole_env, create_nethack_env, run_native_m
 
 N_ENVS = 2
 N_EPISODES = 2
-
 
 nethack_env = create_nethack_env()
 cartpole_env = create_cartpole_env()
@@ -34,7 +34,10 @@ curricula = [
         "evaluator": evaluator,
         "device": "cpu",
         "num_processes": N_ENVS,
-        "num_steps": 2048
+        "num_steps": 2048,
+        "robust_plr": True,
+        "eval_envs": create_nethack_env(),
+        "action_value_fn": get_action_value
     }),
     (ExpandingBox, create_cartpole_env, (cartpole_env.task_space,), {}),
     (SimulatedAnnealing, create_cartpole_env, (cartpole_env.task_space,), {

@@ -139,6 +139,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
 
         if task_wrapper or curriculum_components is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
@@ -156,16 +157,16 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    # TODO: Replace
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
 def level_replay_evaluate(
-    env_name,
-    policy,
-    num_episodes,
-    device,
+    env_name: str,
+    evaluator: Evaluator,
+    num_episodes: int,
+    device: torch.device,
     num_levels=0
 ):
     policy.eval()
@@ -173,7 +174,6 @@ def level_replay_evaluate(
     eval_envs = ProcgenEnv(
         num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
     )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
@@ -191,7 +191,6 @@ def level_replay_evaluate(
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
@@ -225,23 +224,22 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-    print("Device:", device)
-
-    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
-    sample_envs = wrap_vecenv(sample_envs)
-    single_action_space = sample_envs.single_action_space
-    single_observation_space = sample_envs.single_observation_space
-    sample_envs.close()
 
     # Agent setup
-    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
     agent = ProcgenAgent(
-        single_observation_space.shape,
-        single_action_space.n,
+        (64, 64, 3),
+        15,
         base_kwargs={'hidden_size': 256}
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    eval_env_fn = make_env(
+        args.env_id,
+        args.seed,
+        num_levels=200,
+        task_wrapper=True,
+    )
+    evaluator = CleanRLDiscreteEvaluator(agent, make_eval_env=eval_env_fn, device=device, num_eval_processes=64)
 
     # Curriculum setup
     curriculum = None
@@ -253,6 +251,8 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
+
+            plr_eval_env = make_env(args.env_id, args.seed, num_levels=200, task_wrapper=True)()
             evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
@@ -261,7 +261,9 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
+                task_sampler_kwargs_dict={"strategy": "value_l1", "replay_schedule": "fixed"},
+                robust_plr=True,
+                eval_envs=plr_eval_env,
                 evaluator=evaluator,
                 device="cuda",
             )
@@ -513,10 +515,10 @@ if __name__ == "__main__":
 
         # Evaluate agent
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
+            args.env_id, evaluator, args.num_eval_episodes, device, num_levels=0
         )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
+            args.env_id, evaluator, args.num_eval_episodes, device, num_levels=200
         )
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
