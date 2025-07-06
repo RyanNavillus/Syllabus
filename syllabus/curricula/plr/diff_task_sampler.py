@@ -65,8 +65,13 @@ class TaskSampler:
         use_dense_rewards=False,
         gamma=0.999,
         evaluator=None,
+        robust_plr: bool = False,
         eval_envs=None,
+        evaluator: Evaluator = None,
+        observation_space=None,
+
     ):
+        self.task_space = task_space
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
@@ -629,6 +634,49 @@ class TaskSampler:
             task_idx = np.random.choice(range(len(self.tasks)), 1, p=sample_weights)[0]
             self._update_staleness(task_idx)
             return int(self.tasks[task_idx])
+
+    def _evaluate_unseen_level(self):
+        sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
+        task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
+        task = self.tasks[task_idx]
+
+        episode_data = self.evaluate_task(task)
+        self.update_with_episode_data(episode_data)
+
+        self._update_staleness(task_idx)
+
+    def evaluate_task(self, task):
+        # TODO: Set task for evaluator envs
+        task_encoded = self.task_space.encode(task)
+        eval_envs = self.evaluator.create_eval_envs()
+        obs, _ = eval_envs.reset(seed=list(range(eval_envs.num_envs)), options={"seed_task": True})
+        done = False
+        # TODO: Support any number of eval processes
+        # TODO: Figure out how to generate roughly 1 episode of data for each task?
+        while not done:
+            action, value, _ = self.evaluator.get_action_and_value(obs)
+            obs, rew, term, trunc, infos = eval_envs.step(action)
+
+            mask = -torch.Tensor(np.logical_or(term, trunc)).unsqueeze(-1)
+            self._robust_rollouts.insert(mask, value_preds=value, rewards=torch.Tensor(
+                rew).unsqueeze(-1), tasks=torch.Tensor([task_encoded]))
+
+            # Check if the episode is done
+            if "final_info" in infos:
+                for i, info in enumerate(infos["final_info"]):
+                    if info and "episode" in info:
+                        print(info["episode"])
+                        assert False
+
+        next_value = self.evaluator.get_value(obs)
+        self._robust_rollouts.compute_returns(next_value, self.gamma, self.gae_lambda)
+        return {
+            "tasks": self._robust_rollouts.tasks,
+            "masks": self._robust_rollouts.masks,
+            "rewards": self._robust_rollouts.rewards,
+            "value_preds": self._robust_rollouts.value_preds,
+            "returns": self._robust_rollouts.returns,
+        }
 
     def sample(self, strategy=None):
         if strategy == "full_distribution":
