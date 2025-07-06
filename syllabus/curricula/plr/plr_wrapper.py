@@ -10,7 +10,7 @@ from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 from syllabus.utils import UsageError
 
-from .task_sampler import TaskSampler
+from .diff_task_sampler import TaskSampler
 
 
 class RolloutStorage(object):
