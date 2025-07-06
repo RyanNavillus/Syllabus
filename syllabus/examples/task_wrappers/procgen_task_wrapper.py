@@ -39,7 +39,11 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        self.env.gym_env.unwrapped._venv.seed(int(seed), 0)
+        if hasattr(self.env, 'gym_env') and hasattr(self.env.gym_env, 'unwrapped'):
+            if hasattr(self.env.gym_env.unwrapped, '_venv'):
+                self.env.gym_env.unwrapped._venv.seed(int(seed), 0)
+        else:
+            self.env.seed(int(seed))
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -77,8 +81,9 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.episode_return += rew
 
         env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
-        normalized_return = (self.episode_return - env_min) / (env_max - env_min)
-        info["task_completion"] = normalized_return
+        normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
+        clipped_return = 1 if normalized_return > 0.1 else 0    # Binary progress
+        info["task_completion"] = clipped_return
 
         return self.observation(obs), rew, term, trunc, info
 

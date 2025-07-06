@@ -21,3 +21,8 @@ try:
     from .procgen_task_wrapper import ProcgenTaskWrapper
 except ImportError  as e:
     warnings.warn(f"Unable to import the following procgen dependencies: {e.name}")
+
+try:
+    from .pistonball_task_wrapper import PistonballTaskWrapper
+except ImportError  as e:
+    warnings.warn(f"Unable to import the following pistonball dependencies: {e.name}")

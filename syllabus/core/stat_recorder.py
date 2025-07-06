@@ -6,16 +6,18 @@ from syllabus.task_space import TaskSpace
 from gymnasium.spaces import Discrete
 from collections import deque, defaultdict
 
+
 class StatRecorder:
     """
     Individual statistics tracking for each task.
     """
 
-    def __init__(self, task_space: TaskSpace, calc_past_n=None):
+    def __init__(self, task_space: TaskSpace, calc_past_n=None, task_names=None):
         """Initialize the StatRecorder"""
 
         self.task_space = task_space
         self.calc_past_n = calc_past_n
+        self.task_names = task_names if task_names is not None else lambda task, idx: idx
 
         assert isinstance(self.task_space, TaskSpace), f"task_space must be a TaskSpace object. Got {type(task_space)} instead."
         assert isinstance(self.task_space.gym_space, Discrete), f"Only Discrete task spaces are supported. Got {type(task_space.gym_space)}"
@@ -29,7 +31,7 @@ class StatRecorder:
             self.env_ids = {task: deque(maxlen=calc_past_n) for task in self.tasks}
         else:
             self.num_past_episodes = {task: 0 for task in self.tasks}
-        
+
         self.stats = {task: defaultdict(float) for task in self.tasks}
 
     def record(self, episode_return: float, episode_length: int, episode_task, env_id=None):
@@ -40,7 +42,6 @@ class StatRecorder:
         :param episodic_return: Total return for the episode
         :param episode_task: Identifier for the task
         """
-
         if episode_task in self.tasks:
             if self.calc_past_n is not None:
                 self.episode_returns[episode_task].append(episode_return)
@@ -54,17 +55,17 @@ class StatRecorder:
             else:
                 n_past = self.num_past_episodes[episode_task]
                 self.num_past_episodes[episode_task] += 1
-                
+
                 self.stats[episode_task]['mean_r'] = (self.stats[episode_task]['mean_r'] * n_past + episode_return) / (n_past + 1)
                 self.stats[episode_task]['mean_r_squared'] = (self.stats[episode_task]['mean_r_squared'] * n_past + episode_return ** 2) / (n_past + 1)
                 self.stats[episode_task]['var_r'] = self.stats[episode_task]['mean_r_squared'] - self.stats[episode_task]['mean_r'] ** 2
-                
+
                 self.stats[episode_task]['mean_l'] = (self.stats[episode_task]['mean_l'] * n_past + episode_length) / (n_past + 1)
                 self.stats[episode_task]['mean_l_squared'] = (self.stats[episode_task]['mean_l_squared'] * n_past + episode_length ** 2) / (n_past + 1)
                 self.stats[episode_task]['var_l'] = self.stats[episode_task]['mean_l_squared'] - self.stats[episode_task]['mean_l'] ** 2
         else:
             raise ValueError("Unknown task")
-    
+
     def log_metrics(self, writer, step=None, log_full_dist=False):
         """Log the statistics of the first 5 tasks to the provided tensorboard writer.
 
@@ -73,21 +74,28 @@ class StatRecorder:
         try:
             import wandb
             tasks_to_log = self.tasks
-            if len(self.tasks) > 5 and not log_full_dist:
+            if len(self.tasks) > 10 and not log_full_dist:
                 warnings.warn("Only logging stats for 5 tasks.")
-                tasks_to_log = self.tasks[:5]
+                tasks_to_log = self.tasks[:10]
+            log_data = []
             for idx in tasks_to_log:
-                if self.stats[idx]:
-                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_mean", self.stats[idx]['mean_r'], step)
-                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_return_var", self.stats[idx]['var_r'], step)
-                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_mean", self.stats[idx]['mean_l'], step)
-                    writer.add_scalar(f"stats_per_task/task_{idx}_episode_length_var", self.stats[idx]['var_l'], step)
+                if len(self.stats[idx]) > 0:
+                    name = self.task_names(list(self.task_space.tasks)[idx], idx)
+                    log_data.append((f"stats_per_task/{name}_episode_return_mean", self.stats[idx]['mean_r'], step))
+                    log_data.append((f"stats_per_task/{name}_episode_return_var", self.stats[idx]['var_r'], step))
+                    log_data.append((f"stats_per_task/{name}_episode_length_mean", self.stats[idx]['mean_l'], step))
+                    log_data.append((f"stats_per_task/{name}_episode_length_var", self.stats[idx]['var_l'], step))
+            for name, prob, step in log_data:
+                if writer == wandb:
+                    writer.log({name: prob}, step=step)
+                else:
+                    writer.add_scalar(name, prob, step)
         except ImportError:
             warnings.warn("Wandb is not installed. Skipping logging.")
         except wandb.errors.Error:
             # No need to crash over logging :)
             warnings.warn("Failed to log curriculum stats to wandb.")
-    
+
     def normalize(self, reward, task):
         """
         Normalize reward by task.
@@ -99,7 +107,7 @@ class StatRecorder:
         for r in reward:
             normalized_reward.append((r - reward_mean) / max(0.01, reward_std))
         return normalized_reward
-    
+
     def save_statistics(self, output_path):
         """
         Write task-specific statistics to file.
