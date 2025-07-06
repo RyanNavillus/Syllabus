@@ -5,7 +5,8 @@ from typing import List
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from syllabus.task_space import TaskSpace
+
+from syllabus.task_space import DiscreteTaskSpace
 
 from .task_wrapper import TaskWrapper
 
@@ -19,11 +20,12 @@ class SubclassTaskWrapper(TaskWrapper):
     This is a simple, general solution to using Syllabus with tasks that need to be reinitialized, but it is inefficient.
     It's likely that you can achieve better performance by using a more specialized wrapper.
     """
+
     def __init__(self, env: gym.Env, task_subclasses: List[gym.Env] = None, **env_init_kwargs):
         super().__init__(env)
 
         self.task_list = task_subclasses
-        self.task_space = TaskSpace(spaces.Discrete(len(self.task_list)), self.task_list)
+        self.task_space = DiscreteTaskSpace(len(self.task_list), self.task_list)
         self._env_init_kwargs = env_init_kwargs  # kwargs for reinitializing the base environment
 
         # Add goal space to observation

@@ -15,10 +15,10 @@ import torch.optim as optim
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import MultiProcessingSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLDiscreteEvaluator, Evaluator
-from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgressCurriculum, SequentialCurriculum
-from syllabus.curricula.plr.central_plr_wrapper import CentralizedPrioritizedLevelReplay
+from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
+from syllabus.core.evaluator import CleanRLEvaluator
+from syllabus.curricula import PrioritizedLevelReplay, DomainRandomization, BatchedDomainRandomization, LearningProgress, SequentialCurriculum
+from syllabus.curricula.plr.central_plr_wrapper import CentralPrioritizedLevelReplay
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.examples.task_wrappers.cartpole_task_wrapper import CartPoleTaskWrapper
@@ -106,11 +106,11 @@ def make_env(env_id, task_wrapper=False, curriculum=None):
             env = CartPoleTaskWrapper(env)
 
         if curriculum is not None:
-            env = MultiProcessingSyncWrapper(
+            env = GymnasiumSyncWrapper(
                 env,
-                curriculum.get_components(),
+                env.task_space,
+                curriculum.components,
                 update_on_step=curriculum.requires_step_updates,
-                task_space=env.task_space,
                 batch_size=10
             )
         env.action_space.seed(0)
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLDiscreteEvaluator(agent, device=device)
+            evaluator = CleanRLEvaluator(agent, device=device)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -237,7 +237,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "centralplr":
             print("Using centralized prioritized level replay.")
-            curriculum = CentralizedPrioritizedLevelReplay(
+            curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
@@ -256,7 +256,8 @@ if __name__ == "__main__":
             eval_envs = gym.vector.AsyncVectorEnv(
                 [make_env(args.env_id, task_wrapper=True) for _ in range(8)]
             )
-            curriculum = LearningProgressCurriculum(eval_envs, make_action_fn(), sample_env.task_space, eval_interval_steps=409600)
+            curriculum = LearningProgress(eval_envs, make_action_fn(),
+                                          sample_env.task_space, eval_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
@@ -334,7 +335,7 @@ if __name__ == "__main__":
                         writer.add_scalar("charts/episodic_return", ep_return, global_step)
                         writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
                         if curriculum is not None:
-                            curriculum.log_metrics(writer, global_step)
+                            curriculum.log_metrics(writer, [], step=global_step)
                         break
 
             # Syllabus curriculum update

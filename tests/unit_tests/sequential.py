@@ -5,8 +5,8 @@ import pytest
 from nle.env.tasks import NetHackEat, NetHackScore
 
 from syllabus.core import make_multiprocessing_curriculum
-from syllabus.curricula import SequentialCurriculum, NoopCurriculum, DomainRandomization
-from syllabus.task_space import TaskSpace
+from syllabus.curricula import SequentialCurriculum, Constant, DomainRandomization
+from syllabus.task_space import DiscreteTaskSpace
 from syllabus.tests.utils import create_nethack_env, run_native_multiprocess, run_single_process, run_set_length
 
 
@@ -52,24 +52,26 @@ def test_parsing_compount_conditions(create_env):
 
 def test_curriculum_sequence_2step(create_env):
     env = create_env()
-    curriculum = SequentialCurriculum([NetHackScore, TaskSpace(3, env.task_space.list_tasks()[1:4])], ["steps>100"], env.task_space)
-    assert isinstance(curriculum.current_curriculum, NoopCurriculum)
+    curriculum = SequentialCurriculum([NetHackScore, DiscreteTaskSpace(
+        3, env.task_space.list_tasks()[1:4])], ["steps>100"], env.task_space)
+    assert isinstance(curriculum.current_curriculum, Constant)
     env_outputs = run_set_length(env, curriculum, steps=50)
-    assert isinstance(curriculum.current_curriculum, NoopCurriculum)
+    assert isinstance(curriculum.current_curriculum, Constant)
     run_set_length(env, curriculum, episodes=1, env_outputs=env_outputs)
     assert isinstance(curriculum.current_curriculum, DomainRandomization)
 
 
 def test_curriculum_sequence_3step(create_env):
     env = create_env()
-    curriculum = SequentialCurriculum([NetHackScore, TaskSpace(3, env.task_space.list_tasks()[1:4]), NetHackEat], ["steps>100", "episodes>=5"], env.task_space)
-    assert isinstance(curriculum.current_curriculum, NoopCurriculum)
+    curriculum = SequentialCurriculum([NetHackScore, DiscreteTaskSpace(3, env.task_space.list_tasks()[1:4]), NetHackEat], [
+                                      "steps>100", "episodes>=5"], env.task_space)
+    assert isinstance(curriculum.current_curriculum, Constant)
     env_outputs = run_set_length(env, curriculum, steps=50)
-    assert isinstance(curriculum.current_curriculum, NoopCurriculum)
+    assert isinstance(curriculum.current_curriculum, Constant)
     run_set_length(env, curriculum, episodes=1, env_outputs=env_outputs)
     assert isinstance(curriculum.current_curriculum, DomainRandomization)
     run_set_length(env, curriculum, episodes=5, env_outputs=env_outputs)
-    assert isinstance(curriculum.current_curriculum, NoopCurriculum)
+    assert isinstance(curriculum.current_curriculum, Constant)
 
 
 if __name__ == "__main__":

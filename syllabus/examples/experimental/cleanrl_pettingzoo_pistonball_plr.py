@@ -12,9 +12,9 @@ import torch.nn as nn
 import torch.optim as optim
 from pettingzoo.butterfly import pistonball_v6
 from supersuit import color_reduction_v0, frame_stack_v1, resize_v1
-from syllabus.core import (PettingZooMultiProcessingSyncWrapper, TaskWrapper,
+from syllabus.core import (PettingZooSyncWrapper, TaskWrapper,
                            make_multiprocessing_curriculum)
-from syllabus.curricula import CentralizedPrioritizedLevelReplay
+from syllabus.curricula import CentralPrioritizedLevelReplay
 from syllabus.examples import PistonballTaskWrapper
 from torch.distributions.categorical import Categorical
 
@@ -117,11 +117,11 @@ if __name__ == "__main__":
     num_actions = action_space.n
     observation_size = sample_env.observation_space(sample_env.possible_agents[0]).shape
 
-    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(CentralizedPrioritizedLevelReplay,
+    curriculum, task_queue, update_queue = make_multiprocessing_curriculum(CentralPrioritizedLevelReplay,
                                                                            sample_env.task_space,
                                                                            task_sampler_kwargs_dict={"strategy": "one_step_td_error",
-                                                                            "rho": 0.01,
-                                                                            "nu": 0},
+                                                                                                     "rho": 0.01,
+                                                                                                     "nu": 0},
                                                                            action_space=action_space,
                                                                            num_steps=num_steps,
                                                                            num_processes=num_agents,
@@ -135,12 +135,8 @@ if __name__ == "__main__":
         continuous=False, max_cycles=max_cycles
     )
     env = PistonballTaskWrapper(env)
-    env = PettingZooMultiProcessingSyncWrapper(env,
-                                               task_queue,
-                                               update_queue,
-                                               update_on_step=False,
-                                               default_task=0,
-                                               task_space=env.task_space)
+    env = PettingZooSyncWrapper(
+        env, env.task_space, task_queue, update_queue, update_on_step=False, default_task=0)
     task_space = env.task_space
     env = color_reduction_v0(env)
     env = resize_v1(env, frame_size[0], frame_size[1])
@@ -219,7 +215,6 @@ if __name__ == "__main__":
                 if any([dones[a] for a in dones]):
                     end_step = step
                     break
-
 
         # bootstrap value if not done
         with torch.no_grad():

@@ -2,7 +2,7 @@
 import ray
 
 from nle.env.tasks import NetHackScore
-from syllabus.curricula import NoopCurriculum, DomainRandomization, LearningProgressCurriculum, CentralizedPrioritizedLevelReplay, SimpleBoxCurriculum
+from syllabus.curricula import Constant, DomainRandomization, LearningProgress, CentralPrioritizedLevelReplay, SimpleBoxCurriculum
 from syllabus.core import make_multiprocessing_curriculum, make_ray_curriculum
 from syllabus.tests import run_single_process, run_native_multiprocess, run_ray_multiprocess, create_nethack_env, create_cartpole_env
 
@@ -15,7 +15,8 @@ if __name__ == "__main__":
     cartpole_env = create_cartpole_env()
     curricula = [
         (DomainRandomization, create_nethack_env, (nethack_env.task_space,), {"random_start_tasks": 10}),
-        (CentralizedPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS, "random_start_tasks": 10}),
+        (CentralPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {
+         "device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS, "random_start_tasks": 10}),
     ]
     for curriculum, env_fn, args, kwargs in curricula:
         print("")
@@ -34,7 +35,8 @@ if __name__ == "__main__":
         test_curriculum = curriculum(*args, **kwargs)
         test_curriculum, task_queue, update_queue = make_multiprocessing_curriculum(test_curriculum)
         print("\nRUNNING: Python multiprocess test with Syllabus...")
-        native_syllabus_speed = run_native_multiprocess(env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
+        native_syllabus_speed = run_native_multiprocess(
+            env_fn, curriculum=test_curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES)
         print(f"PASSED: Python multiprocess test with Syllabus: {native_syllabus_speed:.2f}s")
 
         # Test Ray multiprocess speed with Syllabus

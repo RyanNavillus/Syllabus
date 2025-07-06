@@ -1,3 +1,7 @@
+import copy
+import warnings
+from collections import defaultdict
+from io import BytesIO
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 import warnings
 
@@ -5,6 +9,11 @@ import gymnasium as gym
 import numpy as np
 import torch
 from torch import Tensor
+from gymnasium.vector import AsyncVectorEnv, SyncVectorEnv
+
+from syllabus.core.curriculum_sync_wrapper import make_multiprocessing_curriculum
+from syllabus.core.environment_sync_wrapper import GymnasiumSyncWrapper
+from syllabus.task_space.task_space import TaskSpace
 
 from syllabus.core.utils import UsageError
 
@@ -24,9 +33,7 @@ class Evaluator:
         make_eval_env: Callable = None,
         device: Optional[torch.device] = None,
         preprocess_obs: Optional[Callable] = None,
-        num_eval_processes: int = 1,
-        norm_obs: bool = False,
-        norm_reward: bool = False,
+        copy_agent: bool = True,
     ):
         """
         Initialize the Evaluator.
@@ -35,44 +42,47 @@ class Evaluator:
             agent (Any): The trained agent to be evaluated.
             device (Optional[torch.device]): The device to run the evaluation on.
             preprocess_obs (Optional[Any]): A function to preprocess observations.
+            copy_agent (bool): Whether to make a copy of the agent.
         """
-        self.agent = agent
-        self.make_eval_env = make_eval_env
+        self._agent_reference = agent
         self.device = device
         self.preprocess_obs = preprocess_obs
-        self.num_eval_processes = num_eval_processes
-        self.norm_obs = norm_obs
-        self.norm_reward = norm_reward
+        self._copy_agent = copy_agent   # Save to skip update if possible
 
-        if self.make_eval_env is not None and not self._check_envs(make_eval_env):
-            warnings.warn("The provided make_eval_env is not valid.")
+        # Make cpu copy of model
+        if copy_agent:
+            try:
+                # Save agent in memory
+                model_data_in_memory = BytesIO()
+                torch.save(self._agent_reference, model_data_in_memory, pickle_protocol=-1)
+                model_data_in_memory.seek(0)
 
-    def get_value(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
-    ) -> Tuple[torch.Tensor, Dict[str, Any]]:
+                # Load the model from memory to CPU
+                self.agent = torch.load(model_data_in_memory, map_location=self.device)
+                model_data_in_memory.close()
+            except RuntimeError as e:
+                warnings.warn(str(e), stacklevel=2)
+                agent.to(self.device)
+                self.agent = copy.deepcopy(agent).to(self.device)
+                agent.to("cuda")
+
+        if copy_agent and simple_copy:
+            agent.to(self.device)
+            self.agent = copy.deepcopy(agent).to(self.device).detach()
+            agent.to("cuda")
+
+        if not simple_copy:
+            self.agent = self._agent_reference
+
+    def _update_agent(self):
         """
-        Get the value of a given environment state.
-
-        Args:
-            state (Array): The current environment state.
-            lstm_state (Optional[LSTMState] ): The LSTM cell and hidden state.
-            done (Optional[Array]): The done flag.
-
-        Returns:
-            Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
+        Update the agent with a copy of the agent reference.
+        This is necessary if you are using a model with different training and evaluation modes
+        because the evaluator may need to run in eval mode while the agent is training.
         """
-        state = self._prepare_state(state)
-        if lstm_state is not None:
-            lstm_state, done = self._prepare_lstm(lstm_state, done)
-
-        self._set_eval_mode()
-        with torch.no_grad():
-            value, lstm_state, extras = self._get_value(
-                state, lstm_state=lstm_state, done=done
-            )
-        self._set_train_mode()
-
-        return value.to("cpu"), lstm_state, extras
+        if self._copy_agent:
+            # Copy most recent parameters from agent reference
+            self.agent.load_state_dict(self._agent_reference.state_dict())
 
     def get_action(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
@@ -88,6 +98,7 @@ class Evaluator:
         Returns:
             Tuple[torch.Tensor, Dict[str, Any]]: The action and additional information.
         """
+        self._update_agent()
         state = self._prepare_state(state)
         if lstm_state is not None:
             lstm_state, done = self._prepare_lstm(lstm_state, done)
@@ -98,8 +109,33 @@ class Evaluator:
                 state, lstm_state=lstm_state, done=done
             )
         self._set_train_mode()
+        return action, lstm_state, extras
 
-        return action.to("cpu"), lstm_state, extras
+    def get_value(
+        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+    ) -> Tuple[torch.Tensor, Dict[str, Any]]:
+        """
+        Get the value of a given environment state.
+
+        Args:
+            state (Array): The current environment state.
+            lstm_state (Optional[LSTMState] ): The LSTM cell and hidden state.
+            done (Optional[Array]): The done flag.
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
+        """
+        self._update_agent()
+        state = self._prepare_state(state)
+        if lstm_state is not None:
+            lstm_state, done = self._prepare_lstm(lstm_state, done)
+        self._set_eval_mode()
+        with torch.no_grad():
+            value, lstm_state, extras = self._get_value(
+                state, lstm_state=lstm_state, done=done
+            )
+        self._set_train_mode()
+        return value, lstm_state, extras
 
     def get_action_and_value(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
@@ -115,17 +151,18 @@ class Evaluator:
         Returns:
             Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]: The action, value, and additional information.
         """
+        self._update_agent()
         state = self._prepare_state(state)
         if lstm_state is not None:
             lstm_state, done = self._prepare_lstm(lstm_state, done)
 
         self._set_eval_mode()
         with torch.no_grad():
-            action, value, extras = self._get_action_and_value(
+            action, value, lstm_state, extras = self._get_action_and_value(
                 state, lstm_state=lstm_state, done=done
             )
         self._set_train_mode()
-        return action.to("cpu"), value.to("cpu"), lstm_state, extras
+        return action, value, lstm_state, extras
 
     def _get_action(
         self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
@@ -139,7 +176,7 @@ class Evaluator:
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, Dict[str, Any]]: The action and additional information.
+            Tuple[torch.Tensor, LSTMState, Dict[str, Any]]: The action and additional information.
         """
         raise NotImplementedError
 
@@ -156,7 +193,7 @@ class Evaluator:
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, Dict[str, Any]]: The value and additional information.
+            Tuple[torch.Tensor, LSTMState, Dict[str, Any]]: The value and additional information.
         """
         raise NotImplementedError
 
@@ -172,9 +209,11 @@ class Evaluator:
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]: The action, value, and additional information.
+            Tuple[torch.Tensor, torch.Tensor, LSTMState, Dict[str, Any]]: The action, value, and additional information.
         """
-        raise NotImplementedError
+        action, _, _ = self._get_action(state, lstm_state, done)
+        value, lstm_state, extras = self._get_value(state, lstm_state, done)
+        return action, value, lstm_state, extras
 
     def _prepare_state(self, state: Array) -> torch.Tensor:
         """
@@ -186,9 +225,9 @@ class Evaluator:
         Returns:
             torch.Tensor: The prepared state.
         """
+        state = torch.Tensor(np.stack(state))
         if self.preprocess_obs is not None:
             state = self.preprocess_obs(state)
-        state = torch.Tensor(state)
         if self.device is not None:
             state = state.to(self.device)
         return state
@@ -223,103 +262,82 @@ class Evaluator:
         """
         Set the policy to evaluation mode.
         """
-        pass
 
     def _set_train_mode(self):
         """
         Set the policy to training mode.
         """
-        pass
-
-    def evaluate_agent(self, fast_biased: bool = False, full_data: bool = False, num_episodes=10, num_steps=None, eval_envs=None):
-        """
-        Evaluate the agent on the environment.
-        The fast_biased option will use the first num_episodes completed episodes, which biases towards shorter episodes.
-        This may increase or decrease the expected return depending on the environment's reward function.
-
-        Args:
-            fast_biased (bool): Whether to use a faster, biased evaluation.
-            full_data (bool): Whether to return the full evaluation data.
-
-        Returns:
-            Dict[str, Any]: The evaluation data.
-        """
-        # TODO: Run for specific number of steps and continue with provided rollout storage
-        # TODO: Check that eval_envs is usable and give warning. Throw error here for same check
-        # TODO: Test with nonmatching num_episodes and env size. Make it work for any combo.
-        eval_envs = eval_envs if eval_envs is not None else self.create_eval_envs()
-        assert self._check_envs(eval_envs)
-        self._set_eval_mode()
-        obs, _ = eval_envs.reset()
-        assert obs.shape[0] == num_episodes, "Number of episodes must match the batch size of the environment."
-
-        episode_rewards = -np.ones(num_episodes)
-        completed = np.zeros(num_episodes)
-        fast_index = 0
-
-        while sum(completed) < num_episodes:
-            action, _, _ = self.get_action_and_value(torch.Tensor(obs).to(self.device))
-
-            obs, _, _, _, infos = eval_envs.step(action.cpu().numpy())
-            if "final_info" in infos:
-                for i, info in enumerate(infos["final_info"]):
-                    if info and "episode" in info:
-                        if fast_biased:
-                            episode_rewards[fast_index] = info['episode']['r']
-                            fast_index += 1
-                        elif completed[i] == 0:
-                            episode_rewards[i] = info['episode']['r']
-                            completed[i] = 1
-
-        self._set_train_mode()
-        return episode_rewards
-
-    def create_eval_envs(self):
-        return gym.vector.SyncVectorEnv([self.make_eval_env for _ in range(self.num_eval_processes)])
-
-    def _check_envs(self, make_eval_env):
-        eval_env = make_eval_env()
-        return eval_env is not None and hasattr(eval_env, "reset") and hasattr(eval_env, "step")
 
 
-class CleanRLDiscreteEvaluator(Evaluator):
-    def __init__(self, agent, *args, is_lstm=False, **kwargs):
-        super().__init__(agent, *args, **kwargs)
-        self.agent = agent
-        self.is_lstm = is_lstm or hasattr(agent, "lstm")
+class DummyEvaluator(Evaluator):
+    def __init__(self, action_space, *args, **kwargs):
+        self.action_space = action_space
+        if isinstance(action_space, gym.spaces.Discrete):
+            self.action_shape = 1
+        else:
+            self.action_shape = action_space.sample().shape
+        kwargs.pop("copy_agent", None)
+        super().__init__(None, *args, copy_agent=False, **kwargs)
+
+    def _get_state_shape(self, state):
+        if isinstance(state, (torch.Tensor, np.ndarray)):
+            state_shape = state.shape[0]
+        elif isinstance(state, (list, tuple)):
+            state_shape = len(state)
+        else:
+            state_shape = 1
+        return state_shape
+
+    def _get_action(self, state, lstm_state=None, done=None):
+        state_shape = self._get_state_shape(state)
+        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
+            lstm_state[1])) if lstm_state is not None else None
+        return torch.zeros((state_shape, self.action_shape)), lstm_state, {}
 
     def _get_value(self, state, lstm_state=None, done=None):
-        if self.is_lstm:
-            self._check_inputs(lstm_state, done)
-            value = self.agent.get_value(state, lstm_state, done)
-        else:
-            value = self.agent.get_value(state)
-        return value, {}
+        state_shape = self._get_state_shape(state)
+        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
+            lstm_state[1])) if lstm_state is not None else None
+        return torch.zeros((state_shape, 1)), lstm_state, {}
+
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
+        state_shape = self._get_state_shape(state)
+        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
+            lstm_state[1])) if lstm_state is not None else None
+        return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), lstm_state, {}
+
+
+class CleanRLEvaluator(Evaluator):
+    def __init__(self, agent, *args, is_lstm=False, **kwargs):
+        super().__init__(agent, *args, **kwargs)
+        self.is_lstm = is_lstm or hasattr(agent, "lstm")
 
     def _get_action(self, state, lstm_state=None, done=None):
         if self.is_lstm:
             self._check_inputs(lstm_state, done)
-            action = self.agent.get_action(state, lstm_state, done)
+            action, lstm_state = self.agent.get_action(state, lstm_state, done)
         else:
             action = self.agent.get_action(state)
-        return action, {}
+            lstm_state = None
+        return action, lstm_state, {}
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        if self.is_lstm:
+            self._check_inputs(lstm_state, done)
+            value, lstm_state = self.agent.get_value(state, lstm_state, done)
+        else:
+            value = self.agent.get_value(state)
+            lstm_state = None
+        return value, lstm_state, {}
 
     def _get_action_and_value(self, state, lstm_state=None, done=None):
         if self.is_lstm:
             self._check_inputs(lstm_state, done)
-            action, log_probs, entropy, value, lstm_state = (
-                self.agent.get_action_and_value(state, lstm_state, done)
-            )
-            return (
-                action,
-                value,
-                {"log_probs": log_probs, "entropy": entropy,
-                    "lstm_state": lstm_state},
-            )
+            action, log_probs, entropy, value, lstm_state = self.agent.get_action_and_value(state, lstm_state, done)
         else:
-            action, log_probs, entropy, value = self.agent.get_action_and_value(
-                state)
-            return action, value, {"log_probs": log_probs, "entropy": entropy}
+            action, log_probs, entropy, value = self.agent.get_action_and_value(state)
+            lstm_state = None
+        return action, value, lstm_state, {"log_probs": log_probs, "entropy": entropy}
 
     def _check_inputs(self, lstm_state, done):
         assert (
@@ -335,3 +353,91 @@ class CleanRLDiscreteEvaluator(Evaluator):
 
     def _set_train_mode(self):
         self.agent.train()
+
+
+class MoolibEvaluator(Evaluator):
+    def __init__(self, agent, *args, **kwargs):
+        super().__init__(agent, *args, **kwargs)
+
+    def _get_action(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=False)
+        action = output["action"]
+        return action, lstm_state, {}
+
+    def _get_value(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state, get_action=False, get_value=True)
+        value = output["baseline"].reshape(-1, 1)
+        return value, lstm_state, {}
+
+    def _get_action_and_value(self, state, lstm_state=None, done=None):
+        self._check_inputs(lstm_state, done)
+        state["done"] = done
+        output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=True)
+        action = output["action"]
+        value = output["baseline"].reshape(-1, 1)
+        return action, value, lstm_state, {}
+
+    def _prepare_state(self, state) -> torch.Tensor:
+        full_dict = defaultdict(list)
+        for obs_dict in state:
+            for k, v in obs_dict.items():
+                full_dict[k].append(v)
+        tensor_dict = {key: torch.unsqueeze(torch.Tensor(np.stack(val_list)), 0).to(self.device)
+                       for key, val_list in full_dict.items()}
+        return tensor_dict
+
+    def _check_inputs(self, lstm_state, done):
+        assert (
+            lstm_state is not None
+        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        return True
+
+    def _set_eval_mode(self):
+        self.agent.eval()
+
+    def _set_train_mode(self):
+        self.agent.train()
+
+
+class GymnasiumEvaluationWrapper(gym.Wrapper):
+    def __init__(
+        self,
+        *args,
+        task_space: TaskSpace = None,
+        change_task_on_completion: bool = False,
+        eval_only_n_tasks: bool = None,
+        ignore_seed: bool = False,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.change_task_on_completion = change_task_on_completion
+        self.task_space = task_space if task_space is not None else self.env.task_space
+        self.tidx = 0
+        eval_only_n_tasks = eval_only_n_tasks if eval_only_n_tasks is not None else self.task_space.num_tasks
+        self.random_tasks = copy.deepcopy(self.task_space.tasks[:eval_only_n_tasks])
+        if ignore_seed:
+            rng = np.random.default_rng()
+            rng.shuffle(self.random_tasks)
+        else:
+            np.random.shuffle(self.random_tasks)
+
+    def reset(self, **kwargs):
+        new_task = self.random_tasks[self.tidx]
+
+        # Repeat task list when done
+        self.tidx = (self.tidx + 1) % len(self.random_tasks)
+
+        obs, info = self.env.reset(new_task=new_task, **kwargs)
+        return obs, info
+
+    def step(self, action):
+        obs, rew, term, trunc, info = self.env.step(action)
+        if "task_completion" in info and (info["task_completion"] >= 1.0 or info["task_completion"] < 0) and self.change_task_on_completion and not (term or trunc):
+            new_task = self.random_tasks[self.tidx]
+            self.tidx = (self.tidx + 1) % len(self.random_tasks)
+            self.env.change_task(new_task)
+        return obs, rew, term, trunc, info

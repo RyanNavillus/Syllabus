@@ -8,9 +8,9 @@ import ray
 from nle.env.tasks import NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackOracle, NetHackGold
 from syllabus.examples import NethackTaskWrapper
 from syllabus.curricula import Uniform
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           RaySyncWrapper,
-                           MultiProcessingCurriculumWrapper,
+from syllabus.core import (GymnasiumSyncWrapper,
+                           RayGymnasiumSyncWrapper,
+                           CurriculumSyncWrapper,
                            make_multiprocessing_curriculum,
                            make_ray_curriculum)
 from syllabus.task_space import TaskSpace
@@ -46,19 +46,19 @@ def create_nethack_env():
 def create_nethack_env_queue(task_queue, update_queue, update_on_step=True):
     env = NetHackScore()
     env = MutableNethackTaskWrapper(env)
-    env = MultiProcessingSyncWrapper(env,
-                                     task_queue,
-                                     update_queue,
-                                     update_on_step=update_on_step,
-                                     default_task=0,
-                                     task_space=env.task_space)
+    env = GymnasiumSyncWrapper(env,
+                               env.task_space,
+                               task_queue,
+                               update_queue,
+                               update_on_step=update_on_step,
+                               default_task=0)
     return env
 
 
 def create_nethack_env_ray(update_on_step=True):
     env = NetHackScore()
     env = MutableNethackTaskWrapper(env)
-    env = RaySyncWrapper(env, update_on_step=update_on_step, default_task=0, task_space=env.task_space)
+    env = RayGymnasiumSyncWrapper(env, env.task_space, update_on_step=update_on_step, default_task=0)
     return env
 
 
@@ -86,8 +86,6 @@ def run_episodes(curriculum=None, update_on_step=True):
             task = curriculum.sample()[0]
             ep_rews.append(run_episode(env, new_task=task, curriculum=curriculum, update_on_step=update_on_step))
             curriculum._complete_task(task, success_prob=random.random())
-            if curriculum.task_space.num_tasks < 7:
-                curriculum.add_task("")
         else:
             ep_rews.append(run_episode(env))
 
@@ -97,9 +95,6 @@ def run_episodes_queue(task_queue, update_queue, update_on_step=True):
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
-        if env.task_space.num_tasks < 7:
-            env.add_task("")
-
 
 
 @ray.remote
@@ -108,8 +103,6 @@ def run_episodes_ray_syllabus(update_on_step=True):
     ep_rews = []
     for _ in range(N_EPISODES):
         ep_rews.append(run_episode(env))
-        if env.task_space.num_tasks < 7:
-            env.add_task("")
 
 
 @ray.remote
@@ -167,5 +160,3 @@ if __name__ == "__main__":
     end = time.time()
     ray_syllabus_speed = end - start
     print(f"Ray multiprocess test with Syllabus passed: {ray_syllabus_speed:.2f}s")
-
-
