@@ -5,6 +5,17 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 from syllabus.tests import test_determinism
 
+from nle.env.tasks import NetHackScore, NetHackStaircase, NetHackStaircasePet, NetHackScout, NetHackEat, NetHackGold
+from syllabus.examples.task_wrappers import NethackTaskWrapper
+from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
+
+
+def make_nethack_env(seed=42):
+    env = NetHackScore()
+    env = GymV21CompatibilityV0(env=env)
+    env = NethackTaskWrapper(env, seed=seed)
+    return env
+
 
 def make_env(seed=42):
     env_id = "bigfish"
@@ -14,4 +25,4 @@ def make_env(seed=42):
     return env
 
 
-test_determinism(make_env, verbose=1)
+test_determinism(make_nethack_env, verbose=1)

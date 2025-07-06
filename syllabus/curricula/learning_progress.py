@@ -1,96 +1,158 @@
 import math
 import random
 import warnings
-from typing import Any, List
+from typing import Any, List, Union
 
+import gymnasium as gym
 import numpy as np
-from gymnasium.spaces import Discrete, MultiDiscrete
+import torch
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
-from syllabus.task_space import TaskSpace
+from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace
 
 
-class LearningProgressCurriculum(Curriculum):
+class LearningProgress(Curriculum):
     """
-    Provides an interface for tracking success rates of discrete tasks and sampling tasks 
+    Provides an interface for tracking success rates of discrete tasks and sampling tasks
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
-    REQUIRES_STEP_UPDATES = False
-    REQUIRES_EPISODE_UPDATES = False
-    REQUIRES_CENTRAL_UPDATES = False
 
-    def __init__(self, eval_envs, get_action, *args, ema_alpha=0.1, eval_interval=None, eval_interval_steps=None, **kwargs):
+    def __init__(self, *args, eval_envs=None, evaluator=None, ema_alpha=0.1, rnn_shape=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.eval_envs = eval_envs
-        self.get_action = get_action
+        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None, "Either eval_envs and evaluator or eval_fn must be provided."
+        # Decide evaluation method
+        if eval_fn is None:
+            self.custom_eval = False
+            self.eval_envs = eval_envs
+            self.evaluator = evaluator
+            self._evaluate = self._evaluate_all_tasks
+        else:
+            self.custom_eval = True
+            self._evaluate = eval_fn
+
         self.ema_alpha = ema_alpha
+        self.lstm_shape = rnn_shape
         self.eval_interval = eval_interval
+        assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
-        assert self.eval_interval is None or self.eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
+        self.eval_eps = eval_eps
         self.completed_episodes = 0
-        self.completed_steps = 0
+        self.current_steps = 0
 
-        assert isinstance(self.task_space.gym_space, (Discrete, MultiDiscrete))
-        self._p_fast = np.zeros(self.num_tasks)
-        self._p_slow = np.zeros(self.num_tasks)
+        assert isinstance(
+            self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
+        ), f"LearningProgressCurriculum only supports Discrete and MultiDiscrete task spaces. Got {self.task_space.__class__.__name__}."
+        self.random_baseline = None
+        self._p_fast = None
+        self._p_slow = None
+        self._p_true = None
+        self.task_rates = None
+        self._stale_dist = True
 
-        self._evaluate_all_tasks()
+        self.random_baseline = self.eval_and_update(baseline_eval_eps if baseline_eval_eps is not None else eval_eps)
 
-    def _evaluate_all_tasks(self, eval_eps=20):
-        task_progresses = np.zeros(self.task_space.num_tasks)
-        for task_idx, task in enumerate(self.task_space.tasks):
-            obss, _ = self.eval_envs.reset(options=task)
-            ep_counter = 0
-            progress = 0.0
-            while ep_counter < eval_eps:
-                actions = self.get_action(obss)
-                obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
-                dones = tuple(a | b for a, b in zip(terminateds, truncateds))
-                for i, done in enumerate(dones):
-                    if done:
-                        if isinstance(infos, list):
-                            task_progress = infos[i]["final_info"]['task_completion']
-                        elif isinstance(infos, dict):
-                            task_progress = infos["final_info"][i]['task_completion']
-                        progress += task_progress
-                        ep_counter += 1
-            task_progresses[task_idx] = progress
-        task_success_rates = np.divide(task_progresses, float(eval_eps))
+    def eval_and_update(self, eval_eps=1):
+        task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
+
+        if self.random_baseline is None:
+            # Assume that any perfect success rate is actually 75% due to evaluation precision.
+            # Prevents NaN probabilities and prevents task from being completely ignored.
+            high_success_idxs = np.where(task_success_rates > 0.75)
+            high_success_rates = task_success_rates[high_success_idxs]
+            warnings.warn(
+                f"Tasks {high_success_idxs} had very high success rates {high_success_rates} for random baseline. Consider removing them from the training set of tasks.")
+            self.random_baseline = np.minimum(task_success_rates, 0.75)
 
         # Update task scores
-        self._p_fast = (task_progresses * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
-        self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+        normalized_task_success_rates = np.maximum(
+            task_success_rates - self.random_baseline, np.zeros(task_success_rates.shape)) / (1.0 - self.random_baseline)
+
+        if self._p_fast is None:
+            # Initial values
+            self._p_fast = normalized_task_success_rates
+            self._p_slow = normalized_task_success_rates
+            self._p_true = task_success_rates
+        else:
+            # Exponential moving average
+            self._p_fast = (normalized_task_success_rates * self.ema_alpha) + (self._p_fast * (1.0 - self.ema_alpha))
+            self._p_slow = (self._p_fast * self.ema_alpha) + (self._p_slow * (1.0 - self.ema_alpha))
+            self._p_true = (task_success_rates * self.ema_alpha) + (self._p_true * (1.0 - self.ema_alpha))
+
+        self.task_rates = task_success_rates    # Logging only
+        self._stale_dist = True
+        self.task_dist = None
 
         return task_success_rates
 
-    def update_task_progress(self, task: int, progress: float, env_id: int = None):
+    def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
+        if verbose:
+            print("Evaluating tasks for {eval_episodes} episodes.")
+        task_success_rates = np.zeros(self.task_space.num_tasks)
+        lstm_state = torch.zeros(*self.lstm_shape) if self.lstm_shape else None
+        obss, _ = self.eval_envs.reset()
+        ep_counter = 0
+        dones = [False] * self.eval_envs.num_envs
+        task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
+        task_successes = np.zeros(self.task_space.num_tasks)
+
+        while ep_counter < eval_episodes:
+            actions, lstm_state, _ = self.evaluator.get_action(obss, lstm_state=lstm_state, done=dones)
+            actions = torch.flatten(actions)
+            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                actions = actions.int()
+            obss, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions.cpu().numpy())
+            dones = tuple(a | b for a, b in zip(terminateds, truncateds))
+
+            if "task_completion" in infos:
+                task_completions = infos["task_completion"]
+                task_idx = infos["task"]
+
+                for task, completion, done in zip(task_idx, task_completions, dones):
+                    if abs(completion) >= 1.0:
+                        task_counts[task] += 1
+                        task_successes[task] += math.floor(max(completion, 0.0))
+            else:
+                warnings.warn("Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
+
+            for done in dones:
+                if done:
+                    ep_counter += 1
+                    if verbose and ep_counter % 100 == 0:
+                        print([f"{f}/{g}" for f, g in zip(task_successes, task_counts)])
+
+        # Warn user if any task_counts are 0
+        if np.any(task_counts == 0):
+            warnings.warn(
+                f"Tasks {np.where(task_counts == 0)} were not attempted during evaluation. Consider increasing eval episodes.")
+
+        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
+        task_success_rates = np.divide(task_successes, task_counts)
+        return task_success_rates
+
+    def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
-        if task is None or progress == 0.0:
-            return
         super().update_task_progress(task, progress)
 
-        self._p_fast[task] = (progress * self.ema_alpha) + (self._p_fast[task] * (1.0 - self.ema_alpha))
-        self._p_slow[task] = (self._p_fast[task] * self.ema_alpha) + (self._p_slow[task] * (1.0 - self.ema_alpha))
-
-    def update_on_episode(self, episode_return: float, episode_length: int, episode_task: Any, env_id: int = None) -> None:
+    def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
-        self.completed_steps += episode_length
+        self.current_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
-            self._evaluate_all_tasks()
-        if self.eval_interval_steps is not None and self.completed_steps > self.eval_interval_steps:
-            self._evaluate_all_tasks()
-            self.completed_steps = 0
+            self.eval_and_update(eval_eps=self.eval_eps)
+        if self.eval_interval_steps is not None and self.current_steps > self.eval_interval_steps:
+            self.eval_and_update(eval_eps=self.eval_eps)
+            self.current_steps = 0
 
     def _learning_progress(self, reweight: bool = True) -> float:
         """
         Compute the learning progress metric for the given task.
         """
-        slow = self._reweight(self._p_slow) if reweight else self._p_slow
         fast = self._reweight(self._p_fast) if reweight else self._p_fast
+        slow = self._reweight(self._p_slow) if reweight else self._p_slow
+
         return abs(fast - slow)
 
     def _reweight(self, p: np.ndarray, p_theta: float = 0.1) -> float:
@@ -102,31 +164,56 @@ class LearningProgressCurriculum(Curriculum):
         return numerator / denominator
 
     def _sigmoid(self, x: np.ndarray):
+        """ Sigmoid function for reweighting the learning progress."""
         return 1 / (1 + np.exp(-x))
 
     def _sample_distribution(self) -> List[float]:
-        if self.num_tasks == 0:
-            return []
+        """ Return sampling distribution over the task space based on the learning progress."""
+        if not self._stale_dist:
+            # No changes since distribution was last computed
+            return self.task_dist
 
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
-        task_lps = self._learning_progress()
-        posidxs = [i for i, lp in enumerate(task_lps) if lp > 0]
-        zeroout = len(posidxs) > 0
+        learning_progress = self._learning_progress()
+        posidxs = [i for i, lp in enumerate(learning_progress) if lp > 0 or self._p_true[i] > 0]
+        any_progress = len(posidxs) > 0
 
-        subprobs = task_lps[posidxs] if zeroout else task_lps
+        subprobs = learning_progress[posidxs] if any_progress else learning_progress
         std = np.std(subprobs)
         subprobs = (subprobs - np.mean(subprobs)) / (std if std else 1)  # z-score
         subprobs = self._sigmoid(subprobs)  # sigmoid
         subprobs = subprobs / np.sum(subprobs)  # normalize
-        if zeroout:
+        if any_progress:
             # If some tasks have nonzero progress, zero out the rest
-            task_dist = np.zeros(len(task_lps))
+            task_dist = np.zeros(len(learning_progress))
             task_dist[posidxs] = subprobs
         else:
             # If all tasks have 0 progress, return uniform distribution
             task_dist = subprobs
+
+        self.task_dist = task_dist
+        self._stale_dist = False
         return task_dist
+
+    def log_metrics(self, writer, logs, step, log_n_tasks=1):
+        logs = [] if logs is None else logs
+        learning_progresses = self._learning_progress()
+        logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
+        if self.task_rates is not None:
+            logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
+
+        tasks = range(self.num_tasks)
+        if self.num_tasks > log_n_tasks and log_n_tasks != -1:
+            warnings.warn(f"Too many tasks to log {self.num_tasks}. Only logging stats for 1 task.", stacklevel=2)
+            tasks = tasks[:log_n_tasks]
+
+        for idx in tasks:
+            name = self.task_names(self.tasks[idx], idx)
+            logs.append((f"curriculum/{name}_slow", self._p_slow[idx]))
+            logs.append((f"curriculum/{name}_fast", self._p_fast[idx]))
+            logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
+        return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
 
 if __name__ == "__main__":
@@ -155,7 +242,7 @@ if __name__ == "__main__":
     tasks = range(20)
     histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
 
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+    curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
     for i in range(len(histories[0][0])):
         for task in tasks:
             curriculum.update_task_progress(task, histories[task][0][i])
@@ -170,7 +257,7 @@ if __name__ == "__main__":
 
     tasks = [0]
     histories = {task: generate_history(n=200, center=75, curve=0.1) for task in tasks}
-    curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+    curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
     lp_raw = []
     lp_reweight = []
     p_fast = []
@@ -218,7 +305,7 @@ if __name__ == "__main__":
 
         # Z-score plot
         tasks = [i for i in range(50)]
-        curriculum = LearningProgressCurriculum(TaskSpace(len(tasks)))
+        curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
         histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
         for i in range(len(histories[0][0])):
             for task in tasks:

@@ -1,8 +1,6 @@
 import gymnasium as gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
-from typing import Tuple
-from syllabus.task_space import TaskSpace
 
 
 class TaskWrapper(gym.Wrapper):
@@ -13,14 +11,17 @@ class TaskWrapper(gym.Wrapper):
         self.task_space = None
         self.task = None    # TODO: Would making this a property protect from accidental overriding?
 
-    def reset(self, *args, **kwargs):
-        new_task = kwargs.pop("new_task", None)
+    def reset(self, new_task=None, **kwargs):
+        # Change task if new one is provided
+        if new_task is None:
+            new_task = kwargs.pop("options", None)
+
         if new_task is not None:
             self.change_task(new_task)
-            # TODO: Handle failure case for change task
-            self.task = new_task
 
         obs, info = self.env.reset(**kwargs)
+        info["task_completion"] = 0.0
+        info["task"] = self.task
         return self.observation(obs), info
 
     def change_task(self, new_task):
@@ -34,10 +35,7 @@ class TaskWrapper(gym.Wrapper):
         If you need to reset or re-init the environment here, make sure to check
         that it is not in the middle of an episode to avoid unexpected behavior.
         """
-        raise NotImplementedError
-
-    def add_task(self, task):
-        raise NotImplementedError("This environment does not support adding tasks.")
+        self.task = new_task
 
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """
@@ -75,14 +73,16 @@ class TaskWrapper(gym.Wrapper):
         # Determine completion status of the current task
         self.task_completion = self._task_completion(obs, rew, term, trunc, info)
         info["task_completion"] = self.task_completion
+        info["task"] = self.task
 
         return self.observation(obs), rew, term, trunc, info
 
     def __getattr__(self, attr):
-        env_attr = self.env.__class__.__dict__.get(attr, None)
-
-        if env_attr and callable(env_attr):
+        env_attr = getattr(self.env, attr)
+        if env_attr:
             return env_attr
+        else:
+            raise AttributeError(f"TaskWrapper and env do not have attribute {attr}")
 
 
 class PettingZooTaskWrapper(BaseParallelWrapper):
@@ -102,12 +102,16 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
     def get_current_task(self):
         return self.current_task
 
-    def reset(self, *args, **kwargs):
+    def reset(self, **kwargs):
         new_task = kwargs.pop("new_task", None)
         if new_task is not None:
             self.change_task(new_task)
             self.task = new_task
-        return self.observation(self.env.reset(*args, **kwargs))
+        obs, info = self.env.reset(**kwargs)
+        for agent in info.keys():
+            info[agent]["task_completion"] = 0.0
+            info[agent]["task_id"] = self.task
+        return self.observation(obs), info
 
     def change_task(self, new_task):
         """
@@ -124,6 +128,13 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
 
     def step(self, action):
         obs, rew, term, trunc, info = self.env.step(action)
+        # Determine completion status of the current task
+        self.task_completion = self._task_completion(obs, rew, term, trunc, info)
+        for agent in self.env.possible_agents:
+            if agent not in info:
+                info[agent] = {}
+            info[agent]["task_completion"] = self.task_completion
+            info[agent]["task_id"] = self.task
         return obs, rew, term, trunc, info
 
     def observation(self, observation):
@@ -157,5 +168,4 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
         Returns a boolean or float value indicating binary completion or scalar degree of completion.
         # TODO: Support PettingZoo environments
         """
-        # return 1.0 if term or trunc else 0.0
-        return info
+        return 0.0

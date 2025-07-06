@@ -1,17 +1,17 @@
 """ Test curriculum synchronization across multiple processes. """
 import time
 import random
-from multiprocessing import SimpleQueue, Process
+from multiprocessing import Process
 
 import ray
 
 from nle.env.tasks import NetHackScore
 from syllabus.examples import NethackTaskWrapper
-from syllabus.curricula import LearningProgressCurriculum, PrioritizedLevelReplay
-from syllabus.core import (MultiProcessingSyncWrapper,
-                           RaySyncWrapper,
-                           RayCurriculumWrapper,
-                           MultiProcessingCurriculumWrapper,
+from syllabus.curricula import LearningProgress, PrioritizedLevelReplay
+from syllabus.core import (GymnasiumSyncWrapper,
+                           RayGymnasiumSyncWrapper,
+                           RayCurriculumSyncWrapper,
+                           CurriculumSyncWrapper,
                            make_multiprocessing_curriculum,
                            make_ray_curriculum)
 
@@ -29,19 +29,19 @@ def create_nethack_env():
 def create_nethack_env_queue(task_queue, update_queue):
     env = NetHackScore()
     env = NethackTaskWrapper(env)
-    env = MultiProcessingSyncWrapper(env,
-                                     task_queue,
-                                     update_queue,
-                                     update_on_step=False,
-                                     default_task=0,
-                                     task_space=env.task_space)
+    env = GymnasiumSyncWrapper(env,
+                               env.task_space,
+                               task_queue,
+                               update_queue,
+                               update_on_step=False,
+                               default_task=0)
     return env
 
 
 def create_nethack_env_ray():
     env = NetHackScore()
     env = NethackTaskWrapper(env)
-    env = RaySyncWrapper(env, update_on_step=False, default_task=0, task_space=env.task_space)
+    env = RayGymnasiumSyncWrapper(env, update_on_step=False, default_task=0, task_space=env.task_space)
     return env
 
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     print(f"Python multiprocess test passed: {end - start:.2f}s")
 
     # Test Ray multi process
-    curriculum = make_ray_curriculum(PrioritizedLevelReplay, 
+    curriculum = make_ray_curriculum(PrioritizedLevelReplay,
                                      ([1], sample_env.action_space),
                                      {},
                                      action_space=sample_env.action_space,
