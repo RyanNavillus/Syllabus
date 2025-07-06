@@ -64,8 +64,9 @@ class TaskSampler:
         task_buffer_priority="replay_support",
         use_dense_rewards=False,
         gamma=0.999,
+        evaluator=None,
+        eval_envs=None,
     ):
-        print("DIFF")
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
@@ -122,6 +123,8 @@ class TaskSampler:
 
         # Offline evaluation
         self.offline_queue = []
+        self.evaluator = evaluator
+        self.eval_envs = eval_envs
 
     def _init_task_index(self, tasks):
         if tasks:
@@ -159,6 +162,10 @@ class TaskSampler:
             "alt_advantage_abs",
         ]
 
+    
+    def _evaluate_task_queue(self):
+        pass
+
     def update_with_rollouts(self, rollouts, actor_id=None, external_scores=None):
         if self.strategy in ["random", "off"]:
             return
@@ -194,6 +201,10 @@ class TaskSampler:
             score_function = self._average_external_score
 
         self._update_with_rollouts(rollouts, score_function, actor_index=actor_id, external_scores=external_scores)
+
+        # Evaluate random tasks
+        if len(self.offline_queue) > 16:
+            self._evaluate_task_queue()
 
     def update_task_score(self, actor_index, task, score, max_score, num_steps, running_mean=True):
         if self.sample_full_distribution and task in self.staging_task_set:
@@ -637,7 +648,7 @@ class TaskSampler:
                 return int(self.tasks[task_idx])
 
         replay_decision = self.sample_replay_decision()
-        print(f"Sampling replay decision {self._proportion_filled}")
+        print(f"Sampling replay decision {self._proportion_filled} {replay_decision}")
 
         # If we have seen enough tasks to sample a replay level, stop training on them and only evaluate
         if self._proportion_filled >= self.rho:

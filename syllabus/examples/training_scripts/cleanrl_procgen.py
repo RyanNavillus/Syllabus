@@ -282,7 +282,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict={"strategy": "value_l1", "rho": 0.5},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
