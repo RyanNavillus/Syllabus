@@ -15,7 +15,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False, pie_plot_interval: int = 50) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False, pie_plot_interval: int = 1) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -171,7 +171,7 @@ class Curriculum:
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
-    def plot_pie_chart(self, task_dist, log_n_tasks: int = 1):
+    def plot_pie_chart(self, task_dist, run_id, log_n_tasks: int = 1):
         # Identify tasks above the 1% threshold
         threshold = 0.01
         eligible_indices = [i for i, p in enumerate(task_dist) if p > threshold]
@@ -199,7 +199,7 @@ class Curriculum:
         fig, ax = plt.subplots()
         ax.pie(top_probs, labels=top_labels, autopct="%1.1f%%", startangle=0)
         ax.set_title("Task Sampling Distribution")
-        plt.savefig('tmp_syllabus_fig.png')
+        plt.savefig(f'tmp_syllabus_fig_{run_id}.png')
         return fig
 
     def log_metrics(self, writer, logs: List[Dict], step: int = None, log_n_tasks: int = -1):
@@ -246,12 +246,11 @@ class Curriculum:
             logp = np.log(entropy_task_dist)
             entropy = np.sum(-entropy_task_dist * logp)
             logs.append(("curriculum/entropy", entropy))
-
             if self.pie_plot_counter % self.pie_plot_interval == 0:
                 self.pie_plot_counter = 0
                 # Generate task distribution pie chart
-                self.plot_pie_chart(task_dist, log_n_tasks=log_n_tasks)
-                wandb.log({"curriculum/task_distribution": wandb.Image("tmp_syllabus_fig.png"), "global_step": step})
+                self.plot_pie_chart(task_dist, wandb.run.id, log_n_tasks=log_n_tasks)
+                wandb.log({"curriculum/task_distribution": wandb.Image(f"tmp_syllabus_fig_{wandb.run.id}.png"), "global_step": step})
 
                 # Get top 10 tasks
                 top_10 = sorted(

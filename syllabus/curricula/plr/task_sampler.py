@@ -276,8 +276,6 @@ class TaskSampler:
 
     def _sample_replay_level(self):
         sample_weights = self.sample_weights()
-        if np.isclose(np.sum(sample_weights), 0):
-            sample_weights = np.ones_like(sample_weights, dtype=float) / len(sample_weights)
 
         task_idx = np.random.choice(range(self.num_tasks), 1, p=sample_weights)[0]
 
@@ -328,9 +326,7 @@ class TaskSampler:
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)
         weights = weights * (1 - self.unseen_task_weights)  # zero out unseen levels
-        z = np.sum(weights)
-        if z > 0:
-            weights /= z
+        weights = weights / weights.sum() if weights.sum() > 0 else weights
 
         staleness_weights = 0
         if self.staleness_coef > 0:
@@ -340,10 +336,14 @@ class TaskSampler:
                 self.task_staleness,
             )
             staleness_weights = staleness_weights * (1 - self.unseen_task_weights)
-            z = np.sum(staleness_weights)
-            if z > 0:
-                staleness_weights /= z
+            staleness_weights = staleness_weights / staleness_weights.sum() if staleness_weights.sum() > 0 else staleness_weights
+
             weights = (1 - self.staleness_coef) * weights + self.staleness_coef * staleness_weights
+
+        if np.isclose(np.sum(weights), 0):
+            weights = np.ones_like(weights, dtype=float) / len(weights)
+
+        weights = weights / weights.sum() if weights.sum() > 0 else weights
         return weights
 
     def _score_transform(self, transform, temperature, scores):
