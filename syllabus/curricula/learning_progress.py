@@ -381,7 +381,7 @@ class OnlineLearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, save_last=False, **kwargs):
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_interval=None, eval_interval_steps=None, normalize_success=True, uniform_prob=0.25, save_last=False, use_live_dist=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.ema_alpha = ema_alpha
@@ -395,6 +395,7 @@ class OnlineLearningProgress(Curriculum):
         self.normalized_task_success_rates = None
         self.uniform_prob = uniform_prob
         self.save_last = save_last
+        self.use_live_dist = use_live_dist
         self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.int_)
         self.current_task_counts = np.zeros(self.num_tasks, dtype=np.int_)
 
@@ -494,7 +495,7 @@ class OnlineLearningProgress(Curriculum):
 
     def _sample_distribution(self) -> List[float]:
         """ Return sampling distribution over the task space based on the learning progress."""
-        if not self._stale_dist:
+        if not self.use_live_dist and not self._stale_dist:
             # No changes since distribution was last computed
             return self.task_dist
 
@@ -531,7 +532,7 @@ class OnlineLearningProgress(Curriculum):
 
     def log_metrics(self, writer, logs, step, log_n_tasks=-1):
         logs = [] if logs is None else logs
-        learning_progresses = self._learning_progress()
+        learning_progresses = np.zeros(self.num_tasks) if self.task_rates is None else self._learning_progress()
         logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
         if self.task_rates is not None:
             logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
@@ -543,7 +544,8 @@ class OnlineLearningProgress(Curriculum):
 
         for idx in tasks:
             name = self.task_names(self.tasks[idx], idx)
-            logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
+            if self.task_rates is not None:
+                logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
             logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
@@ -552,14 +554,19 @@ class StratifiedLearningProgress(LearningProgress):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
-        assert selection_metric in ["success", "progress"]
+        assert selection_metric in ["success", "score", "learnability"], f"Selection metric {selection_metric} not recognized. Use 'success', 'score', or 'learnability'."
         self.selection_metric = selection_metric
 
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
         selection_weight = np.ones(len(lp_dist)) * 0.001
-        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+        if self.selection_metric == "learnability":
+            metric = self.task_rates * (1.0 - self.task_rates)
+        elif self.selection_metric == "score":
+            metric = lp_dist
+        else:
+            metric = self.task_rates
 
         # Find the highest success rate task in each strata
         for strata in self.task_space.strata:
@@ -576,14 +583,20 @@ class StratifiedOnlineLearningProgress(OnlineLearningProgress):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
-        assert selection_metric in ["success", "progress"]
+        assert selection_metric in ["success", "score", "learnability"], f"Selection metric {selection_metric} not recognized. Use 'success', 'score', or 'learnability'."
         self.selection_metric = selection_metric
 
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
         selection_weight = np.ones(len(lp_dist)) * 0.001
-        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+
+        if self.selection_metric == "learnability":
+            metric = self.task_rates * (1.0 - self.task_rates)
+        elif self.selection_metric == "score":
+            metric = lp_dist
+        else:
+            metric = self.task_rates
 
         # Find the highest success rate task in each strata
         for strata in self.task_space.strata:

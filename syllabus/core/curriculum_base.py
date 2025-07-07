@@ -15,7 +15,7 @@ class Curriculum:
     """Base class and API for defining curricula to interface with Gym environments.
     """
 
-    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False) -> None:
+    def __init__(self, task_space: TaskSpace, random_start_tasks: int = 0, task_names: Callable = None, record_stats: bool = False, pie_plot_interval: int = 50) -> None:
         """Initialize the base Curriculum
 
         :param task_space: the environment's task space from which new tasks are sampled
@@ -30,6 +30,8 @@ class Curriculum:
         self.completed_tasks = 0
         self.task_names = task_names if task_names is not None else lambda task, idx: idx
         self.stat_recorder = StatRecorder(self.task_space, task_names=task_names) if record_stats else None
+        self.pie_plot_interval = pie_plot_interval
+        self.pie_plot_counter = 0
 
         if self.num_tasks == 0:
             warnings.warn("Task space is empty. This will cause errors during sampling if no tasks are added.", stacklevel=2)
@@ -140,10 +142,10 @@ class Curriculum:
     def _should_use_startup_sampling(self) -> bool:
         return self.random_start_tasks > 0 and self.completed_tasks < self.random_start_tasks
 
-    def _startup_sample(self) -> List:
-        return self.task_space.sample()
+    def _startup_sample(self, k: int = 1) -> List[Any]:
+        return [self.task_space.encode(self.task_space.sample()) for _ in range(k)]
 
-    def sample(self, k: int = 1) -> Union[List, Any]:
+    def sample(self, k: int = 1) -> List[Any]:
         """Sample k tasks from the curriculum.
 
         :param k: Number of tasks to sample, defaults to 1
@@ -220,8 +222,11 @@ class Curriculum:
             use_wandb = False
 
         try:
-            task_dist = self._sample_distribution()
+            # Use uniform distribution during startup sampling
+            task_dist = self._sample_distribution() if not self._should_use_startup_sampling() else np.ones(self.num_tasks) / self.num_tasks
             task_dist = np.nan_to_num(task_dist)  # Convert NaN to 0
+
+            # Reduce amount of per-task basic logging
             log_task_dist = task_dist
             if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
                 warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
@@ -242,25 +247,28 @@ class Curriculum:
             entropy = np.sum(-entropy_task_dist * logp)
             logs.append(("curriculum/entropy", entropy))
 
-            # Generate task distribution pie chart
-            self.plot_pie_chart(task_dist, log_n_tasks=log_n_tasks)
-            wandb.log({"curriculum/task_distribution": wandb.Image("tmp_syllabus_fig.png"), "global_step": step})
+            if self.pie_plot_counter % self.pie_plot_interval == 0:
+                self.pie_plot_counter = 0
+                # Generate task distribution pie chart
+                self.plot_pie_chart(task_dist, log_n_tasks=log_n_tasks)
+                wandb.log({"curriculum/task_distribution": wandb.Image("tmp_syllabus_fig.png"), "global_step": step})
 
-            # Get top tasks
-            top_10 = sorted(
-                zip(self.tasks, task_dist),
-                key=lambda x: x[1],
-                reverse=True
-            )[:10]
-            top_10_tasks, top_10_probs = zip(*top_10)
+                # Get top 10 tasks
+                top_10 = sorted(
+                    zip(self.tasks, task_dist),
+                    key=lambda x: x[1],
+                    reverse=True
+                )[:10]
+                top_10_tasks, top_10_probs = zip(*top_10)
 
-            # Log top tasks to wandb table
-            try:
-                import wandb
-                self.wandb_table.add_data(step, "\n".join(top_10_tasks), "\n".join([f"{t:.3f}" for t in top_10_probs]))
-                wandb.log({"curriculum/top_tasks": self.wandb_table, "global_step": step})
-            except ImportError:
-                pass
+                # Log top 10 tasks to wandb table
+                try:
+                    import wandb
+                    self.wandb_table.add_data(step, "\n".join(top_10_tasks), "\n".join([f"{t:.3f}" for t in top_10_probs]))
+                    wandb.log({"curriculum/top_tasks": self.wandb_table, "global_step": step})
+                except ImportError:
+                    pass
+            self.pie_plot_counter += 1
 
             # Write logs
             for name, prob in logs:

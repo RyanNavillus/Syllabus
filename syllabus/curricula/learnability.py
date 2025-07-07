@@ -335,14 +335,20 @@ class StratifiedLearnability(Learnability):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
-        assert selection_metric in ["success", "progress"]
+        assert selection_metric in ["success", "score", "learnability"], f"Selection metric {selection_metric} not recognized. Use 'success', 'score', or 'learnability'."
         self.selection_metric = selection_metric
 
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
-        selection_weight = np.ones(len(lp_dist)) * 0.0001
-        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+        selection_weight = np.ones(len(lp_dist)) * 0.001
+
+        if self.selection_metric == "learnability":
+            metric = self.task_rates * (1.0 - self.task_rates)
+        elif self.selection_metric == "score":
+            metric = lp_dist
+        else:
+            metric = self.task_rates
 
         # Find the highest success rate task in each strata
         for strata in self.task_space.strata:
