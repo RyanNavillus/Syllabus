@@ -70,7 +70,6 @@ class ProcgenTaskWrapper(TaskWrapper):
 
         Ignores requests for unknown tasks or task changes outside of a reset.
         """
-        print("New task", new_task)
         seed = int(new_task)
         self.task = seed
         self.seed(seed)

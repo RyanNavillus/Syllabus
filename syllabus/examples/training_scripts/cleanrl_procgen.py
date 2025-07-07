@@ -157,14 +157,14 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    # TODO: Replace
+    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
 def level_replay_evaluate(
     env_name: str,
-    evaluator: Evaluator,
+    policy: ProcgenAgent,
     num_episodes: int,
     device: torch.device,
     num_levels=0
@@ -174,6 +174,7 @@ def level_replay_evaluate(
     eval_envs = ProcgenEnv(
         num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
     )
+    eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
@@ -224,6 +225,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    print(device)
 
     # Agent setup
     print("Creating agent")
@@ -239,7 +241,6 @@ if __name__ == "__main__":
         num_levels=200,
         task_wrapper=True,
     )
-    evaluator = CleanRLDiscreteEvaluator(agent, make_eval_env=eval_env_fn, device=device, num_eval_processes=64)
 
     # Curriculum setup
     curriculum = None
@@ -261,7 +262,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1", "replay_schedule": "fixed"},
+                task_sampler_kwargs_dict={"strategy": "grounded_positive_value_loss", "replay_schedule": "fixed"},
                 robust_plr=True,
                 eval_envs=plr_eval_env,
                 evaluator=evaluator,
@@ -284,7 +285,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1", "rho": 0.5},
+                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "rho": 0.5},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -515,10 +516,10 @@ if __name__ == "__main__":
 
         # Evaluate agent
         mean_eval_returns, stddev_eval_returns, normalized_mean_eval_returns = level_replay_evaluate(
-            args.env_id, evaluator, args.num_eval_episodes, device, num_levels=0
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=0
         )
         mean_train_returns, stddev_train_returns, normalized_mean_train_returns = level_replay_evaluate(
-            args.env_id, evaluator, args.num_eval_episodes, device, num_levels=200
+            args.env_id, agent, args.num_eval_episodes, device, num_levels=200
         )
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes

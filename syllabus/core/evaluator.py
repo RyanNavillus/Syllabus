@@ -15,7 +15,7 @@ from syllabus.core.curriculum_sync_wrapper import make_multiprocessing_curriculu
 from syllabus.core.environment_sync_wrapper import GymnasiumSyncWrapper
 from syllabus.task_space.task_space import TaskSpace
 
-from syllabus.core.utils import UsageError
+from syllabus.utils import UsageError
 
 Array = Union[np.ndarray, Tensor]
 LSTMState = Tuple[Array, Array]
