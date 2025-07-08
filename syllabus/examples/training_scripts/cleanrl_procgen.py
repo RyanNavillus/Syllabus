@@ -449,16 +449,14 @@ if __name__ == "__main__":
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
             completed_episodes += sum(next_done)
 
-            # if "episode" in infos.keys():
-            #     for i in range(len(infos["episode"]["r"])):
-            #         if next_done[i]:
-            # episode_rewards.append(infos["episode"]['r'][i])
-            # print(f"global_step={global_step}, episodic_return={infos['episode']['r'][i]}")
-            # writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
-            # writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
-            # if curriculum is not None:
-            #     curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
-            # break
+            if "episode" in infos.keys():
+                for i in range(len(infos["episode"]["r"])):
+                    if next_done[i]:
+                        episode_rewards.append(infos["episode"]['r'][i])
+                        print(f"global_step={global_step}, episodic_return={infos['episode']['r'][i]}")
+                        writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
+                        writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
+                        break
 
             if "final_info" in infos:
                 for info in infos["final_info"]:
@@ -485,6 +483,9 @@ if __name__ == "__main__":
                     "tasks": current_tasks,
                 }
                 curriculum.update(plr_update)
+
+        if curriculum is not None:
+            curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
 
         # bootstrap value if not done
         with torch.no_grad():
