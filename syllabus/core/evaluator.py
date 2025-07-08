@@ -45,6 +45,7 @@ class Evaluator:
         self.device = device
         self.preprocess_obs = preprocess_obs
         self._copy_agent = copy_agent   # Save to skip update if possible
+        assert not (simple_copy and not copy_agent), "Cannot use simple_copy without copy_agent being True."
 
         # Make cpu copy of model
         if copy_agent and not simple_copy:
@@ -63,7 +64,7 @@ class Evaluator:
 
         if copy_agent and simple_copy:
             agent.to(self.device)
-            self.agent = copy.deepcopy(agent).to(self.device)
+            self.agent = copy.deepcopy(agent).to(self.device).detach()
             agent.to("cuda")
 
         if not simple_copy:

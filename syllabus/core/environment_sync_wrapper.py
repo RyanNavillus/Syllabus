@@ -168,6 +168,8 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         env_attr = getattr(self.env, attr, None)
         if env_attr is not None:
             return env_attr
+        else:
+            raise AttributeError(f"{self.__class__.__name__} object has no attribute '{attr}'")
 
 
 class PettingZooSyncWrapper(BaseParallelWrapper):
