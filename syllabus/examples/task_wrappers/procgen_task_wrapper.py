@@ -39,7 +39,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        self.env.env.unwrapped.gym_env.env.env._venv.seed(int(seed), 0)
+        self.env.unwrapped.gym_env.unwrapped._venv.seed(int(seed), 0)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -51,18 +51,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         calling the final reset.
         """
         self.episode_return = 0.0
-
-        # Change task if new one is provided
-        # TODO: Move logic to TaskWrapper and refactor all task wrapper examples
-        options = kwargs.pop("options", None)   # Gym environments don't support options
-        seed = kwargs.pop("seed", None)
-        if new_task is not None:
-            self.change_task(new_task)
-        elif options is not None and "seed_task" in options and seed is not None:
-            self.change_task(seed)
-
-        obs, info = self.env.reset(**kwargs)
-        return self.observation(obs), info
+        return super().reset(new_task=new_task, **kwargs)
 
     def change_task(self, new_task: int):
         """
@@ -78,15 +67,18 @@ class ProcgenTaskWrapper(TaskWrapper):
         """
         Step through environment and update task completion.
         """
-        obs, rew, term, trunc, info = self.env.step(action)
+        obs, rew, term, trunc, info = super().step(action)
         self.episode_return += rew
-
-        env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
-        normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
-        clipped_return = 1 if normalized_return > 0.1 else 0    # Binary progress
-        info["task_completion"] = clipped_return
-
         return self.observation(obs), rew, term, trunc, info
 
-    def observation(self, obs):
-        return obs
+    def _task_completion(self, obs, rew, term, trunc, info) -> float:
+        if not (term or trunc):
+            return 0.0
+        env_min, env_max = PROCGEN_RETURN_BOUNDS[self.env_id]
+        normalized_return = (self.episode_return - env_min) / float(env_max - env_min)
+        return normalized_return
+        # clipped_return = 1 if normalized_return > 0.5 else 0    # Binary progress
+        # return clipped_return
+
+    def observation(self, observation):
+        return observation

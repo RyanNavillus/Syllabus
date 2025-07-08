@@ -23,11 +23,11 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLEvaluator
+from syllabus.core.evaluator import CleanRLEvaluator, GymnasiumEvaluationWrapper
 from syllabus.curricula import (BatchedDomainRandomization,
                                 CentralPrioritizedLevelReplay, Constant,
                                 DirectPrioritizedLevelReplay,
-                                DomainRandomization, LearningProgress,
+                                DomainRandomization, LearningProgress, Learnability,
                                 PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -106,6 +106,22 @@ def parse_args():
                         help="curriculum method to use")
     parser.add_argument("--num-eval-episodes", type=int, default=10,
                         help="the number of episodes to evaluate the agent on after each policy update.")
+    parser.add_argument("--normalize-success-rates", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="if toggled, the success rates will be normalized")
+
+    # Learning Progress arguments
+    parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
+                        help="the alpha parameter for the EMA")
+    parser.add_argument("--lp-ptheta", type=float, default=0.1,
+                        help="the ptheta parameter for reweighting")
+
+    # Learnability arguments
+    parser.add_argument("--learnability-top-k", type=int, default=10,
+                        help="the number of top tasks to sample from")
+    parser.add_argument("--learnability-sampling-prob", type=float, default=0.5,
+                        help="the probability of sampling from the top tasks")
+
+
 
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
@@ -134,7 +150,7 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, eval=False):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
@@ -144,12 +160,16 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
         if task_wrapper or curriculum_components is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
 
+        if eval:
+            env = GymnasiumEvaluationWrapper(env, start_index_spacing=3, randomize_order=False)
+
         if curriculum_components is not None:
             env = GymnasiumSyncWrapper(
                 env,
                 env.task_space,
                 curriculum_components,
                 batch_size=256,
+                buffer_size=2,
             )
         return env
     return thunk
@@ -176,6 +196,7 @@ def level_replay_evaluate(
     )
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
     eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
+    eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
 
@@ -310,12 +331,55 @@ if __name__ == "__main__":
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
             eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1) for _ in range(8)]
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
-            eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            lp_eval_envs = wrap_vecenv(eval_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
             curriculum = LearningProgress(
-                eval_envs, evaluator, sample_env.task_space, eval_interval_steps=25 * args.batch_size
+                sample_env.task_space,
+                eval_envs=lp_eval_envs,
+                evaluator=evaluator,
+                eval_interval_steps=25 * args.batch_size,
+                eval_eps=20 * 200,
+                continuous_progress=True,
+                normalize_success=args.normalize_success_rates,
+                ema_alpha=args.lp_ema_alpha,
+                p_theta=args.lp_ptheta
+            )
+        elif args.curriculum_method == "learnability":
+            print("Using learnability.")
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            )
+            lp_eval_envs = wrap_vecenv(eval_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
+            curriculum = Learnability(
+                sample_env.task_space,
+                eval_envs=lp_eval_envs,
+                evaluator=evaluator,
+                eval_interval_steps=25 * args.batch_size,
+                eval_eps=20 * 200,
+                continuous_progress=True,
+                normalize_success=args.normalize_success_rates,
+            )
+        elif args.curriculum_method == "learnability_top10":
+            print("Using learnability top 10.")
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            )
+            lp_eval_envs = wrap_vecenv(eval_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            curriculum = Learnability(
+                sample_env.task_space,
+                eval_envs=lp_eval_envs,
+                evaluator=evaluator,
+                eval_interval_steps=25 * args.batch_size,
+                eval_eps=20 * 200,
+                continuous_progress=True,
+                normalize_success=args.normalize_success_rates,
+                sampling="topk",
+                topk=args.learnability_top_k,
+                learnable_prob=args.learnability_sampling_prob
             )
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
@@ -329,7 +393,7 @@ if __name__ == "__main__":
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum = make_multiprocessing_curriculum(curriculum, use_simple_queues=True)
+        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000, start=False)
 
     # env setup
     print("Creating env")
@@ -349,6 +413,7 @@ if __name__ == "__main__":
     # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
     if args.curriculum:
         del sample_env
+        curriculum.start()
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -368,7 +433,6 @@ if __name__ == "__main__":
     num_updates = args.total_timesteps // args.batch_size
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
-
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
@@ -389,24 +453,22 @@ if __name__ == "__main__":
             logprobs[step] = logprob
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
+            next_obs, reward, term, trunc, infos = envs.step(action.cpu().numpy())
             next_done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
-            tasks[step] = torch.Tensor(info["task"])
+            if args.curriculum:
+                tasks[step] = torch.Tensor(infos["task"])
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
             completed_episodes += sum(next_done)
 
-            if "episode" in info.keys():
-                for idx in np.nonzero(info["episode"]["l"])[0]:
-                    r = info["episode"]["r"][idx]
-                    l = info["episode"]["l"][idx]
-                    episode_rewards.append(r)
-                    print(f"global_step={global_step}, episodic_return={r}")
-                    writer.add_scalar("charts/episodic_return", r, global_step)
-                    writer.add_scalar("charts/episodic_length", l, global_step)
-                    if curriculum is not None:
-                        curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
-                    break
+            if "episode" in infos.keys():
+                for i in range(len(infos["episode"]["r"])):
+                    if next_done[i]:
+                        episode_rewards.append(infos["episode"]['r'][i])
+                        print(f"global_step={global_step}, episodic_return={infos['episode']['r'][i]}")
+                        writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
+                        writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
+                        break
 
             # Syllabus curriculum update
             if args.curriculum and args.curriculum_method == "centralplr":
@@ -422,6 +484,9 @@ if __name__ == "__main__":
                     "tasks": current_tasks,
                 }
                 curriculum.update(plr_update)
+
+        if curriculum is not None:
+            curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -557,6 +622,7 @@ if __name__ == "__main__":
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
-
+    if args.curriculum:
+        curriculum.stop()
     envs.close()
     writer.close()

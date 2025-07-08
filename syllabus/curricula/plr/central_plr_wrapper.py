@@ -37,7 +37,7 @@ class RolloutStorage():
             self.action_log_dist = torch.zeros(num_steps, num_processes, action_space.n)
 
         self.num_steps = num_steps
-        self.env_steps = torch.zeros(num_processes, dtype=torch.int)
+        self.env_steps = torch.zeros(num_processes, dtype=torch.long)
         self.env_to_idx = {}
         self.max_idx = 0
 
@@ -70,28 +70,23 @@ class RolloutStorage():
         if env_ids is None:
             env_ids = list(range(self.num_processes))
         env_idxs = self.get_idxs(env_ids)
-
+        steps = self.env_steps[env_idxs]
         if self._requires_value_buffers:
             assert (value_preds is not None and rewards is not None), "Selected strategy requires value_preds and rewards"
             if len(rewards.shape) == 3:
                 rewards = rewards.squeeze(2)
-            self.value_preds[self.env_steps[env_idxs], env_idxs] = torch.as_tensor(
-                value_preds).reshape((len(env_idxs), 1)).cpu()
+            self.value_preds[steps, env_idxs] = torch.as_tensor(value_preds).reshape((len(env_idxs), 1)).cpu()
             if next_values is not None:
-                self.value_preds[self.env_steps[env_idxs] + 1,
-                                 env_idxs] = torch.as_tensor(next_values).reshape((len(env_idxs), 1)).cpu()
-            self.rewards[self.env_steps[env_idxs], env_idxs] = torch.as_tensor(
-                rewards).reshape((len(env_idxs), 1)).cpu().float()
-            self.masks[self.env_steps[env_idxs] + 1,
-                       env_idxs] = torch.IntTensor(masks.cpu()).reshape((len(env_idxs), 1))
+                self.value_preds[steps + 1, env_idxs] = torch.as_tensor(next_values).reshape((len(env_idxs), 1)).cpu()
+            self.rewards[steps, env_idxs] = torch.as_tensor(rewards).reshape((len(env_idxs), 1)).cpu().float()
+            self.masks[steps + 1, env_idxs] = torch.IntTensor(masks.cpu()).reshape((len(env_idxs), 1))
         else:
-            self.action_log_dist[self.env_steps[env_idxs],
-                                 env_idxs] = action_log_dist.reshape((len(env_idxs), -1)).cpu()
+            self.action_log_dist[steps, env_idxs] = action_log_dist.reshape((len(env_idxs), -1)).cpu()
 
         if tasks is not None:
             assert isinstance(tasks[0], int), "Provided task must be an integer"
-            self.tasks[self.env_steps[env_idxs], env_idxs] = torch.IntTensor(tasks).reshape((len(env_idxs), 1))
-        self.env_steps[env_idxs] = (self.env_steps[env_idxs] + 1) % (self.num_steps + 1)
+            self.tasks[steps, env_idxs] = torch.IntTensor(tasks).reshape((len(env_idxs), 1))
+        self.env_steps[env_idxs] = (steps + 1) % (self.num_steps + 1)
 
     def after_update(self):
         env_idxs = (self.env_steps == self.num_steps).nonzero()
@@ -188,7 +183,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
         try:
             masks = 1 - torch.Tensor(metrics["dones"]).int()
             tasks = metrics["tasks"]
-            tasks = [self._task2index[int(t)] for t in tasks]
+            tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
             raise KeyError(
                 "Missing or malformed PLR update. Must include 'masks', and 'tasks', and all tasks must be in the task space"
@@ -202,7 +197,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
                     f"'value' and 'rew' must be provided in every update for the strategy {self._strategy}."
                 )
             value = metrics["value"]
-            rew = metrics["rew"]
+            rew = torch.Tensor(metrics["rew"])
         else:
             try:
                 action_log_dist = metrics["action_log_dist"]

@@ -7,7 +7,7 @@ EnvTask = TypeVar("EnvTask")
 AgentTask = TypeVar("AgentTask")
 
 
-class DualCurriculumWrapper(CurriculumWrapper):
+class DualCurriculumWrapper():
     """Curriculum wrapper containing both an agent and environment-based curriculum."""
 
     def __init__(
@@ -16,20 +16,14 @@ class DualCurriculumWrapper(CurriculumWrapper):
         agent_curriculum: Curriculum,
         batch_agent_tasks: bool = False,
         batch_size: int = 32,
-        *args,
-        **kwargs,
     ) -> None:
         self.agent_curriculum = agent_curriculum
         self.env_curriculum = env_curriculum
-        self.task_space = TupleTaskSpace(
-            env_curriculum.task_space.gym_space,
-            agent_curriculum.task_space.gym_space,
-        )
+        self.task_space = TupleTaskSpace((env_curriculum.task_space, agent_curriculum.task_space))
         self.batch_agent_tasks = batch_agent_tasks
         self.batch_size = batch_size
         self.batched_tasks = []
         self.agent_task = None
-        super().__init__(self.task_space, *args, **kwargs)
 
     def sample(self, k=1) -> Tuple[EnvTask, AgentTask]:
         """Sets new tasks for the environment and agent curricula."""
@@ -40,10 +34,13 @@ class DualCurriculumWrapper(CurriculumWrapper):
         return list(zip(env_task, agent_task))
 
     def get_agent(self, agent: AgentTask) -> Agent:
-        return self.agent_curriculum.get_opponent(agent)
+        return self.agent_curriculum.get_agent(agent)
 
-    def update_agent(self, agent: Agent) -> int:
-        return self.agent_curriculum.update_agent(agent)
+    def add_agent(self, agent: Agent) -> int:
+        return self.agent_curriculum.add_agent(agent)
+
+    def update_winrate(self, opponent_id: int, opponent_reward: int):
+        self.agent_curriculum.update_winrate(opponent_id, opponent_reward)
 
     def update_on_episode(self, episode_return, length, task, progress, env_id=None):
         self.env_curriculum.update_on_episode(episode_return, length, task[0], progress, env_id)

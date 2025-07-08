@@ -1,3 +1,4 @@
+from collections import deque
 import copy
 import signal
 import sys
@@ -90,6 +91,8 @@ class MultiProcessingComponents:
         self._using_simple_queues = use_simple_queues
         self._maxsize = max_queue_size
         self.started = False
+        self._task_times = deque(maxlen=1000)
+        self._task_time_queue = SimpleQueue() if use_simple_queues else Queue(maxsize=max_queue_size)
 
     def peek_id(self):
         return self._env_count[0]
@@ -114,6 +117,7 @@ class MultiProcessingComponents:
 
     def get_task(self):
         try:
+            start = time.time()
             if self._using_simple_queues:
                 task = self.task_queue.get()
             else:
@@ -121,6 +125,8 @@ class MultiProcessingComponents:
                     warnings.warn(
                         f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
                 task = self.task_queue.get(block=True, timeout=self.timeout)
+            end = time.time()
+            self._task_time_queue.put(end - start)
             return task
         except Empty as e:
             if self._using_simple_queues:
@@ -155,6 +161,9 @@ class MultiProcessingComponents:
 
     def get_metrics(self, log_n_tasks=1):
         logs = []
+        while not self._task_time_queue.empty():
+            self._task_times.append(self._task_time_queue.get(block=False))
+        logs.append(("curriculum/get_task_time_s", sum(self._task_times) / max(len(self._task_times), 1)))
         if not self._using_simple_queues:
             logs.append(("curriculum/updates_in_queue", self.update_queue.qsize()))
             logs.append(("curriculum/tasks_in_queue", self.task_queue.qsize()))
