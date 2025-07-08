@@ -34,6 +34,7 @@ class Evaluator:
         device: Optional[torch.device] = None,
         preprocess_obs: Optional[Callable] = None,
         copy_agent: bool = True,
+        simple_copy: bool = False
     ):
         """
         Initialize the Evaluator.
@@ -58,7 +59,7 @@ class Evaluator:
                 model_data_in_memory.seek(0)
 
                 # Load the model from memory to CPU
-                self.agent = torch.load(model_data_in_memory, map_location=self.device)
+                self.agent = torch.load(model_data_in_memory, map_location=self.device, weights_only=False)
                 model_data_in_memory.close()
             except RuntimeError as e:
                 warnings.warn(str(e), stacklevel=2)

@@ -203,9 +203,6 @@ class TaskSampler:
             score_function = self._average_alt_advantage_abs
         else:
             raise ValueError(f"Unsupported strategy, {self.strategy}")
-
-        if external_scores is not None:
-            score_function = self._average_external_score
         return score_function
 
     def update_with_rollouts(self, rollouts, actor_id=None, external_scores=None):
@@ -453,6 +450,8 @@ class TaskSampler:
         done = ~(rollouts.masks > 0)
         num_actors = rollouts.tasks.shape[1]
 
+        score_function = self.score_function if external_scores is None else self._average_external_score
+
         actors = [actor_index] if actor_index is not None else range(num_actors)
         for actor_index in actors:
             done_steps = done[:, actor_index].nonzero()[:self.num_steps, 0]
@@ -497,7 +496,7 @@ class TaskSampler:
                             gv_ = ret_
                         kwargs_["grounded_value"] = gv_
 
-                score, max_score = self.score_function(**kwargs_)
+                score, max_score = score_function(**kwargs_)
                 num_steps = len(rollouts.tasks[start_t:t, actor_index])
                 _, final_task_idx = self.update_task_score(
                     actor_index, task_t, score, max_score, num_steps, running_mean=(external_scores is not None)
@@ -536,7 +535,7 @@ class TaskSampler:
                     # else:
                     kwargs_["value_preds"] = rollouts.value_preds[start_t:, actor_index]
 
-                score, max_score = self.score_function(**kwargs_)
+                score, max_score = score_function(**kwargs_)
                 self._last_score = score
                 num_steps = len(rollouts.tasks[start_t:, actor_index])
                 if self.sample_full_distribution and task_t in self.staging_task_set:
@@ -670,11 +669,15 @@ class TaskSampler:
             self.returns[step] = gae + value_preds[step]
 
     def compute_discounted_returns(self,
+                                   rewards,
+                                   value_preds,
+                                   masks,
+                                   returns,
                                    returns_buffer, 
                                    next_value,
                                    gamma):
-        self.value_preds[-1] = next_value
-        value_preds = self.value_preds
+        value_preds[-1] = next_value
+        value_preds = value_preds
 
         # if self.use_proper_time_limits:    
         #     self._compute_truncated_value_preds()
@@ -683,28 +686,33 @@ class TaskSampler:
         # if self.use_popart:
         #     self.denorm_value_preds = self.model.popart.denormalize(value_preds) # denormalize all value predictions
 
-        self.returns[-1] = value_preds[-1]
+        returns[-1] = value_preds[-1]
 
-        for step in reversed(range(self.rewards.size(0))):
+        for step in reversed(range(rewards.size(0))):
             returns_buffer[step] = returns_buffer[step + 1] * \
-                gamma * self.masks[step + 1] + self.rewards[step]
+                gamma * masks[step + 1] + rewards[step]
 
     def compute_returns(self,
+                        rewards,
+                        value_preds,
+                        masks,
                         next_value,
                         use_gae,
                         gamma,
                         gae_lambda):
+        returns = np.zeros_like(value_preds)
         if use_gae:
-            self.compute_gae_returns(
-                self.returns, next_value, gamma, gae_lambda)
+            return self.compute_gae_returns(
+                rewards, value_preds, masks, returns, next_value, gamma, gae_lambda)
         else:
-            self.compute_discounted_returns(
-                self.returns, next_value, gamma)
+            return self.compute_discounted_returns(
+                rewards, value_preds, masks, returns, next_value, gamma)
 
     def _evaluate_tasks(self, tasks):
         # TODO: Set task for evaluator envs
-        task_encoded = self.task_space.encode(task)
-        obs, _ = self.eval_envs.reset(seed=list(range(self.eval_envs.num_envs)), options={"seed_task": True})
+        tasks_encoded = [self.task_space.encode(task) for task in tasks]
+        print(f"Evaluating tasks: {tasks_encoded}")
+        obs, _ = self.eval_envs.reset(seed=tasks_encoded, options={"seed_task": True})
         done = False
         # TODO: Support any number of eval processes
         # TODO: Figure out how to generate roughly 1 episode of data for each task?
@@ -713,25 +721,26 @@ class TaskSampler:
         masks = []
         tasks = []
         while not done:
-            action, value, _ = self.evaluator.get_action_and_value(obs)
-            obs, rew, term, trunc, infos = self.eval_envs.step(action)
+            action, value, lstm_states, _ = self.evaluator.get_action_and_value(obs)
+            obs, rew, term, trunc, infos = self.eval_envs.step(action.cpu().numpy())
 
             mask = -torch.Tensor(np.logical_or(term, trunc)).unsqueeze(-1)
             rewards.append(torch.Tensor(
                 rew).unsqueeze(-1))
             value_preds.append(value)
             masks.append(mask)
-            tasks.append(task_encoded * torch.ones_like(mask))
+            tasks.append(torch.Tensor(tasks_encoded))
+            print(infos)
 
             # Check if the episode is done
-            if "final_info" in infos:
+            if "episode" in infos:
                 for i, info in enumerate(infos["final_info"]):
                     if info and "episode" in info:
                         print(info["episode"])
                         assert False
 
         next_value = self.evaluator.get_value(obs)
-        self._robust_rollouts.compute_returns(next_value, self.gamma, self.gae_lambda)
+        returns = self.compute_returns(rewards, value_preds, masks, next_value, self.gamma, self.gae_lambda)
         
         rewards = torch.cat(rewards, dim=0)
         value_preds = torch.cat(value_preds, dim=0)
@@ -771,7 +780,6 @@ class TaskSampler:
                 return int(self.tasks[task_idx])
 
         replay_decision = self.sample_replay_decision()
-        print(f"Sampling replay decision {self._proportion_filled} {replay_decision}")
 
         # If we have seen enough tasks to sample a replay level, stop training on them and only evaluate
         if self._proportion_filled >= self.rho:
@@ -779,7 +787,6 @@ class TaskSampler:
             while not replay_decision:
                 self.offline_queue.append(self._sample_unseen_level())
                 replay_decision = self.sample_replay_decision()
-                print("Replay decision:", "Replay" if replay_decision else "Random")
             return self._sample_replay_level()
         else:
             return self._sample_unseen_level()
@@ -805,6 +812,7 @@ class TaskSampler:
             else:
                 staleness_w = (1.0 / len(staleness_w)) * (1 - self.unseen_task_weights)
             weights = (1.0 - self.staleness_coef) * weights + self.staleness_coef * staleness_w
+        weights = weights / weights.sum() if weights.sum() > 0 else weights
         return weights
 
     def _score_transform(self, transform, temperature, scores):

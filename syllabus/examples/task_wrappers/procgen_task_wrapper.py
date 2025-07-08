@@ -39,7 +39,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         self.observation_space = self.env.observation_space
 
     def seed(self, seed):
-        self.env.gym_env.unwrapped._venv.seed(int(seed), 0)
+        self.env.env.unwrapped.gym_env.env.env._venv.seed(int(seed), 0)
 
     def reset(self, new_task=None, **kwargs):
         """
@@ -55,7 +55,7 @@ class ProcgenTaskWrapper(TaskWrapper):
         # Change task if new one is provided
         # TODO: Move logic to TaskWrapper and refactor all task wrapper examples
         options = kwargs.pop("options", None)   # Gym environments don't support options
-        seed = kwargs.get("seed", None)
+        seed = kwargs.pop("seed", None)
         if new_task is not None:
             self.change_task(new_task)
         elif options is not None and "seed_task" in options and seed is not None:

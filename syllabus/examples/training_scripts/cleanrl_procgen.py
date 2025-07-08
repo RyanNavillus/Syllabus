@@ -157,7 +157,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
+    # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
@@ -175,7 +175,7 @@ def level_replay_evaluate(
         num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
     )
     eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = wrap_vecenv(eval_envs)
+    eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
 
@@ -247,6 +247,7 @@ if __name__ == "__main__":
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
+        sample_env = gym.wrappers.RecordEpisodeStatistics(sample_env)
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
@@ -279,12 +280,22 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "centralplr":
             print("Using centralized prioritized level replay.")
+            plr_eval_envs = gym.vector.SyncVectorEnv(
+                [
+                    make_env(args.env_id, args.seed + i, num_levels=200, task_wrapper=True)
+                    for i in range(args.num_envs)
+                ]
+            )
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
+                robust_plr=True,
+                eval_envs=plr_eval_envs,
+                evaluator=evaluator,
                 task_sampler_kwargs_dict={"strategy": "positive_value_loss", "rho": 0.5},
             )
         elif args.curriculum_method == "dr":
@@ -381,16 +392,18 @@ if __name__ == "__main__":
             next_obs, reward, term, trunc, info = envs.step(action.cpu().numpy())
             next_done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
-            tasks[step] = torch.Tensor([i["task"] for i in info])
+            tasks[step] = torch.Tensor(info["task"])
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
             completed_episodes += sum(next_done)
 
-            for item in info:
-                if "episode" in item.keys():
-                    episode_rewards.append(item['episode']['r'])
-                    print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
-                    writer.add_scalar("charts/episodic_return", item["episode"]["r"], global_step)
-                    writer.add_scalar("charts/episodic_length", item["episode"]["l"], global_step)
+            if "episode" in info.keys():
+                for idx in np.nonzero(info["episode"]["l"])[0]:
+                    r = info["episode"]["r"][idx]
+                    l = info["episode"]["l"][idx]
+                    episode_rewards.append(r)
+                    print(f"global_step={global_step}, episodic_return={r}")
+                    writer.add_scalar("charts/episodic_return", r, global_step)
+                    writer.add_scalar("charts/episodic_length", l, global_step)
                     if curriculum is not None:
                         curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                     break
