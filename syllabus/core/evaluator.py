@@ -1,4 +1,7 @@
 import copy
+from threading import Lock
+from multiprocessing.shared_memory import ShareableList
+
 import warnings
 from collections import defaultdict
 from io import BytesIO
@@ -27,6 +30,7 @@ class Evaluator:
         device: Optional[torch.device] = None,
         preprocess_obs: Optional[Callable] = None,
         copy_agent: bool = True,
+        simple_copy: bool = False,
     ):
         """
         Initialize the Evaluator.
@@ -41,9 +45,10 @@ class Evaluator:
         self.device = device
         self.preprocess_obs = preprocess_obs
         self._copy_agent = copy_agent   # Save to skip update if possible
+        assert not (simple_copy and not copy_agent), "Cannot use simple_copy without copy_agent being True."
 
         # Make cpu copy of model
-        if copy_agent:
+        if copy_agent and not simple_copy:
             try:
                 # Save agent in memory
                 model_data_in_memory = BytesIO()
@@ -55,20 +60,14 @@ class Evaluator:
                 model_data_in_memory.close()
             except RuntimeError as e:
                 warnings.warn(str(e), stacklevel=2)
-                agent.to(self.device)
-                self.agent = copy.deepcopy(agent).to(self.device)
-                agent.to("cuda")
+                simple_copy = True
 
-<<<<<<< Updated upstream
-        else:
-=======
         if copy_agent and simple_copy:
             agent.to(self.device)
             self.agent = copy.deepcopy(agent).to(self.device).detach()
             agent.to("cuda")
 
         if not simple_copy:
->>>>>>> Stashed changes
             self.agent = self._agent_reference
 
     def _update_agent(self):
@@ -380,9 +379,12 @@ class MoolibEvaluator(Evaluator):
 
     def _prepare_state(self, state) -> torch.Tensor:
         full_dict = defaultdict(list)
-        for obs_dict in state:
-            for k, v in obs_dict.items():
-                full_dict[k].append(v)
+        if isinstance(state, list):
+            for obs_dict in state:
+                for k, v in obs_dict.items():
+                    full_dict[k].append(v)
+        elif isinstance(state, dict):
+            full_dict = state
         tensor_dict = {key: torch.unsqueeze(torch.Tensor(np.stack(val_list)), 0).to(self.device)
                        for key, val_list in full_dict.items()}
         return tensor_dict
@@ -401,6 +403,9 @@ class MoolibEvaluator(Evaluator):
 
 
 class GymnasiumEvaluationWrapper(gym.Wrapper):
+    instance_lock = Lock()
+    env_count = ShareableList([0])
+
     def __init__(
         self,
         *args,
@@ -408,26 +413,33 @@ class GymnasiumEvaluationWrapper(gym.Wrapper):
         change_task_on_completion: bool = False,
         eval_only_n_tasks: bool = None,
         ignore_seed: bool = False,
+        randomize_order: bool = True,
+        start_index_spacing: int = 0,
         **kwargs
     ):
+        if start_index_spacing > 0:
+            with GymnasiumEvaluationWrapper.instance_lock:
+                instance_id = GymnasiumEvaluationWrapper.env_count[0]
+                GymnasiumEvaluationWrapper.env_count[0] += 1
+
         super().__init__(*args, **kwargs)
         self.change_task_on_completion = change_task_on_completion
         self.task_space = task_space if task_space is not None else self.env.task_space
-        self.tidx = 0
+        self.tidx = (start_index_spacing * instance_id) % len(self.task_space.tasks) if start_index_spacing > 0 else 0
         eval_only_n_tasks = eval_only_n_tasks if eval_only_n_tasks is not None else self.task_space.num_tasks
         self.random_tasks = copy.deepcopy(self.task_space.tasks[:eval_only_n_tasks])
-        if ignore_seed:
-            rng = np.random.default_rng()
-            rng.shuffle(self.random_tasks)
-        else:
-            np.random.shuffle(self.random_tasks)
+        if randomize_order:
+            if ignore_seed:
+                rng = np.random.default_rng()
+                rng.shuffle(self.random_tasks)
+            else:
+                np.random.shuffle(self.random_tasks)
 
     def reset(self, **kwargs):
         new_task = self.random_tasks[self.tidx]
 
         # Repeat task list when done
         self.tidx = (self.tidx + 1) % len(self.random_tasks)
-
         obs, info = self.env.reset(new_task=new_task, **kwargs)
         return obs, info
 

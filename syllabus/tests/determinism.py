@@ -203,7 +203,7 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
     return2, _ = evaluate_random_policy(make_env, num_episodes=num_episodes, seeds=seeds)
     full_return_test = return1 == return2
     if full_return_test:
-        print_if_verbose(verbose, "PASSED: Random policy returns are deterministic!")
+        print_if_verbose(verbose, f"PASSED: Random policy returns are deterministic! {return1}")
     else:
         print_if_verbose(verbose, f"FAILED: Random policy returns are not deterministic! {return1} != {return2}")
 
@@ -213,7 +213,7 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
                                                   randint(0, 1000000)] * num_episodes)
     return_test = all([ret == avg_returns for ret in returns])
     if return_test:
-        print_if_verbose(verbose, "PASSED: Episodes returns are deterministic!")
+        print_if_verbose(verbose, f"PASSED: Episodes returns are deterministic! {avg_returns}")
     else:
         print_if_verbose(verbose, f"FAILED: Episodes returns are not deterministic! {avg_returns} != {returns}")
 
@@ -229,7 +229,7 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
         print_if_verbose(verbose, "PASSED: Random policy returns with different seeds are different.")
     else:
         print_if_verbose(
-            verbose, f"FAILED: Random policy returns with different seeds are the same. {return1} == {return2}")
+            verbose, f"FAILED: Random policy returns are the same with different seeds. {return1} == {return2}")
 
     print_if_verbose(verbose, "\nTesting actions, rewards, and observations seeds...")
     task1 = task2 = randint(0, 1000000)
@@ -240,12 +240,12 @@ def test_determinism(make_env, num_episodes=10, verbose=0):
 
     if step_tests_same and not step_tests_different:
         print_if_verbose(verbose, "PASSED: Environment returns on individual steps are deterministic with respect to seed.")
-    elif step_tests_different:
-        print_if_verbose(
-            verbose, "FAILED: Environment returns on individual steps are deterministic even with different seeds.")
-    else:
+    if not step_tests_same:
         print_if_verbose(
             verbose, "FAILED: Environment returns on individual steps are not deterministic with the same seed.")
+    if step_tests_different:
+        print_if_verbose(
+            verbose, "FAILED: Environment returns on individual steps are the same with different seeds.")
 
     return {
         "avg_episodic_returns": full_return_test,

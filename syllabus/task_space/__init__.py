@@ -1,1 +1,1 @@
-from .task_space import TaskSpace, DiscreteTaskSpace, MultiDiscreteTaskSpace, TupleTaskSpace, BoxTaskSpace
+from .task_space import BoxTaskSpace, DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace, TaskSpace, TupleTaskSpace

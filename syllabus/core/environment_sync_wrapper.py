@@ -249,7 +249,7 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
         info["task"] = self.task_space.encode(self.get_task())
         if self.update_on_step:
             self._update_step(obs, *self._template_args, info, False, send=False)
-        return self.env.reset(*args, new_task=next_task, **kwargs)
+        return obs, info
 
     def step(self, actions):
         obs, rews, terms, truncs, infos = self.env.step(actions)
