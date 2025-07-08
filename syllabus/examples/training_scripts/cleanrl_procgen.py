@@ -420,7 +420,6 @@ if __name__ == "__main__":
     num_updates = args.total_timesteps // args.batch_size
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
-    torch.autograd.set_detect_anomaly(True)
     for update in range(1, num_updates + 1):
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
@@ -456,17 +455,6 @@ if __name__ == "__main__":
                         print(f"global_step={global_step}, episodic_return={infos['episode']['r'][i]}")
                         writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
                         writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
-                        break
-
-            if "final_info" in infos:
-                for info in infos["final_info"]:
-                    if info and "episode" in info:
-                        episode_rewards.append(info["episode"]['r'])
-                        print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
-                        writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
-                        writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
-                        if curriculum is not None:
-                            curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
                         break
 
             # Syllabus curriculum update
