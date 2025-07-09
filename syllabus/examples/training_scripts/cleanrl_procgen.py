@@ -114,6 +114,8 @@ def parse_args():
                         help="the temperature parameter for the PLR task sampler")
     parser.add_argument("--staleness-coef", type=float, default=0.1,
                         help="the staleness coefficient for the PLR task sampler")
+    parser.add_argument("--plr-ema-alpha", type=float, default=1.0,
+                        help="the alpha parameter for the PLR task sampler EMA")
 
     # Learning Progress arguments
     parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
@@ -341,7 +343,7 @@ if __name__ == "__main__":
                 eval_envs=plr_eval_envs,
                 evaluator=evaluator,
                 task_sampler_kwargs_dict={"strategy": "positive_value_loss",
-                                          "rho": 0.5, "nu": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature},
+                                          "rho": 0.5, "nu": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
