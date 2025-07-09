@@ -19,12 +19,12 @@ class TaskSampler:
         action_space (gym.spaces.Space): Action space of the environment
         num_actors (int): Number of actors/processes
         strategy (str): Strategy for sampling tasks. Some possible values include
-            "random", "sequential", "policy_entropy", "least_confidence", 
+            "random", "sequential", "policy_entropy", "least_confidence",
             "min_margin", "gae", "value_l1", "one_step_td_error", "signed_value_loss",
             "positive_value_loss", "grounded_signed_value_loss", "grounded_positive_value_loss",
             "alt_advantage_abs", "uniform", "off".
         replay_schedule (str): Schedule for sampling replay levels. One of "fixed" or "proportionate".
-        score_transform (str): Transform to apply to task scores. One of "constant", "max", "eps_greedy", 
+        score_transform (str): Transform to apply to task scores. One of "constant", "max", "eps_greedy",
             "rank", "power", "softmax", etc.
         temperature (float): Temperature for score transform. Increasing temperature makes the sampling
             distribution more uniform.
@@ -559,7 +559,6 @@ class TaskSampler:
         start_t = 0
 
         for t in done_steps:
-            print("Start_t", start_t, "T", t, "Num steps", self.num_steps)
             if not start_t < self.num_steps:
                 break
             if t == 0:
@@ -610,13 +609,11 @@ class TaskSampler:
                 and kwargs_["grounded_value"] is not None
             ):
                 self.grounded_values[final_task_idx] = kwargs_["grounded_value"]
-        print("Start_t", start_t, "Num steps", self.num_steps)
-        # TODO: Do we need the partial update here? I assume we don't want to do it to avoid updating on the same task twice
 
     def after_update(self, actor_indices=None):
         if not self._has_working_task_buffer:
             return
-        actor_indices = range(self.partial_task_scores.shape[0]) if actor_indices is None else actor_indices
+        actor_indices = range(self.num_actors) if actor_indices is None else actor_indices
 
         for actor_index in actor_indices:
             for task_idx in range(self.partial_task_scores.shape[1]):
