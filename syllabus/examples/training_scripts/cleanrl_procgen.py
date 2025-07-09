@@ -109,6 +109,12 @@ def parse_args():
     parser.add_argument("--normalize-success-rates", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, the success rates will be normalized")
 
+    # PLR arguments
+    parser.add_argument("--temperature", type=float, default=0.1,
+                        help="the temperature parameter for the PLR task sampler")
+    parser.add_argument("--staleness-coef", type=float, default=0.1,
+                        help="the staleness coefficient for the PLR task sampler")
+
     # Learning Progress arguments
     parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
                         help="the alpha parameter for the EMA")
@@ -334,7 +340,8 @@ if __name__ == "__main__":
                 robust_plr=True,
                 eval_envs=plr_eval_envs,
                 evaluator=evaluator,
-                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "rho": 0.5},
+                task_sampler_kwargs_dict={"strategy": "positive_value_loss",
+                                          "rho": 0.5, "nu": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
