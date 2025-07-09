@@ -314,6 +314,23 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
+                task_sampler_kwargs_dict={"strategy": "value_l1"},
+            )
+        elif args.curriculum_method == "robustplr":
+            print("Using robust prioritized level replay.")
+            plr_eval_envs = gym.vector.AsyncVectorEnv(
+                [
+                    make_env(args.env_id, args.seed + i, num_levels=200, task_wrapper=True)
+                    for i in range(args.num_envs)
+                ]
+            )
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            curriculum = CentralPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
                 robust_plr=True,
                 eval_envs=plr_eval_envs,
                 evaluator=evaluator,
@@ -471,7 +488,7 @@ if __name__ == "__main__":
                         break
 
             # Syllabus curriculum update
-            if args.curriculum and args.curriculum_method == "centralplr":
+            if args.curriculum and args.curriculum_method in ["centralplr", "robustplr"]:
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
                 current_tasks = tasks[step]

@@ -67,20 +67,25 @@ class TaskSampler:
         task_buffer_priority="replay_support",
         use_dense_rewards=False,
         gamma=0.999,
+        gae_lambda=0.95,
         robust_plr: bool = False,
         eval_envs=None,
         evaluator: Evaluator = None,
         observation_space=None,
 
     ):
+        if robust_plr:
+            assert task_space is not None, "Task space must be provided for robust PLR."
+            assert eval_envs is not None, "Eval environments must be provided for robust PLR."
+            assert evaluator is not None, "Evaluator must be provided for robust PLR."
         self.task_space = task_space
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
         self.num_steps = num_steps
         # TODO: Add space for eval actors
-        self.num_actors = num_actors
-
+        self.num_actors = num_actors + eval_envs.num_envs if robust_plr else num_actors
+        self.num_train_actors = num_actors
         self.strategy = strategy
         self.replay_schedule = replay_schedule
         self.score_transform = score_transform
@@ -98,6 +103,7 @@ class TaskSampler:
         self.task_buffer_priority = task_buffer_priority
         self.use_dense_rewards = use_dense_rewards
         self.gamma = gamma
+        self.gae_lambda = gae_lambda
         self.score_function = self._get_score_function()
 
         self._init_task_index(tasks if tasks else [])
@@ -106,9 +112,9 @@ class TaskSampler:
         N = self.task_buffer_size if self.sample_full_distribution else self.num_tasks
         self.unseen_task_weights = np.array([1.0] * N)
         self.task_scores = np.array([0.0] * N, dtype=np.float32)
-        self.partial_task_scores = np.zeros((num_actors, N), dtype=np.float32)
-        self.partial_task_max_scores = np.ones((num_actors, N), dtype=np.float32) * float("-inf")
-        self.partial_task_steps = np.zeros((num_actors, N), dtype=np.int32)
+        self.partial_task_scores = np.zeros((self.num_actors, N), dtype=np.float32)
+        self.partial_task_max_scores = np.ones((self.num_actors, N), dtype=np.float32) * float("-inf")
+        self.partial_task_steps = np.zeros((self.num_actors, N), dtype=np.int32)
         self.task_staleness = np.array([0.0] * N, dtype=np.float32)
 
         self.running_sample_count = 0
@@ -125,13 +131,14 @@ class TaskSampler:
             self.staging_task_set = set()
             self.working_task_set = set()
             self.task2timestamp_buffer = {}
-            self.partial_task_scores_buffer = [defaultdict(float) for _ in range(num_actors)]
-            self.partial_task_max_scores_buffer = [defaultdict(lambda: float("-inf")) for _ in range(num_actors)]
-            self.partial_task_steps_buffer = [defaultdict(int) for _ in range(num_actors)]
+            self.partial_task_scores_buffer = [defaultdict(float) for _ in range(self.num_actors)]
+            self.partial_task_max_scores_buffer = [defaultdict(lambda: float("-inf")) for _ in range(self.num_actors)]
+            self.partial_task_steps_buffer = [defaultdict(int) for _ in range(self.num_actors)]
 
         self._last_score = 0.0
 
         # Offline evaluation
+        self.robust_plr = robust_plr
         self.offline_queue = []
         self.evaluator = evaluator
         self.eval_envs = eval_envs
@@ -172,7 +179,6 @@ class TaskSampler:
             "alt_advantage_abs",
         ]
 
-    
     def _get_score_function(self):
         if self.strategy in ["random", "off"]:
             return
@@ -210,11 +216,10 @@ class TaskSampler:
 
         # Evaluate random tasks
         self.num_eval_envs = self.eval_envs.num_envs if self.eval_envs is not None else 0
-        while len(self.offline_queue) > self.num_eval_envs:
+        while self.robust_plr and len(self.offline_queue) > self.num_eval_envs:
             tasks = self.offline_queue[:self.num_eval_envs]
             self._evaluate_tasks(tasks)
             self.offline_queue = self.offline_queue[self.num_eval_envs:]
-
 
     def update_task_score(self, actor_index, task, score, max_score, num_steps, running_mean=True):
         if self.sample_full_distribution and task in self.staging_task_set:
@@ -448,11 +453,10 @@ class TaskSampler:
         if not self.requires_value_buffers:
             policy_logits = rollouts.action_log_dist
         done = ~(rollouts.masks > 0)
-        num_actors = rollouts.tasks.shape[1]
 
         score_function = self.score_function if external_scores is None else self._average_external_score
 
-        actors = [actor_index] if actor_index is not None else range(num_actors)
+        actors = [actor_index] if actor_index is not None else range(self.num_train_actors)
         for actor_index in actors:
             done_steps = done[:, actor_index].nonzero()[:self.num_steps, 0]
             start_t = 0
@@ -544,6 +548,70 @@ class TaskSampler:
                 else:
                     self._partial_update_task_score(actor_index, task_t, score, max_score,
                                                     num_steps, running_mean=(external_scores is not None))
+
+    def _update_actor_with_data(self, actor_index, tasks, dones, returns, rewards, value_preds, policy_logits=None, alt_returns=None, external_scores=None):
+        if not self._has_working_task_buffer:
+            return
+
+        score_function = self.score_function if external_scores is None else self._average_external_score
+
+        done_steps = dones.nonzero()[:self.num_steps, 0]
+        start_t = 0
+
+        for t in done_steps:
+            print("Start_t", start_t, "T", t, "Num steps", self.num_steps)
+            if not start_t < self.num_steps:
+                break
+            if t == 0:
+                continue
+
+            task_t = tasks[start_t].item()
+            kwargs_ = {
+                "actor_index": actor_index,
+                "done": True,
+                "task": task_t,
+            }
+            if not self.requires_value_buffers:
+                ep_logits = policy_logits[start_t:t]
+                kwargs_["episode_logits"] = torch.log_softmax(ep_logits, -1)
+
+            if external_scores is not None:
+                kwargs_["external_scores"] = external_scores
+
+            if self.requires_value_buffers:
+                kwargs_["returns"] = returns[start_t:t]
+                kwargs_["rewards"] = rewards[start_t:t]
+                if self.strategy == "alt_advantage_abs":
+                    kwargs_["alt_returns"] = alt_returns[start_t:t]
+
+                # if rollouts.use_popart:
+                #     kwargs_["value_preds"] = rollouts.denorm_value_preds[start_t:t, actor_index]
+                # else:
+                kwargs_["value_preds"] = value_preds[start_t:t]
+
+                if self.grounded_values is not None:
+                    task_idx_ = self.task2index.get(task_t, None)
+                    ret_ = rewards[start_t:t].sum(0)
+                    if task_idx_ is not None:
+                        gv_ = max(self.grounded_values[task_idx_], ret_)
+                    else:
+                        gv_ = ret_
+                    kwargs_["grounded_value"] = gv_
+
+            score, max_score = score_function(**kwargs_)
+            num_steps = len(tasks[start_t:t])
+            _, final_task_idx = self.update_task_score(
+                actor_index, task_t, score, max_score, num_steps, running_mean=(external_scores is not None)
+            )
+            if (
+                self.grounded_values is not None
+                and final_task_idx is not None
+                and "grounded_value" in kwargs_
+                and kwargs_["grounded_value"] is not None
+            ):
+                self.grounded_values[final_task_idx] = kwargs_["grounded_value"]
+        print("Start_t", start_t, "Num steps", self.num_steps)
+        # TODO: Do we need the partial update here? I assume we don't want to do it to avoid updating on the same task twice
 
     def after_update(self, actor_indices=None):
         if not self._has_working_task_buffer:
@@ -643,54 +711,60 @@ class TaskSampler:
             self._update_staleness(task_idx)
             return int(self.tasks[task_idx])
 
-    def compute_gae_returns(self, 
+    def compute_gae_returns(self,
+                            rewards,
+                            value_preds,
+                            masks,
                             returns_buffer,
-                            next_value, 
-                            gamma, 
+                            next_value,
+                            gamma,
                             gae_lambda):
-        self.value_preds[-1] = next_value
+        print(value_preds.shape, next_value.shape)
+        value_preds[-1, :] = next_value
         gae = 0
-        value_preds = self.value_preds
+        value_preds = value_preds
 
-        if self.use_proper_time_limits:
-            # Get truncated value preds
-            self._compute_truncated_value_preds()
-            value_preds = self.truncated_value_preds
+        # if self.use_proper_time_limits:
+        #     # Get truncated value preds
+        #     self._compute_truncated_value_preds()
+        #     value_preds = self.truncated_value_preds
 
-        if self.use_popart:
-            self.denorm_value_preds = self.model.popart.denormalize(value_preds) # denormalize all value predictions
-            value_preds = self.denorm_value_preds
+        # if self.use_popart:
+        #     self.denorm_value_preds = self.model.popart.denormalize(value_preds) # denormalize all value predictions
+        #     value_preds = self.denorm_value_preds
 
-        for step in reversed(range(self.rewards.size(0))):
-            delta = self.rewards[step] + \
-                gamma*value_preds[step + 1]*self.masks[step + 1] - value_preds[step]
+        for step in reversed(range(rewards.size(0))):
+            delta = rewards[step] + \
+                gamma*value_preds[step + 1]*masks[step + 1] - value_preds[step]
 
-            gae = delta + gamma * gae_lambda * self.masks[step + 1] * gae
-            self.returns[step] = gae + value_preds[step]
+            gae = delta + gamma * gae_lambda * masks[step + 1] * gae
+            returns_buffer[step] = gae + value_preds[step]
+        return returns_buffer
 
     def compute_discounted_returns(self,
                                    rewards,
                                    value_preds,
                                    masks,
-                                   returns,
-                                   returns_buffer, 
+                                   returns_buffer,
                                    next_value,
                                    gamma):
         value_preds[-1] = next_value
         value_preds = value_preds
 
-        # if self.use_proper_time_limits:    
+        # if self.use_proper_time_limits:
         #     self._compute_truncated_value_preds()
         #     value_preds = self.truncated_value_preds
 
         # if self.use_popart:
         #     self.denorm_value_preds = self.model.popart.denormalize(value_preds) # denormalize all value predictions
 
-        returns[-1] = value_preds[-1]
+        returns_buffer[-1] = value_preds[-1]
 
         for step in reversed(range(rewards.size(0))):
             returns_buffer[step] = returns_buffer[step + 1] * \
                 gamma * masks[step + 1] + rewards[step]
+
+        return returns_buffer
 
     def compute_returns(self,
                         rewards,
@@ -700,7 +774,7 @@ class TaskSampler:
                         use_gae,
                         gamma,
                         gae_lambda):
-        returns = np.zeros_like(value_preds)
+        returns = torch.zeros_like(value_preds)
         if use_gae:
             return self.compute_gae_returns(
                 rewards, value_preds, masks, returns, next_value, gamma, gae_lambda)
@@ -712,55 +786,63 @@ class TaskSampler:
         # TODO: Set task for evaluator envs
         tasks_encoded = [self.task_space.encode(task) for task in tasks]
         print(f"Evaluating tasks: {tasks_encoded}")
-        obs, _ = self.eval_envs.reset(seed=tasks_encoded, options={"seed_task": True})
-        done = False
+        obs, _ = self.eval_envs.reset(seed=tasks_encoded)
         # TODO: Support any number of eval processes
         # TODO: Figure out how to generate roughly 1 episode of data for each task?
         rewards = []
         value_preds = []
-        masks = []
+        dones = []
         tasks = []
-        while not done:
+        episodic_returns = np.zeros(self.eval_envs.num_envs, dtype=np.float32)
+        episodic_lengths = np.zeros(self.eval_envs.num_envs, dtype=np.int32)
+        done_check = np.zeros(self.eval_envs.num_envs, dtype=bool)
+        step = 0
+        while not all(done_check):
             action, value, lstm_states, _ = self.evaluator.get_action_and_value(obs)
             obs, rew, term, trunc, infos = self.eval_envs.step(action.cpu().numpy())
 
-            mask = -torch.Tensor(np.logical_or(term, trunc)).unsqueeze(-1)
+            # done = torch.Tensor(np.logical_or(term, trunc)).unsqueeze(-1)
             rewards.append(torch.Tensor(
                 rew).unsqueeze(-1))
-            value_preds.append(value)
-            masks.append(mask)
+            value_preds.append(value.cpu())
+            dones.append(torch.zeros_like(value.cpu()))
             tasks.append(torch.Tensor(tasks_encoded))
-            print(infos)
 
             # Check if the episode is done
-            if "episode" in infos:
-                for i, info in enumerate(infos["final_info"]):
-                    if info and "episode" in info:
-                        print(info["episode"])
-                        assert False
+            if "episode" in infos.keys():
+                for i in range(len(infos["episode"]["r"])):
+                    if infos["episode"]["l"][i] > 0:
+                        episodic_return = infos["episode"]['r'][i]
+                        episode_length = infos["episode"]['l'][i]
+                        if not done_check[i]:
+                            done_check[i] = True
+                            dones[step][i] = True
+                            episodic_returns[i] = episodic_return
+                            episodic_lengths[i] = episode_length
+                            print(
+                                f"Episode finished: Task {tasks_encoded[i]}, Return: {episodic_return}, Length: {episode_length}")
+            step += 1
 
-        next_value = self.evaluator.get_value(obs)
-        returns = self.compute_returns(rewards, value_preds, masks, next_value, self.gamma, self.gae_lambda)
-        
-        rewards = torch.cat(rewards, dim=0)
-        value_preds = torch.cat(value_preds, dim=0)
-        masks = torch.cat(masks, dim=0)
-        tasks = torch.cat(tasks, dim=0)
+        next_value, _, _ = self.evaluator.get_value(obs)
+        next_value = torch.squeeze(next_value.cpu())
+        rewards = torch.squeeze(torch.stack(rewards, dim=0))
+        value_preds.append(torch.zeros_like(value.cpu()))
+        value_preds = torch.squeeze(torch.stack(value_preds, dim=0))
+        dones.append(torch.zeros_like(value.cpu()))
+        dones = torch.squeeze(torch.stack(dones, dim=0))
+        tasks = torch.squeeze(torch.stack(tasks, dim=0))
+        returns = self.compute_returns(rewards, value_preds, 1 - dones, next_value, True, self.gamma, self.gae_lambda)
 
         # Iterate over eval actor indices
-        for actor_index in range(self.num_actors, self.num_actors + self.eval_envs.num_envs):
-            episode_data = {
-                "tasks": tasks[:, actor_index],
-                "masks": masks[:, actor_index],
-                "rewards": rewards[:, actor_index],
-                "value_preds": value_preds[:, actor_index],
-                "returns": returns[:, actor_index],
-            }
-            self._update_with_rollouts(
-                episode_data, actor_index=actor_index,
+        for actor_index in range(self.eval_envs.num_envs):
+            self._update_actor_with_data(
+                self.num_train_actors + actor_index,
+                tasks[:, actor_index],
+                dones[:, actor_index],
+                returns[:, actor_index],
+                rewards[:, actor_index],
+                value_preds[:, actor_index],
             )
-
-
 
     def sample(self, strategy=None):
         if strategy == "full_distribution":

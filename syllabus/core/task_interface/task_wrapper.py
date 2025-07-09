@@ -1,3 +1,4 @@
+import warnings
 import gymnasium as gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
@@ -14,7 +15,8 @@ class TaskWrapper(gym.Wrapper):
     def reset(self, new_task=None, **kwargs):
         # Change task if new one is provided
         if new_task is None:
-            new_task = kwargs.pop("options", None)
+            seed = kwargs.pop("seed", None)
+            new_task = seed if seed is not None else kwargs.pop("options", None)
 
         if new_task is not None:
             self.change_task(new_task)

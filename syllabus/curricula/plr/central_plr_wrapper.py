@@ -167,7 +167,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
         self._task_sampler = TaskSampler(self.tasks, self._num_steps, eval_envs=eval_envs, evaluator=evaluator,
-                                        robust_plr=robust_plr, action_space=action_space, task_space=task_space, **task_sampler_kwargs_dict)
+                                         robust_plr=robust_plr, action_space=action_space, task_space=task_space, gamma=gamma, gae_lambda=gae_lambda, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,
@@ -183,10 +183,12 @@ class CentralPrioritizedLevelReplay(Curriculum):
         try:
             masks = 1 - torch.Tensor(metrics["dones"]).int()
             tasks = metrics["tasks"]
+            if isinstance(tasks, torch.Tensor):
+                tasks = tasks.tolist()
             tasks = [self._task2index[t] for t in tasks]
         except KeyError as e:
             raise KeyError(
-                "Missing or malformed PLR update. Must include 'masks', and 'tasks', and all tasks must be in the task space"
+                "Missing or malformed PLR update. Must include 'dones', and 'tasks', and all tasks must be in the task space"
             ) from e
 
         # Parse optional update values (required for some strategies)
