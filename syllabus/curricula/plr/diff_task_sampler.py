@@ -56,7 +56,7 @@ class TaskSampler:
         temperature: float = 0.1,
         eps: float = 0.05,
         rho: float = 1.0,
-        nu: float = 0.5,
+        replay_prob: float = 0.5,
         alpha: float = 1.0,
         staleness_coef: float = 0.1,
         staleness_transform: str = "power",
@@ -92,7 +92,7 @@ class TaskSampler:
         self.temperature = temperature
         self.eps = eps
         self.rho = rho
-        self.nu = nu
+        self.nu = replay_prob
         self.alpha = float(alpha)
         self.staleness_coef = staleness_coef
         self.staleness_transform = staleness_transform
@@ -716,7 +716,6 @@ class TaskSampler:
                             next_value,
                             gamma,
                             gae_lambda):
-        print(value_preds.shape, next_value.shape)
         value_preds[-1, :] = next_value
         gae = 0
         value_preds = value_preds
@@ -859,7 +858,6 @@ class TaskSampler:
                 return int(self.tasks[task_idx])
 
         replay_decision = self.sample_replay_decision()
-
         # If we have seen enough tasks to sample a replay level, stop training on them and only evaluate
         if self._proportion_filled >= self.rho:
             # Add random levels to an evaluation queue until we sample a replay level
