@@ -329,7 +329,7 @@ if __name__ == "__main__":
             plr_eval_envs = gym.vector.AsyncVectorEnv(
                 [
                     make_env(args.env_id, args.seed + i, num_levels=200, task_wrapper=True)
-                    for i in range(args.num_envs)
+                    for i in range(16)
                 ]
             )
             evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
@@ -390,7 +390,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "learnability_top10":
             print("Using learnability top 10.")
-            eval_envs = gym.vector.AsyncVectorEnv(
+            eval_envs = gym.vector.SyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
             lp_eval_envs = wrap_vecenv(eval_envs)
@@ -419,11 +419,11 @@ if __name__ == "__main__":
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000, start=False)
+        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000, start=True)
 
     # env setup
     print("Creating env")
-    envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.SyncVectorEnv(
         [
             make_env(
                 args.env_id,
@@ -435,11 +435,13 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
+    print("Created envs")
 
     # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
     if args.curriculum:
         del sample_env
         curriculum.start()
+    print("Curriculum started")
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -460,6 +462,7 @@ if __name__ == "__main__":
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
     for update in range(1, num_updates + 1):
+        print("Update")
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
             frac = 1.0 - (update - 1.0) / num_updates
@@ -628,7 +631,8 @@ if __name__ == "__main__":
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
-        writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
+        if len(episode_rewards) > 0:
+            writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
         writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
         writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
         writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
