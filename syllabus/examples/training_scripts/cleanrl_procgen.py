@@ -323,8 +323,8 @@ if __name__ == "__main__":
                 robust_plr=True,
                 eval_envs=plr_eval_envs,
                 evaluator=evaluator,
-                task_sampler_kwargs_dict={"strategy": "positive_value_loss",
-                                          "rho": 0.5, "nu": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
+                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "proportionate",
+                                          "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
