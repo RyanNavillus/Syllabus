@@ -329,7 +329,7 @@ if __name__ == "__main__":
             plr_eval_envs = gym.vector.AsyncVectorEnv(
                 [
                     make_env(args.env_id, args.seed + i, num_levels=200, task_wrapper=True)
-                    for i in range(16)
+                    for i in range(args.num_envs)
                 ]
             )
             evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
@@ -342,7 +342,7 @@ if __name__ == "__main__":
                 robust_plr=True,
                 eval_envs=plr_eval_envs,
                 evaluator=evaluator,
-                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "fixed",
+                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "proportionate",
                                           "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "dr":
@@ -423,7 +423,7 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    envs = gym.vector.SyncVectorEnv(
+    envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
                 args.env_id,

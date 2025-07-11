@@ -92,7 +92,7 @@ class TaskSampler:
         self.temperature = temperature
         self.eps = eps
         self.rho = rho
-        self.nu = replay_prob
+        self.replay_prob = replay_prob
         self.alpha = float(alpha)
         self.staleness_coef = staleness_coef
         self.staleness_transform = staleness_transform
@@ -645,11 +645,11 @@ class TaskSampler:
         if self.sample_full_distribution:
             if self.task_buffer_size > 0:
                 if self.replay_schedule == "fixed":
-                    if proportion_seen >= self.rho and np.random.rand() < self.nu:
+                    if proportion_seen >= self.rho and np.random.rand() < self.replay_prob:
                         return True
                     return False
                 else:
-                    if proportion_seen >= self.rho and np.random.rand() < min(proportion_seen, self.nu):
+                    if proportion_seen >= self.rho and np.random.rand() < min(proportion_seen, self.replay_prob):
                         return True
                     return False
             return False
@@ -657,11 +657,11 @@ class TaskSampler:
             # Sample random level until we have seen enough tasks
             if proportion_seen >= self.rho:
                 # Sample replay level with fixed replay_prob OR if all levels seen
-                if np.random.rand() < self.nu or proportion_seen >= 1.0:
+                if np.random.rand() < self.replay_prob or proportion_seen >= 1.0:
                     return True
             return False
         else:
-            if proportion_seen >= self.rho and np.random.rand() < proportion_seen:
+            if proportion_seen >= self.rho and np.random.rand() < min(proportion_seen, self.replay_prob):
                 return True
             return False
 
@@ -705,6 +705,20 @@ class TaskSampler:
         else:
             sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
             task_idx = np.random.choice(range(len(self.tasks)), 1, p=sample_weights)[0]
+            self._update_staleness(task_idx)
+            return int(self.tasks[task_idx])
+
+    def _sample_random_level(self):
+        if self.sample_full_distribution:
+            # TODO: Fix this, stolen from unseen level sampling
+            t_val = int(np.random.randint(1, INT32_MAX))
+            while t_val in self.staging_task_set or t_val in self.working_task_set:
+                t_val = int(np.random.randint(1, INT32_MAX))
+            self.task2timestamp_buffer[t_val] = self.running_sample_count
+            self.staging_task_set.add(t_val)
+            return t_val
+        else:
+            task_idx = np.random.choice(range(len(self.tasks)), 1)[0]
             self._update_staleness(task_idx)
             return int(self.tasks[task_idx])
 
@@ -815,8 +829,8 @@ class TaskSampler:
                             dones[step][i] = True
                             episodic_returns[i] = episodic_return
                             episodic_lengths[i] = episode_length
-                            print(
-                                f"Episode finished: Task {tasks_encoded[i]}, Return: {episodic_return}, Length: {episode_length}")
+                            # print(
+                            # f"Episode finished: Task {tasks_encoded[i]}, Return: {episodic_return}, Length: {episode_length}")
             step += 1
 
         next_value, _, _ = self.evaluator.get_value(obs)
@@ -862,7 +876,8 @@ class TaskSampler:
         if self._proportion_filled >= self.rho:
             # Add random levels to an evaluation queue until we sample a replay level
             while not replay_decision:
-                self.offline_queue.append(self._sample_unseen_level())
+                level = self._sample_unseen_level() if self._proportion_filled < 1.0 else self._sample_random_level()
+                self.offline_queue.append(level)
                 replay_decision = self.sample_replay_decision()
             return self._sample_replay_level()
         else:
