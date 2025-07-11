@@ -264,12 +264,6 @@ if __name__ == "__main__":
         base_kwargs={'hidden_size': 256}
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
-    eval_env_fn = make_env(
-        args.env_id,
-        args.seed,
-        num_levels=200,
-        task_wrapper=True,
-    )
 
     # Curriculum setup
     curriculum = None
@@ -282,9 +276,6 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-
-            plr_eval_env = make_env(args.env_id, args.seed, num_levels=200, task_wrapper=True)()
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -293,9 +284,6 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "grounded_positive_value_loss", "replay_schedule": "fixed"},
-                robust_plr=True,
-                eval_envs=plr_eval_env,
-                evaluator=evaluator,
                 device="cuda",
             )
         elif args.curriculum_method == "simpleplr":
@@ -309,13 +297,6 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "centralplr":
             print("Using centralized prioritized level replay.")
-            plr_eval_envs = gym.vector.SyncVectorEnv(
-                [
-                    make_env(args.env_id, args.seed + i, num_levels=200, task_wrapper=True)
-                    for i in range(args.num_envs)
-                ]
-            )
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
@@ -328,8 +309,8 @@ if __name__ == "__main__":
             print("Using robust prioritized level replay.")
             plr_eval_envs = gym.vector.AsyncVectorEnv(
                 [
-                    make_env(args.env_id, args.seed + i, num_levels=200, task_wrapper=True)
-                    for i in range(16)
+                    make_env(args.env_id, 0, num_levels=1, task_wrapper=True)
+                    for i in range(args.num_envs)
                 ]
             )
             evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
@@ -423,7 +404,7 @@ if __name__ == "__main__":
 
     # env setup
     print("Creating env")
-    envs = gym.vector.SyncVectorEnv(
+    envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
                 args.env_id,
