@@ -184,7 +184,8 @@ class Curriculum:
         try:
             task_dist = self._sample_distribution()
             if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
-                warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
+                warnings.warn(
+                    f"Too many tasks to log {len(self.tasks)}. Only logging stats for {log_n_tasks} tasks.", stacklevel=2)
                 task_dist = task_dist[:log_n_tasks]
 
             # Add basic logs

@@ -31,8 +31,8 @@ from syllabus.curricula import (BatchedDomainRandomization,
                                 PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.utils.vecenv import (VecExtractDictObs, VecMonitor,
-                                            VecNormalize)
+# from syllabus.examples.utils.vecenv import (VecExtractDictObs, VecMonitor,
+#                                             VecNormalize)
 
 
 def parse_args():
@@ -186,7 +186,9 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
     # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
-    vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
+    vecenv = gym.wrappers.vector.NormalizeReward(vecenv, gamma=args.gamma)
+    vecenv = gym.wrappers.vector.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
+    # vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
@@ -197,13 +199,26 @@ def level_replay_evaluate(
     device: torch.device,
     num_levels=0
 ):
+    print("Evaluating agent")
     policy.eval()
 
-    eval_envs = ProcgenEnv(
-        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
+    # eval_envs = ProcgenEnv(
+    #     num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
+    # )
+    eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(
+                env_name,
+                args.seed + i,
+                num_levels=num_levels,
+                start_level=0,
+            )
+            for i in range(args.num_eval_episodes)
+        ]
     )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
+    # eval_envs = VecExtractDictObs(eval_envs, "rgb")
+    # eval_envs = gym.wrappers.vector.TransformObservation(eval_envs, lambda obs: obs["rgb"])
+    # eval_envs = gym.wrappers.vector.RecordEpisodeStatistics(eval_envs)
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
@@ -212,15 +227,19 @@ def level_replay_evaluate(
         with torch.no_grad():
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device))
 
-        eval_obs, _, _, _, eval_infos = eval_envs.step(eval_action.cpu().numpy())
-        for info in eval_infos:
-            if 'episode' in info.keys():
-                eval_episode_rewards.append(info['episode']['r'])
+        eval_obs, _, eval_term, eval_trunc, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        eval_done = np.logical_or(eval_term, eval_trunc)
+        if "episode" in eval_infos.keys():
+            for i in range(len(eval_infos["episode"]["r"])):
+                if eval_done[i]:
+                    eval_episode_rewards.append(eval_infos['episode']['r'][i])
 
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    print(
+        f"Mean returns: {mean_returns}, Stddev returns: {stddev_returns}, Normalized mean returns: {normalized_mean_returns}")
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
@@ -356,7 +375,7 @@ if __name__ == "__main__":
             curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            eval_envs = gym.vector.AsyncVectorEnv(
+            eval_envs = gym.vector.SyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
             lp_eval_envs = wrap_vecenv(eval_envs)
@@ -516,6 +535,8 @@ if __name__ == "__main__":
 
         if curriculum is not None:
             curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
+
+        print("Gradient update")
 
         # bootstrap value if not done
         with torch.no_grad():

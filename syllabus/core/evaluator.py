@@ -71,7 +71,7 @@ class Evaluator:
 
         if copy_agent and simple_copy:
             agent.to(self.device)
-            self.agent = copy.deepcopy(agent).to(self.device).detach()
+            self.agent = copy.deepcopy(agent).to(self.device)
             agent.to("cuda")
 
         if not simple_copy:
