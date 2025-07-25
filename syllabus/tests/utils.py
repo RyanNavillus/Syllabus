@@ -197,48 +197,29 @@ def run_episodes(env_fn, env_args, env_kwargs, curriculum=None, num_episodes=10,
     env.close()
 
 
-<< << << < HEAD
-
-
-def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, update_on_step=True, buffer_size=2, env_id=0):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, type="queue", update_on_step=update_on_step,
-                 buffer_size=buffer_size, batch_size=1) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
-
-
-== == == =
-
-
 def run_episodes_queue(env_fn, env_args, env_kwargs, curriculum_components, sync=True, num_episodes=10, buffer_size=1, env_id=0):
-    env = env_fn(curriculum_components, env_args=env_args, env_kwargs=env_kwargs, sync_type="queue",
-                 buffer_size=buffer_size, batch_size=2) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
-
-
->>>>>> > main
-   ep_rews = []
+    if sync:
+        env = env_fn(curriculum_components,
+                     env_args=env_args,
+                     env_kwargs=env_kwargs,
+                     sync_type="queue",
+                     buffer_size=buffer_size,
+                     batch_size=2)
+    else:
+        env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env, env_id=env_id))
     time.sleep(3)
 
 
 @ray.remote
-<< << << < HEAD
-
-
-def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10, update_on_step=True):
-    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, type="ray",
-                 update_on_step=update_on_step) if sync else env_fn(env_args=env_args, env_kwargs=env_kwargs)
-
-
-== == == =
-
-
 def run_episodes_ray(env_fn, env_args, env_kwargs, sync=True, num_episodes=10):
-    env = env_fn(env_args=env_args, env_kwargs=env_kwargs, sync_type="ray") if sync else env_fn(
-        env_args=env_args, env_kwargs=env_kwargs)
-
-
->>>>>> > main
-   ep_rews = []
+    if sync:
+        env = env_fn(env_args=env_args, env_kwargs=env_kwargs, sync_type="ray")
+    else:
+        env = env_fn(env_args=env_args, env_kwargs=env_kwargs)
+    ep_rews = []
     for _ in range(num_episodes):
         ep_rews.append(run_episode(env))
     env.close()
@@ -260,15 +241,8 @@ def run_native_multiprocess(env_fn, env_args=(), env_kwargs={}, curriculum=None,
     # Choose multiprocessing and curriculum methods
     if curriculum:
         target = run_episodes_queue
-
-
-<< << << < HEAD
-   args = (env_fn, env_args, env_kwargs, curriculum.get_components(), True, num_episodes,
-            update_on_step and curriculum.curriculum.requires_step_updates, buffer_size)
-== == == =
-   args = (env_fn, env_args, env_kwargs, curriculum.components, True, num_episodes, buffer_size)
->>>>>> > main
-   else:
+        args = (env_fn, env_args, env_kwargs, curriculum.components, True, num_episodes, buffer_size)
+    else:
         target = run_episodes
         args = (env_fn, env_args, env_kwargs, (), num_episodes)
     if curriculum is not None:
@@ -421,7 +395,7 @@ def create_cartpole_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=
 def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=False, eval=False, **kwargs):
     from nle.env.tasks import NetHackScore
 
-    from syllabus.examples.task_wrappers.nethack_wrappers import NethackSeedWrapper
+    from syllabus.examples.task_wrappers.nethack_wrappers import NethackDummyWrapper
 
     def thunk():
         env = NetHackScore(*env_args, max_episode_steps=200, **env_kwargs)
@@ -429,10 +403,10 @@ def create_nethack_env(*args, sync_type=None, env_args=(), env_kwargs={}, wrap=F
         # env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = ExtractDictObservation(env, filter_key="blstats")
-        env = NethackSeedWrapper(env)
+        env = NethackDummyWrapper(env)
 
         if eval:
-            env = GymnasiumEvaluationWrapper(env)
+            env = GymnasiumEvaluationWrapper(env, task_space=env.task_space)
 
         if sync_type == "queue":
             env = GymnasiumSyncWrapper(

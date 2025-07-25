@@ -30,14 +30,25 @@ curricula = [
      {"eval_envs": eval_envs, "evaluator": evaluator, "eval_eps": 100}),
     (CentralPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,),
      {"device": "cpu", "suppress_usage_warnings": True, "num_processes": N_ENVS}),
-    (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
+    (CentralPrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space,), {
         "evaluator": evaluator,
         "device": "cpu",
         "num_processes": N_ENVS,
         "num_steps": 2048,
         "robust_plr": True,
-        "eval_envs": create_nethack_env(),
-        "action_value_fn": get_action_value
+        "eval_envs": eval_envs,
+        "task_sampler_kwargs_dict": {
+            "strategy": "grounded_signed_value_loss",
+            "replay_schedule": "proportionate",
+            "rho": 0.5,
+            "replay_prob": 0.5,
+        }
+    }),
+    (PrioritizedLevelReplay, create_nethack_env, (nethack_env.task_space, nethack_env.observation_space), {
+        "evaluator": evaluator,
+        "device": "cpu",
+        "num_processes": N_ENVS,
+        "num_steps": 2048
     }),
     (ExpandingBox, create_cartpole_env, (cartpole_env.task_space,), {}),
     (SimulatedAnnealing, create_cartpole_env, (cartpole_env.task_space,), {
