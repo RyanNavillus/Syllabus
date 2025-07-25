@@ -860,6 +860,7 @@ class NethackSeedWrapper(TaskWrapper):
 
         if seed is not None:
             self.seed(seed)
+
         observation_dict = {key: space for key, space in self.env.observation_space.spaces.items()}
         observation_dict["prev_action"] = gym.spaces.Discrete(1)
         self.observation_space = gym.spaces.Dict(spaces=observation_dict)

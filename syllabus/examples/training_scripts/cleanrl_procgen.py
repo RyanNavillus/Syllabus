@@ -18,7 +18,6 @@ import procgen  # type: ignore # noqa: F401
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
@@ -31,8 +30,6 @@ from syllabus.curricula import (BatchedDomainRandomization,
                                 PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-# from syllabus.examples.utils.vecenv import (VecExtractDictObs, VecMonitor,
-#                                             VecNormalize)
 
 
 def parse_args():
@@ -185,10 +182,8 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
     vecenv = gym.wrappers.vector.NormalizeReward(vecenv, gamma=args.gamma)
     vecenv = gym.wrappers.vector.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
-    # vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
     return vecenv
 
 
@@ -202,9 +197,6 @@ def level_replay_evaluate(
     print("Evaluating agent")
     policy.eval()
 
-    # eval_envs = ProcgenEnv(
-    #     num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
-    # )
     eval_envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
@@ -216,9 +208,7 @@ def level_replay_evaluate(
             for i in range(args.num_eval_episodes)
         ]
     )
-    # eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    # eval_envs = gym.wrappers.vector.TransformObservation(eval_envs, lambda obs: obs["rgb"])
-    # eval_envs = gym.wrappers.vector.RecordEpisodeStatistics(eval_envs)
+
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
@@ -238,8 +228,7 @@ def level_replay_evaluate(
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    print(
-        f"Mean returns: {mean_returns}, Stddev returns: {stddev_returns}, Normalized mean returns: {normalized_mean_returns}")
+    policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
@@ -322,7 +311,8 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "proportionate",  "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
+                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "proportionate",  "rho": 0.5,
+                                          "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "robustplr":
             print("Using robust prioritized level replay.")
@@ -356,7 +346,7 @@ if __name__ == "__main__":
             curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            eval_envs = gym.vector.SyncVectorEnv(
+            eval_envs = gym.vector.AsyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
             lp_eval_envs = wrap_vecenv(eval_envs)
@@ -390,7 +380,7 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "learnability_top10":
             print("Using learnability top 10.")
-            eval_envs = gym.vector.SyncVectorEnv(
+            eval_envs = gym.vector.AsyncVectorEnv(
                 [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
             )
             lp_eval_envs = wrap_vecenv(eval_envs)
@@ -435,13 +425,11 @@ if __name__ == "__main__":
         ]
     )
     envs = wrap_vecenv(envs)
-    print("Created envs")
 
     # Wait to delete sample_env until after envs is created. For some reason procgen wants to rebuild for each env.
     if args.curriculum:
         del sample_env
         curriculum.start()
-    print("Curriculum started")
 
     # ALGO Logic: Storage setup
     obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -462,7 +450,6 @@ if __name__ == "__main__":
     episode_rewards = deque(maxlen=10)
     completed_episodes = 0
     for update in range(1, num_updates + 1):
-        print("Update")
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
             frac = 1.0 - (update - 1.0) / num_updates
@@ -516,8 +503,6 @@ if __name__ == "__main__":
 
         if curriculum is not None:
             curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
-
-        print("Gradient update")
 
         # bootstrap value if not done
         with torch.no_grad():

@@ -1,4 +1,4 @@
 from .central_plr_wrapper import CentralPrioritizedLevelReplay
 from .direct_plr_wrapper import DirectPrioritizedLevelReplay
 from .plr_wrapper import PrioritizedLevelReplay
-from .diff_task_sampler import TaskSampler
+from .task_sampler import TaskSampler
