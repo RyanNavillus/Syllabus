@@ -491,14 +491,14 @@ class TaskSampler:
                     # else:
                     kwargs_["value_preds"] = rollouts.value_preds[start_t:t, actor_index]
 
-                    if self.grounded_values is not None:
-                        task_idx_ = self.task2index.get(task_t, None)
-                        ret_ = rollouts.rewards[start_t:t].sum(0)[actor_index]
-                        if task_idx_ is not None:
-                            gv_ = max(self.grounded_values[task_idx_], ret_)
-                        else:
-                            gv_ = ret_
-                        kwargs_["grounded_value"] = gv_
+                if self.grounded_values is not None:
+                    task_idx_ = self.task2index.get(task_t, None)
+                    ret = rollouts.rewards[start_t:t].sum(0)[actor_index]
+                    if task_idx_ is not None:
+                        grounded_value = max(self.grounded_values[task_idx_], ret)
+                    else:
+                        grounded_value = ret
+                    kwargs_["grounded_value"] = grounded_value
 
                 score, max_score = score_function(**kwargs_)
                 num_steps = len(rollouts.tasks[start_t:t, actor_index])
