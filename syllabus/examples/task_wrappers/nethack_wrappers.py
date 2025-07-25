@@ -114,7 +114,7 @@ class NetHackScore(base.NLE):
                     observation = (
                         *observation[: self._message_index],
                         previous_msg,
-                        *observation[self._message_index + 1 :],
+                        *observation[self._message_index + 1:],
                     )
                 continue
 
@@ -263,7 +263,7 @@ class NetHackExtendedActionEnv(base.NLE):
                     observation = (
                         *observation[: self._message_index],
                         previous_msg,
-                        *observation[self._message_index + 1 :],
+                        *observation[self._message_index + 1:],
                     )
                 continue
 
@@ -421,7 +421,7 @@ class NetHackExtendedActionEnv(base.NLE):
             self._steps >= self._max_episode_steps
             or self._no_progress_count >= self.no_progress_timeout
         )
-    
+
 
 class NetHackScoreExtendedActions(NetHackExtendedActionEnv, NetHackScore):
 
@@ -920,3 +920,14 @@ class NethackSeedWrapper(TaskWrapper):
         if isinstance(obs, dict):
             obs["prev_action"] = action
         return obs, rew, term, trunc, info
+
+
+class NethackDummyWrapper(TaskWrapper):
+    def __init__(
+        self,
+        env: gym.Env,
+        num_seeds: int = 200,
+    ):
+        super().__init__(env)
+        self.env = env
+        self.task_space = DiscreteTaskSpace(num_seeds)

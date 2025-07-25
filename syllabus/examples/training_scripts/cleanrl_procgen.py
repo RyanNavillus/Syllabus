@@ -18,7 +18,6 @@ import procgen  # type: ignore # noqa: F401
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from procgen import ProcgenEnv
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
@@ -31,8 +30,6 @@ from syllabus.curricula import (BatchedDomainRandomization,
                                 PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
-from syllabus.examples.utils.vecenv import (VecExtractDictObs, VecMonitor,
-                                            VecNormalize)
 
 
 def parse_args():
@@ -109,6 +106,14 @@ def parse_args():
     parser.add_argument("--normalize-success-rates", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, the success rates will be normalized")
 
+    # PLR arguments
+    parser.add_argument("--temperature", type=float, default=0.1,
+                        help="the temperature parameter for the PLR task sampler")
+    parser.add_argument("--staleness-coef", type=float, default=0.1,
+                        help="the staleness coefficient for the PLR task sampler")
+    parser.add_argument("--plr-ema-alpha", type=float, default=1.0,
+                        help="the alpha parameter for the PLR task sampler EMA")
+
     # Learning Progress arguments
     parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
                         help="the alpha parameter for the EMA")
@@ -177,25 +182,33 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 
 def wrap_vecenv(vecenv):
     vecenv.is_vector_env = True
-    # vecenv = VecMonitor(venv=vecenv, filename=None, keep_buf=100)
-    vecenv = VecNormalize(venv=vecenv, ob=False, ret=True)
+    vecenv = gym.wrappers.vector.NormalizeReward(vecenv, gamma=args.gamma)
+    vecenv = gym.wrappers.vector.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
     return vecenv
 
 
 def level_replay_evaluate(
-    env_name,
-    policy,
-    num_episodes,
-    device,
+    env_name: str,
+    policy: ProcgenAgent,
+    num_episodes: int,
+    device: torch.device,
     num_levels=0
 ):
+    print("Evaluating agent")
     policy.eval()
 
-    eval_envs = ProcgenEnv(
-        num_envs=args.num_eval_episodes, env_name=env_name, num_levels=num_levels, start_level=0, distribution_mode="easy"
+    eval_envs = gym.vector.AsyncVectorEnv(
+        [
+            make_env(
+                env_name,
+                args.seed + i,
+                num_levels=num_levels,
+                start_level=0,
+            )
+            for i in range(args.num_eval_episodes)
+        ]
     )
-    eval_envs = VecExtractDictObs(eval_envs, "rgb")
-    eval_envs = VecMonitor(venv=eval_envs, filename=None, keep_buf=100)
+
     eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
@@ -204,10 +217,12 @@ def level_replay_evaluate(
         with torch.no_grad():
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device))
 
-        eval_obs, _, _, _, eval_infos = eval_envs.step(eval_action.cpu().numpy())
-        for info in eval_infos:
-            if 'episode' in info.keys():
-                eval_episode_rewards.append(info['episode']['r'])
+        eval_obs, _, eval_term, eval_trunc, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        eval_done = np.logical_or(eval_term, eval_trunc)
+        if "episode" in eval_infos.keys():
+            for i in range(len(eval_infos["episode"]["r"])):
+                if eval_done[i]:
+                    eval_episode_rewards.append(eval_infos['episode']['r'][i])
 
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
@@ -247,20 +262,13 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-    print("Device:", device)
-
-    sample_envs = gym.vector.AsyncVectorEnv([make_env(args.env_id, args.seed + i) for i in range(args.num_envs)])
-    sample_envs = wrap_vecenv(sample_envs)
-    single_action_space = sample_envs.single_action_space
-    single_observation_space = sample_envs.single_observation_space
-    sample_envs.close()
+    print(device)
 
     # Agent setup
-    assert isinstance(single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
     print("Creating agent")
     agent = ProcgenAgent(
-        single_observation_space.shape,
-        single_action_space.n,
+        (64, 64, 3),
+        15,
         base_kwargs={'hidden_size': 256}
     ).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
@@ -270,12 +278,12 @@ if __name__ == "__main__":
     if args.curriculum:
         sample_env = openai_gym.make(f"procgen-{args.env_id}-v0")
         sample_env = GymV21CompatibilityV0(env=sample_env)
+        sample_env = gym.wrappers.RecordEpisodeStatistics(sample_env)
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -283,8 +291,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"},
-                evaluator=evaluator,
+                task_sampler_kwargs_dict={"strategy": "grounded_positive_value_loss", "replay_schedule": "fixed"},
                 device="cuda",
             )
         elif args.curriculum_method == "simpleplr":
@@ -304,7 +311,29 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1"}
+                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "proportionate",  "rho": 0.5,
+                                          "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
+            )
+        elif args.curriculum_method == "robustplr":
+            print("Using robust prioritized level replay.")
+            plr_eval_envs = gym.vector.AsyncVectorEnv(
+                [
+                    make_env(args.env_id, 0, num_levels=1, task_wrapper=True)
+                    for i in range(args.num_envs)
+                ]
+            )
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            curriculum = CentralPrioritizedLevelReplay(
+                sample_env.task_space,
+                num_steps=args.num_steps,
+                num_processes=args.num_envs,
+                gamma=args.gamma,
+                gae_lambda=args.gae_lambda,
+                robust_plr=True,
+                eval_envs=plr_eval_envs,
+                evaluator=evaluator,
+                task_sampler_kwargs_dict={"strategy": "grounded_positive_value_loss", "replay_schedule": "proportionate",
+                                          "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")
@@ -380,7 +409,7 @@ if __name__ == "__main__":
             curriculum = SequentialCurriculum(curricula, stopping[:-1], sample_env.task_space)
         else:
             raise ValueError(f"Unknown curriculum method {args.curriculum_method}")
-        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000, start=False)
+        curriculum = make_multiprocessing_curriculum(curriculum, timeout=3000, start=True)
 
     # env setup
     print("Creating env")
@@ -458,7 +487,7 @@ if __name__ == "__main__":
                         break
 
             # Syllabus curriculum update
-            if args.curriculum and args.curriculum_method == "centralplr":
+            if args.curriculum and args.curriculum_method in ["centralplr", "robustplr"]:
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
                 current_tasks = tasks[step]
@@ -589,7 +618,8 @@ if __name__ == "__main__":
 
         # TRY NOT TO MODIFY: record rewards for plotting purposes
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
-        writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
+        if len(episode_rewards) > 0:
+            writer.add_scalar("charts/episode_returns", np.mean(episode_rewards), global_step)
         writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
         writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
         writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)

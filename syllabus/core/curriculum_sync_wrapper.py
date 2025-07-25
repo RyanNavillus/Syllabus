@@ -75,7 +75,7 @@ class CurriculumWrapper:
 
 
 class MultiProcessingComponents:
-    def __init__(self, requires_step_updates, max_queue_size=1000000, timeout=60, max_envs=None, use_simple_queues=False):
+    def __init__(self, requires_step_updates, max_queue_size=1000000, timeout=60, max_envs=None, use_simple_queues=False, verbose=False):
         self.requires_step_updates = requires_step_updates
         if use_simple_queues:
             self.task_queue = SimpleQueue()
@@ -89,6 +89,7 @@ class MultiProcessingComponents:
         self.timeout = timeout
         self.max_envs = max_envs
         self._using_simple_queues = use_simple_queues
+        self.verbose = verbose
         self._maxsize = max_queue_size
         self.started = False
         self._task_times = deque(maxlen=1000)
@@ -121,7 +122,7 @@ class MultiProcessingComponents:
             if self._using_simple_queues:
                 task = self.task_queue.get()
             else:
-                if self.started and self.task_queue.empty():
+                if self.verbose and self.started and self.task_queue.empty():
                     warnings.warn(
                         f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
                 task = self.task_queue.get(block=True, timeout=self.timeout)
