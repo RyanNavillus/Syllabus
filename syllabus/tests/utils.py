@@ -311,12 +311,6 @@ def get_test_values(x):
     return torch.unsqueeze(torch.Tensor(np.array([0] * len(x))), -1)
 
 
-def get_action_value(obs):
-    action = 0
-    value = 0
-    return action, value
-
-
 def get_test_actions(x):
     return torch.IntTensor(np.array([0] * len(x)))
 
