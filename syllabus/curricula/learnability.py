@@ -1,14 +1,13 @@
 import math
-import random
 import warnings
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 import gymnasium as gym
 import numpy as np
 import torch
-from scipy.stats import norm
 
 from syllabus.core import Curriculum
+from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace
 from syllabus.utils import UsageError
 
@@ -20,36 +19,27 @@ class Learnability(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, topk=1000, learnable_prob=1.0, sampling="topk", eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, multiagent=False, **kwargs):
+    def __init__(
+        self,
+            evaluator: Evaluator,
+            *args,
+            topk: int = 1000,
+            learnable_prob: float = 1.0,
+            sampling: str = "topk",
+            eval_interval: Optional[int] = None,
+            eval_interval_steps: Optional[int] = None,
+            eval_eps: float = 1,
+            baseline_eval_eps: Optional[float] = None,
+            normalize_success: bool = False,
+            continuous_progress: bool = False,
+            **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None or create_env is not None, "One of create_env and evaluator, eval_envs and evaluator, or eval_fn must be provided."
-        if recurrent_method is not None:
-            assert recurrent_method in ["lstm", "rnn"], f"Recurrent method {recurrent_method} not supported."
-            assert recurrent_size is not None, "Recurrent size must be provided if recurrent method is set."
 
-        # Decide evaluation method
-        self.eval_envs = None
-        self.create_env = None
-        if eval_envs is not None:
-            self.custom_eval = False
-            self.eval_envs = eval_envs
-            self.evaluator = evaluator
-            self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
-        elif create_env is not None:
-            self.custom_eval = False
-            self.create_env = create_env
-            self.num_eval_envs = num_eval_envs
-            self.evaluator = evaluator
-            self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
-        else:
-            self.custom_eval = True
-            self._evaluate = eval_fn
-
+        self.evaluator = evaluator
         self.k = topk
         self.learnable_prob = learnable_prob
         self.sampling = sampling
-        self.recurrent_size = recurrent_size
-        self.recurrent_method = recurrent_method
         self.eval_interval = eval_interval
         assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
@@ -70,7 +60,9 @@ class Learnability(Curriculum):
         self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
     def eval_and_update(self, eval_eps=1):
-        task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
+        _, task_success_rates, final_success_rates = self.evaluator.evaluate_agent(eval_eps, verbose=True)
+        if self.continuous_progress:
+            task_success_rates = final_success_rates
 
         if self.random_baseline is None:
             # Assume that any perfect success rate is actually 75% due to evaluation precision.

@@ -2,16 +2,14 @@ import math
 import random
 import warnings
 from itertools import groupby
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
-import gymnasium as gym
 import numpy as np
-import torch
 from scipy.stats import norm
 
 from syllabus.core import Curriculum
+from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace
-from syllabus.utils import UsageError
 
 
 def compress_ranges(nums):
@@ -31,35 +29,25 @@ class LearningProgress(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=True, continuous_progress=False, multiagent=False, **kwargs):
+    def __init__(
+        self,
+        evaluator: Evaluator,
+        *args,
+        ema_alpha: float = 0.1,
+        p_theta: float = 0.1,
+        eval_interval: Optional[int] = None,
+        eval_interval_steps: Optional[int] = None,
+        eval_eps: float = 1,
+        baseline_eval_eps: Optional[float] = None,
+        normalize_success: bool = True,
+        continuous_progress: bool = False,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        assert (eval_envs is not None and evaluator is not None) or eval_fn is not None or create_env is not None, "One of create_env and evaluator, eval_envs and evaluator, or eval_fn must be provided."
-        if recurrent_method is not None:
-            assert recurrent_method in ["lstm", "rnn"], f"Recurrent method {recurrent_method} not supported."
-            assert recurrent_size is not None, "Recurrent size must be provided if recurrent method is set."
 
-        # Decide evaluation method
-        self.eval_envs = None
-        self.create_env = None
-        if eval_envs is not None:
-            self.custom_eval = False
-            self.eval_envs = eval_envs
-            self.evaluator = evaluator
-            self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
-        elif create_env is not None:
-            self.custom_eval = False
-            self.create_env = create_env
-            self.num_eval_envs = num_eval_envs
-            self.evaluator = evaluator
-            self._evaluate = self._multiagent_evaluate_all_tasks if multiagent else self._evaluate_all_tasks
-        else:
-            self.custom_eval = True
-            self._evaluate = eval_fn
-
+        self.evaluator = evaluator
         self.ema_alpha = ema_alpha
         self.p_theta = p_theta
-        self.recurrent_size = recurrent_size
-        self.recurrent_method = recurrent_method
         self.eval_interval = eval_interval
         assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
         self.eval_interval_steps = eval_interval_steps
@@ -83,7 +71,9 @@ class LearningProgress(Curriculum):
         self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
     def eval_and_update(self, eval_eps=1):
-        task_success_rates = self._evaluate(eval_episodes=int(eval_eps))
+        _, task_success_rates, final_success_rates = self.evaluator.evaluate_agent(eval_eps, verbose=True)
+        if self.continuous_progress:
+            task_success_rates = final_success_rates
 
         if self.random_baseline is None:
             # Assume that any perfect success rate is actually 75% due to evaluation precision.
@@ -115,176 +105,6 @@ class LearningProgress(Curriculum):
         self.task_rates = task_success_rates    # Used for logging and OMNI
         self._stale_dist = True
         self.task_dist = None
-        return task_success_rates
-
-    def _evaluate_all_tasks(self, eval_episodes=1, verbose=True):
-        if verbose:
-            print(f"Evaluating tasks for {eval_episodes} episodes.")
-
-        # Prepare evaluation environments
-        if self.eval_envs is not None:
-            eval_envs = self.eval_envs
-        elif self.create_env is not None:
-            eval_envs = gym.vector.AsyncVectorEnv([self.create_env for _ in range(self.num_eval_envs)])
-        else:
-            raise UsageError("No evaluation environment provided.")
-        obs, _ = eval_envs.reset()
-        num_envs = eval_envs.num_envs
-
-        # Initialize recurrent state
-        recurrent_state = None
-        if self.recurrent_method == "lstm":
-            recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
-                               torch.zeros(1, num_envs, self.recurrent_size))
-        elif self.recurrent_method == "rnn":
-            recurrent_state = torch.zeros(num_envs, self.recurrent_size)
-
-        ep_counter = 0
-        dones = [False] * num_envs
-        task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
-        task_successes = np.zeros(self.task_space.num_tasks)
-
-        while ep_counter < eval_episodes:
-            actions, recurrent_state, _ = self.evaluator.get_action(obs, lstm_state=recurrent_state, done=dones)
-            actions = torch.flatten(actions)
-            if isinstance(eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
-                actions = actions.int()
-            obs, rewards, terminateds, truncateds, infos = eval_envs.step(actions.cpu().numpy())
-            dones = tuple(a | b for a, b in zip(terminateds, truncateds))
-
-            if self.continuous_progress:
-                # Continuous progress can only be measured at the end of the episode
-                if "final_info" in infos:
-                    for final_info in infos["final_info"]:
-                        if final_info is not None and "task_completion" in final_info:
-                            # print(final_info)
-                            completion = final_info["task_completion"]
-                            task = final_info["task"]
-                            task_counts[task] += 1
-                            task_successes[task] += max(completion, 0.0)
-            else:
-                if "task_completion" in infos:
-                    task_completions = infos["task_completion"]
-                    task_idx = infos["task"]
-
-                    for task, completion, done in zip(task_idx, task_completions, dones):
-                        # Binary success/failure can be measured at each step.
-                        # Assumes that success will only be 1.0 or -1.0 for 1 step
-                        if abs(completion) >= 1.0:
-                            task_counts[task] += 1
-                            task_successes[task] += math.floor(max(completion, 0.0))
-                else:
-                    raise UsageError(
-                        "Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
-
-            for done in dones:
-                if done:
-                    ep_counter += 1
-                    if verbose and ep_counter % 100 == 0:
-                        print([f"{f:.1f}/{g:.0f}" for f, g in zip(task_successes, task_counts)])
-
-        # Warn user if any task_counts are 0
-        if np.any(task_counts == 0):
-            warnings.warn(
-                f"Tasks {compress_ranges(np.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
-
-        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
-        task_success_rates = np.divide(task_successes, task_counts)
-
-        # Close env to prevent resource leaks
-        if self.create_env is not None:
-            eval_envs.close()
-
-        return task_success_rates
-
-    def _multiagent_evaluate_all_tasks(self, eval_episodes=1, verbose=True):
-        if verbose:
-            print(f"Evaluating tasks for {eval_episodes} episodes.")
-
-        # Prepare evaluation environments
-        if self.eval_envs is not None:
-            eval_envs = self.eval_envs
-        elif self.create_env is not None:
-            eval_envs = gym.vector.AsyncVectorEnv([self.create_env for _ in range(self.num_eval_envs)])
-        else:
-            raise UsageError("No evaluation environment provided.")
-        obs, _ = eval_envs.reset()
-        num_envs = eval_envs.num_envs
-
-        # Initialize recurrent state
-        recurrent_state = None
-        if self.recurrent_method == "lstm":
-            recurrent_state = (torch.zeros(1, num_envs, self.recurrent_size),
-                               torch.zeros(1, num_envs, self.recurrent_size))
-        elif self.recurrent_method == "rnn":
-            recurrent_state = torch.zeros(num_envs, self.recurrent_size)
-
-        ep_counter = 0
-        dones = [False] * num_envs
-        task_counts = np.zeros(self.task_space.num_tasks)   # TODO: Maybe start with assigned tasks?
-        task_successes = np.zeros(self.task_space.num_tasks)
-
-        while ep_counter < eval_episodes:
-            actions, recurrent_state, _ = self.evaluator.get_action(obs, lstm_state=recurrent_state, done=dones)
-            # actions = torch.flatten(actions)
-            # if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
-            #     actions = actions.int()
-
-            obs, rewards, terminateds, truncateds, infos = self.eval_envs.step(actions)
-            dones = tuple(
-                {k: a or b for k, a, b in zip(term.keys(), term.values(), trunc.values())}
-                for term, trunc in zip(terminateds, truncateds)
-            )
-            all_dones = [all(list(done.values())) for done in dones]
-
-            if self.continuous_progress:
-                # Continuous progress can only be measured at the end of the episode
-                if isinstance(infos, list) and "task_completion" in infos[0]:
-                    task_completions = [i["task_completion"] for i in infos]
-                    task_idx = [i["task"] for i in infos]
-                    for i, done in enumerate(all_dones):
-                        if done:
-                            task = task_idx[i]
-                            task_counts[task] += 1
-                            task_successes[task] += max(task_completions[i], 0.0)
-            else:
-                if isinstance(infos, list) and "task_completion" in infos[0]:
-
-                    task_completions = [i["task_completion"] for i in infos]
-                    task_idx = [i["task"] for i in infos]
-
-                    for task, completion, done in zip(task_idx, task_completions, dones):
-                        # Binary success/failure can be measured at each step.
-                        # Assumes that success will only be 1.0 or -1.0 for 1 step
-                        if abs(completion) >= 1.0:
-                            task_counts[task] += 1
-                            task_successes[task] += math.floor(max(completion, 0.0))
-                elif isinstance(infos, list) and "task_completion" in infos[0]:
-                    task_completions = [info["task_completion"] for info in infos]
-                    task_idx = [info["task"] for info in infos]
-
-                else:
-                    raise UsageError(
-                        "Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
-
-            for done in all_dones:
-                if done:
-                    ep_counter += 1
-                    if verbose and ep_counter % 100 == 0:
-                        print([f"{f:.1f}/{g:.0f}" for f, g in zip(task_successes, task_counts)])
-
-        # Warn user if any task_counts are 0
-        if np.any(task_counts == 0):
-            warnings.warn(
-                f"Tasks {np.where(task_counts == 0)[0].tolist()} were not attempted during evaluation. Consider increasing eval episodes.")
-
-        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
-        task_success_rates = np.divide(task_successes, task_counts)
-
-        # Close env to prevent resource leaks
-        if self.create_env is not None:
-            eval_envs.close()
-
         return task_success_rates
 
     def update_task_progress(self, task: int, progress: Union[float, bool], env_id: int = None):

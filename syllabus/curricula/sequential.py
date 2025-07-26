@@ -11,11 +11,15 @@ from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 class SequentialCurriculum(Curriculum):
     """ Curriculum that iterates through a list of curricula based on stopping conditions. """
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Any], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, should_loop=False, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
-        assert len(stopping_conditions) == len(curriculum_list) - \
-            1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
+        if should_loop:
+            assert len(stopping_conditions) == len(
+                curriculum_list), f"Stopping conditions must match the number of curricula when should_loop=True. Expected {len(curriculum_list)}, got {len(stopping_conditions)}."
+        else:
+            assert len(stopping_conditions) == len(curriculum_list) - \
+                1, f"Stopping conditions must be one less than the number of curricula when should_loop=False. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
             warnings.warn(
                 "Your sequential curriculum only containes one element. Consider using that element directly instead.", stacklevel=2)
@@ -23,6 +27,7 @@ class SequentialCurriculum(Curriculum):
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
         self._curriculum_index = 0
+        self.should_loop = should_loop
 
         # Stopping metrics
         self.n_steps = 0
@@ -148,6 +153,7 @@ class SequentialCurriculum(Curriculum):
         Choose the next k tasks from the list.
         """
         curriculum = self.current_curriculum
+        # TODO: Sample tasks individually for more precise stopping
         tasks = curriculum.sample(k)
 
         # Recode tasks into environment task space
@@ -189,10 +195,16 @@ class SequentialCurriculum(Curriculum):
     def check_stopping_conditions(self):
         if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
             self._curriculum_index += 1
-            self.n_episodes = 0
-            self.n_steps = 0
-            self.episode_returns = deque(maxlen=100)
-            self.n_tasks = 0
+
+        if self.should_loop and self._curriculum_index == len(self.curriculum_list):
+            # Loop sequential curriculum back to the first curriculum
+            self._curriculum_index = 0
+
+        # Reset individual curriculum metrics
+        self.n_episodes = 0
+        self.n_steps = 0
+        self.episode_returns = deque(maxlen=100)
+        self.n_tasks = 0
 
     def _sample_distribution(self) -> List[float]:
         return self.current_curriculum._sample_distribution()

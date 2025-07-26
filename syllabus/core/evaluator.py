@@ -1,23 +1,23 @@
 import copy
-from threading import Lock
-from multiprocessing.shared_memory import ShareableList
-
 import warnings
 from collections import defaultdict
 from io import BytesIO
+from multiprocessing.shared_memory import ShareableList
+from threading import Lock
 from typing import Any, Callable, Dict, Optional, Tuple, Union
-import warnings
 
 import gymnasium as gym
 import numpy as np
 import torch
+from gymnasium.vector import VectorEnv
 from torch import Tensor
 
+from syllabus.core.curriculum_base import Curriculum
 from syllabus.task_space.task_space import TaskSpace
-
+from syllabus.utils import UsageError, compress_ranges
 
 Array = Union[np.ndarray, Tensor]
-LSTMState = Tuple[Array, Array]
+RecurrentState = Union[Tuple[Array, Array], Array]
 
 
 class Evaluator:
@@ -26,10 +26,14 @@ class Evaluator:
     def __init__(
         self,
         agent: Any,
-        device: Optional[torch.device] = None,
+        device: torch.device = "cpu",
         preprocess_obs: Optional[Callable] = None,
         copy_agent: bool = True,
         simple_copy: bool = False,
+        eval_curriculum: Optional[Curriculum] = None,
+        eval_envs: Optional[VectorEnv] = None,
+        recurrent_method: Optional[str] = None,
+        recurrent_size: Optional[int] = None,
     ):
         """
         Initialize the Evaluator.
@@ -64,11 +68,26 @@ class Evaluator:
         if copy_agent and simple_copy:
             agent.to(self.device)
             self.agent = copy.deepcopy(agent).to(self.device)
-            self.agent.require_grad_(False)
             agent.to("cuda")
 
         if not simple_copy:
             self.agent = self._agent_reference
+
+        self.task_space = eval_curriculum.task_space if eval_curriculum else None
+        self.eval_envs = eval_envs
+        self.recurrent_method = recurrent_method
+        self.recurrent_size = recurrent_size
+
+        try:
+            import pettingzoo
+            self.is_multiagent = isinstance(self.eval_envs, (
+                pettingzoo.utils.BaseWrapper,
+                pettingzoo.utils.BaseParallelWrapper,
+                pettingzoo.AECEnv,
+                pettingzoo.ParallelEnv
+            ))
+        except ImportError:
+            self.is_multiagent = False
 
     def _update_agent(self):
         """
@@ -81,14 +100,14 @@ class Evaluator:
             self.agent.load_state_dict(self._agent_reference.state_dict())
 
     def get_action(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+        self, state: Array, recurrent_state: RecurrentState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         Sample an action from the policy for a given environment state.
 
         Args:
             state (Array): The current environment state.
-            lstm_state (Optional[LSTMState]): The LSTM cell and hidden state.
+            recurrent_state (Optional[RecurrentState]): The LSTM cell and hidden state.
             done (Optional[Array]): The done flag.
 
         Returns:
@@ -96,26 +115,26 @@ class Evaluator:
         """
         self._update_agent()
         state = self._prepare_state(state)
-        if lstm_state is not None:
-            lstm_state, done = self._prepare_lstm(lstm_state, done)
+        if recurrent_state is not None:
+            recurrent_state, done = self._prepare_recurrent(recurrent_state, done)
 
         self._set_eval_mode()
         with torch.no_grad():
-            action, lstm_state, extras = self._get_action(
-                state, lstm_state=lstm_state, done=done
+            action, recurrent_state, extras = self._get_action(
+                state, recurrent_state=recurrent_state, done=done
             )
         self._set_train_mode()
-        return action, lstm_state, extras
+        return action, recurrent_state, extras
 
     def get_value(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+        self, state: Array, recurrent_state: RecurrentState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         Get the value of a given environment state.
 
         Args:
             state (Array): The current environment state.
-            lstm_state (Optional[LSTMState] ): The LSTM cell and hidden state.
+            recurrent_state (Optional[RecurrentState] ): The LSTM cell and hidden state.
             done (Optional[Array]): The done flag.
 
         Returns:
@@ -123,25 +142,25 @@ class Evaluator:
         """
         self._update_agent()
         state = self._prepare_state(state)
-        if lstm_state is not None:
-            lstm_state, done = self._prepare_lstm(lstm_state, done)
+        if recurrent_state is not None:
+            recurrent_state, done = self._prepare_recurrent(recurrent_state, done)
         self._set_eval_mode()
         with torch.no_grad():
-            value, lstm_state, extras = self._get_value(
-                state, lstm_state=lstm_state, done=done
+            value, recurrent_state, extras = self._get_value(
+                state, recurrent_state=recurrent_state, done=done
             )
         self._set_train_mode()
-        return value, lstm_state, extras
+        return value, recurrent_state, extras
 
     def get_action_and_value(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+        self, state: Array, recurrent_state: RecurrentState = None, done: Optional[Array] = None
     ) -> Tuple[Tensor, Tensor, Dict[str, Any]]:
         """
         Get the action and value for a given environment state.
 
         Args:
             state (Array): The current environment state.
-            lstm_state (Optional[LSTMState]): The LSTM cell and hidden state.
+            recurrent_state (Optional[RecurrentState]): The LSTM cell and hidden state.
             done (Optional[Array]): The done flag.
 
         Returns:
@@ -149,35 +168,35 @@ class Evaluator:
         """
         self._update_agent()
         state = self._prepare_state(state)
-        if lstm_state is not None:
-            lstm_state, done = self._prepare_lstm(lstm_state, done)
+        if recurrent_state is not None:
+            recurrent_state, done = self._prepare_recurrent(recurrent_state, done)
 
         self._set_eval_mode()
         with torch.no_grad():
-            action, value, lstm_state, extras = self._get_action_and_value(
-                state, lstm_state=lstm_state, done=done
+            action, value, recurrent_state, extras = self._get_action_and_value(
+                state, recurrent_state=recurrent_state, done=done
             )
         self._set_train_mode()
-        return action, value, lstm_state, extras
+        return action, value, recurrent_state, extras
 
     def _get_action(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+        self, state: Array, recurrent_state: RecurrentState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         Get the action for a given environment state.
 
         Args:
             state (Array): The current environment state.
-            lstm_state (Optional[LSTMState]): The LSTM cell and hidden state.
+            recurrent_state (Optional[RecurrentState]): The LSTM cell and hidden state.
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, LSTMState, Dict[str, Any]]: The action and additional information.
+            Tuple[torch.Tensor, RecurrentState, Dict[str, Any]]: The action and additional information.
         """
         raise NotImplementedError
 
     def _get_value(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+        self, state: Array, recurrent_state: RecurrentState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         Abstract method to get the value of a given environment state.
@@ -185,31 +204,31 @@ class Evaluator:
 
         Args:
             state (Array): The current environment state.
-            lstm_state (Optional[LSTMState]): The LSTM cell and hidden state.
+            recurrent_state (Optional[RecurrentState]): The LSTM cell and hidden state.
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, LSTMState, Dict[str, Any]]: The value and additional information.
+            Tuple[torch.Tensor, RecurrentState, Dict[str, Any]]: The value and additional information.
         """
         raise NotImplementedError
 
     def _get_action_and_value(
-        self, state: Array, lstm_state: LSTMState = None, done: Optional[Array] = None
+        self, state: Array, recurrent_state: RecurrentState = None, done: Optional[Array] = None
     ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]:
         """
         Abstract method to get the action and value for a given state.
 
         Args:
             state (Array): The current state.
-            lstm_state (Optional[LSTM_state]): The LSTM state.
+            recurrent_state (Optional[recurrent_state]): The recurrent state.
             done (Optional[Array]): The done flag.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, LSTMState, Dict[str, Any]]: The action, value, and additional information.
+            Tuple[torch.Tensor, torch.Tensor, RecurrentState, Dict[str, Any]]: The action, value, and additional information.
         """
-        action, _, _ = self._get_action(state, lstm_state, done)
-        value, lstm_state, extras = self._get_value(state, lstm_state, done)
-        return action, value, lstm_state, extras
+        action, _, _ = self._get_action(state, recurrent_state, done)
+        value, recurrent_state, extras = self._get_value(state, recurrent_state, done)
+        return action, value, recurrent_state, extras
 
     def _prepare_state(self, state: Array) -> torch.Tensor:
         """
@@ -224,35 +243,48 @@ class Evaluator:
         state = torch.Tensor(np.stack(state))
         if self.preprocess_obs is not None:
             state = self.preprocess_obs(state)
-        if self.device is not None:
-            state = state.to(self.device)
+        state = state.to(self.device)
         return state
 
-    def _prepare_lstm(
-        self, lstm_state: LSTMState, done: Array
-    ) -> Tuple[LSTMState, torch.Tensor]:
+    def _prepare_recurrent(
+        self, recurrent_state: RecurrentState, done: Array
+    ) -> Tuple[RecurrentState, torch.Tensor]:
         """
-        Prepare the LSTM state and done flag for evaluation.
+        Prepare the recurrent state and done flag for evaluation.
 
         Args:
-            lstm_state (Tuple[Any, Any]): The LSTM state.
+            recurrent_state (Tuple[Any, Any]): The recurrent state.
             done (Any): The done flag.
 
         Returns:
-            Tuple[LSTMState, torch.Tensor]: The prepared LSTM state and done flag.
+            Tuple[RecurrentState, torch.Tensor]: The prepared recurrent state and done flag.
         """
-        lstm_state = (
-            torch.Tensor(lstm_state[0]),
-            torch.Tensor(lstm_state[1]),
-        )
-        done = torch.Tensor(done)
-        if self.device is not None:
-            lstm_state = (
-                lstm_state[0].to(self.device),
-                lstm_state[1].to(self.device),
+        if self.recurrent_method == "lstm":
+            if self.recurrent_method == "lstm":
+                assert (
+                    isinstance(recurrent_state, tuple)
+                    and len(recurrent_state) == 2
+                    and isinstance(recurrent_state[0], Array)
+                    and isinstance(recurrent_state[1], Array)
+                ), (
+                    "Recurrent state must be a tuple of "
+                    "(cell_state, hidden_state) for LSTM."
+                )
+                recurrent_state = (
+                    torch.Tensor(recurrent_state[0]).to(self.device),
+                    torch.Tensor(recurrent_state[1]).to(self.device),
+                )
+            recurrent_state = (
+                torch.Tensor(recurrent_state[0]).to(self.device),
+                torch.Tensor(recurrent_state[1]).to(self.device),
             )
-            done = done.to(self.device)
-        return lstm_state, done
+        elif self.recurrent_method == "rnn":
+            assert isinstance(recurrent_state, Array), "Recurrent state must be a tensor for RNN."
+            recurrent_state = recurrent_state.to(self.device)
+
+        done = torch.Tensor(done)
+        done = done.to(self.device)
+        return recurrent_state, done
 
     def _set_eval_mode(self):
         """
@@ -263,6 +295,195 @@ class Evaluator:
         """
         Set the policy to training mode.
         """
+
+    def _initial_recurrent_state(self, batch_size):
+        if self.recurrent_method == "lstm":
+            return (
+                torch.zeros(1, batch_size, self.recurrent_size),
+                torch.zeros(1, batch_size, self.recurrent_size)
+            )
+        elif self.recurrent_method == "rnn":
+            return torch.zeros(batch_size, self.recurrent_size)
+        else:
+            return None
+
+    def evaluate_agent(self, num_episodes=100, verbose=False):
+        """
+        Evaluate the agent over a number of episodes.
+
+        Args:
+            num_episodes (int): Number of episodes to evaluate.
+
+        Returns:
+            List[float]: List of returns for each episode.
+        """
+        if self.is_multiagent:
+            return self._evaluate_pettingzoo(num_episodes, verbose=verbose)
+        else:
+            return self._evaluate_gymnasium(num_episodes, verbose=verbose)
+
+    def _evaluate_gymnasium(self, num_episodes=100, verbose=False):
+        """
+        Evaluate the agent over a number of episodes.
+
+        Args:
+            num_episodes (int): Number of episodes to evaluate.
+
+        Returns:
+            List[float]: List of returns for each episode.
+        """
+        # Testing
+        num_envs = self.eval_envs.num_envs
+
+        # Standard RL data
+        obs, info = self.eval_envs.reset()
+        recurrent_state = self._initial_recurrent_state(num_envs)
+        completed_episodes = 0
+        returns = []
+        rews = np.zeros(num_envs)
+        dones = [False] * num_envs
+
+        # Track task progress
+        task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
+        task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+
+        final_task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
+        final_task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+
+        while completed_episodes < num_episodes:
+            actions, recurrent_state, _ = self.get_action(obs, recurrent_state, done=dones)
+            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                actions = actions.int()
+            obs, rew, term, trunc, info = self.eval_envs.step(actions.cpu().numpy())
+            rews += rew
+            dones = np.logical_or(term, trunc)
+
+            # Track task completion for tasks that can change mid-episode
+            if "task_completion" in info:
+                task_idx = info["task"]
+                task_completions = info["task_completion"]
+
+                for task, completion in zip(task_idx, task_completions):
+                    # Assumes that success will only remain 1.0 or -1.0 for 1 step
+                    if completion >= 1.0:
+                        # Task has succeeded
+                        task_counts[task] += 1
+                        task_successes[task] += 1.0
+                    elif completion < 0:
+                        # Task has failed
+                        task_counts[task] += 1
+                        task_successes[task] += 0.0
+
+            # Handle episode completion
+            for i, done in enumerate(dones):
+                if done:
+                    if verbose:
+                        print(f"Episode {completed_episodes} finished for task {info['task'][i]} with return {rews[i]}")
+                    returns.append(rews[i])
+                    rews[i] = 0
+                    completed_episodes += 1
+
+                    # Track task progress at end of episode
+                    completion = info["task_completion"][i]
+                    task = info["task"][i]
+                    final_task_counts[task] += 1
+                    final_task_successes[task] += max(completion, 0.0)
+
+        if np.any(final_task_counts == 0):
+            warnings.warn(
+                f"Tasks {compress_ranges(np.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
+        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
+        final_task_counts = np.maximum(final_task_counts, np.ones_like(final_task_counts))
+        task_success_rates = np.divide(task_successes, task_counts)
+        final_task_success_rates = np.divide(final_task_successes, final_task_counts)
+        return returns, task_success_rates, final_task_success_rates
+
+    def _evaluate_pettingzoo(self, num_episodes=100, verbose=False):
+        """
+        Evaluate the agent over a number of episodes.
+
+        Args:
+            num_episodes (int): Number of episodes to evaluate.
+
+        Returns:
+            List[float]: List of returns for each episode.
+        """
+        # Testing
+        num_envs = self.eval_envs.num_envs
+
+        # Standard RL data
+        obs, info = self.eval_envs.reset()
+        recurrent_state = self._initial_recurrent_state(num_envs)
+        completed_episodes = 0
+        returns = []
+        rews = np.zeros(num_envs)
+        dones = [False] * num_envs
+
+        # Track task progress
+        task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
+        task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+
+        final_task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
+        final_task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+
+        while completed_episodes < num_episodes:
+            actions, recurrent_state, _ = self.get_action(obs, recurrent_state, done=dones)
+            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                actions = actions.int()
+            obs, rew, terms, truncs, infos = self.eval_envs.step(actions.cpu().numpy())
+            rews += rew
+            dones = tuple(
+                {k: a or b for k, a, b in zip(term.keys(), term.values(), trunc.values())}
+                for term, trunc in zip(terms, truncs)
+            )
+            all_dones = [all(list(done.values())) for done in dones]
+
+            # Track task completion for tasks that can change mid-episode
+            if isinstance(infos, list) and "task_completion" in infos[0]:
+                task_idx = [i["task"] for i in infos]
+                task_completions = [i["task_completion"] for i in infos]
+
+                for task, completion in zip(task_idx, task_completions):
+                    # Assumes that success will only remain 1.0 or -1.0 for 1 step
+                    if completion >= 1.0:
+                        # Task has succeeded
+                        task_counts[task] += 1
+                        task_successes[task] += 1.0
+                    elif completion < 0:
+                        # Task has failed
+                        task_counts[task] += 1
+                        task_successes[task] += 0.0
+            elif isinstance(infos, list) and "task_completion" in infos[0]:
+                task_completions = [info["task_completion"] for info in infos]
+                task_idx = [info["task"] for info in infos]
+            else:
+                raise UsageError(
+                    "Did not find 'task_completion' in infos. Task success rates will not be evaluated.")
+
+            # Handle episode completion
+            for i, done in enumerate(all_dones):
+                if done:
+                    if verbose:
+                        print(f"Episode {completed_episodes} finished for task {info['task'][i]} with return {rews[i]}")
+                    returns.append(rews[i])
+                    rews[i] = 0
+                    completed_episodes += 1
+
+                    # Track task progress at end of episode
+                    task_completions = [i["task_completion"] for i in infos]
+                    task_idx = [i["task"] for i in infos]
+                    task = task_idx[i]
+                    final_task_counts[task] += 1
+                    final_task_successes[task] += max(task_completions[i], 0.0)
+
+        if np.any(final_task_counts == 0):
+            warnings.warn(
+                f"Tasks {compress_ranges(np.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
+        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
+        final_task_counts = np.maximum(final_task_counts, np.ones_like(final_task_counts))
+        task_success_rates = np.divide(task_successes, task_counts)
+        final_task_success_rates = np.divide(final_task_successes, final_task_counts)
+        return returns, task_success_rates, final_task_success_rates
 
 
 class DummyEvaluator(Evaluator):
@@ -284,64 +505,61 @@ class DummyEvaluator(Evaluator):
             state_shape = 1
         return state_shape
 
-    def _get_action(self, state, lstm_state=None, done=None):
+    def _get_action(self, state, recurrent_state=None, done=None):
         state_shape = self._get_state_shape(state)
-        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
-            lstm_state[1])) if lstm_state is not None else None
-        return torch.zeros((state_shape, self.action_shape)), lstm_state, {}
+        recurrent_state = self._initial_recurrent_state() if recurrent_state is not None else None
+        return torch.zeros((state_shape, self.action_shape)), recurrent_state, {}
 
-    def _get_value(self, state, lstm_state=None, done=None):
+    def _get_value(self, state, recurrent_state=None, done=None):
         state_shape = self._get_state_shape(state)
-        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
-            lstm_state[1])) if lstm_state is not None else None
-        return torch.zeros((state_shape, 1)), lstm_state, {}
+        recurrent_state = self._initial_recurrent_state() if recurrent_state is not None else None
+        return torch.zeros((state_shape, 1)), recurrent_state, {}
 
-    def _get_action_and_value(self, state, lstm_state=None, done=None):
+    def _get_action_and_value(self, state, recurrent_state=None, done=None):
         state_shape = self._get_state_shape(state)
-        lstm_state = (torch.zeros_like(lstm_state[0]), torch.zeros_like(
-            lstm_state[1])) if lstm_state is not None else None
-        return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), lstm_state, {}
+        recurrent_state = self._initial_recurrent_state() if recurrent_state is not None else None
+        return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), recurrent_state, {}
+
+    def evaluate_agent(self, num_episodes=100, verbose=False):
+        return np.zeros(num_episodes), np.zeros(self.task_space.num_tasks), np.zeros(self.task_space.num_tasks)
 
 
 class CleanRLEvaluator(Evaluator):
-    def __init__(self, agent, *args, is_lstm=False, **kwargs):
-        super().__init__(agent, *args, **kwargs)
-        self.is_lstm = is_lstm or hasattr(agent, "lstm")
-
-    def _get_action(self, state, lstm_state=None, done=None):
-        if self.is_lstm:
-            self._check_inputs(lstm_state, done)
-            action, lstm_state = self.agent.get_action(state, lstm_state, done)
+    def _get_action(self, state, recurrent_state=None, done=None):
+        if self.recurrent_method is not None:
+            self._check_inputs(recurrent_state, done)
+            action, recurrent_state = self.agent.get_action(state, recurrent_state, done)
         else:
             action = self.agent.get_action(state)
-            lstm_state = None
-        return action, lstm_state, {}
+            recurrent_state = None
+        return action, recurrent_state, {}
 
-    def _get_value(self, state, lstm_state=None, done=None):
-        if self.is_lstm:
-            self._check_inputs(lstm_state, done)
-            value, lstm_state = self.agent.get_value(state, lstm_state, done)
+    def _get_value(self, state, recurrent_state=None, done=None):
+        if self.recurrent_method is not None:
+            self._check_inputs(recurrent_state, done)
+            value, recurrent_state = self.agent.get_value(state, recurrent_state, done)
         else:
             value = self.agent.get_value(state)
-            lstm_state = None
-        return value, lstm_state, {}
+            recurrent_state = None
+        return value, recurrent_state, {}
 
-    def _get_action_and_value(self, state, lstm_state=None, done=None):
-        if self.is_lstm:
-            self._check_inputs(lstm_state, done)
-            action, log_probs, entropy, value, lstm_state = self.agent.get_action_and_value(state, lstm_state, done)
+    def _get_action_and_value(self, state, recurrent_state=None, done=None):
+        if self.recurrent_method is not None:
+            self._check_inputs(recurrent_state, done)
+            action, log_probs, entropy, value, recurrent_state = self.agent.get_action_and_value(
+                state, recurrent_state, done)
         else:
             action, log_probs, entropy, value = self.agent.get_action_and_value(state)
-            lstm_state = None
-        return action, value, lstm_state, {"log_probs": log_probs, "entropy": entropy}
+            recurrent_state = None
+        return action, value, recurrent_state, {"log_probs": log_probs, "entropy": entropy}
 
-    def _check_inputs(self, lstm_state, done):
+    def _check_inputs(self, recurrent_state, done):
         assert (
-            lstm_state is not None
-        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            recurrent_state is not None
+        ), "Recurrent state must be provided. Make sure to configure any recurrence-specific settings for your curriculum."
         assert (
             done is not None
-        ), "Done must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+        ), "Done must be provided. Make sure to configure any recurrence-specific settings for your curriculum."
         return True
 
     def _set_eval_mode(self):
@@ -355,27 +573,27 @@ class MoolibEvaluator(Evaluator):
     def __init__(self, agent, *args, **kwargs):
         super().__init__(agent, *args, **kwargs)
 
-    def _get_action(self, state, lstm_state=None, done=None):
-        self._check_inputs(lstm_state, done)
+    def _get_action(self, state, recurrent_state=None, done=None):
+        self._check_inputs(recurrent_state, done)
         state["done"] = done
-        output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=False)
+        output, recurrent_state = self.agent(state, recurrent_state, get_action=True, get_value=False)
         action = output["action"]
-        return action, lstm_state, {}
+        return action, recurrent_state, {}
 
-    def _get_value(self, state, lstm_state=None, done=None):
-        self._check_inputs(lstm_state, done)
+    def _get_value(self, state, recurrent_state=None, done=None):
+        self._check_inputs(recurrent_state, done)
         state["done"] = done
-        output, lstm_state = self.agent(state, lstm_state, get_action=False, get_value=True)
+        output, recurrent_state = self.agent(state, recurrent_state, get_action=False, get_value=True)
         value = output["baseline"].reshape(-1, 1)
-        return value, lstm_state, {}
+        return value, recurrent_state, {}
 
-    def _get_action_and_value(self, state, lstm_state=None, done=None):
-        self._check_inputs(lstm_state, done)
+    def _get_action_and_value(self, state, recurrent_state=None, done=None):
+        self._check_inputs(recurrent_state, done)
         state["done"] = done
-        output, lstm_state = self.agent(state, lstm_state, get_action=True, get_value=True)
+        output, recurrent_state = self.agent(state, recurrent_state, get_action=True, get_value=True)
         action = output["action"]
         value = output["baseline"].reshape(-1, 1)
-        return action, value, lstm_state, {}
+        return action, value, recurrent_state, {}
 
     def _prepare_state(self, state) -> torch.Tensor:
         full_dict = defaultdict(list)
@@ -389,10 +607,10 @@ class MoolibEvaluator(Evaluator):
                        for key, val_list in full_dict.items()}
         return tensor_dict
 
-    def _check_inputs(self, lstm_state, done):
+    def _check_inputs(self, recurrent_state, done):
         assert (
-            lstm_state is not None
-        ), "LSTM state must be provided. Make sure to configure any LSTM-specific settings for your curriculum."
+            recurrent_state is not None
+        ), "Recurrent state must be provided. Make sure to configure any recurrence-specific settings for your curriculum."
         return True
 
     def _set_eval_mode(self):

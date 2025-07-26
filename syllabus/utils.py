@@ -1,4 +1,4 @@
-from itertools import product
+from itertools import product, groupby
 from typing import Union
 
 import numpy as np
@@ -29,3 +29,13 @@ def enumerate_axes(list_or_size: Union[np.ndarray, int]):
         return tuple(product(*[enumerate_axes(x) for x in list_or_size]))
     else:
         raise NotImplementedError(f"{type(list_or_size)}")
+
+
+def compress_ranges(nums):
+    nums = sorted(set(nums))
+    ranges = []
+    for _, group in groupby(enumerate(nums), lambda x: x[1] - x[0]):
+        group = list(group)
+        start, end = group[0][1], group[-1][1]
+        ranges.append(f"{start}" if start == end else f"{start}-{end}")
+    return ", ".join(ranges)

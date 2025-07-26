@@ -281,6 +281,20 @@ if __name__ == "__main__":
         sample_env = gym.wrappers.RecordEpisodeStatistics(sample_env)
         sample_env = ProcgenTaskWrapper(sample_env, args.env_id, seed=args.seed)
 
+        evaluator_curriculum = SequentialCurriculum(
+            sample_env.task_space.tasks, ["tasks>=1"] * len(sample_env.task_space.tasks), sample_env.task_space, should_loop=True)
+        evaluator_curriculum = make_multiprocessing_curriculum(
+            evaluator_curriculum, timeout=3000, start=True
+        )
+        evaluator_envs = gym.vector.AsyncVectorEnv(
+            [
+                make_env(args.env_id, 0, task_wrapper=True, num_levels=1,
+                         curriculum_components=evaluator_curriculum.components)
+                for i in range(args.num_envs)
+            ]
+        )
+        evaluator_envs = wrap_vecenv(evaluator_envs)
+
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
@@ -322,7 +336,8 @@ if __name__ == "__main__":
                     for i in range(args.num_envs)
                 ]
             )
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True,
+                                         eval_curriculum=evaluator_curriculum, eval_envs=evaluator_envs)
             curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
@@ -346,15 +361,11 @@ if __name__ == "__main__":
             curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
-            )
-            lp_eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True,
+                                         eval_curriculum=evaluator_curriculum, eval_envs=evaluator_envs)
             curriculum = LearningProgress(
+                evaluator,
                 sample_env.task_space,
-                eval_envs=lp_eval_envs,
-                evaluator=evaluator,
                 eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
