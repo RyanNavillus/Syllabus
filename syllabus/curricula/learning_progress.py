@@ -71,9 +71,8 @@ class LearningProgress(Curriculum):
         self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
     def eval_and_update(self, eval_eps=1):
-        _, task_success_rates, final_success_rates = self.evaluator.evaluate_agent(eval_eps, verbose=True)
-        if self.continuous_progress:
-            task_success_rates = final_success_rates
+        _, task_success_rates, final_success_rates, _ = self.evaluator.evaluate_agent(eval_eps, verbose=True)
+        task_success_rates = final_success_rates.numpy() if self.continuous_progress else task_success_rates.numpy()
 
         if self.random_baseline is None:
             # Assume that any perfect success rate is actually 75% due to evaluation precision.

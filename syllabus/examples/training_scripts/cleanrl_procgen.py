@@ -170,7 +170,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
         if eval:
             env = GymnasiumEvaluationWrapper(env, start_index_spacing=3, randomize_order=False)
 
-        if curriculum_components is not None:
+        if curriculum_components is not None:5098120
             env = GymnasiumSyncWrapper(
                 env,
                 env.task_space,
@@ -373,7 +373,7 @@ if __name__ == "__main__":
                 evaluator,
                 sample_env.task_space,
                 eval_interval_steps=25 * args.batch_size,
-                eval_eps=20 * 200,
+                eval_eps=2 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
                 ema_alpha=args.lp_ema_alpha,

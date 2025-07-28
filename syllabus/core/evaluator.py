@@ -309,41 +309,23 @@ class Evaluator:
         else:
             return None
 
-    def evaluate_agent(self, num_episodes=100, verbose=False, store_all=False):
-        """
-        Evaluate the agent over a number of episodes.
-
-        Args:
-            num_episodes (int): Number of episodes to evaluate.
-
-        Returns:
-            List[float]: List of returns for each episode.
-        """
-        assert self.task_space is not None, "Task space must be defined for evaluation."
-        if self.is_multiagent:
-            return self._evaluate_pettingzoo(num_episodes, verbose=verbose, store_all=store_all)
-        else:
-            return self._evaluate_gymnasium(num_episodes, verbose=verbose, store_all=store_all)
-
     def evaluate_batch(self, steps, initial_obs, recurrent_state=None, rewards=None, dones=None, tasks=None, value_preds=None):
         """
         Evaluate the agent over a batch of steps.
 
         Args:
             steps (List[Tuple[Array, Array]]): List of (observation, recurrent_state) pairs.
+            initial_obs (Array): Initial observations for the batch.
+            recurrent_state (Optional[RecurrentState]): Current recurrent state.
+            rewards (Optional[Array]): Array to store rewards.
+            dones (Optional[Array]): Array to store done flags.
+            tasks (Optional[Array]): Array to store tasks.
+            value_preds (Optional[Array]): Array to store value predictions.
 
         Returns:
-            List[float]: List of returns for each step.
+            Tuple[Array, RecurrentState, Array, Array, Array, Array]: Updated observations, recurrent state, rewards, dones, tasks, and value predictions.
         """
-        """
-        Evaluate the agent over a number of episodes.
-
-        Args:
-            num_episodes (int): Number of episodes to evaluate.
-
-        Returns:
-            List[float]: List of returns for each episode.
-        """
+        assert not self.is_multiagent, "Batch evaluation is not supported for multi-agent environments."
         num_envs = self.eval_envs.num_envs
 
         # Standard RL data
@@ -368,6 +350,24 @@ class Evaluator:
 
         return obs, recurrent_state, rewards, dones, tasks, value_preds
 
+    def evaluate_agent(self, num_episodes=100, verbose=False, store_all=False):
+        """
+        Evaluate the agent over a number of episodes.
+
+        Args:
+            num_episodes (int): Number of episodes to evaluate.
+            verbose (bool): Whether to print episode results.
+            store_all (bool): Whether to store all step data.
+
+        Returns:
+            Tuple[List[float], torch.Tensor, torch.Tensor, Optional[Dict[str, Any]]]: Returns, task success rates, final task success rates, and optional step data.
+        """
+        assert self.task_space is not None, "Task space must be defined for evaluation."
+        if self.is_multiagent:
+            return self._evaluate_pettingzoo(num_episodes, verbose=verbose, store_all=store_all)
+        else:
+            return self._evaluate_gymnasium(num_episodes, verbose=verbose, store_all=store_all)
+
     def _evaluate_gymnasium(self, num_episodes=100, verbose=False, store_all=False):
         """
         Evaluate the agent over a number of episodes.
@@ -386,7 +386,7 @@ class Evaluator:
         recurrent_state = self._initial_recurrent_state(num_envs)
         completed_episodes = 0
         returns = []
-        rews = np.zeros(num_envs)
+        rews = torch.zeros(num_envs)
         dones = [False] * num_envs
 
         if store_all:
@@ -396,11 +396,11 @@ class Evaluator:
             step_tasks = []
 
         # Track task progress
-        task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
-        task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+        task_counts = torch.zeros(self.task_space.num_tasks, dtype=int)
+        task_successes = torch.zeros(self.task_space.num_tasks, dtype=float)
 
-        final_task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
-        final_task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+        final_task_counts = torch.zeros(self.task_space.num_tasks, dtype=int)
+        final_task_successes = torch.zeros(self.task_space.num_tasks, dtype=float)
 
         while completed_episodes < num_episodes:
             if store_all:
@@ -450,13 +450,13 @@ class Evaluator:
                     final_task_counts[task] += 1
                     final_task_successes[task] += max(completion, 0.0)
 
-        if np.any(final_task_counts == 0):
+        if torch.any(final_task_counts == 0):
             warnings.warn(
-                f"Tasks {compress_ranges(np.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
-        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
-        final_task_counts = np.maximum(final_task_counts, np.ones_like(final_task_counts))
-        task_success_rates = np.divide(task_successes, task_counts)
-        final_task_success_rates = np.divide(final_task_successes, final_task_counts)
+                f"Tasks {compress_ranges(torch.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
+        task_counts = torch.maximum(task_counts, torch.ones_like(task_counts))
+        final_task_counts = torch.maximum(final_task_counts, torch.ones_like(final_task_counts))
+        task_success_rates = torch.divide(task_successes, task_counts)
+        final_task_success_rates = torch.divide(final_task_successes, final_task_counts)
         all_data = None
         if store_all:
             all_data = {
@@ -485,15 +485,15 @@ class Evaluator:
         recurrent_state = self._initial_recurrent_state(num_envs)
         completed_episodes = 0
         returns = []
-        rews = np.zeros(num_envs)
+        rews = torch.zeros(num_envs)
         dones = [False] * num_envs
 
         # Track task progress
-        task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
-        task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+        task_counts = torch.zeros(self.task_space.num_tasks, dtype=int)
+        task_successes = torch.zeros(self.task_space.num_tasks, dtype=float)
 
-        final_task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
-        final_task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
+        final_task_counts = torch.zeros(self.task_space.num_tasks, dtype=int)
+        final_task_successes = torch.zeros(self.task_space.num_tasks, dtype=float)
 
         while completed_episodes < num_episodes:
             actions, recurrent_state, _ = self.get_action(obs, recurrent_state, done=dones)
@@ -545,14 +545,14 @@ class Evaluator:
                     final_task_counts[task] += 1
                     final_task_successes[task] += max(task_completions[i], 0.0)
 
-        if np.any(final_task_counts == 0):
+        if torch.any(final_task_counts == 0):
             warnings.warn(
-                f"Tasks {compress_ranges(np.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
-        task_counts = np.maximum(task_counts, np.ones_like(task_counts))
-        final_task_counts = np.maximum(final_task_counts, np.ones_like(final_task_counts))
-        task_success_rates = np.divide(task_successes, task_counts)
-        final_task_success_rates = np.divide(final_task_successes, final_task_counts)
-        return returns, task_success_rates, final_task_success_rates
+                f"Tasks {compress_ranges(torch.where(task_counts == 0)[0].tolist())} were not attempted during evaluation. Consider increasing eval episodes.")
+        task_counts = torch.maximum(task_counts, torch.ones_like(task_counts))
+        final_task_counts = torch.maximum(final_task_counts, torch.ones_like(final_task_counts))
+        task_success_rates = torch.divide(task_successes, task_counts)
+        final_task_success_rates = torch.divide(final_task_successes, final_task_counts)
+        return returns, task_success_rates, final_task_success_rates, None
 
 
 class DummyEvaluator(Evaluator):
