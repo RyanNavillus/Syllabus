@@ -12,7 +12,7 @@ import torch
 from gymnasium.vector import VectorEnv
 from torch import Tensor
 
-from syllabus.core.curriculum_base import Curriculum
+from syllabus.core import Curriculum
 from syllabus.task_space.task_space import TaskSpace
 from syllabus.utils import UsageError, compress_ranges
 
@@ -30,8 +30,9 @@ class Evaluator:
         preprocess_obs: Optional[Callable] = None,
         copy_agent: bool = True,
         simple_copy: bool = False,
-        eval_curriculum: Optional[Curriculum] = None,
+        task_space: Optional[TaskSpace] = None,
         eval_envs: Optional[VectorEnv] = None,
+        eval_curriculum: Optional[Curriculum] = None,
         recurrent_method: Optional[str] = None,
         recurrent_size: Optional[int] = None,
     ):
@@ -73,8 +74,9 @@ class Evaluator:
         if not simple_copy:
             self.agent = self._agent_reference
 
-        self.task_space = eval_curriculum.task_space if eval_curriculum else None
+        self.task_space = task_space if task_space is not None else eval_curriculum.task_space if eval_curriculum is not None else None
         self.eval_envs = eval_envs
+        self.eval_curriculum = eval_curriculum
         self.recurrent_method = recurrent_method
         self.recurrent_size = recurrent_size
 
@@ -307,7 +309,7 @@ class Evaluator:
         else:
             return None
 
-    def evaluate_agent(self, num_episodes=100, verbose=False):
+    def evaluate_agent(self, num_episodes=100, verbose=False, store_all=False):
         """
         Evaluate the agent over a number of episodes.
 
@@ -317,12 +319,56 @@ class Evaluator:
         Returns:
             List[float]: List of returns for each episode.
         """
+        assert self.task_space is not None, "Task space must be defined for evaluation."
         if self.is_multiagent:
-            return self._evaluate_pettingzoo(num_episodes, verbose=verbose)
+            return self._evaluate_pettingzoo(num_episodes, verbose=verbose, store_all=store_all)
         else:
-            return self._evaluate_gymnasium(num_episodes, verbose=verbose)
+            return self._evaluate_gymnasium(num_episodes, verbose=verbose, store_all=store_all)
 
-    def _evaluate_gymnasium(self, num_episodes=100, verbose=False):
+    def evaluate_batch(self, steps, initial_obs, recurrent_state=None, rewards=None, dones=None, tasks=None, value_preds=None):
+        """
+        Evaluate the agent over a batch of steps.
+
+        Args:
+            steps (List[Tuple[Array, Array]]): List of (observation, recurrent_state) pairs.
+
+        Returns:
+            List[float]: List of returns for each step.
+        """
+        """
+        Evaluate the agent over a number of episodes.
+
+        Args:
+            num_episodes (int): Number of episodes to evaluate.
+
+        Returns:
+            List[float]: List of returns for each episode.
+        """
+        num_envs = self.eval_envs.num_envs
+
+        # Standard RL data
+        obs = initial_obs
+        recurrent_state = recurrent_state if recurrent_state is not None else self._initial_recurrent_state(num_envs)
+        rewards = rewards if rewards is not None else torch.zeros((steps, num_envs))
+        dones = dones if dones is not None else torch.zeros((steps, num_envs))
+        tasks = tasks if tasks is not None else torch.zeros((steps, num_envs))
+        value_preds = value_preds if value_preds is not None else torch.zeros((steps, num_envs))
+
+        for i in range(steps):
+            actions, value, recurrent_state, _ = self.get_action_and_value(obs, recurrent_state, done=dones)
+            if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
+                actions = actions.int()
+            obs, rew, term, trunc, info = self.eval_envs.step(actions.cpu().numpy())
+
+            done = torch.logical_or(torch.Tensor(term), torch.Tensor(trunc))
+            rewards[i] = torch.Tensor(rew)
+            dones[i + 1] = torch.Tensor(done)
+            tasks[i] = torch.Tensor(info["task"])
+            value_preds[i] = torch.squeeze(value.cpu())
+
+        return obs, recurrent_state, rewards, dones, tasks, value_preds
+
+    def _evaluate_gymnasium(self, num_episodes=100, verbose=False, store_all=False):
         """
         Evaluate the agent over a number of episodes.
 
@@ -343,6 +389,12 @@ class Evaluator:
         rews = np.zeros(num_envs)
         dones = [False] * num_envs
 
+        if store_all:
+            step_rewards = []
+            step_value_preds = []
+            step_dones = []
+            step_tasks = []
+
         # Track task progress
         task_counts = np.zeros(self.task_space.num_tasks, dtype=int)
         task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
@@ -351,12 +403,21 @@ class Evaluator:
         final_task_successes = np.zeros(self.task_space.num_tasks, dtype=float)
 
         while completed_episodes < num_episodes:
-            actions, recurrent_state, _ = self.get_action(obs, recurrent_state, done=dones)
+            if store_all:
+                actions, value, recurrent_state, _ = self.get_action_and_value(obs, recurrent_state, done=dones)
+            else:
+                actions, recurrent_state, _ = self.get_action(obs, recurrent_state, done=dones)
             if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
                 actions = actions.int()
             obs, rew, term, trunc, info = self.eval_envs.step(actions.cpu().numpy())
             rews += rew
             dones = np.logical_or(term, trunc)
+
+            if store_all:
+                step_rewards.append(torch.Tensor(rew).unsqueeze(-1))
+                step_value_preds.append(value.cpu())
+                step_dones.append(torch.zeros_like(value.cpu()))
+                step_tasks.append(torch.Tensor(info["task"]))
 
             # Track task completion for tasks that can change mid-episode
             if "task_completion" in info:
@@ -396,7 +457,15 @@ class Evaluator:
         final_task_counts = np.maximum(final_task_counts, np.ones_like(final_task_counts))
         task_success_rates = np.divide(task_successes, task_counts)
         final_task_success_rates = np.divide(final_task_successes, final_task_counts)
-        return returns, task_success_rates, final_task_success_rates
+        all_data = None
+        if store_all:
+            all_data = {
+                "rewards": step_rewards,
+                "value_preds": step_value_preds,
+                "dones": step_dones,
+                "tasks": step_tasks
+            }
+        return returns, task_success_rates, final_task_success_rates, all_data
 
     def _evaluate_pettingzoo(self, num_episodes=100, verbose=False):
         """

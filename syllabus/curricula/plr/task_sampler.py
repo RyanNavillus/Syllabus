@@ -1,5 +1,7 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and original PLR paper: https://arxiv.org/abs/2010.03934
+import threading
+import time
 import gymnasium as gym
 import numpy as np
 import torch
@@ -69,14 +71,10 @@ class TaskSampler:
         gamma=0.999,
         gae_lambda=0.95,
         robust_plr: bool = False,
-        eval_envs=None,
         evaluator: Evaluator = None,
-        observation_space=None,
-
     ):
         if robust_plr:
             assert task_space is not None, "Task space must be provided for robust PLR."
-            assert eval_envs is not None, "Eval environments must be provided for robust PLR."
             assert evaluator is not None, "Evaluator must be provided for robust PLR."
         self.task_space = task_space
         self.action_space = action_space
@@ -84,7 +82,7 @@ class TaskSampler:
         self.num_tasks = len(self.tasks)
         self.num_steps = num_steps
         # TODO: Add space for eval actors
-        self.num_actors = num_actors + eval_envs.num_envs if robust_plr else num_actors
+        self.num_actors = num_actors + evaluator.eval_envs.num_envs if robust_plr else num_actors
         self.num_train_actors = num_actors
         self.strategy = strategy
         self.replay_schedule = replay_schedule
@@ -139,9 +137,11 @@ class TaskSampler:
 
         # Offline evaluation
         self.robust_plr = robust_plr
-        self.offline_queue = []
-        self.evaluator = evaluator
-        self.eval_envs = eval_envs
+        if self.robust_plr:
+            self.evaluator = evaluator
+            self.num_eval_envs = self.evaluator.eval_envs.num_envs
+            self.evaluate_thread = threading.Thread(name='robustplr-evaluate', target=self._evaluate_tasks, daemon=True)
+            self.evaluate_thread.start()
 
     def _init_task_index(self, tasks):
         if tasks:
@@ -215,11 +215,11 @@ class TaskSampler:
         self._update_with_rollouts(rollouts, actor_index=actor_id, external_scores=external_scores)
 
         # Evaluate random tasks
-        self.num_eval_envs = self.eval_envs.num_envs if self.eval_envs is not None else 0
-        while self.robust_plr and len(self.offline_queue) > self.num_eval_envs:
-            tasks = self.offline_queue[:self.num_eval_envs]
-            self._evaluate_tasks(tasks)
-            self.offline_queue = self.offline_queue[self.num_eval_envs:]
+        # self.num_eval_envs = self.evaluator.eval_envs.num_envs if self.evaluator is not None else 0
+        # while self.robust_plr and len(self.offline_queue) > self.num_eval_envs * 2:
+        #     tasks = self.offline_queue[:self.num_eval_envs*2]
+        #     self._evaluate_tasks(tasks)
+        #     self.offline_queue = self.offline_queue[self.num_eval_envs*2:]
 
     def update_task_score(self, actor_index, task, score, max_score, num_steps, running_mean=True):
         if self.sample_full_distribution and task in self.staging_task_set:
@@ -366,7 +366,7 @@ class TaskSampler:
             task_idx = self.task2index.get(task, None)
             partial_steps = self.partial_task_steps[actor_idx][task_idx] if task_idx is not None else 0
 
-        new_steps = len(kwargs["episode_logits"])
+        new_steps = len(kwargs["value_preds"])
         total_steps = partial_steps + new_steps
 
         if done and grounded_val is not None:
@@ -785,7 +785,7 @@ class TaskSampler:
                         use_gae,
                         gamma,
                         gae_lambda):
-        returns = torch.zeros_like(value_preds)
+        returns = np.zeros_like(value_preds)
         if use_gae:
             return self.compute_gae_returns(
                 rewards, value_preds, masks, returns, next_value, gamma, gae_lambda)
@@ -793,67 +793,35 @@ class TaskSampler:
             return self.compute_discounted_returns(
                 rewards, value_preds, masks, returns, next_value, gamma)
 
-    def _evaluate_tasks(self, tasks):
-        # TODO: Set task for evaluator envs
-        tasks_encoded = [self.task_space.encode(task) for task in tasks]
-        print(f"Evaluating tasks: {tasks_encoded}")
-        obs, _ = self.eval_envs.reset(seed=tasks_encoded)
-        # TODO: Support any number of eval processes
-        # TODO: Figure out how to generate roughly 1 episode of data for each task?
-        rewards = []
-        value_preds = []
-        dones = []
-        tasks = []
-        episodic_returns = np.zeros(self.eval_envs.num_envs, dtype=np.float32)
-        episodic_lengths = np.zeros(self.eval_envs.num_envs, dtype=np.int32)
-        done_check = np.zeros(self.eval_envs.num_envs, dtype=bool)
-        step = 0
-        while not all(done_check):
-            action, value, lstm_states, _ = self.evaluator.get_action_and_value(obs)
-            obs, rew, term, trunc, infos = self.eval_envs.step(action.cpu().numpy())
+    def _evaluate_tasks(self):
+        obs, _ = self.evaluator.eval_envs.reset()
+        recurrent_state = self.evaluator._initial_recurrent_state(self.num_eval_envs)
+        rewards = torch.zeros((self.num_steps, self.num_eval_envs), dtype=torch.float32)
+        dones = torch.zeros((self.num_steps + 1, self.num_eval_envs), dtype=torch.float32)
+        tasks = torch.zeros((self.num_steps, self.num_eval_envs), dtype=torch.float32)
+        value_preds = torch.zeros((self.num_steps + 1, self.num_eval_envs), dtype=torch.float32)
 
-            # done = torch.Tensor(np.logical_or(term, trunc)).unsqueeze(-1)
-            rewards.append(torch.Tensor(
-                rew).unsqueeze(-1))
-            value_preds.append(value.cpu())
-            dones.append(torch.zeros_like(value.cpu()))
-            tasks.append(torch.Tensor(tasks_encoded))
-
-            # Check if the episode is done
-            if "episode" in infos.keys():
-                for i in range(len(infos["episode"]["r"])):
-                    if infos["episode"]["l"][i] > 0:
-                        episodic_return = infos["episode"]['r'][i]
-                        episode_length = infos["episode"]['l'][i]
-                        if not done_check[i]:
-                            done_check[i] = True
-                            dones[step][i] = True
-                            episodic_returns[i] = episodic_return
-                            episodic_lengths[i] = episode_length
-                            # print(
-                            # f"Episode finished: Task {tasks_encoded[i]}, Return: {episodic_return}, Length: {episode_length}")
-            step += 1
-
-        next_value, _, _ = self.evaluator.get_value(obs)
-        next_value = torch.squeeze(next_value.cpu())
-        rewards = torch.squeeze(torch.stack(rewards, dim=0))
-        value_preds.append(torch.zeros_like(value.cpu()))
-        value_preds = torch.squeeze(torch.stack(value_preds, dim=0))
-        dones.append(torch.zeros_like(value.cpu()))
-        dones = torch.squeeze(torch.stack(dones, dim=0))
-        tasks = torch.squeeze(torch.stack(tasks, dim=0))
-        returns = self.compute_returns(rewards, value_preds, 1 - dones, next_value, True, self.gamma, self.gae_lambda)
-
-        # Iterate over eval actor indices
-        for actor_index in range(self.eval_envs.num_envs):
-            self._update_actor_with_data(
-                self.num_train_actors + actor_index,
-                tasks[:, actor_index],
-                dones[:, actor_index],
-                returns[:, actor_index],
-                rewards[:, actor_index],
-                value_preds[:, actor_index],
+        while True:
+            # TODO: Make sure queue is being emptied at reasonable rate
+            obs, recurrent_state, rewards, dones, tasks, value_preds = self.evaluator.evaluate_batch(
+                self.num_steps, obs, recurrent_state=recurrent_state, rewards=rewards, dones=dones, tasks=tasks, value_preds=value_preds
             )
+
+            next_value, _, _ = self.evaluator.get_value(obs, recurrent_state)
+            returns = self.compute_returns(rewards, value_preds, 1 - dones, torch.squeeze(next_value.cpu()),
+                                           True, self.gamma, self.gae_lambda)
+
+            # Iterate over eval actor indices
+            for actor_index in range(self.evaluator.eval_envs.num_envs):
+                self._update_actor_with_data(
+                    self.num_train_actors + actor_index,
+                    tasks[:, actor_index],
+                    dones[:, actor_index],
+                    returns[:, actor_index],
+                    rewards[:, actor_index],
+                    value_preds[:, actor_index],
+                )
+            time.sleep(0.01)
 
     def sample(self, strategy=None):
         if strategy == "full_distribution":
@@ -878,7 +846,7 @@ class TaskSampler:
             # Add random levels to an evaluation queue until we sample a replay level
             while not replay_decision:
                 level = self._sample_unseen_level() if self._proportion_filled < 1.0 else self._sample_random_level()
-                self.offline_queue.append(level)
+                self.evaluator.eval_curriculum.send_task(level)     # Send task to evaluator environments
                 replay_decision = self.sample_replay_decision()
             return self._sample_replay_level()
         else:
