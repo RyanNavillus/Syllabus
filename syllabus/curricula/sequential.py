@@ -207,7 +207,7 @@ class SequentialCurriculum(Curriculum):
         # Set probability for tasks from other stages to 0
         current_tasks = set(self.current_curriculum.task_space.tasks)
         all_tasks = set(self.task_space.tasks)
-        noncurrent_tasks = all_tasks - current_tasks
+        noncurrent_tasks = list(all_tasks - current_tasks)[:log_n_tasks]
         for task in noncurrent_tasks:
             name = self.task_names(task, self.task_space.encode(task))
             logs.append((f"curriculum/{name}_prob", 0))
