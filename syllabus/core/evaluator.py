@@ -6,16 +6,15 @@ import warnings
 from collections import defaultdict
 from io import BytesIO
 from typing import Any, Callable, Dict, Optional, Tuple, Union
+import warnings
 
 import gymnasium as gym
 import numpy as np
 import torch
 from torch import Tensor
-from gymnasium.vector import AsyncVectorEnv, SyncVectorEnv
 
-from syllabus.core.curriculum_sync_wrapper import make_multiprocessing_curriculum
-from syllabus.core.environment_sync_wrapper import GymnasiumSyncWrapper
 from syllabus.task_space.task_space import TaskSpace
+
 
 Array = Union[np.ndarray, Tensor]
 LSTMState = Tuple[Array, Array]
@@ -45,6 +44,7 @@ class Evaluator:
         self.device = device
         self.preprocess_obs = preprocess_obs
         self._copy_agent = copy_agent   # Save to skip update if possible
+        assert not (simple_copy and not copy_agent), "Cannot use simple_copy without copy_agent being True."
 
         # Make cpu copy of model
         if copy_agent and not simple_copy:
@@ -55,7 +55,7 @@ class Evaluator:
                 model_data_in_memory.seek(0)
 
                 # Load the model from memory to CPU
-                self.agent = torch.load(model_data_in_memory, map_location=self.device)
+                self.agent = torch.load(model_data_in_memory, map_location=self.device, weights_only=False)
                 model_data_in_memory.close()
             except RuntimeError as e:
                 warnings.warn(str(e), stacklevel=2)
@@ -64,6 +64,7 @@ class Evaluator:
         if copy_agent and simple_copy:
             agent.to(self.device)
             self.agent = copy.deepcopy(agent).to(self.device)
+            self.agent.require_grad_(False)
             agent.to("cuda")
 
         if not simple_copy:

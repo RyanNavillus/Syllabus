@@ -229,8 +229,9 @@ class Curriculum:
             # Reduce amount of per-task basic logging
             log_task_dist = task_dist
             if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
-                warnings.warn(f"Too many tasks to log {len(self.tasks)}. Only logging stats for 1 task.", stacklevel=2)
-                log_task_dist = task_dist[:log_n_tasks]
+                warnings.warn(
+                    f"Too many tasks to log {len(self.tasks)}. Only logging stats for {log_n_tasks} tasks.", stacklevel=2)
+                task_dist = task_dist[:log_n_tasks]
 
             # Add basic logs
             for idx, prob in enumerate(log_task_dist):
@@ -263,7 +264,8 @@ class Curriculum:
                 # Log top 10 tasks to wandb table
                 try:
                     import wandb
-                    self.wandb_table.add_data(step, "\n".join(top_10_tasks), "\n".join([f"{t:.3f}" for t in top_10_probs]))
+                    self.wandb_table.add_data(step, "\n".join(top_10_tasks),
+                                              "\n".join([f"{t:.3f}" for t in top_10_probs]))
                     wandb.log({"curriculum/top_tasks": self.wandb_table, "global_step": step})
                 except ImportError:
                     pass
