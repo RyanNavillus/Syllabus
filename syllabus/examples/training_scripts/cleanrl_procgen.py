@@ -22,11 +22,13 @@ from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import CleanRLEvaluator, GymnasiumEvaluationWrapper
+from syllabus.core.evaluator import (CleanRLEvaluator,
+                                     GymnasiumEvaluationWrapper)
 from syllabus.curricula import (BatchedDomainRandomization,
                                 CentralPrioritizedLevelReplay, Constant,
                                 DirectPrioritizedLevelReplay,
-                                DomainRandomization, LearningProgress, Learnability,
+                                DomainRandomization, Learnability,
+                                LearningProgress, OnlineLearningProgress,
                                 PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
@@ -355,9 +357,23 @@ if __name__ == "__main__":
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
-                eval_interval_steps=25 * args.batch_size,
+                update_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
+                normalize_success=args.normalize_success_rates,
+                ema_alpha=args.lp_ema_alpha,
+                p_theta=args.lp_ptheta
+            )
+        elif args.curriculum_method == "online_lp":
+            print("Using online learning progress.")
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            )
+            lp_eval_envs = wrap_vecenv(eval_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
+            curriculum = OnlineLearningProgress(
+                sample_env.task_space,
+                update_interval_steps=25 * args.batch_size,
                 normalize_success=args.normalize_success_rates,
                 ema_alpha=args.lp_ema_alpha,
                 p_theta=args.lp_ptheta
@@ -373,7 +389,7 @@ if __name__ == "__main__":
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
-                eval_interval_steps=25 * args.batch_size,
+                update_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
@@ -389,7 +405,7 @@ if __name__ == "__main__":
                 sample_env.task_space,
                 eval_envs=lp_eval_envs,
                 evaluator=evaluator,
-                eval_interval_steps=25 * args.batch_size,
+                update_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,

@@ -257,7 +257,7 @@ if __name__ == "__main__":
                 [make_env(args.env_id, task_wrapper=True) for _ in range(8)]
             )
             curriculum = LearningProgress(eval_envs, make_action_fn(),
-                                          sample_env.task_space, eval_interval_steps=409600)
+                                          sample_env.task_space, update_interval_steps=409600)
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")
             curricula = []
