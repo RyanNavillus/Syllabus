@@ -20,7 +20,7 @@ class Learnability(Curriculum):
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(self, *args, topk=1000, learnable_prob=1.0, sampling="topk", eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, eval_interval=None, eval_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, multiagent=False, **kwargs):
+    def __init__(self, *args, topk=1000, learnable_prob=1.0, sampling="topk", eval_envs=None, evaluator=None, create_env=None, num_eval_envs=16, recurrent_size=None, recurrent_method=None, update_interval=None, update_interval_steps=None, eval_eps=1, eval_fn=None, baseline_eval_eps=None, normalize_success=False, continuous_progress=False, multiagent=False, **kwargs):
         super().__init__(*args, **kwargs)
         assert (eval_envs is not None and evaluator is not None) or eval_fn is not None or create_env is not None, "One of create_env and evaluator, eval_envs and evaluator, or eval_fn must be provided."
         if recurrent_method is not None:
@@ -50,9 +50,9 @@ class Learnability(Curriculum):
         self.sampling = sampling
         self.recurrent_size = recurrent_size
         self.recurrent_method = recurrent_method
-        self.eval_interval = eval_interval
-        assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
-        self.eval_interval_steps = eval_interval_steps
+        self.eval_interval = update_interval
+        assert update_interval is None or update_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
+        self.eval_interval_steps = update_interval_steps
         self.eval_eps = eval_eps
         self.completed_episodes = 0
         self.current_steps = 0
@@ -335,14 +335,21 @@ class StratifiedLearnability(Learnability):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
-        assert selection_metric in ["success", "progress"]
+        assert selection_metric in [
+            "success", "score", "learnability"], f"Selection metric {selection_metric} not recognized. Use 'success', 'score', or 'learnability'."
         self.selection_metric = selection_metric
 
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
-        selection_weight = np.ones(len(lp_dist)) * 0.0001
-        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+        selection_weight = np.ones(len(lp_dist)) * 0.001
+
+        if self.selection_metric == "learnability":
+            metric = self.task_rates * (1.0 - self.task_rates)
+        elif self.selection_metric == "score":
+            metric = lp_dist
+        else:
+            metric = self.task_rates
 
         # Find the highest success rate task in each strata
         for strata in self.task_space.strata:
