@@ -538,6 +538,8 @@ class TaskSampler:
                     #     kwargs_["value_preds"] = rollouts.denorm_value_preds[start_t:, actor_index]
                     # else:
                     kwargs_["value_preds"] = rollouts.value_preds[start_t:, actor_index]
+                
+                if self.grounded_values is not None:
                     kwargs_["grounded_value"] = self.grounded_values[task_t]
 
                 score, max_score = score_function(**kwargs_)
