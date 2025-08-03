@@ -310,7 +310,7 @@ if __name__ == "__main__":
             eval_envs = wrap_vecenv(eval_envs)
             evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
             curriculum = LearningProgress(
-                eval_envs, evaluator, sample_env.task_space, eval_interval_steps=25 * args.batch_size
+                eval_envs, evaluator, sample_env.task_space, update_interval_steps=25 * args.batch_size
             )
         elif args.curriculum_method == "sq":
             print("Using sequential curriculum.")

@@ -24,12 +24,13 @@ from procgen import ProcgenEnv  # type: ignore # noqa: F401
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
-from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum, MultiProcessingComponents
+from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
 from syllabus.core.evaluator import CleanRLEvaluator, GymnasiumEvaluationWrapper
 from syllabus.curricula import (BatchedDomainRandomization,
                                 CentralPrioritizedLevelReplay, Constant,
                                 DirectPrioritizedLevelReplay,
-                                DomainRandomization, LearningProgress, Learnability,
+                                DomainRandomization, Learnability,
+                                LearningProgress, OnlineLearningProgress,
                                 PrioritizedLevelReplay, SequentialCurriculum)
 from syllabus.curricula.manual import Manual
 from syllabus.examples.models import ProcgenAgent
@@ -324,7 +325,8 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "value_l1", "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
+                task_sampler_kwargs_dict={"strategy": "value_l1", "staleness_coef": args.staleness_coef,
+                                          "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "robustplr":
             print("Using robust prioritized level replay.")
@@ -383,8 +385,22 @@ if __name__ == "__main__":
                 evaluator,
                 sample_env.task_space,
                 eval_interval_steps=25 * args.batch_size,
-                eval_eps=2 * 200,
+                eval_eps=20 * 200,
                 continuous_progress=True,
+                normalize_success=args.normalize_success_rates,
+                ema_alpha=args.lp_ema_alpha,
+                p_theta=args.lp_ptheta
+            )
+        elif args.curriculum_method == "online_lp":
+            print("Using online learning progress.")
+            eval_envs = gym.vector.AsyncVectorEnv(
+                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            )
+            lp_eval_envs = wrap_vecenv(eval_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
+            curriculum = OnlineLearningProgress(
+                sample_env.task_space,
+                update_interval_steps=25 * args.batch_size,
                 normalize_success=args.normalize_success_rates,
                 ema_alpha=args.lp_ema_alpha,
                 p_theta=args.lp_ptheta

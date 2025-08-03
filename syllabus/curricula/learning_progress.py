@@ -1,11 +1,9 @@
 import math
-import random
 import warnings
 from itertools import groupby
 from typing import Any, List, Optional, Union
 
 import numpy as np
-from scipy.stats import norm
 
 from syllabus.core import Curriculum
 from syllabus.core.evaluator import Evaluator
@@ -174,7 +172,7 @@ class LearningProgress(Curriculum):
         self._stale_dist = False
         return task_dist
 
-    def log_metrics(self, writer, logs, step, log_n_tasks=1):
+    def log_metrics(self, writer, logs, step, log_n_tasks=-1):
         logs = [] if logs is None else logs
         learning_progresses = self._learning_progress()
         logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
@@ -197,14 +195,20 @@ class StratifiedLearningProgress(LearningProgress):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
-        assert selection_metric in ["success", "progress"]
+        assert selection_metric in [
+            "success", "score", "learnability"], f"Selection metric {selection_metric} not recognized. Use 'success', 'score', or 'learnability'."
         self.selection_metric = selection_metric
 
     def _sample_distribution(self) -> List[float]:
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
-        selection_weight = np.ones(len(lp_dist)) * 0.0001
-        metric = self.task_rates if self.selection_metric == "success" else lp_dist
+        selection_weight = np.ones(len(lp_dist)) * 0.001
+        if self.selection_metric == "learnability":
+            metric = self.task_rates * (1.0 - self.task_rates)
+        elif self.selection_metric == "score":
+            metric = lp_dist
+        else:
+            metric = self.task_rates
 
         # Find the highest success rate task in each strata
         for strata in self.task_space.strata:
@@ -232,7 +236,7 @@ class StratifiedDomainRandomization(LearningProgress):
         if self.task_rates is None:
             self.eval_and_update(self._baseline_eval_eps)
 
-        # Prioritize tasks by learning progress first
+        # Prioritize tasks uniformly first
         uni_dist = np.ones(self.num_tasks) / self.num_tasks
         selection_weight = np.ones(len(uni_dist)) * 0.0001
         metric = self.task_rates if self.selection_metric == "success" else uni_dist
@@ -249,109 +253,3 @@ class StratifiedDomainRandomization(LearningProgress):
         self.task_dist = stratified_dist
         self._stale_dist = False
         return stratified_dist
-
-
-if __name__ == "__main__":
-    def sample_binomial(p=0.5, n=200):
-        success = 0.0
-        for _ in range(n):
-            rand = random.random()
-            if rand < p:
-                success += 1.0
-        return success / n
-
-    def generate_history(center=0, curve=1.0, n=100):
-        center = center if center else n / 2.0
-
-        def sig(x, x_0=center, curve=curve):
-            return 1.0 / (1.0 + math.e**(curve * (x_0 - x)))
-        history = []
-        probs = []
-        success_prob = 0.0
-        for i in range(n):
-            probs.append(success_prob)
-            history.append(sample_binomial(p=success_prob))
-            success_prob = sig(i)
-        return history, probs
-
-    tasks = range(20)
-    histories = {task: generate_history(center=random.randint(0, 100), curve=random.random()) for task in tasks}
-
-    curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
-    for i in range(len(histories[0][0])):
-        for task in tasks:
-            curriculum.update_task_progress(task, histories[task][0][i])
-        if i > 10:
-            distribution = curriculum._sample_distribution()
-            print("[", end="")
-            for j, prob in enumerate(distribution):
-                print(f"{prob:.3f}", end="")
-                if j < len(distribution) - 1:
-                    print(", ", end="")
-            print("]")
-
-    tasks = [0]
-    histories = {task: generate_history(n=200, center=75, curve=0.1) for task in tasks}
-    curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
-    lp_raw = []
-    lp_reweight = []
-    p_fast = []
-    p_slow = []
-    true_probs = []
-    estimates = []
-    for estimate, true_prob in zip(histories[0][0], histories[0][1]):
-        curriculum.update_task_progress(tasks[0], estimate)
-        lp_raw.append(curriculum._learning_progress(tasks[0], reweight=False))
-        lp_reweight.append(curriculum._learning_progress(tasks[0]))
-        p_fast.append(curriculum._p_fast[0])
-        p_slow.append(curriculum._p_slow[0])
-        true_probs.append(true_prob)
-        estimates.append(estimate)
-
-    try:
-        import matplotlib.pyplot as plt
-
-        # TODO: Plot probabilities
-        def plot_history(true_probs, estimates, p_slow, p_fast, lp_reweight, lp_raw):
-            x_axis = range(0, len(true_probs))
-            plt.plot(x_axis, true_probs, color="#222222", label="True Success Probability")
-            plt.plot(x_axis, estimates, color="#888888", label="Estimated Success Probability")
-            plt.plot(x_axis, p_slow, color="#ee3333", label="p_slow")
-            plt.plot(x_axis, p_fast, color="#33ee33", label="p_fast")
-            plt.plot(x_axis, lp_raw, color="#c4c25b", label="Learning Progress")
-            plt.plot(x_axis, lp_reweight, color="#1544ee", label="Learning Progress Reweighted")
-            plt.xlabel('Time step')
-            plt.ylabel('Learning Progress')
-            plt.legend()
-            plt.show()
-
-        plot_history(true_probs, estimates, p_slow, p_fast, lp_reweight, lp_raw)
-
-        # Reweight Plot
-        x_axis = np.linspace(0, 1, num=100)
-        y_axis = []
-        for x in x_axis:
-            y_axis.append(curriculum._reweight(x))
-        plt.plot(x_axis, y_axis, color="blue", label="p_theta = 0.1")
-        plt.xlabel('p')
-        plt.ylabel('reweight')
-        plt.legend()
-        plt.show()
-
-        # Z-score plot
-        tasks = [i for i in range(50)]
-        curriculum = LearningProgress(DiscreteTaskSpace(len(tasks)))
-        histories = {task: generate_history(n=200, center=60, curve=0.09) for task in tasks}
-        for i in range(len(histories[0][0])):
-            for task in tasks:
-                curriculum.update_task_progress(task, histories[task][0][i])
-        distribution = curriculum._sample_distribution()
-        x_axis = np.linspace(-3, 3, num=len(distribution))
-        sigmoid_axis = curriculum._sigmoid(x_axis)
-        plt.plot(x_axis, norm.pdf(x_axis, 0, 1), color="blue", label="Normal distribution")
-        plt.plot(x_axis, sigmoid_axis, color="orange", label="Sampling weight")
-        plt.xlabel('Z-scored distributed learning progress')
-        plt.legend()
-        plt.show()
-    except ImportError:
-        warnings.warn("Matplotlib not installed. Plotting will not work.")
