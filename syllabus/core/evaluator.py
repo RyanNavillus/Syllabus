@@ -262,20 +262,15 @@ class Evaluator:
             Tuple[RecurrentState, torch.Tensor]: The prepared recurrent state and done flag.
         """
         if self.recurrent_method == "lstm":
-            if self.recurrent_method == "lstm":
-                assert (
-                    isinstance(recurrent_state, tuple)
-                    and len(recurrent_state) == 2
-                    and isinstance(recurrent_state[0], Array)
-                    and isinstance(recurrent_state[1], Array)
-                ), (
-                    "Recurrent state must be a tuple of "
-                    "(cell_state, hidden_state) for LSTM."
-                )
-                recurrent_state = (
-                    torch.Tensor(recurrent_state[0]).to(self.device),
-                    torch.Tensor(recurrent_state[1]).to(self.device),
-                )
+            assert (
+                isinstance(recurrent_state, tuple)
+                and len(recurrent_state) == 2
+                and isinstance(recurrent_state[0], Array)
+                and isinstance(recurrent_state[1], Array)
+            ), (
+                "Recurrent state must be a tuple of "
+                "(cell_state, hidden_state) for LSTM."
+            )
             recurrent_state = (
                 torch.Tensor(recurrent_state[0]).to(self.device),
                 torch.Tensor(recurrent_state[1]).to(self.device),
@@ -284,8 +279,7 @@ class Evaluator:
             assert isinstance(recurrent_state, Array), "Recurrent state must be a tensor for RNN."
             recurrent_state = recurrent_state.to(self.device)
 
-        done = torch.Tensor(done)
-        done = done.to(self.device)
+        done = torch.Tensor(done).to(self.device)
         return recurrent_state, done
 
     def _set_eval_mode(self):

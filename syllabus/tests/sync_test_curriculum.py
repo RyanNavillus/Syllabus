@@ -64,5 +64,4 @@ class SyncTestCurriculum(SequentialCurriculum):
                 k -= (self.num_envs - self.n_tasks)
             if k > 0:
                 tasks += super().sample(k=k)
-        print(f"Sampled tasks: {tasks}")
         return tasks
