@@ -76,13 +76,16 @@ class TaskSampler:
         if robust_plr:
             assert task_space is not None, "Task space must be provided for robust PLR."
             assert evaluator is not None, "Evaluator must be provided for robust PLR."
+            self.evaluator = evaluator
+            self.num_eval_envs = self.evaluator.eval_envs.num_envs if self.evaluator.eval_envs is not None else 0
+            self.num_actors = num_actors + self.num_eval_envs
+
         self.task_space = task_space
         self.action_space = action_space
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
         self.num_steps = num_steps
-        # TODO: Add space for eval actors
-        self.num_actors = num_actors + evaluator.eval_envs.num_envs if robust_plr else num_actors
+        self.num_actors = num_actors
         self.num_train_actors = num_actors
         self.strategy = strategy
         self.replay_schedule = replay_schedule
@@ -138,8 +141,6 @@ class TaskSampler:
         # Offline evaluation
         self.robust_plr = robust_plr
         if self.robust_plr:
-            self.evaluator = evaluator
-            self.num_eval_envs = self.evaluator.eval_envs.num_envs
             self.evaluate_thread = threading.Thread(name='robustplr-evaluate', target=self._evaluate_tasks, daemon=True)
             self.evaluate_thread.start()
 
@@ -213,13 +214,6 @@ class TaskSampler:
 
     def update_with_rollouts(self, rollouts, actor_id=None, external_scores=None):
         self._update_with_rollouts(rollouts, actor_index=actor_id, external_scores=external_scores)
-
-        # Evaluate random tasks
-        # self.num_eval_envs = self.evaluator.eval_envs.num_envs if self.evaluator is not None else 0
-        # while self.robust_plr and len(self.offline_queue) > self.num_eval_envs * 2:
-        #     tasks = self.offline_queue[:self.num_eval_envs*2]
-        #     self._evaluate_tasks(tasks)
-        #     self.offline_queue = self.offline_queue[self.num_eval_envs*2:]
 
     def update_task_score(self, actor_index, task, score, max_score, num_steps, running_mean=True):
         if self.sample_full_distribution and task in self.staging_task_set:
@@ -538,7 +532,7 @@ class TaskSampler:
                     #     kwargs_["value_preds"] = rollouts.denorm_value_preds[start_t:, actor_index]
                     # else:
                     kwargs_["value_preds"] = rollouts.value_preds[start_t:, actor_index]
-                
+
                 if self.grounded_values is not None:
                     kwargs_["grounded_value"] = self.grounded_values[task_t]
 
@@ -796,7 +790,8 @@ class TaskSampler:
                 rewards, value_preds, masks, returns, next_value, gamma)
 
     def _evaluate_tasks(self):
-        obs, _ = self.evaluator.eval_envs.reset()
+        # TODO: Force DummyEvaluator to have dummy eval envs
+        obs, _ = self.evaluator.eval_envs.reset() if self.num_eval_envs > 0 else (None, None)
         recurrent_state = self.evaluator._initial_recurrent_state(self.num_eval_envs)
         rewards = torch.zeros((self.num_steps, self.num_eval_envs), dtype=torch.float32)
         dones = torch.zeros((self.num_steps + 1, self.num_eval_envs), dtype=torch.float32)
@@ -814,7 +809,7 @@ class TaskSampler:
                                            True, self.gamma, self.gae_lambda)
 
             # Iterate over eval actor indices
-            for actor_index in range(self.evaluator.eval_envs.num_envs):
+            for actor_index in range(self.num_eval_envs):
                 self._update_actor_with_data(
                     self.num_train_actors + actor_index,
                     tasks[:, actor_index],

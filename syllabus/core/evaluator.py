@@ -457,7 +457,7 @@ class Evaluator:
         final_task_counts = torch.maximum(final_task_counts, torch.ones_like(final_task_counts))
         task_success_rates = torch.divide(task_successes, task_counts)
         final_task_success_rates = torch.divide(final_task_successes, final_task_counts)
-        all_data = None
+        all_data = {}
         if store_all:
             all_data = {
                 "rewards": step_rewards,
@@ -552,12 +552,15 @@ class Evaluator:
         final_task_counts = torch.maximum(final_task_counts, torch.ones_like(final_task_counts))
         task_success_rates = torch.divide(task_successes, task_counts)
         final_task_success_rates = torch.divide(final_task_successes, final_task_counts)
-        return returns, task_success_rates, final_task_success_rates, None
+        return returns, task_success_rates, final_task_success_rates, {}
 
 
 class DummyEvaluator(Evaluator):
-    def __init__(self, action_space, *args, **kwargs):
+    # TODO: Add DummyEnvs and let user choose num_envs
+    def __init__(self, action_space, task_space, *args, **kwargs):
         self.action_space = action_space
+        self.task_space = task_space
+        kwargs["task_space"] = task_space
         if isinstance(action_space, gym.spaces.Discrete):
             self.action_shape = 1
         else:
@@ -574,23 +577,31 @@ class DummyEvaluator(Evaluator):
             state_shape = 1
         return state_shape
 
-    def _get_action(self, state, recurrent_state=None, done=None):
+    def get_action(self, state, recurrent_state=None, done=None):
         state_shape = self._get_state_shape(state)
         recurrent_state = self._initial_recurrent_state() if recurrent_state is not None else None
         return torch.zeros((state_shape, self.action_shape)), recurrent_state, {}
 
-    def _get_value(self, state, recurrent_state=None, done=None):
+    def get_value(self, state, recurrent_state=None, done=None):
         state_shape = self._get_state_shape(state)
         recurrent_state = self._initial_recurrent_state() if recurrent_state is not None else None
         return torch.zeros((state_shape, 1)), recurrent_state, {}
 
-    def _get_action_and_value(self, state, recurrent_state=None, done=None):
+    def get_action_and_value(self, state, recurrent_state=None, done=None):
         state_shape = self._get_state_shape(state)
         recurrent_state = self._initial_recurrent_state() if recurrent_state is not None else None
         return torch.zeros((state_shape, 1)), torch.zeros((state_shape, self.action_shape)), recurrent_state, {}
 
     def evaluate_agent(self, num_episodes=100, verbose=False):
-        return np.zeros(num_episodes), np.zeros(self.task_space.num_tasks), np.zeros(self.task_space.num_tasks)
+        return torch.zeros(num_episodes), torch.zeros(self.task_space.num_tasks), torch.zeros(self.task_space.num_tasks), {}
+
+    def evaluate_batch(self, steps, initial_obs, recurrent_state=None, rewards=None, dones=None, tasks=None, value_preds=None):
+        recurrent_state = recurrent_state if recurrent_state is not None else self._initial_recurrent_state(8)
+        rewards = rewards if rewards is not None else torch.zeros((steps, 8))
+        dones = dones if dones is not None else torch.zeros((steps, 8))
+        tasks = tasks if tasks is not None else torch.zeros((steps, 8))
+        value_preds = value_preds if value_preds is not None else torch.zeros((steps, 8))
+        return initial_obs, recurrent_state, rewards, dones, tasks, value_preds
 
 
 class CleanRLEvaluator(Evaluator):

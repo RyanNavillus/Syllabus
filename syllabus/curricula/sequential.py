@@ -159,9 +159,9 @@ class SequentialCurriculum(Curriculum):
         # Recode tasks into environment task space
         decoded_tasks = [curriculum.task_space.decode(task) for task in tasks]
         recoded_tasks = [self.task_space.encode(task) for task in decoded_tasks]
-
         self.n_tasks += k
         self.total_tasks += k
+        print(k, self.n_tasks)
 
         # Check if we should move on to the next phase of the curriculum
         self.check_stopping_conditions()
@@ -193,18 +193,22 @@ class SequentialCurriculum(Curriculum):
         self.current_curriculum.update_task_progress(task, progress, env_id)
 
     def check_stopping_conditions(self):
+        did_reset = False
         if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
             self._curriculum_index += 1
+            did_reset = True
 
         if self.should_loop and self._curriculum_index == len(self.curriculum_list):
             # Loop sequential curriculum back to the first curriculum
             self._curriculum_index = 0
+            did_reset = True
 
-        # Reset individual curriculum metrics
-        self.n_episodes = 0
-        self.n_steps = 0
-        self.episode_returns = deque(maxlen=100)
-        self.n_tasks = 0
+        if did_reset:
+            # Reset individual curriculum metrics
+            self.n_episodes = 0
+            self.n_steps = 0
+            self.episode_returns = deque(maxlen=100)
+            self.n_tasks = 0
 
     def _sample_distribution(self) -> List[float]:
         return self.current_curriculum._sample_distribution()
