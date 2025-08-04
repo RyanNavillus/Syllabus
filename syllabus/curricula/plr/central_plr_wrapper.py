@@ -137,7 +137,6 @@ class CentralPrioritizedLevelReplay(Curriculum):
         gae_lambda: float = 0.95,
         suppress_usage_warnings=False,
         robust_plr: bool = False,  # Option to use RobustPLR
-        eval_envs=None,
         evaluator: Evaluator = None,
         **curriculum_kwargs,
     ):
@@ -154,11 +153,10 @@ class CentralPrioritizedLevelReplay(Curriculum):
             warnings.warn(
                 f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.", stacklevel=2)
         task_sampler_kwargs_dict["num_actors"] = num_processes
-
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
 
-        if robust_plr and eval_envs is None:
-            raise UsageError("RobustPLR requires evaluation environments to be provided.")
+        if robust_plr and evaluator is None:
+            raise UsageError("RobustPLR requires evaluator to be provided.")
 
         self._num_steps = num_steps  # Number of steps stored in rollouts and used to update task sampler
         self._num_processes = num_processes  # Number of parallel environments
@@ -166,7 +164,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
         self._gae_lambda = gae_lambda
         self._supress_usage_warnings = suppress_usage_warnings
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-        self._task_sampler = TaskSampler(self.tasks, self._num_steps, eval_envs=eval_envs, evaluator=evaluator,
+        self._task_sampler = TaskSampler(self.tasks, self._num_steps, evaluator=evaluator,
                                          robust_plr=robust_plr, action_space=action_space, task_space=task_space, gamma=gamma, gae_lambda=gae_lambda, **task_sampler_kwargs_dict)
         self._rollouts = RolloutStorage(
             self._num_steps,

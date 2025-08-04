@@ -63,7 +63,9 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                 "Buffer size greater than 2 can cause some automatic curriculum learning methods to perform worse.", stacklevel=2)
 
         # Request initial task
-        assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."
+        if buffer_size <= 0:
+            warnings.warn("Buffer size should be greater than 0 to sample initial task for envs.")
+
         for _ in range(buffer_size):
             update = {
                 "update_type": "noop",

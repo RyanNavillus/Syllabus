@@ -5,6 +5,7 @@ NOTE: In order to efficiently change the seed of a procgen environment directly 
 we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
 """
 import argparse
+import multiprocessing
 import os
 import random
 import time
@@ -18,18 +19,20 @@ import procgen  # type: ignore # noqa: F401
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from procgen import ProcgenEnv  # type: ignore # noqa: F401
+
 from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 from torch.utils.tensorboard import SummaryWriter
 
 from syllabus.core import GymnasiumSyncWrapper, make_multiprocessing_curriculum
-from syllabus.core.evaluator import (CleanRLEvaluator,
-                                     GymnasiumEvaluationWrapper)
+from syllabus.core.evaluator import CleanRLEvaluator, GymnasiumEvaluationWrapper
 from syllabus.curricula import (BatchedDomainRandomization,
                                 CentralPrioritizedLevelReplay, Constant,
                                 DirectPrioritizedLevelReplay,
                                 DomainRandomization, Learnability,
                                 LearningProgress, OnlineLearningProgress,
                                 PrioritizedLevelReplay, SequentialCurriculum)
+from syllabus.curricula.manual import Manual
 from syllabus.examples.models import ProcgenAgent
 from syllabus.examples.task_wrappers import ProcgenTaskWrapper
 
@@ -157,7 +160,19 @@ PROCGEN_RETURN_BOUNDS = {
 }
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, eval=False):
+# Fix reward normalization: set reward to 0 at start of episode
+class NormalizeReward(gym.wrappers.vector.NormalizeReward):
+    def step(self, actions):
+        """Steps through the environment, normalizing the reward returned."""
+        obs, reward, terminated, truncated, info = self.env.step(actions)
+        dones = np.logical_or(terminated, truncated)
+        self.accumulated_reward = self.accumulated_reward * self.gamma + reward
+        reward = self.normalize(reward)
+        self.accumulated_reward[dones] = 0
+        return obs, reward, terminated, truncated, info
+
+
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, eval=False, buffer_size=1):
     def thunk():
         env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
                               start_level=start_level, num_levels=num_levels)
@@ -176,17 +191,17 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
                 env.task_space,
                 curriculum_components,
                 batch_size=256,
-                buffer_size=2,
+                buffer_size=buffer_size,
             )
         return env
     return thunk
 
 
-def wrap_vecenv(vecenv):
-    vecenv.is_vector_env = True
-    vecenv = gym.wrappers.vector.NormalizeReward(vecenv, gamma=args.gamma)
-    vecenv = gym.wrappers.vector.TransformReward(vecenv, lambda reward: np.clip(reward, -10, 10))
-    return vecenv
+def wrap_vecenv(vecenvs):
+    vecenvs.is_vector_env = True
+    vecenvs = NormalizeReward(vecenvs, gamma=args.gamma)
+    vecenvs = gym.wrappers.vector.TransformReward(vecenvs, lambda reward: np.clip(reward, -10, 10))
+    return vecenvs
 
 
 def level_replay_evaluate(
@@ -197,8 +212,6 @@ def level_replay_evaluate(
     num_levels=0
 ):
     print("Evaluating agent")
-    policy.eval()
-
     eval_envs = gym.vector.AsyncVectorEnv(
         [
             make_env(
@@ -206,12 +219,11 @@ def level_replay_evaluate(
                 args.seed + i,
                 num_levels=num_levels,
                 start_level=0,
+                eval=False,
             )
             for i in range(args.num_eval_episodes)
         ]
     )
-
-    eval_envs = wrap_vecenv(eval_envs)
     eval_obs, _ = eval_envs.reset()
     eval_episode_rewards = []
 
@@ -221,6 +233,7 @@ def level_replay_evaluate(
 
         eval_obs, _, eval_term, eval_trunc, eval_infos = eval_envs.step(eval_action.cpu().numpy())
         eval_done = np.logical_or(eval_term, eval_trunc)
+
         if "episode" in eval_infos.keys():
             for i in range(len(eval_infos["episode"]["r"])):
                 if eval_done[i]:
@@ -230,7 +243,6 @@ def level_replay_evaluate(
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
-    policy.train()
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
@@ -293,7 +305,7 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "grounded_positive_value_loss", "replay_schedule": "fixed"},
+                task_sampler_kwargs_dict={"strategy": "value_l1", "replay_schedule": "fixed"},
                 device="cuda",
             )
         elif args.curriculum_method == "simpleplr":
@@ -313,18 +325,25 @@ if __name__ == "__main__":
                 num_processes=args.num_envs,
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
-                task_sampler_kwargs_dict={"strategy": "positive_value_loss", "replay_schedule": "proportionate",  "rho": 0.5,
-                                          "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
+                task_sampler_kwargs_dict={"strategy": "value_l1", "staleness_coef": args.staleness_coef,
+                                          "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "robustplr":
             print("Using robust prioritized level replay.")
-            plr_eval_envs = gym.vector.AsyncVectorEnv(
+            evaluator_curriculum = Manual(sample_env.task_space)
+            evaluator_curriculum = make_multiprocessing_curriculum(
+                evaluator_curriculum, timeout=300, start=True, verbose=True
+            )
+            evaluator_envs = gym.vector.SyncVectorEnv(
                 [
-                    make_env(args.env_id, 0, num_levels=1, task_wrapper=True)
+                    make_env(args.env_id, 0, task_wrapper=True, num_levels=1, buffer_size=0,
+                             curriculum_components=evaluator_curriculum.components)
                     for i in range(args.num_envs)
                 ]
             )
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            evaluator_envs = wrap_vecenv(evaluator_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True,
+                                         eval_curriculum=evaluator_curriculum, eval_envs=evaluator_envs)
             curriculum = CentralPrioritizedLevelReplay(
                 sample_env.task_space,
                 num_steps=args.num_steps,
@@ -332,9 +351,8 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 robust_plr=True,
-                eval_envs=plr_eval_envs,
                 evaluator=evaluator,
-                task_sampler_kwargs_dict={"strategy": "grounded_positive_value_loss", "replay_schedule": "proportionate",
+                task_sampler_kwargs_dict={"strategy": "grounded_signed_value_loss", "replay_schedule": "proportionate",
                                           "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
             )
         elif args.curriculum_method == "dr":
@@ -348,16 +366,25 @@ if __name__ == "__main__":
             curriculum = Constant(0, sample_env.task_space, require_step_updates=True)
         elif args.curriculum_method == "lp":
             print("Using learning progress.")
-            eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            evaluator_curriculum = SequentialCurriculum(
+                sample_env.task_space.tasks, ["tasks>=1"] * len(sample_env.task_space.tasks), sample_env.task_space, should_loop=True)
+            evaluator_curriculum = make_multiprocessing_curriculum(
+                evaluator_curriculum, timeout=3000, start=True
             )
-            lp_eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
+            evaluator_envs = gym.vector.AsyncVectorEnv(
+                [
+                    make_env(args.env_id, 0, task_wrapper=True, num_levels=1,
+                             curriculum_components=evaluator_curriculum.components)
+                    for i in range(args.num_envs)
+                ]
+            )
+            evaluator_envs = wrap_vecenv(evaluator_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True,
+                                         eval_curriculum=evaluator_curriculum, eval_envs=evaluator_envs)
             curriculum = LearningProgress(
+                evaluator,
                 sample_env.task_space,
-                eval_envs=lp_eval_envs,
-                evaluator=evaluator,
-                update_interval_steps=25 * args.batch_size,
+                eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
@@ -380,32 +407,50 @@ if __name__ == "__main__":
             )
         elif args.curriculum_method == "learnability":
             print("Using learnability.")
-            eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            evaluator_curriculum = SequentialCurriculum(
+                sample_env.task_space.tasks, ["tasks>=1"] * len(sample_env.task_space.tasks), sample_env.task_space, should_loop=True)
+            evaluator_curriculum = make_multiprocessing_curriculum(
+                evaluator_curriculum, timeout=3000, start=True
             )
-            lp_eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True)
+            evaluator_envs = gym.vector.AsyncVectorEnv(
+                [
+                    make_env(args.env_id, 0, task_wrapper=True, num_levels=1,
+                             curriculum_components=evaluator_curriculum.components)
+                    for i in range(args.num_envs)
+                ]
+            )
+            evaluator_envs = wrap_vecenv(evaluator_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True,
+                                         eval_curriculum=evaluator_curriculum, eval_envs=evaluator_envs)
             curriculum = Learnability(
+                evaluator,
                 sample_env.task_space,
-                eval_envs=lp_eval_envs,
-                evaluator=evaluator,
-                update_interval_steps=25 * args.batch_size,
+                eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,
             )
         elif args.curriculum_method == "learnability_top10":
             print("Using learnability top 10.")
-            eval_envs = gym.vector.AsyncVectorEnv(
-                [make_env(args.env_id, 0, task_wrapper=True, num_levels=1, eval=True) for _ in range(args.num_envs)]
+            evaluator_curriculum = SequentialCurriculum(
+                sample_env.task_space.tasks, ["tasks>=1"] * len(sample_env.task_space.tasks), sample_env.task_space, should_loop=True)
+            evaluator_curriculum = make_multiprocessing_curriculum(
+                evaluator_curriculum, timeout=3000, start=True
             )
-            lp_eval_envs = wrap_vecenv(eval_envs)
-            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True)
+            evaluator_envs = gym.vector.AsyncVectorEnv(
+                [
+                    make_env(args.env_id, 0, task_wrapper=True, num_levels=1,
+                             curriculum_components=evaluator_curriculum.components)
+                    for i in range(args.num_envs)
+                ]
+            )
+            evaluator_envs = wrap_vecenv(evaluator_envs)
+            evaluator = CleanRLEvaluator(agent, device="cuda", copy_agent=True, simple_copy=True,
+                                         eval_curriculum=evaluator_curriculum, eval_envs=evaluator_envs)
             curriculum = Learnability(
+                evaluator,
                 sample_env.task_space,
-                eval_envs=lp_eval_envs,
-                evaluator=evaluator,
-                update_interval_steps=25 * args.batch_size,
+                eval_interval_steps=25 * args.batch_size,
                 eval_eps=20 * 200,
                 continuous_progress=True,
                 normalize_success=args.normalize_success_rates,

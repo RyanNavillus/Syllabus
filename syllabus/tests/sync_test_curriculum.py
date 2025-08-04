@@ -8,8 +8,6 @@ class SyncTestCurriculum(SequentialCurriculum):
     """
     Base class and API for defining curricula to interface with Gym environments.
     """
-    REQUIRES_STEP_UPDATES = True
-    REQUIRES_CENTRAL_UPDATES = False
 
     def __init__(self, num_envs, num_episodes, *curriculum_args, **curriculum_kwargs):
         # Create a manual curriculum with a new task per episode, repeated across all envs
@@ -44,7 +42,6 @@ class SyncTestCurriculum(SequentialCurriculum):
         self.episode_rewards[env_id] += rew
 
     def update_on_step_batch(self, step_results, env_id=None):
-        # print(step_results)
         tasks, obs, rews, terms, truncs, infos, progresses = tuple(step_results)
         for t, o, r, te, tr, i, p in zip(tasks, obs, rews, terms, truncs, infos, progresses):
             self.update_on_step(t, o, r, te, tr, i, p, env_id=env_id)

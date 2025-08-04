@@ -183,6 +183,7 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         self.should_update = False
         self.added_tasks = []
         self.num_assigned_tasks = 0
+        self.skip_samples = 0
 
         self.components = MultiProcessingComponents(self.curriculum.requires_step_updates, **kwargs)
 
@@ -224,15 +225,26 @@ class CurriculumSyncWrapper(CurriculumWrapper):
 
                 # Sample new tasks if requested
                 if "request_sample" in update and update["request_sample"]:
-                    new_tasks = self.curriculum.sample(k=1)
-                    for task in new_tasks:
-                        message = {"next_task": task}
-                        self.components.put_task(message)
-                        self.num_assigned_tasks += 1
+                    if self.skip_samples > 0:
+                        self.skip_samples -= 1
+                    else:
+                        new_tasks = self.curriculum.sample(k=1)
+                        for task in new_tasks:
+                            message = {"next_task": task}
+                            self.components.put_task(message)
+                            self.num_assigned_tasks += 1
                 self.route_update(update)
                 time.sleep(0.0)
             else:
                 time.sleep(0.01)
+
+    def send_task(self, task):
+        """Send a task to the curriculum's task queue.
+
+        :param task: Task to be sent to the curriculum.
+        """
+        self.skip_samples += 1
+        self.components.put_task({"next_task": task})
 
     def route_update(self, update_data: Dict[str, tuple]):
         """Update the curriculum with the specified update type.

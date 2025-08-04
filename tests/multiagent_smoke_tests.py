@@ -13,12 +13,12 @@ N_EPISODES = 2
 
 pistonball_env = create_pistonball_env()
 default_task = pistonball_env.task_space.encode(1)
-evaluator = DummyEvaluator(pistonball_env.action_space("piston_0"))
+evaluator = DummyEvaluator(pistonball_env.action_space("piston_0"), pistonball_env.task_space)
 
 curricula = [
     (Constant, create_pistonball_env, (default_task, pistonball_env.task_space), {}),
     (DomainRandomization, create_pistonball_env, (pistonball_env.task_space,), {}),
-    # (LearningProgressCurriculum, create_pistonball_env, (pistonball_env.task_space,), {}),
+    (LearningProgress, create_pistonball_env, (evaluator, pistonball_env.task_space,), {}),
     (PrioritizedLevelReplay, create_pistonball_env, (pistonball_env.task_space, pistonball_env.observation_space), {
         "evaluator": evaluator, "device": "cpu", "num_processes": N_ENVS*len(pistonball_env.possible_agents), "num_steps": 2048}),
 ]
