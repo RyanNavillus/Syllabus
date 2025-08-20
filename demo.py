@@ -119,13 +119,13 @@ torch.backends.cudnn.deterministic = args.torch_deterministic
 device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
 
-# We need to select a task space that our curriculum learning method will choose tasks from.
+# SYLLABUS: We need to select a task space that our curriculum learning method will choose tasks from.
 # Here we define a simple range of continuous tasks from -0.2 to 0.2
 # This is roughly the maximum range of valid CartPole angles
 task_space = BoxTaskSpace(Box(low=-0.2, high=0.2, shape=(1,), dtype=np.float32))
 
 
-# We will use a TaskWrapper to allow us to set the initial angle of the pole during each reset()
+# SYLLABUS: We will use a TaskWrapper to allow us to set the initial angle of the pole during each reset()
 class CartPoleTaskWrapper(TaskWrapper):
     def __init__(self, env, task_space, *args, **kwargs):
         super().__init__(env, *args, **kwargs)
@@ -144,7 +144,7 @@ class CartPoleTaskWrapper(TaskWrapper):
         return np.array(self.env.unwrapped.state, dtype=np.float32), info
 
 
-# You can render the environment to see that when we choose the task 0.2
+# SYLLABUS: You can render the environment to see that when we choose the task 0.2
 # the pole always starts at the same angle, tilted to the right
 render_env = gym.make("CartPole-v1", render_mode="rgb_array")
 render_env = CartPoleTaskWrapper(render_env, task_space)
@@ -168,7 +168,7 @@ for i in range(100):
 plt.close()
 
 
-# We need to modify the make_env function to include our task wrapper and synchronization wrapper
+# SYLLABUS: We need to modify the make_env function to include our task wrapper and synchronization wrapper
 def make_env(env_id, idx, task_space, components=None):
     def thunk():
         env = gym.make("CartPole-v1")
@@ -181,6 +181,10 @@ def make_env(env_id, idx, task_space, components=None):
     return thunk
 
 
+# SYLLABUS: We can define a simple curriculum which will start training with a small range
+# of possible pole angles, then slowly expand it in stages as the agent improves.
+# Specifically we will increase the range 10 times, every time the mean return over the past
+# 10 episodes exceeds 300, which is 60% of the maximum possible return in CartPole.
 class RangeCurriculum(Curriculum):
     def __init__(self, task_space, stages=10, return_threshold=300.0, **kwargs):
         assert isinstance(task_space, BoxTaskSpace), "RangeCurriculum requires a BoxTaskSpace"
@@ -219,7 +223,7 @@ class RangeCurriculum(Curriculum):
         return self.current_stage
 
 
-# If you want, you can use some of the curriculum learning methods already included in Syllabus instead.
+# SYLLABUS: If you want, you can use some of the curriculum learning methods already included in Syllabus instead.
 # from syllabus.curricula import DomainRandomization
 # curriculum = DomainRandomization(task_space)
 curriculum = RangeCurriculum(task_space)
@@ -236,7 +240,7 @@ agent = Agent(envs).to(device)
 optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
 
-# Evaluation loop
+# SYLLABUS: Evaluation loop
 eval_envs = gym.vector.SyncVectorEnv(
     [make_env(args.env_id, i, task_space) for i in range(args.num_envs)],
 )
@@ -248,7 +252,7 @@ stage_ups = []
 last_stage = 0
 
 
-# Evaluate the agent's performance on uniformly sampled tasks
+# SYLLABUS: Evaluate the agent's performance on uniformly sampled tasks
 def evaluate(agent, num_episodes=50):
     print(f"Evaluating for {num_episodes} episodes...")
     agent.eval()
@@ -269,6 +273,7 @@ def evaluate(agent, num_episodes=50):
     return np.mean(episode_returns)
 
 
+# SYLLABUS: Lets evaluate the agent before training to see the random policy performance.
 print("Running initial evaluation")
 result = evaluate(agent)
 eval_results.append(result)
@@ -320,6 +325,7 @@ for iteration in range(1, args.num_iterations + 1):
                     task = infos['task'][i][0]
                     print(
                         f"global_step={global_step}, episodic_return={infos['episode']['r'][i]} ({np.mean(last_ten_returns)})")
+                    # SYLLABUS: We add a bit of optional logging code here to track when the curriculum stage changes
                     current_stage = curriculum.log_metrics()
                     if len(stage_ups) <= 11 and current_stage > last_stage:
                         stage_ups.append(global_step)
@@ -400,6 +406,7 @@ for iteration in range(1, args.num_iterations + 1):
             nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
             optimizer.step()
 
+    # SYLLABUS: Evaluate the agent
     if iteration % EVAL_INTERVAL == 0:
         eval_results.append(evaluate(agent))
 
@@ -408,11 +415,14 @@ for iteration in range(1, args.num_iterations + 1):
     explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
     print(f"Iteration: {iteration}/{args.num_iterations} \t SPS: {int(global_step / (time.time() - start_time))}")
 mp_curriculum.stop()
+envs.close()
 
+# SYLLABUS: Evaluate the final agent for 250 episodes instead of 50
 print("Running final evaluation for 250 episodes...")
 final_result = evaluate(agent, num_episodes=250)
 eval_results.append(final_result)
 
+# SYLLABUS: Plot the evaluation results
 x_axis = [0, 25600, 51200, 76800, 102400, 128000, 153600, 179200, 204800, 230400, 250000]
 y_axis = eval_results
 
@@ -433,5 +443,3 @@ plt.grid(True)
 plt.legend()
 plt.show()
 plt.pause(30.0)
-
-envs.close()
