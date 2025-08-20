@@ -12,6 +12,9 @@ class DomainRandomization(Curriculum):
         """
         Returns a sample distribution over the task space.
         """
+        if self.num_tasks <= 0:
+            return []
+
         # Uniform distribution
         return [1.0 / self.num_tasks for _ in range(self.num_tasks)]
 

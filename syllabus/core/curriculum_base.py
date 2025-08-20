@@ -157,7 +157,10 @@ class Curriculum:
 
         # Use list of indices because np.choice does not play nice with tuple tasks
         task_dist = self._sample_distribution()
-        task_idx = np.random.choice(list(range(self.num_tasks)), size=k, p=task_dist)
+        if task_dist != []:
+            task_idx = np.random.choice(list(range(self.num_tasks)), size=k, p=task_dist)
+        else:
+            task_idx = [self.task_space.encode(self.task_space.sample()) for _ in range(k)]
         return task_idx
 
     def normalize(self, reward: float, task: Any) -> float:

@@ -22,6 +22,7 @@ class OnlineLearningProgress(Curriculum):
         self.p_theta = p_theta
         self.eval_interval = update_interval
         assert update_interval is None or update_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
+        assert update_interval is not None or update_interval_steps is not None, "One of eval_interval or eval_interval_steps must be set."
         self.eval_interval_steps = update_interval_steps
         self.completed_episodes = 0
         self.current_steps = 0
