@@ -40,11 +40,3 @@ Procgen Task Wrapper
    :members:
    :undoc-members:
    :show-inheritance:
-
-SimpleTag Task Wrapper
-----------------------------------------------------------------
-
-.. automodule:: syllabus.examples.task_wrappers.simpletag_task_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:

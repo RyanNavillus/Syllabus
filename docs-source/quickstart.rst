@@ -1,6 +1,8 @@
 Quickstart
 ==========
 
+For a full demo of Syllabus, check out our `demo script <https://github.com/RyanNavillus/Syllabus/blob/main/demo.py>`_  or `demo notebook <https://colab.research.google.com/drive/1bGvsfGgf47QRZCE1ocR6a-6GpHfKqCnu>`_ in Google Colab.
+
 To use Syllabus with your existing training code you need to:
 
 1. Define a :ref:`Task Space <TaskSpace>` for your environment.

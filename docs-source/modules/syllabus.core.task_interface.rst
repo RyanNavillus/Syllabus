@@ -48,16 +48,17 @@ syllabus.core.task_interface.reinit\_task\_wrapper module
    :undoc-members:
    :show-inheritance:
 
-syllabus.core.task_interface.subclass\_task\_wrapper module
------------------------------------------------------------
+syllabus.core.task\_interface.subclass\_task\_wrapper module
+------------------------------------------------------------
 
 .. automodule:: syllabus.core.task_interface.subclass_task_wrapper
    :members:
    :undoc-members:
    :show-inheritance:
 
-syllabus.core.task_interface.task\_wrapper module
--------------------------------------------------
+syllabus.core.task\_interface.task\_wrapper module
+--------------------------------------------------
+
 .. _TaskWrapper:
 
 .. automodule:: syllabus.core.task_interface.task_wrapper
