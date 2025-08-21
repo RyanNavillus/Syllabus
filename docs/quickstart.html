@@ -1,36 +1,36 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Motivation" href="motivation.html" /><link rel="prev" title="Installation" href="installation.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Quickstart - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Quickstart - Syllabus 0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
       }
     }
@@ -69,7 +69,7 @@
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -84,22 +84,63 @@
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -113,6 +154,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -124,13 +167,14 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
+      <a href="index.html"><div class="brand">Syllabus 0.7 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -146,8 +190,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
-  
-  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.7 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -235,11 +278,17 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/quickstart.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
 <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -249,9 +298,10 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading">#</a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
+<p>For a full demo of Syllabus, check out our <a class="reference external" href="https://github.com/RyanNavillus/Syllabus/blob/main/demo.py">demo script</a>  or <a class="reference external" href="https://colab.research.google.com/drive/1bGvsfGgf47QRZCE1ocR6a-6GpHfKqCnu">demo notebook</a> in Google Colab.</p>
 <p>To use Syllabus with your existing training code you need to:</p>
 <ol class="arabic simple">
 <li><p>Define a <a class="reference internal" href="modules/syllabus.task_space.html#taskspace"><span class="std std-ref">Task Space</span></a> for your environment.</p></li>
@@ -261,66 +311,66 @@
 <li><p>Wrap your environment with a <a class="reference internal" href="synchronization/environment_synchronization.html#environment-synchronization"><span class="std std-ref">synchronization wrapper</span></a>.</p></li>
 </ol>
 <section id="define-a-task-space">
-<h2>Define a Task Space<a class="headerlink" href="#define-a-task-space" title="Permalink to this heading">#</a></h2>
+<h2>Define a Task Space<a class="headerlink" href="#define-a-task-space" title="Link to this heading">¶</a></h2>
 <p>The task space represents the set of tasks that you want your curriculum to sample from. For example, in procgen, the task space is usually a discrete set of 200 seeds.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">DiscreteTaskSpace</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.task_space</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiscreteTaskSpace</span>
 <span class="n">task_space</span> <span class="o">=</span> <span class="n">DiscreteTaskSpace</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="creating-a-curriculum">
-<h2>Creating a Curriculum<a class="headerlink" href="#creating-a-curriculum" title="Permalink to this heading">#</a></h2>
+<h2>Creating a Curriculum<a class="headerlink" href="#creating-a-curriculum" title="Link to this heading">¶</a></h2>
 <p>Either use one of the curricula built into Syllabus, or create your own by extending the <a class="reference internal" href="modules/syllabus.core.curriculum.html#curriculum-api"><span class="std std-ref">Curriculum</span></a> class.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.curricula</span> <span class="kn">import</span> <span class="n">DomainRandomization</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.curricula</span><span class="w"> </span><span class="kn">import</span> <span class="n">DomainRandomization</span>
 <span class="n">curriculum</span> <span class="o">=</span> <span class="n">DomainRandomization</span><span class="p">(</span><span class="n">task_space</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="synchronizing-the-curriculum">
-<h2>Synchronizing the Curriculum<a class="headerlink" href="#synchronizing-the-curriculum" title="Permalink to this heading">#</a></h2>
+<h2>Synchronizing the Curriculum<a class="headerlink" href="#synchronizing-the-curriculum" title="Link to this heading">¶</a></h2>
 <p>Use either the native multiprocessing or ray multiprocessing wrapper to synchronize the curriculum across environments. Syllabus creates a separate, direct multiprocessing channel from your environments to the curriculum, so make sure to choose the same backend for each wrapper (either native or ray).</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Native Python Multiprocessing</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Ray Multiprocessing</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">make_multiprocessing_curriculum</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Native Python Multiprocessing</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Ray Multiprocessing</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_multiprocessing_curriculum</span>
 <span class="n">curriculum</span> <span class="o">=</span> <span class="n">make_multiprocessing_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">)</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">make_ray_curriculum</span>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_ray_curriculum</span>
 <span class="n">curriculum</span> <span class="o">=</span> <span class="n">make_ray_curriculum</span><span class="p">(</span><span class="n">curriculum</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></div>
 </section>
 <section id="synchronizing-the-environment">
-<h2>Synchronizing the Environment<a class="headerlink" href="#synchronizing-the-environment" title="Permalink to this heading">#</a></h2>
+<h2>Synchronizing the Environment<a class="headerlink" href="#synchronizing-the-environment" title="Link to this heading">¶</a></h2>
 <p>Use the matching native multiprocessing or ray multiprocessing wrapper for either gymnasium or pettingzoo to synchronize the environments.</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Native Multiprocessing for Gymnasium</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Native Multiprocessing for PettingZoo</button><button aria-controls="panel-1-1-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-2" name="1-2" role="tab" tabindex="-1">Ray Multiprocessing for Gymnasium</button><button aria-controls="panel-1-1-3" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-3" name="1-3" role="tab" tabindex="-1">Ray Multiprocessing for PettingZoo</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">GymnasiumSyncWrapper</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Native Multiprocessing for Gymnasium</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Native Multiprocessing for PettingZoo</button><button aria-controls="panel-1-1-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-2" name="1-2" role="tab" tabindex="-1">Ray Multiprocessing for Gymnasium</button><button aria-controls="panel-1-1-3" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-3" name="1-3" role="tab" tabindex="-1">Ray Multiprocessing for PettingZoo</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymnasiumSyncWrapper</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">GymnasiumSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">.</span><span class="n">components</span><span class="p">)</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">PettingZooSyncWrapper</span>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">PettingZooSyncWrapper</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">PettingZooSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">curriculum</span><span class="o">.</span><span class="n">components</span><span class="p">)</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-1-2" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-2" name="1-2" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">RayGymnasiumSyncWrapper</span>
+</div><div aria-labelledby="tab-1-1-2" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-2" name="1-2" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayGymnasiumSyncWrapper</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">RayGymnasiumSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-1-3" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-3" name="1-3" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">syllabus.core</span> <span class="kn">import</span> <span class="n">RayPettingZooSyncWrapper</span>
+</div><div aria-labelledby="tab-1-1-3" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-3" name="1-3" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayPettingZooSyncWrapper</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">RayPettingZooSyncWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></div>
 </section>
 <section id="things-to-consider">
-<h2>Things to consider<a class="headerlink" href="#things-to-consider" title="Permalink to this heading">#</a></h2>
+<h2>Things to consider<a class="headerlink" href="#things-to-consider" title="Link to this heading">¶</a></h2>
 <p><strong>Training returns no longer reflect agent performance</strong> - when you use a curriculum, it changes the task distribution in some non-uniform way, often prioritizing easier or harder tasks. This means that training returns no longer reflect the agent’s average performance over the task space. You typically need to write a separate evaluation pipeline over a uniform task distribution to properly evaluate agents. You can find more info in the <a class="reference internal" href="evaluation/evaluation.html#evaluation"><span class="std std-ref">Evaluation</span></a> section.</p>
 <p><strong>Reward normalization may no longer work</strong> - many baselines in RL will normalize returns automatically using running statistics of the agent’s average episodic return. If you are using a curriculum these statistics depend on the task distribution, and may harm the agent’s performance by dramatically increasing the nonstationarity of the rewards. If you want to use per-task return normalization, you can use the <a class="reference internal" href="stat_recorder.html#statrecorder"><span class="std std-ref">Stat Recorder</span></a> to track per-task returns.</p>
 <p><strong>Curriculum learning can be slow</strong> - curriculum learning methods do additional computation to select tasks and improve sample efficiency, but this comes at the cost of reduced time efficiency per episode. Syllabus is designed to do this extra computation asynchronously, but it will always be slower than training on a fixed distribution.</p>
 <p><strong>Curriculum learning can change the optimal hyperparameters</strong> - because curriculum learning changes the task distribution, and therefore the reward scale, it can also change the optimal hyperparameters for your agent. You may need to tune your hyperparameters to get the best performance with a curriculum, though you should see some improvement without any tuning if the curriculum works on your environment.</p>
 </section>
 <section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>For more help setting up Syllabus, check out our <a class="reference external" href="https://github.com/RyanNavillus/Syllabus/blob/main/syllabus/examples/training_scripts/cleanrl_procgen.py">example script</a> of how to use Syllabus with CleanRL to train Procgen agents.</p>
 </section>
 </section>
@@ -398,10 +448,10 @@
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
-    <script src="_static/tabs.js"></script>
+</div><script src="_static/documentation_options.js?v=48f8e935"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/tabs.js?v=3030b3cb"></script>
     </body>
 </html>

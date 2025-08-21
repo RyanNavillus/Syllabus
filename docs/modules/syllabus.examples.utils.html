@@ -1,36 +1,35 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="syllabus.tests package" href="syllabus.tests.html" /><link rel="prev" title="Example Models" href="syllabus.examples.models.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>Example Utils - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>Example Utils - Syllabus 0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
       }
     }
@@ -69,7 +68,7 @@
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -84,22 +83,63 @@
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -113,6 +153,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -124,13 +166,14 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
+      <a href="../index.html"><div class="brand">Syllabus 0.7 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -146,8 +189,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
-  
-  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.7 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -235,11 +277,17 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/modules/syllabus.examples.utils.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
 <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -249,413 +297,14 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="example-utils">
-<h1>Example Utils<a class="headerlink" href="#example-utils" title="Permalink to this heading">#</a></h1>
+<h1>Example Utils<a class="headerlink" href="#example-utils" title="Link to this heading">¶</a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="module-syllabus.examples.utils.vecenv">
-<span id="syllabus-examples-utils-vecenv-module"></span><h2>syllabus.examples.utils.vecenv module<a class="headerlink" href="#module-syllabus.examples.utils.vecenv" title="Permalink to this heading">#</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.RunningMeanStd">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">RunningMeanStd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#RunningMeanStd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.RunningMeanStd" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.RunningMeanStd.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#RunningMeanStd.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.RunningMeanStd.update" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.RunningMeanStd.update_from_moments">
-<span class="sig-name descname"><span class="pre">update_from_moments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_count</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#RunningMeanStd.update_from_moments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.RunningMeanStd.update_from_moments" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">VecEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>An abstract asynchronous, vectorized environment.
-Used to batch data from multiple copies of an environment, so that
-each observation becomes an batch of observations, and expected action is a batch of actions to
-be applied per-environment.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.close" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.close_extras">
-<span class="sig-name descname"><span class="pre">close_extras</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.close_extras"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.close_extras" title="Permalink to this definition">#</a></dt>
-<dd><p>Clean up the  extra resources, beyond what’s in this base class.
-Only runs when not self.closed.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.closed">
-<span class="sig-name descname"><span class="pre">closed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.closed" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.get_images">
-<span class="sig-name descname"><span class="pre">get_images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.get_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.get_images" title="Permalink to this definition">#</a></dt>
-<dd><p>Return RGB images from each environment</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.get_viewer">
-<span class="sig-name descname"><span class="pre">get_viewer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.get_viewer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.get_viewer" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.metadata">
-<span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'render.modes':</span> <span class="pre">['human',</span> <span class="pre">'rgb_array']}</span></em><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.metadata" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.render">
-<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'human'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.render" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Reset all the environments and return an array of
-observations, or a dict of observation arrays.</p>
-<p>If step_async is still doing work, that work will
-be cancelled and step_wait() should not be called
-until step_async() is invoked again.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.step" title="Permalink to this definition">#</a></dt>
-<dd><p>Step the environments synchronously.</p>
-<p>This is available for backwards compatibility.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.step_async">
-<span class="sig-name descname"><span class="pre">step_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.step_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.step_async" title="Permalink to this definition">#</a></dt>
-<dd><p>Tell all the environments to start taking a step
-with the given actions.
-Call step_wait() to get the results of the step.</p>
-<p>You should not call this if a step_async run is
-already pending.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.step_env">
-<span class="sig-name descname"><span class="pre">step_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.step_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.step_env" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.step_wait">
-<span class="sig-name descname"><span class="pre">step_wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnv.step_wait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.step_wait" title="Permalink to this definition">#</a></dt>
-<dd><p>Wait for the step taken with step_async().</p>
-<dl class="simple">
-<dt>Returns (obs, rews, dones, infos):</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>obs: an array of observations, or a dict of</dt><dd><p>arrays of observations.</p>
-</dd>
-</dl>
-</li>
-<li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of “episode done” booleans</p></li>
-<li><p>infos: a sequence of info objects</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.unwrapped">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unwrapped</span></span><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.unwrapped" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnv.viewer">
-<span class="sig-name descname"><span class="pre">viewer</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnv.viewer" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvObservationWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">VecEnvObservationWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">venv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvObservationWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper" title="syllabus.examples.utils.vecenv.VecEnvWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">VecEnvWrapper</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvObservationWrapper.process">
-<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvObservationWrapper.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.process" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvObservationWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvObservationWrapper.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Reset all the environments and return an array of
-observations, or a dict of observation arrays.</p>
-<p>If step_async is still doing work, that work will
-be cancelled and step_wait() should not be called
-until step_async() is invoked again.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvObservationWrapper.step_wait">
-<span class="sig-name descname"><span class="pre">step_wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvObservationWrapper.step_wait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.step_wait" title="Permalink to this definition">#</a></dt>
-<dd><p>Wait for the step taken with step_async().</p>
-<dl class="simple">
-<dt>Returns (obs, rews, dones, infos):</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>obs: an array of observations, or a dict of</dt><dd><p>arrays of observations.</p>
-</dd>
-</dl>
-</li>
-<li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of “episode done” booleans</p></li>
-<li><p>infos: a sequence of info objects</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">VecEnvWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">venv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv" title="syllabus.examples.utils.vecenv.VecEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">VecEnv</span></code></a></p>
-<p>An environment wrapper that applies to an entire batch
-of environments at once.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.close" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper.get_images">
-<span class="sig-name descname"><span class="pre">get_images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper.get_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.get_images" title="Permalink to this definition">#</a></dt>
-<dd><p>Return RGB images from each environment</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper.render">
-<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'human'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.render" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Reset all the environments and return an array of
-observations, or a dict of observation arrays.</p>
-<p>If step_async is still doing work, that work will
-be cancelled and step_wait() should not be called
-until step_async() is invoked again.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper.step_async">
-<span class="sig-name descname"><span class="pre">step_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper.step_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.step_async" title="Permalink to this definition">#</a></dt>
-<dd><p>Tell all the environments to start taking a step
-with the given actions.
-Call step_wait() to get the results of the step.</p>
-<p>You should not call this if a step_async run is
-already pending.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecEnvWrapper.step_wait">
-<span class="sig-name descname"><span class="pre">step_wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecEnvWrapper.step_wait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.step_wait" title="Permalink to this definition">#</a></dt>
-<dd><p>Wait for the step taken with step_async().</p>
-<dl class="simple">
-<dt>Returns (obs, rews, dones, infos):</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>obs: an array of observations, or a dict of</dt><dd><p>arrays of observations.</p>
-</dd>
-</dl>
-</li>
-<li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of “episode done” booleans</p></li>
-<li><p>infos: a sequence of info objects</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecExtractDictObs">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">VecExtractDictObs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">venv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecExtractDictObs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecExtractDictObs" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper" title="syllabus.examples.utils.vecenv.VecEnvObservationWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">VecEnvObservationWrapper</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecExtractDictObs.process">
-<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecExtractDictObs.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecExtractDictObs.process" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecMonitor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">VecMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">venv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_buf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecMonitor" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper" title="syllabus.examples.utils.vecenv.VecEnvWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">VecEnvWrapper</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecMonitor.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecMonitor.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecMonitor.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Reset all the environments and return an array of
-observations, or a dict of observation arrays.</p>
-<p>If step_async is still doing work, that work will
-be cancelled and step_wait() should not be called
-until step_async() is invoked again.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecMonitor.step_wait">
-<span class="sig-name descname"><span class="pre">step_wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecMonitor.step_wait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecMonitor.step_wait" title="Permalink to this definition">#</a></dt>
-<dd><p>Wait for the step taken with step_async().</p>
-<dl class="simple">
-<dt>Returns (obs, rews, dones, infos):</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>obs: an array of observations, or a dict of</dt><dd><p>arrays of observations.</p>
-</dd>
-</dl>
-</li>
-<li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of “episode done” booleans</p></li>
-<li><p>infos: a sequence of info objects</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecNormalize">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">VecNormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">venv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clipob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cliprew</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecNormalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecNormalize" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper" title="syllabus.examples.utils.vecenv.VecEnvWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">VecEnvWrapper</span></code></a></p>
-<p>A vectorized wrapper that normalizes the observations
-and returns from an environment.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecNormalize.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecNormalize.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecNormalize.reset" title="Permalink to this definition">#</a></dt>
-<dd><p>Reset all the environments and return an array of
-observations, or a dict of observation arrays.</p>
-<p>If step_async is still doing work, that work will
-be cancelled and step_wait() should not be called
-until step_async() is invoked again.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.VecNormalize.step_wait">
-<span class="sig-name descname"><span class="pre">step_wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#VecNormalize.step_wait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.VecNormalize.step_wait" title="Permalink to this definition">#</a></dt>
-<dd><p>Wait for the step taken with step_async().</p>
-<dl class="simple">
-<dt>Returns (obs, rews, dones, infos):</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>obs: an array of observations, or a dict of</dt><dd><p>arrays of observations.</p>
-</dd>
-</dl>
-</li>
-<li><p>rews: an array of rewards</p></li>
-<li><p>dones: an array of “episode done” booleans</p></li>
-<li><p>infos: a sequence of info objects</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vecenv.update_mean_var_count_from_moments">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vecenv.</span></span><span class="sig-name descname"><span class="pre">update_mean_var_count_from_moments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_count</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vecenv.html#update_mean_var_count_from_moments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vecenv.update_mean_var_count_from_moments" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</section>
-<section id="module-syllabus.examples.utils.vtrace">
-<span id="syllabus-examples-utils-vtrace-module"></span><h2>syllabus.examples.utils.vtrace module<a class="headerlink" href="#module-syllabus.examples.utils.vtrace" title="Permalink to this heading">#</a></h2>
-<p>Functions to compute V-trace off-policy actor critic targets.</p>
-<p>For details and theory see:</p>
-<p>“IMPALA: Scalable Distributed Deep-RL with
-Importance Weighted Actor-Learner Architectures”
-by Espeholt, Soyer, Munos et al.</p>
-<p>See <a class="reference external" href="https://arxiv.org/abs/1802.01561">https://arxiv.org/abs/1802.01561</a> for the full paper.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceFromLogitsReturns">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vtrace.</span></span><span class="sig-name descname"><span class="pre">VTraceFromLogitsReturns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pg_advantages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_rhos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_action_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_action_log_probs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.behavior_action_log_probs">
-<span class="sig-name descname"><span class="pre">behavior_action_log_probs</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.behavior_action_log_probs" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 3</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.log_rhos">
-<span class="sig-name descname"><span class="pre">log_rhos</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.log_rhos" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.pg_advantages">
-<span class="sig-name descname"><span class="pre">pg_advantages</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.pg_advantages" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.target_action_log_probs">
-<span class="sig-name descname"><span class="pre">target_action_log_probs</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.target_action_log_probs" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 4</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.vs">
-<span class="sig-name descname"><span class="pre">vs</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.vs" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceReturns">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vtrace.</span></span><span class="sig-name descname"><span class="pre">VTraceReturns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pg_advantages</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceReturns" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceReturns.pg_advantages">
-<span class="sig-name descname"><span class="pre">pg_advantages</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceReturns.pg_advantages" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.VTraceReturns.vs">
-<span class="sig-name descname"><span class="pre">vs</span></span><a class="headerlink" href="#syllabus.examples.utils.vtrace.VTraceReturns.vs" title="Permalink to this definition">#</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.action_log_probs">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vtrace.</span></span><span class="sig-name descname"><span class="pre">action_log_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">policy_logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vtrace.html#action_log_probs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vtrace.action_log_probs" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.from_importance_weights">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vtrace.</span></span><span class="sig-name descname"><span class="pre">from_importance_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_rhos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_rho_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_pg_rho_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vtrace.html#from_importance_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vtrace.from_importance_weights" title="Permalink to this definition">#</a></dt>
-<dd><p>V-trace from log importance weights.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="syllabus.examples.utils.vtrace.from_logits">
-<span class="sig-prename descclassname"><span class="pre">syllabus.examples.utils.vtrace.</span></span><span class="sig-name descname"><span class="pre">from_logits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">behavior_policy_logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_policy_logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_rho_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_pg_rho_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/syllabus/examples/utils/vtrace.html#from_logits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#syllabus.examples.utils.vtrace.from_logits" title="Permalink to this definition">#</a></dt>
-<dd><p>V-trace for softmax policies.</p>
-</dd></dl>
-
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
 </section>
 <section id="module-syllabus.examples.models">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.examples.models" title="Permalink to this heading">#</a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-syllabus.examples.models" title="Link to this heading">¶</a></h2>
 </section>
 </section>
 
@@ -716,80 +365,6 @@ by Espeholt, Soyer, Munos et al.</p>
             <ul>
 <li><a class="reference internal" href="#">Example Utils</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-syllabus.examples.utils.vecenv">syllabus.examples.utils.vecenv module</a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.RunningMeanStd"><code class="docutils literal notranslate"><span class="pre">RunningMeanStd</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.RunningMeanStd.update"><code class="docutils literal notranslate"><span class="pre">RunningMeanStd.update()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.RunningMeanStd.update_from_moments"><code class="docutils literal notranslate"><span class="pre">RunningMeanStd.update_from_moments()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv"><code class="docutils literal notranslate"><span class="pre">VecEnv</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.close"><code class="docutils literal notranslate"><span class="pre">VecEnv.close()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.close_extras"><code class="docutils literal notranslate"><span class="pre">VecEnv.close_extras()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.closed"><code class="docutils literal notranslate"><span class="pre">VecEnv.closed</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.get_images"><code class="docutils literal notranslate"><span class="pre">VecEnv.get_images()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.get_viewer"><code class="docutils literal notranslate"><span class="pre">VecEnv.get_viewer()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.metadata"><code class="docutils literal notranslate"><span class="pre">VecEnv.metadata</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.render"><code class="docutils literal notranslate"><span class="pre">VecEnv.render()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.reset"><code class="docutils literal notranslate"><span class="pre">VecEnv.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.step"><code class="docutils literal notranslate"><span class="pre">VecEnv.step()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.step_async"><code class="docutils literal notranslate"><span class="pre">VecEnv.step_async()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.step_env"><code class="docutils literal notranslate"><span class="pre">VecEnv.step_env()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.step_wait"><code class="docutils literal notranslate"><span class="pre">VecEnv.step_wait()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.unwrapped"><code class="docutils literal notranslate"><span class="pre">VecEnv.unwrapped</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnv.viewer"><code class="docutils literal notranslate"><span class="pre">VecEnv.viewer</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.process"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper.process()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.reset"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvObservationWrapper.step_wait"><code class="docutils literal notranslate"><span class="pre">VecEnvObservationWrapper.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.close"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.close()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.get_images"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.get_images()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.render"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.render()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.reset"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.step_async"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.step_async()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecEnvWrapper.step_wait"><code class="docutils literal notranslate"><span class="pre">VecEnvWrapper.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecExtractDictObs"><code class="docutils literal notranslate"><span class="pre">VecExtractDictObs</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecExtractDictObs.process"><code class="docutils literal notranslate"><span class="pre">VecExtractDictObs.process()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecMonitor"><code class="docutils literal notranslate"><span class="pre">VecMonitor</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecMonitor.reset"><code class="docutils literal notranslate"><span class="pre">VecMonitor.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecMonitor.step_wait"><code class="docutils literal notranslate"><span class="pre">VecMonitor.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecNormalize"><code class="docutils literal notranslate"><span class="pre">VecNormalize</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecNormalize.reset"><code class="docutils literal notranslate"><span class="pre">VecNormalize.reset()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.VecNormalize.step_wait"><code class="docutils literal notranslate"><span class="pre">VecNormalize.step_wait()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vecenv.update_mean_var_count_from_moments"><code class="docutils literal notranslate"><span class="pre">update_mean_var_count_from_moments()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-syllabus.examples.utils.vtrace">syllabus.examples.utils.vtrace module</a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.behavior_action_log_probs"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.behavior_action_log_probs</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.log_rhos"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.log_rhos</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.pg_advantages"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.pg_advantages</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.target_action_log_probs"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.target_action_log_probs</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceFromLogitsReturns.vs"><code class="docutils literal notranslate"><span class="pre">VTraceFromLogitsReturns.vs</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceReturns"><code class="docutils literal notranslate"><span class="pre">VTraceReturns</span></code></a><ul>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceReturns.pg_advantages"><code class="docutils literal notranslate"><span class="pre">VTraceReturns.pg_advantages</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.VTraceReturns.vs"><code class="docutils literal notranslate"><span class="pre">VTraceReturns.vs</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.action_log_probs"><code class="docutils literal notranslate"><span class="pre">action_log_probs()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.from_importance_weights"><code class="docutils literal notranslate"><span class="pre">from_importance_weights()</span></code></a></li>
-<li><a class="reference internal" href="#syllabus.examples.utils.vtrace.from_logits"><code class="docutils literal notranslate"><span class="pre">from_logits()</span></code></a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#module-syllabus.examples.models">Module contents</a></li>
 </ul>
 </li>
@@ -802,9 +377,9 @@ by Espeholt, Soyer, Munos et al.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=48f8e935"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
     </body>
 </html>

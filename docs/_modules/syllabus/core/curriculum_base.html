@@ -1,35 +1,34 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>syllabus.core.curriculum_base - Syllabus 0.6 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>syllabus.core.curriculum_base - Syllabus 0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
       }
     }
@@ -68,7 +67,7 @@
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -83,22 +82,63 @@
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -112,6 +152,8 @@
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
 
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
@@ -123,13 +165,14 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index.html"><div class="brand">Syllabus 0.6 documentation</div></a>
+      <a href="../../../index.html"><div class="brand">Syllabus 0.7 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -145,8 +188,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
   
-  
-  <span class="sidebar-brand-text">Syllabus 0.6 documentation</span>
+  <span class="sidebar-brand-text">Syllabus 0.7 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -237,7 +279,8 @@
           <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -247,26 +290,28 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <h1>Source code for syllabus.core.curriculum_base</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">syllabus.task_space</span> <span class="kn">import</span> <span class="n">TaskSpace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">syllabus.task_space</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskSpace</span>
 
-<span class="kn">from</span> <span class="nn">.stat_recorder</span> <span class="kn">import</span> <span class="n">StatRecorder</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">.stat_recorder</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatRecorder</span>
 
 <span class="n">Agent</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Agent&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Curriculum"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum">[docs]</a><span class="k">class</span> <span class="nc">Curriculum</span><span class="p">:</span>
+<div class="viewcode-block" id="Curriculum">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Curriculum</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class and API for defining curricula to interface with Gym environments.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_space</span><span class="p">:</span> <span class="n">TaskSpace</span><span class="p">,</span> <span class="n">random_start_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">task_names</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">record_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_space</span><span class="p">:</span> <span class="n">TaskSpace</span><span class="p">,</span> <span class="n">random_start_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">task_names</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">record_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">pie_plot_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the base Curriculum</span>
 
 <span class="sd">        :param task_space: the environment&#39;s task space from which new tasks are sampled</span>
@@ -281,12 +326,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">completed_tasks</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_names</span> <span class="o">=</span> <span class="n">task_names</span> <span class="k">if</span> <span class="n">task_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="k">lambda</span> <span class="n">task</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">idx</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stat_recorder</span> <span class="o">=</span> <span class="n">StatRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="p">,</span> <span class="n">task_names</span><span class="o">=</span><span class="n">task_names</span><span class="p">)</span> <span class="k">if</span> <span class="n">record_stats</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pie_plot_interval</span> <span class="o">=</span> <span class="n">pie_plot_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pie_plot_counter</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Task space is empty. This will cause errors during sampling if no tasks are added.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
+        <span class="c1"># Log wandb table</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">wandb</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wandb_table</span> <span class="o">=</span> <span class="n">wandb</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;global_step&quot;</span><span class="p">,</span> <span class="s2">&quot;Top tasks&quot;</span><span class="p">,</span> <span class="s2">&quot;Probabilities&quot;</span><span class="p">],</span> <span class="n">log_mode</span><span class="o">=</span><span class="s1">&#39;MUTABLE&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">requires_step_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">requires_step_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the curriculum requires step updates from the environment.</span>
 
 <span class="sd">        :return: True if the curriculum requires step updates, False otherwise</span>
@@ -294,7 +348,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Counts the number of tasks in the task space.</span>
 
 <span class="sd">        :return: Returns the number of tasks in the task space if it is countable, TODO: -1 otherwise</span>
@@ -302,14 +356,16 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">num_tasks</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;List all of the tasks in the task space.</span>
 
 <span class="sd">        :return: List of tasks if task space is enumerable, TODO: empty list otherwise?</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">tasks</span>
 
-<div class="viewcode-block" id="Curriculum.update_task_progress"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_task_progress">[docs]</a>    <span class="k">def</span> <span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Curriculum.update_task_progress">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_task_progress">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_task_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the curriculum with a task and its progress. This is used for binary tasks that can be completed mid-episode.</span>
 
 <span class="sd">        :param task: Task for which progress is being updated.</span>
@@ -318,7 +374,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">completed_tasks</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
-<div class="viewcode-block" id="Curriculum.update_on_step"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_step">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">rew</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">term</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">trunc</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Curriculum.update_on_step">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">rew</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">term</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">trunc</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Update the curriculum with the current step results from the environment.</span>
 
 <span class="sd">        :param obs: Observation from the environment</span>
@@ -333,7 +392,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="s2">&quot;This curriculum does not require step updates. Set update_on_step for the environment sync wrapper to False to improve performance and prevent this error.&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Curriculum.update_on_step_batch"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_step_batch">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Curriculum.update_on_step_batch">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_step_batch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_on_step_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_results</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the curriculum with a batch of step results from the environment.</span>
 
 <span class="sd">        This method can be overridden to provide a more efficient implementation. It is used</span>
@@ -346,7 +408,10 @@
         <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">te</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">truncs</span><span class="p">,</span> <span class="n">infos</span><span class="p">,</span> <span class="n">progresses</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update_on_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">te</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">env_id</span><span class="o">=</span><span class="n">env_id</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Curriculum.update_on_episode"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_episode">[docs]</a>    <span class="k">def</span> <span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Curriculum.update_on_episode">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.update_on_episode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_on_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">env_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the curriculum with episode results from the environment.</span>
 
 <span class="sd">        :param episode_return: Episodic return</span>
@@ -358,7 +423,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stat_recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stat_recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">episode_return</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">env_id</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Curriculum.get_agent"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.get_agent">[docs]</a>    <span class="k">def</span> <span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Curriculum.get_agent">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.get_agent">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Load an agent from the buffer of saved agents.</span>
 
 <span class="sd">        :param agent_id: Identifier of the agent to load</span>
@@ -366,7 +434,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This curriculum does not track agents.&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Curriculum.add_agent"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.add_agent">[docs]</a>    <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Curriculum.add_agent">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.add_agent">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Add an agent to the curriculum.</span>
 
 <span class="sd">        :param agent: Agent to add to the curriculum</span>
@@ -374,20 +445,23 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This curriculum does not track agents.&quot;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_sample_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sample_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a sample distribution over the task space.</span>
 
 <span class="sd">        Any curriculum that maintains a true probability distribution should implement this method to retrieve it.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">_should_use_startup_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_should_use_startup_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_start_tasks</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed_tasks</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_start_tasks</span>
 
-    <span class="k">def</span> <span class="nf">_startup_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_startup_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span>
 
-<div class="viewcode-block" id="Curriculum.sample"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="Curriculum.sample">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.sample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample k tasks from the curriculum.</span>
 
 <span class="sd">        :param k: Number of tasks to sample, defaults to 1</span>
@@ -399,10 +473,16 @@
 
         <span class="c1"># Use list of indices because np.choice does not play nice with tuple tasks</span>
         <span class="n">task_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_distribution</span><span class="p">()</span>
-        <span class="n">task_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span><span class="p">)),</span> <span class="n">size</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">task_dist</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_dist</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="n">task_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span><span class="p">)),</span> <span class="n">size</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">task_dist</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">task_idx</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_space</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">task_idx</span></div>
 
-<div class="viewcode-block" id="Curriculum.normalize"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Curriculum.normalize">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.normalize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Normalize reward by task.</span>
 
@@ -413,7 +493,44 @@
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stat_recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Curriculum must be initialized with record_stats=True to use normalize()&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stat_recorder</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">reward</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Curriculum.log_metrics"><a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Curriculum.plot_pie_chart">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.plot_pie_chart">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_pie_chart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_dist</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Identify tasks above the 1% threshold</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.01</span>
+        <span class="n">eligible_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">task_dist</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">]</span>
+
+        <span class="c1"># Sort eligible tasks by probability, descending</span>
+        <span class="n">sorted_idx</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">eligible_indices</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">task_dist</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">top_indices</span> <span class="o">=</span> <span class="n">sorted_idx</span><span class="p">[:</span><span class="n">log_n_tasks</span><span class="p">]</span> <span class="k">if</span> <span class="n">log_n_tasks</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">sorted_idx</span>
+
+        <span class="c1"># Gather the top-n probs and corresponding labels</span>
+        <span class="n">top_probs</span> <span class="o">=</span> <span class="p">[</span><span class="n">task_dist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">top_indices</span><span class="p">]</span>
+        <span class="n">top_labels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">top_indices</span><span class="p">]</span>
+
+        <span class="c1"># Compute other probability</span>
+        <span class="n">other_prob</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">top_probs</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">other_prob</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">top_probs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other_prob</span><span class="p">)</span>
+            <span class="n">top_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Other&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Generate task distribution pie chart</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span><span class="n">top_probs</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">top_labels</span><span class="p">,</span> <span class="n">autopct</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%1.1f%%</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">startangle</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Task Sampling Distribution&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tmp_syllabus_fig_</span><span class="si">{</span><span class="n">run_id</span><span class="si">}</span><span class="s1">.png&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="Curriculum.log_metrics">
+<a class="viewcode-back" href="../../../modules/syllabus.core.curriculum.html#syllabus.core.curriculum_base.Curriculum.log_metrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Log the task distribution to the provided writer.</span>
 
 <span class="sd">        :param writer: Tensorboard summary writer or wandb object</span>
@@ -427,33 +544,73 @@
             <span class="n">logs</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stat_recorder</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">log_n_tasks</span><span class="o">=</span><span class="n">log_n_tasks</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">wandb</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">wandb</span>
             <span class="n">use_wandb</span> <span class="o">=</span> <span class="n">writer</span> <span class="o">==</span> <span class="n">wandb</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="n">use_wandb</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">task_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_distribution</span><span class="p">()</span>
+            <span class="c1"># Use uniform distribution during startup sampling</span>
+            <span class="n">task_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_distribution</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_use_startup_sampling</span><span class="p">()</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_tasks</span>
+            <span class="n">task_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">task_dist</span><span class="p">)</span>  <span class="c1"># Convert NaN to 0</span>
+
+            <span class="c1"># Reduce amount of per-task basic logging</span>
+            <span class="n">log_task_dist</span> <span class="o">=</span> <span class="n">task_dist</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">log_n_tasks</span> <span class="ow">and</span> <span class="n">log_n_tasks</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Too many tasks to log </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span><span class="si">}</span><span class="s2">. Only logging stats for 1 task.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Too many tasks to log </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span><span class="si">}</span><span class="s2">. Only logging stats for </span><span class="si">{</span><span class="n">log_n_tasks</span><span class="si">}</span><span class="s2"> tasks.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
                 <span class="n">task_dist</span> <span class="o">=</span> <span class="n">task_dist</span><span class="p">[:</span><span class="n">log_n_tasks</span><span class="p">]</span>
 
             <span class="c1"># Add basic logs</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">task_dist</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">log_task_dist</span><span class="p">):</span>
                 <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">idx</span><span class="p">)</span>
                 <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;curriculum/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_prob&quot;</span><span class="p">,</span> <span class="n">prob</span><span class="p">))</span>
+
+            <span class="c1"># Count task with nonzero probability</span>
+            <span class="n">nonzero_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">task_dist</span><span class="p">)</span>
+            <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;curriculum/nonzero_probability_tasks&quot;</span><span class="p">,</span> <span class="n">nonzero_probs</span><span class="p">))</span>
+
+            <span class="c1"># Log entropy</span>
+            <span class="n">entropy_task_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">task_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">task_dist</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">)</span>  <span class="c1"># Avoid log(0)</span>
+            <span class="n">logp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">entropy_task_dist</span><span class="p">)</span>
+            <span class="n">entropy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">entropy_task_dist</span> <span class="o">*</span> <span class="n">logp</span><span class="p">)</span>
+            <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;curriculum/entropy&quot;</span><span class="p">,</span> <span class="n">entropy</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pie_plot_counter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pie_plot_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pie_plot_counter</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="c1"># Generate task distribution pie chart</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot_pie_chart</span><span class="p">(</span><span class="n">task_dist</span><span class="p">,</span> <span class="n">wandb</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">log_n_tasks</span><span class="o">=</span><span class="n">log_n_tasks</span><span class="p">)</span>
+                <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="s2">&quot;curriculum/task_distribution&quot;</span><span class="p">:</span> <span class="n">wandb</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tmp_syllabus_fig_</span><span class="si">{</span><span class="n">wandb</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span> <span class="s2">&quot;global_step&quot;</span><span class="p">:</span> <span class="n">step</span><span class="p">})</span>
+
+                <span class="c1"># Get top 10 tasks</span>
+                <span class="n">top_10</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                    <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">,</span> <span class="n">task_dist</span><span class="p">),</span>
+                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)[:</span><span class="mi">10</span><span class="p">]</span>
+                <span class="n">top_10_tasks</span><span class="p">,</span> <span class="n">top_10_probs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">top_10</span><span class="p">)</span>
+
+                <span class="c1"># Log top 10 tasks to wandb table</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="kn">import</span><span class="w"> </span><span class="nn">wandb</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wandb_table</span><span class="o">.</span><span class="n">add_data</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">top_10_tasks</span><span class="p">),</span>
+                                              <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">top_10_probs</span><span class="p">]))</span>
+                    <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="s2">&quot;curriculum/top_tasks&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wandb_table</span><span class="p">,</span> <span class="s2">&quot;global_step&quot;</span><span class="p">:</span> <span class="n">step</span><span class="p">})</span>
+                <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pie_plot_counter</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="c1"># Write logs</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">use_wandb</span><span class="p">:</span>
-                    <span class="n">writer</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">prob</span><span class="p">,</span> <span class="s2">&quot;global_step&quot;</span><span class="p">:</span> <span class="n">step</span><span class="p">})</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">prob</span><span class="p">})</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># No need to crash over logging :)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to log curriculum stats to wandb. Ignoring error </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to log curriculum stats to wandb. Ignoring error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">logs</span></div>
+</div>
 
-        <span class="k">return</span> <span class="n">logs</span></div></div>
 </pre></div>
         </article>
       </div>
@@ -486,10 +643,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
-    <script src="../../../_static/scripts/furo.js"></script>
-    <script src="../../../_static/tabs.js"></script>
+</div><script src="../../../_static/documentation_options.js?v=48f8e935"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
     </body>
 </html>
