@@ -4,6 +4,8 @@ Syllabus is a portable library for training reinforcement learning (RL) agents w
 
 Syllabus supports both Python native multiprocessing and Ray actors, and has been tested with **CleanRL**, **PufferLib**, **RLLib**, **Stable Baselines 3**, **TorchAC**, and **Moolib**. It also offers native support for multi‑agent **PettingZoo** environments.
 
+For a quick look at how to use Syllabus, check out the [demo script](https://github.com/RyanNavillus/Syllabus/blob/main/demo.py) or [demo notebook](https://colab.research.google.com/drive/1GWfBdZRx-ifOUKcBhPuZTzFFy5CvKFu6?usp=sharing) in Google Colab.
+
 See the paper for more information and baselines: https://arxiv.org/abs/2411.11318
 Documentation can be found at at https://ryannavillus.github.io/Syllabus/index.html
 
