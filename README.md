@@ -1,4 +1,5 @@
 # Syllabus
+## Outstanding Paper Award in Tooling, Environments, and Evaluation for Reinforcement Learning at RLC 2025!
 
 Syllabus is a portable library for training reinforcement learning (RL) agents with curriculum learning. It provides a flexible API for defining curricula, a collection of popular automatic curriculum algorithms, and infrastructure for synchronizing curricula with feedback from environments running across multiple processes. Unlike most curriculum learning implementations, which tightly couple policy training with curriculum logic and rely on algorithm‑specific multiprocessing systems, Syllabus separates curriculum design from the rest of the RL pipeline. This modular design makes it easy to integrate curriculum learning into existing training pipelines across nearly any RL library.
 
