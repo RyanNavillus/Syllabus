@@ -11,7 +11,7 @@ setup(
     name="syllabus-rl",
     description="Portable curricula for RL agents",
     long_description_content_type="text/markdown",
-    version="0.6",
+    version="0.7",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
