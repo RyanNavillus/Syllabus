@@ -1,6 +1,4 @@
-import copy
-import time
-import torch
+import warnings
 from typing import Any, Callable, Dict
 
 import gymnasium as gym
@@ -26,7 +24,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                  task_space: TaskSpace,
                  components: MultiProcessingComponents,
                  batch_size: int = 100,
-                 buffer_size: int = 2,  # Having an extra task in the buffer minimizes wait time at reset
+                 buffer_size: int = 1,  # Having an extra task in the buffer minimizes wait time at reset
                  remove_keys: list = None,
                  change_task_on_completion: bool = False,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
@@ -60,8 +58,14 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             self._tasks = [None] * self.batch_size
             self._task_progresses = np.zeros(self.batch_size, dtype=np.float32)
 
+        if buffer_size > 2:
+            warnings.warn(
+                "Buffer size greater than 2 can cause some automatic curriculum learning methods to perform worse.", stacklevel=2)
+
         # Request initial task
-        assert buffer_size > 0, "Buffer size must be greater than 0 to sample initial task for envs."
+        if buffer_size <= 0:
+            warnings.warn("Buffer size should be greater than 0 to sample initial task for envs.")
+
         for _ in range(buffer_size):
             update = {
                 "update_type": "noop",
@@ -106,7 +110,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             }
             self.components.put_update([episode_update])
 
-        if self.change_task_on_completion and self.task_progress >= 1.0:
+        if self.change_task_on_completion and (self.task_progress >= 1.0 or self.task_progress < 0.0):
             update = {
                 "update_type": "task_progress",
                 "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
@@ -166,6 +170,8 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         env_attr = getattr(self.env, attr, None)
         if env_attr is not None:
             return env_attr
+        else:
+            raise AttributeError(f"{self.__class__.__name__} object has no attribute '{attr}'")
 
 
 class PettingZooSyncWrapper(BaseParallelWrapper):
@@ -245,7 +251,7 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
         info["task"] = self.task_space.encode(self.get_task())
         if self.update_on_step:
             self._update_step(obs, *self._template_args, info, False, send=False)
-        return self.env.reset(*args, new_task=next_task, **kwargs)
+        return obs, info
 
     def step(self, actions):
         obs, rews, terms, truncs, infos = self.env.step(actions)

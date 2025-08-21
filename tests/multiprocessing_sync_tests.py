@@ -12,6 +12,7 @@ N_EPISODES = 10
 
 def evaluate_curriculum(curriculum, num_envs=N_ENVS, num_episodes=N_EPISODES):
     stats = curriculum.get_stats()
+
     expected_reward = 100 * num_envs * num_episodes
     assert stats["total_reward"] == expected_reward, f"Curriculum total reward is {stats['total_reward']}, expected {expected_reward}"
     for task, count in stats["task_counts"].items():

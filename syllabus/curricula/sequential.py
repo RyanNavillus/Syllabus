@@ -11,11 +11,15 @@ from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 class SequentialCurriculum(Curriculum):
     """ Curriculum that iterates through a list of curricula based on stopping conditions. """
 
-    def __init__(self, curriculum_list: List[Curriculum], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Any], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, should_loop=False, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
-        assert len(stopping_conditions) == len(curriculum_list) - \
-            1, f"Stopping conditions must be one less than the number of curricula. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
+        if should_loop:
+            assert len(stopping_conditions) == len(
+                curriculum_list), f"Stopping conditions must match the number of curricula when should_loop=True. Expected {len(curriculum_list)}, got {len(stopping_conditions)}."
+        else:
+            assert len(stopping_conditions) == len(curriculum_list) - \
+                1, f"Stopping conditions must be one less than the number of curricula when should_loop=False. Final curriculum is used for the remainder of training. Expected {len(curriculum_list) - 1}, got {len(stopping_conditions)}."
         if len(curriculum_list) == 1:
             warnings.warn(
                 "Your sequential curriculum only containes one element. Consider using that element directly instead.", stacklevel=2)
@@ -23,6 +27,7 @@ class SequentialCurriculum(Curriculum):
         self.curriculum_list = self._parse_curriculum_list(curriculum_list)
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
         self._curriculum_index = 0
+        self.should_loop = should_loop
 
         # Stopping metrics
         self.n_steps = 0
@@ -148,14 +153,15 @@ class SequentialCurriculum(Curriculum):
         Choose the next k tasks from the list.
         """
         curriculum = self.current_curriculum
+        # TODO: Sample tasks individually for more precise stopping
         tasks = curriculum.sample(k)
 
         # Recode tasks into environment task space
         decoded_tasks = [curriculum.task_space.decode(task) for task in tasks]
         recoded_tasks = [self.task_space.encode(task) for task in decoded_tasks]
-
         self.n_tasks += k
         self.total_tasks += k
+        print(k, self.n_tasks)
 
         # Check if we should move on to the next phase of the curriculum
         self.check_stopping_conditions()
@@ -187,8 +193,18 @@ class SequentialCurriculum(Curriculum):
         self.current_curriculum.update_task_progress(task, progress, env_id)
 
     def check_stopping_conditions(self):
+        did_reset = False
         if self._curriculum_index < len(self.stopping_conditions) and self.stopping_conditions[self._curriculum_index]():
             self._curriculum_index += 1
+            did_reset = True
+
+        if self.should_loop and self._curriculum_index == len(self.curriculum_list):
+            # Loop sequential curriculum back to the first curriculum
+            self._curriculum_index = 0
+            did_reset = True
+
+        if did_reset:
+            # Reset individual curriculum metrics
             self.n_episodes = 0
             self.n_steps = 0
             self.episode_returns = deque(maxlen=100)
@@ -207,7 +223,7 @@ class SequentialCurriculum(Curriculum):
         # Set probability for tasks from other stages to 0
         current_tasks = set(self.current_curriculum.task_space.tasks)
         all_tasks = set(self.task_space.tasks)
-        noncurrent_tasks = all_tasks - current_tasks
+        noncurrent_tasks = list(all_tasks - current_tasks)[:log_n_tasks]
         for task in noncurrent_tasks:
             name = self.task_names(task, self.task_space.encode(task))
             logs.append((f"curriculum/{name}_prob", 0))

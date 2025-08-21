@@ -1,7 +1,7 @@
 import gymnasium as gym
 import numpy as np
 
-from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, TupleTaskSpace, BoxTaskSpace
+from syllabus.task_space import BoxTaskSpace, DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace, TupleTaskSpace
 from syllabus.utils import UsageError
 
 
@@ -23,7 +23,10 @@ def test_encoder(space, input_val, expected_output):
 
 def test_decoder(space, input_val, expected_output):
     decoded_val = space.decode(input_val)
-    assert decoded_val == expected_output, f"Expected {expected_output}, got {decoded_val}"
+    if isinstance(expected_output, np.ndarray):
+        assert np.allclose(decoded_val, expected_output), f"Expected {expected_output}, got {decoded_val}"
+    else:
+        assert decoded_val == expected_output, f"Expected {expected_output}, got {decoded_val}"
 
 
 def test_all_elements(space):
@@ -104,9 +107,9 @@ if __name__ == "__main__":
     test_encoder(task_space, [[0, 1], [1, 0]], [[0, 1], [1, 0]])
     test_encoder(task_space, [[1, 0], [0, 1]], [[1, 0], [0, 1]])
     test_encoder(task_space, [[0.5, 0.2], [0.1, 0.9]], [[0.5, 0.2], [0.1, 0.9]])
-    test_decoder(task_space, [[0, 1], [1, 0]], [[0, 1], [1, 0]])
-    test_decoder(task_space, [[1, 0], [0, 1]], [[1, 0], [0, 1]])
-    test_decoder(task_space, [[0.5, 0.2], [0.1, 0.9]], [[0.5, 0.2], [0.1, 0.9]])
+    test_decoder(task_space, np.array([[0, 1], [1, 0]]), np.array([[0, 1], [1, 0]]))
+    test_decoder(task_space, np.array([[1, 0], [0, 1]]), np.array([[1, 0], [0, 1]]))
+    test_decoder(task_space, np.array([[0.5, 0.2], [0.1, 0.9]]), np.array([[0.5, 0.2], [0.1, 0.9]]))
     test_random_elements(task_space)
     print("Box tests passed!")
 
@@ -121,3 +124,19 @@ if __name__ == "__main__":
     test_error(task_space, -1, "Expected UsageError, got {}", method="decode")
     test_all_elements(task_space)
     print("Tuple tests passed!")
+
+    # Stratified Discrete Tests
+    task_space = StratifiedDiscreteTaskSpace([[1, 2, 3, 4], [5, 6], [7, 8]], [
+                                             ["1", "2", "3", "4"], ["5", "6"], ["7", "8"]])
+
+    test_encoder(task_space, "1", 0)
+    test_encoder(task_space, "2", 1)
+    test_encoder(task_space, "3", 2)
+    test_error(task_space, "9", "Expected UsageError, got {}", method="encode")
+
+    test_decoder(task_space, 0, "1")
+    test_decoder(task_space, 1, "2")
+    test_decoder(task_space, 2, "3")
+    test_error(task_space, 8, "Expected UsageError, got {}", method="decode")
+    test_all_elements(task_space)
+    print("Stratified Discrete tests passed!")

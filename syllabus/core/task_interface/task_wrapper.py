@@ -1,3 +1,4 @@
+import warnings
 import gymnasium as gym
 import pettingzoo
 from pettingzoo.utils.wrappers.base_parallel import BaseParallelWrapper
@@ -11,8 +12,12 @@ class TaskWrapper(gym.Wrapper):
         self.task_space = None
         self.task = None    # TODO: Would making this a property protect from accidental overriding?
 
-    def reset(self, **kwargs):
-        new_task = kwargs.pop("new_task", None)
+    def reset(self, new_task=None, **kwargs):
+        # Change task if new one is provided
+        if new_task is None:
+            seed = kwargs.pop("seed", None)
+            new_task = seed if seed is not None else kwargs.pop("options", None)
+
         if new_task is not None:
             self.change_task(new_task)
 
@@ -105,9 +110,8 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
             self.change_task(new_task)
             self.task = new_task
         obs, info = self.env.reset(**kwargs)
-        for agent in info.keys():
-            info[agent]["task_completion"] = 0.0
-            info[agent]["task_id"] = self.task
+        info["task_completion"] = 0.0
+        info["task"] = self.task
         return self.observation(obs), info
 
     def change_task(self, new_task):
@@ -127,11 +131,8 @@ class PettingZooTaskWrapper(BaseParallelWrapper):
         obs, rew, term, trunc, info = self.env.step(action)
         # Determine completion status of the current task
         self.task_completion = self._task_completion(obs, rew, term, trunc, info)
-        for agent in self.env.possible_agents:
-            if agent not in info:
-                info[agent] = {}
-            info[agent]["task_completion"] = self.task_completion
-            info[agent]["task_id"] = self.task
+        info["task_completion"] = self.task_completion
+        info["task"] = self.task
         return obs, rew, term, trunc, info
 
     def observation(self, observation):

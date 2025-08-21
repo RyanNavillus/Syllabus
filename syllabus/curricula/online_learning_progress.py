@@ -1,60 +1,38 @@
 import math
 import warnings
-from itertools import groupby
-from typing import Any, List, Optional, Union
+from typing import Any, List, Union
 
 import numpy as np
 
 from syllabus.core import Curriculum
-from syllabus.core.evaluator import Evaluator
 from syllabus.task_space import DiscreteTaskSpace, MultiDiscreteTaskSpace, StratifiedDiscreteTaskSpace
 
 
-def compress_ranges(nums):
-    nums = sorted(set(nums))
-    ranges = []
-    for _, group in groupby(enumerate(nums), lambda x: x[1] - x[0]):
-        group = list(group)
-        start, end = group[0][1], group[-1][1]
-        ranges.append(f"{start}" if start == end else f"{start}-{end}")
-    return ", ".join(ranges)
-
-
-class LearningProgress(Curriculum):
+class OnlineLearningProgress(Curriculum):
     """
     Provides an interface for tracking success rates of discrete tasks and sampling tasks
     based on their success rate using the method from https://arxiv.org/abs/2106.14876.
     TODO: Support task spaces aside from Discrete
     """
 
-    def __init__(
-        self,
-        evaluator: Evaluator,
-        *args,
-        ema_alpha: float = 0.1,
-        p_theta: float = 0.1,
-        eval_interval: Optional[int] = None,
-        eval_interval_steps: Optional[int] = None,
-        eval_eps: float = 1,
-        baseline_eval_eps: Optional[float] = None,
-        normalize_success: bool = True,
-        continuous_progress: bool = False,
-        **kwargs
-    ):
+    def __init__(self, *args, ema_alpha=0.1, p_theta=0.1, update_interval=None, update_interval_steps=None, normalize_success=True, uniform_prob=0.25, save_last=False, use_live_dist=False, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.evaluator = evaluator
         self.ema_alpha = ema_alpha
         self.p_theta = p_theta
-        self.eval_interval = eval_interval
-        assert eval_interval is None or eval_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
-        self.eval_interval_steps = eval_interval_steps
-        self.eval_eps = eval_eps
+        self.eval_interval = update_interval
+        assert update_interval is None or update_interval_steps is None, "Only one of eval_interval or eval_interval_steps can be set."
+        assert update_interval is not None or update_interval_steps is not None, "One of eval_interval or eval_interval_steps must be set."
+        self.eval_interval_steps = update_interval_steps
         self.completed_episodes = 0
         self.current_steps = 0
         self.normalize_success = normalize_success
-        self.continuous_progress = continuous_progress
         self.normalized_task_success_rates = None
+        self.uniform_prob = uniform_prob
+        self.save_last = save_last
+        self.use_live_dist = use_live_dist
+        self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.int_)
+        self.current_task_counts = np.zeros(self.num_tasks, dtype=np.int_)
 
         assert isinstance(
             self.task_space, (DiscreteTaskSpace, MultiDiscreteTaskSpace)
@@ -66,11 +44,12 @@ class LearningProgress(Curriculum):
         self.task_rates = None
         self.task_dist = None
         self._stale_dist = True
-        self._baseline_eval_eps = baseline_eval_eps if baseline_eval_eps is not None else eval_eps
 
-    def eval_and_update(self, eval_eps=1):
-        _, task_success_rates, final_success_rates, _ = self.evaluator.evaluate_agent(eval_eps, verbose=True)
-        task_success_rates = final_success_rates.numpy() if self.continuous_progress else task_success_rates.numpy()
+    def eval_and_update(self):
+        safe_task_counts = np.maximum(
+            self.current_task_counts, np.ones_like(self.current_task_counts)
+        )
+        task_success_rates = self.current_task_success_rates / safe_task_counts
 
         if self.random_baseline is None:
             # Assume that any perfect success rate is actually 75% due to evaluation precision.
@@ -101,6 +80,13 @@ class LearningProgress(Curriculum):
 
         self.task_rates = task_success_rates    # Used for logging and OMNI
         self._stale_dist = True
+        if self.save_last:
+            # Save the last task success rates for the next evaluation
+            self.current_task_success_rates = task_success_rates
+            self.current_task_counts = np.ones(self.num_tasks, dtype=np.int_)
+        else:
+            self.current_task_success_rates = np.zeros(self.num_tasks, dtype=np.float32)
+            self.current_task_counts = np.zeros(self.num_tasks, dtype=np.int_)
         self.task_dist = None
         return task_success_rates
 
@@ -108,15 +94,17 @@ class LearningProgress(Curriculum):
         """
         Update the success rate for the given task using a fast and slow exponential moving average.
         """
+        self.current_task_success_rates[task] += math.floor(max(progress, 0.0))
+        self.current_task_counts[task] += 1
         super().update_task_progress(task, progress)
 
     def update_on_episode(self, episode_return: float, length: int, task: Any, progress: Union[float, bool], env_id: int = None) -> None:
         self.completed_episodes += 1
         self.current_steps += length
         if self.eval_interval is not None and self.completed_episodes % self.eval_interval == 0:
-            self.eval_and_update(eval_eps=self.eval_eps)
+            self.eval_and_update()
         if self.eval_interval_steps is not None and self.current_steps > self.eval_interval_steps:
-            self.eval_and_update(eval_eps=self.eval_eps)
+            self.eval_and_update()
             self.current_steps = 0
 
     def _learning_progress(self, reweight: bool = True) -> float:
@@ -142,12 +130,12 @@ class LearningProgress(Curriculum):
 
     def _sample_distribution(self) -> List[float]:
         """ Return sampling distribution over the task space based on the learning progress."""
-        if not self._stale_dist:
+        if not self.use_live_dist and not self._stale_dist:
             # No changes since distribution was last computed
             return self.task_dist
 
         if self.task_rates is None:
-            self.eval_and_update(self._baseline_eval_eps)
+            self.eval_and_update()
 
         task_dist = np.ones(self.num_tasks) / self.num_tasks
 
@@ -168,13 +156,18 @@ class LearningProgress(Curriculum):
             # If all tasks have 0 progress, return uniform distribution
             task_dist = subprobs
 
+        # Mix with uniform distribution
+        task_dist = (1 - self.uniform_prob) * task_dist + self.uniform_prob * (np.ones(self.num_tasks) / self.num_tasks)
+        # Ensure the distribution sums to 1
+        task_dist = task_dist / np.sum(task_dist)
+
         self.task_dist = task_dist
         self._stale_dist = False
         return task_dist
 
     def log_metrics(self, writer, logs, step, log_n_tasks=-1):
         logs = [] if logs is None else logs
-        learning_progresses = self._learning_progress()
+        learning_progresses = np.zeros(self.num_tasks) if self.task_rates is None else self._learning_progress()
         logs.append(("curriculum/learning_progress", np.mean(learning_progresses)))
         if self.task_rates is not None:
             logs.append(("curriculum/mean_success_rate", np.mean(self.task_rates)))
@@ -186,12 +179,13 @@ class LearningProgress(Curriculum):
 
         for idx in tasks:
             name = self.task_names(self.tasks[idx], idx)
-            logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
+            if self.task_rates is not None:
+                logs.append((f"curriculum/{name}_success_rate", self.task_rates[idx]))
             logs.append((f"curriculum/{name}_lp", learning_progresses[idx]))
         return super().log_metrics(writer, logs, step=step, log_n_tasks=log_n_tasks)
 
 
-class StratifiedLearningProgress(LearningProgress):
+class StratifiedOnlineLearningProgress(OnlineLearningProgress):
     def __init__(self, *args, selection_metric="success", **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
@@ -203,6 +197,7 @@ class StratifiedLearningProgress(LearningProgress):
         # Prioritize tasks by learning progress first
         lp_dist = super()._sample_distribution()
         selection_weight = np.ones(len(lp_dist)) * 0.001
+
         if self.selection_metric == "learnability":
             metric = self.task_rates * (1.0 - self.task_rates)
         elif self.selection_metric == "score":
@@ -218,38 +213,4 @@ class StratifiedLearningProgress(LearningProgress):
         # Scale and normalize
         stratified_dist = lp_dist * selection_weight
         stratified_dist = stratified_dist / np.sum(stratified_dist)
-        return stratified_dist
-
-
-class StratifiedDomainRandomization(LearningProgress):
-    def __init__(self, *args, selection_metric="success", **kwargs):
-        super().__init__(*args, **kwargs)
-        assert isinstance(self.task_space, StratifiedDiscreteTaskSpace)
-        assert selection_metric in ["success", "progress"]
-        self.selection_metric = selection_metric
-
-    def _sample_distribution(self) -> List[float]:
-        if not self._stale_dist:
-            # No changes since distribution was last computed
-            return self.task_dist
-
-        if self.task_rates is None:
-            self.eval_and_update(self._baseline_eval_eps)
-
-        # Prioritize tasks uniformly first
-        uni_dist = np.ones(self.num_tasks) / self.num_tasks
-        selection_weight = np.ones(len(uni_dist)) * 0.0001
-        metric = self.task_rates if self.selection_metric == "success" else uni_dist
-
-        # Find the highest success rate task in each strata
-        for strata in self.task_space.strata:
-            task_idx = np.argsort(metric[np.array(list(strata))])[-1]
-            selection_weight[strata[task_idx]] = 1.0
-
-        # Scale and normalize
-        stratified_dist = uni_dist * selection_weight
-        stratified_dist = stratified_dist / np.sum(stratified_dist)
-
-        self.task_dist = stratified_dist
-        self._stale_dist = False
         return stratified_dist

@@ -96,7 +96,7 @@ class TaskSpace:
                 return encoding
             except (KeyError, TypeError):
                 raise UsageError(f"Failed to decode task encoding: {encoding}") from e
-        except ValueError as e:
+        except (ValueError, AssertionError) as e:
             raise UsageError(f"Failed to decode task encoding: {encoding}") from e
 
     def encode(self, task: Any) -> Any:
@@ -118,7 +118,7 @@ class TaskSpace:
                 self._decode(task)
                 warnings.warn(f"Task already encoded: {task}", stacklevel=2)
                 return task
-            except (KeyError, TypeError):
+            except (KeyError, TypeError, AssertionError):
                 raise UsageError(f"Failed to encode task: {task}") from e
         except ValueError as e:
             raise UsageError(f"Failed to encode task: {task}") from e
@@ -233,7 +233,7 @@ class DiscreteTaskSpace(TaskSpace):
         :return: Decoded task representation
         :rtype: int
         """
-        assert isinstance(encoding, (int, np.integer)), f"Encoding must be an integer. Got {type(encoding)} instead."
+        assert isinstance(encoding, (int, np.integer)), f"Encoding must be an integer. Got {type(encoding)} instead: {encoding}"
         if self._sequential:
             task = encoding + self._first_task
             if task < self._first_task or task > self._last_task:
@@ -636,3 +636,39 @@ class TupleTaskSpace(TaskSpace):
         :rtype: str
         """
         return repr(self._decode(task))
+
+
+class StratifiedDiscreteTaskSpace(DiscreteTaskSpace):
+    """Task space for discrete tasks."""
+
+    def __init__(self, strata: List[List[int]], tasks=None):
+        """
+        Initialize a stratified discrete task space.
+
+        :param space_or_value: gym space or value that can be parsed into a gym space
+        :type strata: List[List[int]]
+        :param tasks: The corresponding tasks representations
+        :type tasks: List[Any], optional
+        """
+        n_tasks = sum(len(stratum) for stratum in strata)
+        self.stratum_start_index = [0] + list(itertools.accumulate(len(stratum) for stratum in strata))[:-1]
+        gym_space = Discrete(n_tasks)
+        flat_tasks = []
+        for stratum in tasks:
+            flat_tasks += stratum
+        super().__init__(gym_space, flat_tasks)
+
+        self.strata = strata
+    
+    def sample(self) -> int:
+        """
+        Sample a task from the task space.
+
+        :return: Sampled task
+        :rtype: int
+        """
+        # Randomly choose a stratum
+        stratum_index = np.random.choice(len(self.strata))
+        # Randomly choose a task from the chosen stratum
+        sample = self.stratum_start_index[stratum_index] + np.random.choice(len(self.strata[stratum_index]))
+        return self._decode(sample)

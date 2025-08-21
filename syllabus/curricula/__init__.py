@@ -1,8 +1,12 @@
 import sys
 
-from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
-from .learning_progress import LearningProgress
 from .constant import Constant
+from .domain_randomization import DomainRandomization, BatchedDomainRandomization, SyncedBatchedDomainRandomization
+from .learning_progress import LearningProgress, StratifiedLearningProgress, StratifiedDomainRandomization
+from .learnability import Learnability, StratifiedLearnability
+from .manual import Manual
+from .omni import OMNI, OMNILearnability, interestingness_from_json
+from .online_learning_progress import OnlineLearningProgress, StratifiedOnlineLearningProgress
 from .plr.central_plr_wrapper import CentralPrioritizedLevelReplay
 from .plr.direct_plr_wrapper import DirectPrioritizedLevelReplay
 from .plr.plr_wrapper import PrioritizedLevelReplay

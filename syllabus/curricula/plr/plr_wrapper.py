@@ -259,16 +259,17 @@ class PrioritizedLevelReplay(Curriculum):
                 f"Overwriting 'num_actors' {task_sampler_kwargs_dict['num_actors']} in task sampler kwargs with PLR num_processes {num_processes}.", stacklevel=2)
         task_sampler_kwargs_dict["num_actors"] = num_processes
         super().__init__(task_space, *curriculum_args, **curriculum_kwargs)
-
-        # Number of steps stored in rollouts and used to update task sampler
         self._num_steps = num_steps
         self._num_processes = num_processes  # Number of parallel environments
         self._supress_usage_warnings = suppress_usage_warnings
         self.evaluator = evaluator
         self._task2index = {task: i for i, task in enumerate(self.tasks)}
-
-        self._task_sampler = TaskSampler(self.tasks, self._num_steps,
-                                         action_space=action_space, **task_sampler_kwargs_dict)
+        self._task_sampler = TaskSampler(
+            self.tasks,
+            self._num_steps,
+            action_space=action_space,
+            **task_sampler_kwargs_dict
+        )
         self._rollouts = RolloutStorage(
             self._num_steps,
             self._num_processes,

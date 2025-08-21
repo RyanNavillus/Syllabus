@@ -5,7 +5,7 @@ from syllabus.task_space import BoxTaskSpace, DiscreteTaskSpace
 
 
 class CartPoleTaskWrapper(TaskWrapper):
-    def __init__(self, env, discretize=False):
+    def __init__(self, env, discretize=True):
         super().__init__(env)
         self.discretize = discretize
         if self.discretize:
@@ -24,7 +24,6 @@ class CartPoleTaskWrapper(TaskWrapper):
                 new_task = (3 * new_task / 50.0) - 0.3  # [-0.3, 0.3]
                 new_task = (new_task, new_task)
             self.task = new_task
-            # task = (3 * new_task / 50.0) - 0.3
 
         return self.env.reset(options={"low": -abs(self.task[0]), "high": abs(self.task[1])})
 
