@@ -1,3 +1,0 @@
-[submodule "syllabus/curricula/level-replay"]
-	path = syllabus/curricula/level-replay
-	url = git@github.com:facebookresearch/level-replay.git
