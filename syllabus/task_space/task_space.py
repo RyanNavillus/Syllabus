@@ -190,6 +190,20 @@ class TaskSpace:
         return repr(self._decode(task))
 
 
+class EmptyTaskSpace(TaskSpace):
+    def __init__(self):
+        super().__init__(None, [])
+
+    def _decode(self, encoding: int) -> int:
+        return encoding
+
+    def _encode(self, task: int) -> int:
+        return task
+
+    def sample(self) -> int:
+        assert False, "Cannot sample from EmptyTaskSpace"
+
+
 class DiscreteTaskSpace(TaskSpace):
     """Task space for discrete tasks."""
 
@@ -233,7 +247,8 @@ class DiscreteTaskSpace(TaskSpace):
         :return: Decoded task representation
         :rtype: int
         """
-        assert isinstance(encoding, (int, np.integer)), f"Encoding must be an integer. Got {type(encoding)} instead: {encoding}"
+        assert isinstance(encoding, (int, np.integer)
+                          ), f"Encoding must be an integer. Got {type(encoding)} instead: {encoding}"
         if self._sequential:
             task = encoding + self._first_task
             if task < self._first_task or task > self._last_task:
@@ -659,7 +674,7 @@ class StratifiedDiscreteTaskSpace(DiscreteTaskSpace):
         super().__init__(gym_space, flat_tasks)
 
         self.strata = strata
-    
+
     def sample(self) -> int:
         """
         Sample a task from the task space.

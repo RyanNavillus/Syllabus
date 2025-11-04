@@ -695,8 +695,8 @@ class MoolibEvaluator(Evaluator):
 
 
 class GymnasiumEvaluationWrapper(gym.Wrapper):
-    instance_lock = Lock()
-    env_count = ShareableList([0])
+    instance_lock = None
+    env_count = None
 
     def __init__(
         self,
@@ -710,6 +710,9 @@ class GymnasiumEvaluationWrapper(gym.Wrapper):
         **kwargs
     ):
         if start_index_spacing > 0:
+            if GymnasiumEvaluationWrapper.instance_lock is None:
+                GymnasiumEvaluationWrapper.instance_lock = Lock()
+                GymnasiumEvaluationWrapper.env_count = ShareableList([0])
             with GymnasiumEvaluationWrapper.instance_lock:
                 instance_id = GymnasiumEvaluationWrapper.env_count[0]
                 GymnasiumEvaluationWrapper.env_count[0] += 1
