@@ -1020,8 +1020,8 @@ class MultiGridEnv(minigrid.MiniGridEnv):
         dirs = []
         for a in range(self.n_agents):
             image, direction = self.gen_agent_obs(a)
-            images.append(image)
-            dirs.append(direction)
+            images.append(image.astype('uint8'))
+            dirs.append(np.uint8(direction))
 
         # Backwards compatibility: if there is a single agent do not return an array
         if self.minigrid_mode:
