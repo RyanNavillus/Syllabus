@@ -39,6 +39,13 @@ class TaskWrapper(gym.Wrapper):
         """
         self.task = new_task
 
+    def update_state(self, state_data):
+        """
+        Update any local state variables from the provided state_data.
+        This can be used to synchronize state across distributed components.
+        """
+        pass
+
     def _task_completion(self, obs, rew, term, trunc, info) -> float:
         """
         Implement this function to indicate whether the selected task has been completed.

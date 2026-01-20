@@ -174,6 +174,16 @@ class Curriculum:
         assert self.stat_recorder is not None, "Curriculum must be initialized with record_stats=True to use normalize()"
         return self.stat_recorder.normalize(reward, task)
 
+    def get_state_deltas(self, version=None) -> Tuple[Any, int]:
+        """Get central state delta to be sent to each environment.
+
+        Curricula may share persistent state changes with the environment in addition to ephemeral task assignments.
+
+        :param version: Version number of the last update received by the environment
+        :return: Tuple of local update deltas, and a version number for the update
+        """
+        return None, 0
+
     def plot_pie_chart(self, task_dist, run_id, log_n_tasks: int = 1):
         # Identify tasks above the 1% threshold
         threshold = 0.01
@@ -273,7 +283,10 @@ class Curriculum:
                 except ImportError:
                     pass
             self.pie_plot_counter += 1
-
+        except Exception as e:
+            # No need to crash over logging :)
+            warnings.warn(f"Failed to generate curriculum distribution stats. Ignoring error: {e}", stacklevel=2)
+        try:
             # Write logs
             for name, prob in logs:
                 if use_wandb:

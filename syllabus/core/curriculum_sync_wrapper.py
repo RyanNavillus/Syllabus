@@ -68,6 +68,9 @@ class CurriculumWrapper:
     def normalize(self, rewards, task):
         return self.curriculum.normalize(rewards, task)
 
+    def get_state_deltas(self, version=None):
+        return self.curriculum.get_state_deltas(version=version)
+
     def __getattr__(self, attr):
         curriculum_atr = getattr(self.curriculum, attr, None)
         if curriculum_atr is not None:
@@ -224,15 +227,24 @@ class CurriculumSyncWrapper(CurriculumWrapper):
                     update = update[0]
 
                 # Sample new tasks if requested
+                # TODO: Add state updates to message
                 if "request_sample" in update and update["request_sample"]:
                     if self.skip_samples > 0:
                         self.skip_samples -= 1
                     else:
-                        new_tasks = self.curriculum.sample(k=1)
-                        for task in new_tasks:
-                            message = {"next_task": task}
-                            self.components.put_task(message)
-                            self.num_assigned_tasks += 1
+                        # Sample new task
+                        new_task = self.curriculum.sample(k=1)[0]
+                        message = {"next_task": new_task}
+
+                        # Add state deltas if available
+                        if "state_version" in update:
+                            deltas, version = self.get_state_deltas(update["state_version"])
+                            if deltas is not None:
+                                message["state_deltas"] = deltas
+                                message["state_version"] = version
+
+                        self.components.put_task(message)
+                        self.num_assigned_tasks += 1
                 self.route_update(update)
                 time.sleep(0.0)
             else:

@@ -8,7 +8,6 @@ from collections import OrderedDict
 import joblib
 import numpy as np
 from gymnasium import spaces
-from scipy.special import softmax
 from queue import Queue
 
 from syllabus.core import Agent, Curriculum  # noqa: E402

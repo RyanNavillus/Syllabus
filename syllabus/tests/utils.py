@@ -461,12 +461,8 @@ def create_minigrid_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwa
 
 # Pistonball Tests
 def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
-    try:
-        from pettingzoo.butterfly import pistonball_v6  # noqa: F401
-
-        from syllabus.examples.task_wrappers import PistonballTaskWrapper
-    except ImportError:
-        warnings.warn("Unable to import pistonball from pettingzoo.", stacklevel=2)
+    from pettingzoo.butterfly import pistonball_v6  # noqa: F401
+    from syllabus.examples.task_wrappers import PistonballTaskWrapper
 
     env = pistonball_v6.parallel_env()
     env = PistonballTaskWrapper(env)
@@ -479,12 +475,7 @@ def create_pistonball_env(*args, sync_type=None, env_args=(), env_kwargs={}, **k
 
 # Simple Tag Tests
 def create_simpletag_env(*args, sync_type=None, env_args=(), env_kwargs={}, **kwargs):
-    try:
-        from pettingzoo.mpe import simple_tag_v3  # noqa: F401
-
-        # from syllabus.examples.task_wrappers import SimpleTagTaskWrapper
-    except ImportError:
-        warnings.warn("Unable to import simple tag from pettingzoo.", stacklevel=2)
+    from pettingzoo.mpe import simple_tag_v3  # noqa: F401
 
     def create_env(task):
         good, adversary, obstacle = task

@@ -44,6 +44,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         self._batch_step = 0
         self.instance_id = components.get_id()
         self.update_on_step = components.requires_step_updates and components.should_sync(self.instance_id)
+        self.state_version = None
 
         self.episode_length = 0
         self.episode_return = 0
@@ -71,6 +72,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                 "update_type": "noop",
                 "metrics": None,
                 "request_sample": True,
+                "state_version": self.state_version,
             }
             self.components.put_update(update)
 
@@ -82,6 +84,12 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         message = self.components.get_task()    # Blocks until a task is available
         next_task = self.task_space.decode(message["next_task"])
         self._latest_task = next_task
+
+        # TODO: Update local state
+        state_deltas = message.get("state_deltas", None)
+        self.state_version = message.get("state_version", None)
+        if state_deltas is not None:
+            self.env.update_state(state_deltas)
 
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
         info["task"] = self.task_space.encode(self.get_task())
@@ -106,16 +114,19 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                 "update_type": "episode",
                 "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.get_task()), self.task_progress),
                 "env_id": self.instance_id,
-                "request_sample": True
+                "request_sample": True,
+                "state_version": self.state_version,
             }
             self.components.put_update([episode_update])
 
+        # Task completion update
         if self.change_task_on_completion and (self.task_progress >= 1.0 or self.task_progress < 0.0):
             update = {
                 "update_type": "task_progress",
                 "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
                 "env_id": self.instance_id,
-                "request_sample": True
+                "request_sample": True,
+                "state_version": self.state_version,
             }
 
             self.components.put_update(update)
@@ -157,7 +168,8 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                 self._task_progresses[:self._batch_step],
             ],),
             "env_id": self.instance_id,
-            "request_sample": False
+            "request_sample": False,
+            "state_version": self.state_version,
         }]
 
     def get_task(self):
