@@ -101,6 +101,9 @@ class Curriculum:
         :param env_id: Environment identifier
         """
         tasks, obs, rews, terms, truncs, infos, progresses = tuple(step_results)
+        # Check if obs and infos were sent
+        obs = obs if obs is not None else [None] * len(tasks)
+        infos = infos if infos is not None else [None] * len(tasks)
         for t, o, r, te, tr, i, p in zip(tasks, obs, rews, terms, truncs, infos, progresses):
             self.update_on_step(t, o, r, te, tr, i, p, env_id=env_id)
 

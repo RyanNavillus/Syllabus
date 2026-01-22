@@ -1,5 +1,7 @@
 from collections import deque
 import copy
+import os
+import os
 import signal
 import sys
 import threading
@@ -11,7 +13,7 @@ from queue import Empty
 from typing import Dict
 
 import ray
-from torch.multiprocessing import Lock, Queue, SimpleQueue
+from multiprocessing import Lock, Queue, SimpleQueue
 
 from syllabus.core import Curriculum
 from syllabus.utils import UsageError, decorate_all_functions
@@ -83,9 +85,12 @@ class MultiProcessingComponents:
         if use_simple_queues:
             self.task_queue = SimpleQueue()
             self.update_queue = SimpleQueue()
+            self._task_time_queue = SimpleQueue()
         else:
             self.task_queue = Queue(maxsize=max_queue_size)
             self.update_queue = Queue(maxsize=max_queue_size)
+            self._task_time_queue = Queue(maxsize=max_queue_size)
+
         self._instance_lock = Lock()
         self._env_count = ShareableList([0])
         self._debug = True
@@ -95,8 +100,8 @@ class MultiProcessingComponents:
         self.verbose = verbose
         self._maxsize = max_queue_size
         self.started = False
-        self._task_times = deque(maxlen=1000)
-        self._task_time_queue = SimpleQueue() if use_simple_queues else Queue(maxsize=max_queue_size)
+        self._task_times = deque(maxlen=10000)
+        self._main_pid = os.getpid()
 
     def peek_id(self):
         return self._env_count[0]
@@ -114,59 +119,102 @@ class MultiProcessingComponents:
         return True
 
     def put_task(self, task):
+        self.verbose_print("Putting task")
         if self._using_simple_queues:
             self.task_queue.put(task)
         else:
             self.task_queue.put(task, block=False)
+        self.verbose_print("Put task")
 
     def get_task(self):
-        try:
-            start = time.time()
-            if self._using_simple_queues:
-                task = self.task_queue.get()
-            else:
-                if self.verbose and self.started and self.task_queue.empty():
-                    warnings.warn(
-                        f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
-                task = self.task_queue.get(block=True, timeout=self.timeout)
-            end = time.time()
-            self._task_time_queue.put(end - start)
-            return task
-        except Empty as e:
-            if self._using_simple_queues:
-                raise UsageError(
-                    "Failed to get task from queue.") from e
-            raise UsageError(
-                f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.") from e
+        start = time.time()
+        self.verbose_print("Getting task")
+        if self._using_simple_queues:
+            task = self.task_queue.get()
+        else:
+            if self.verbose and self.started and self.task_queue.empty():
+                warnings.warn(
+                    f"Task queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize}. Program may deadlock if task_queue is empty. If the update queue capacity is increasing, consider optimizing your curriculum or reducing the number of environments. Otherwise, consider increasing the buffer_size for your environment sync wrapper.")
+            for _ in range(self.timeout):
+                try:
+                    task = self.task_queue.get(block=True, timeout=1.0)
+                    break
+                except Empty:
+                    task = None
+            if task is None:
+                if self._using_simple_queues:
+                    raise UsageError(
+                        "Failed to get task from queue.")
+                else:
+                    raise UsageError(
+                        f"Failed to get task from queue after {self.timeout}s. Queue capacity is {self.task_queue.qsize()} / {self.task_queue._maxsize} items.")
+        self.verbose_print("Got task")
+        end = time.time()
+        self.verbose_print("Putting time")
+        self._task_time_queue.put(end - start)
+        self.verbose_print("Put time")
+        return task
 
     def put_update(self, update):
+        self.verbose_print("Putting update")
         if self._using_simple_queues:
             self.update_queue.put(update)
         else:
             self.update_queue.put(copy.deepcopy(update), block=False)
+        self.verbose_print("Put update")
 
     def get_update(self):
+        self.verbose_print("Getting update")
         if self._using_simple_queues:
             update = self.update_queue.get()
         else:
             update = self.update_queue.get(block=False)
+        self.verbose_print("Got update")
         return update
 
     def close(self):
+        def _close_queue(queue):
+            while not queue.empty():
+                try:
+                    queue.get()
+                except Empty:
+                    break
+            if hasattr(queue, "close"):
+                queue.close()
+            # Avoid blocking on queue feeder threads at interpreter shutdown.
+            if hasattr(queue, "cancel_join_thread"):
+                queue.cancel_join_thread()
+
         if self._env_count is not None:
             self._env_count.shm.close()
             try:
                 self._env_count.shm.unlink()
             except FileNotFoundError:
                 pass    # Already unlinked
-            self.task_queue.close()
-            self.update_queue.close()
+            _close_queue(self.task_queue)
+            _close_queue(self.update_queue)
+            _close_queue(self._task_time_queue)
             self._env_count = None
+
+    def verbose_print(self, msg):
+        if self.verbose:
+            print(msg)
+
+    def update_metrics(self):
+        while not self._task_time_queue.empty():
+            if self._using_simple_queues:
+                self._task_times.append(self._task_time_queue.get())
+            else:
+                self.verbose_print("Getting task time for metrics")
+                try:
+                    self._task_times.append(self._task_time_queue.get(block=False))
+                except Empty:
+                    break
+                self.verbose_print("Got task time for metrics")
 
     def get_metrics(self, log_n_tasks=1):
         logs = []
-        while not self._task_time_queue.empty():
-            self._task_times.append(self._task_time_queue.get(block=False))
+        self.update_metrics()
         logs.append(("curriculum/get_task_time_s", sum(self._task_times) / max(len(self._task_times), 1)))
         if not self._using_simple_queues:
             logs.append(("curriculum/updates_in_queue", self.update_queue.qsize()))
@@ -205,10 +253,12 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         """
         Stop the thread that reads the complete_queue and reads the task_queue.
         """
-        self.should_update = False
-        self.components.started = False
-        self.update_thread.join()
-        self.components.close()
+        if self.should_update and os.getpid() == self.components._main_pid:
+            self.should_update = False
+
+            self.components.started = False
+            self.components.close()
+            self.update_thread.join()
 
     def _sigint_handler(self, sig, frame):
         self.stop()
@@ -220,6 +270,7 @@ class CurriculumSyncWrapper(CurriculumWrapper):
         """
         # Update curriculum with environment results:
         while self.should_update:
+            self.components.update_metrics()
             if not self.components.update_queue.empty():
                 update = self.components.get_update()  # Blocks until update is available
 

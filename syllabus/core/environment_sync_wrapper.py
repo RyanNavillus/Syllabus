@@ -25,7 +25,9 @@ class GymnasiumSyncWrapper(gym.Wrapper):
                  components: MultiProcessingComponents,
                  batch_size: int = 100,
                  buffer_size: int = 1,  # Having an extra task in the buffer minimizes wait time at reset
-                 remove_keys: list = None,
+                 remove_obs_keys: list = None,
+                 send_obs: bool = True,
+                 send_infos: bool = True,
                  change_task_on_completion: bool = False,
                  global_task_completion: Callable[[Curriculum, np.ndarray, float, bool, Dict[str, Any]], bool] = None):
         # TODO: reimplement global task progress metrics
@@ -37,7 +39,9 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         self.components = components
         self._latest_task = None
         self.batch_size = batch_size
-        self.remove_keys = remove_keys if remove_keys is not None else []
+        self.remove_obs_keys = remove_obs_keys if remove_obs_keys is not None else []
+        self.send_obs = send_obs
+        self.send_infos = send_infos
         self.change_task_on_completion = change_task_on_completion
         self.global_task_completion = global_task_completion
         self.task_progress = 0.0
@@ -51,11 +55,11 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         # Create batch buffers for step updates
         if self.update_on_step:
-            self._obs = [None] * self.batch_size
+            self._obs = [None] * self.batch_size if self.send_obs else None
             self._rews = np.zeros(self.batch_size, dtype=np.float32)
             self._terms = np.zeros(self.batch_size, dtype=bool)
             self._truncs = np.zeros(self.batch_size, dtype=bool)
-            self._infos = [None] * self.batch_size
+            self._infos = [None] * self.batch_size if self.send_infos else None
             self._tasks = [None] * self.batch_size
             self._task_progresses = np.zeros(self.batch_size, dtype=np.float32)
 
@@ -92,6 +96,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             self.env.update_state(state_deltas)
 
         obs, info = self.env.reset(*args, new_task=next_task, **kwargs)
+        # self.components.task_done()
         info["task"] = self.task_space.encode(self.get_task())
         if self.update_on_step:
             self._update_step(obs, 0.0, False, False, info, send=False)
@@ -139,12 +144,14 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
     def _update_step(self, obs, rew, term, trunc, info, send=True):
         trimmed_obs = {key: obs[key]
-                       for key in obs.keys() if key not in self.remove_keys} if isinstance(obs, dict) else obs
-        self._obs[self._batch_step] = trimmed_obs
+                       for key in obs.keys() if key not in self.remove_obs_keys} if isinstance(obs, dict) else obs
+        if self.send_obs:
+            self._obs[self._batch_step] = trimmed_obs
         self._rews[self._batch_step] = rew
         self._terms[self._batch_step] = term
         self._truncs[self._batch_step] = trunc
-        self._infos[self._batch_step] = info
+        if self.send_infos:
+            self._infos[self._batch_step] = info
         self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
         self._task_progresses[self._batch_step] = self.task_progress
         self._batch_step += 1
@@ -160,11 +167,11 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             "update_type": "step_batch",
             "metrics": ([
                 self._tasks[:self._batch_step],
-                self._obs[:self._batch_step],
+                self._obs[:self._batch_step] if self.send_obs else None,
                 self._rews[:self._batch_step],
                 self._terms[:self._batch_step],
                 self._truncs[:self._batch_step],
-                self._infos[:self._batch_step],
+                self._infos[:self._batch_step] if self.send_infos else None,
                 self._task_progresses[:self._batch_step],
             ],),
             "env_id": self.instance_id,
