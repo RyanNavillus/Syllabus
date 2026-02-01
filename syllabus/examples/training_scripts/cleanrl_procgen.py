@@ -105,6 +105,7 @@ def parse_args():
     parser.add_argument("--distribution-mode", type=str, default="easy", help="distribution mode of procgen")
     parser.add_argument("--easy-visuals", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="Toggle easy visuals for procgen environments")
+    parser.add_argument("--exploratory-actions", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True, help="Use exploratory actions wrapper")
 
     # Curriculum arguments
     parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
@@ -177,7 +178,26 @@ class NormalizeReward(gym.wrappers.vector.NormalizeReward):
         return obs, reward, terminated, truncated, info
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, distribution_mode="easy", easy_visuals=False, eval=False, buffer_size=1):
+class ExploratoryActionsWrapper(gym.Wrapper):
+    def __init__(self, env, repeat_prob=0.95, ignore_actions=None):
+        super().__init__(env)
+        self.repeat_prob = repeat_prob
+        self.ignore_actions = ignore_actions if ignore_actions is not None else []
+        self.last_action = None
+
+    def reset(self, **kwargs):
+        self.last_action = None
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        # Repeat action with probability repeat_prob if not first step and action is not in ignore_actions
+        if self.last_action is not None and action not in self.ignore_actions and self.np_random.random() < self.repeat_prob:
+            action = self.last_action  # Repeat last action
+        self.last_action = action
+        return self.env.step(action)
+
+
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, distribution_mode="easy", easy_visuals=False, eval=False, exploratory_actions=False, buffer_size=1):
     def thunk():
         if easy_visuals:
             env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode=distribution_mode,
@@ -187,6 +207,10 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
                                   start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
+
+        if exploratory_actions:
+            env = ExploratoryActionsWrapper(env, repeat_prob=0.95, ignore_actions=[
+                                            4, 9, 10, 11, 12, 13, 14])  # Ignore no-op action
 
         if task_wrapper or curriculum_components is not None:
             env = ProcgenTaskWrapper(env, env_id, seed=seed)
@@ -492,6 +516,8 @@ if __name__ == "__main__":
                 curriculum_components=curriculum.components if args.curriculum else None,
                 num_levels=1 if args.curriculum else 0,
                 distribution_mode=args.distribution_mode,
+                exploratory_actions=args.exploratory_actions,
+                easy_visuals=args.easy_visuals,
             )
             for i in range(args.num_envs)
         ]
