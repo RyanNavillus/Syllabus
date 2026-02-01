@@ -58,6 +58,8 @@ def parse_args():
                         help="weather to capture videos of the agent performances (check out `videos` folder)")
     parser.add_argument("--logging-dir", type=str, default=".",
                         help="the base directory for logging and wandb storage.")
+    parser.add_argument("--save-model", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True, help="Save the model or not")
+    parser.add_argument("--model-save-freq", type=int, default=100, help="Save the model every x updates")
 
     # Algorithm specific arguments
     parser.add_argument("--env-id", type=str, default="starpilot",
@@ -100,6 +102,9 @@ def parse_args():
     # Procgen arguments
     parser.add_argument("--full-dist", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="Train on full distribution of levels.")
+    parser.add_argument("--distribution-mode", type=str, default="easy", help="distribution mode of procgen")
+    parser.add_argument("--easy-visuals", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="Toggle easy visuals for procgen environments")
 
     # Curriculum arguments
     parser.add_argument("--curriculum", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
@@ -172,10 +177,14 @@ class NormalizeReward(gym.wrappers.vector.NormalizeReward):
         return obs, reward, terminated, truncated, info
 
 
-def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, eval=False, buffer_size=1):
+def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, distribution_mode="easy", easy_visuals=False, eval=False, buffer_size=1):
     def thunk():
-        env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode="easy",
-                              start_level=start_level, num_levels=num_levels)
+        if easy_visuals:
+            env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode=distribution_mode,
+                                  start_level=start_level, num_levels=num_levels, use_generated_assets=False, use_backgrounds=False, use_monochrome_assets=True, restrict_themes=True)
+        else:
+            env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode=distribution_mode,
+                                  start_level=start_level, num_levels=num_levels)
         env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
 
@@ -243,6 +252,7 @@ def level_replay_evaluate(
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
     normalized_mean_returns = (mean_returns - env_min) / (env_max - env_min)
+    print(f"Evaluation over {num_episodes} episodes: mean reward {mean_returns:.2f} +/- {stddev_returns:.2f}, normalized mean reward {normalized_mean_returns:.2f}")
     return mean_returns, stddev_returns, normalized_mean_returns
 
 
@@ -481,6 +491,7 @@ if __name__ == "__main__":
                 args.seed + i,
                 curriculum_components=curriculum.components if args.curriculum else None,
                 num_levels=1 if args.curriculum else 0,
+                distribution_mode=args.distribution_mode,
             )
             for i in range(args.num_envs)
         ]
@@ -700,6 +711,14 @@ if __name__ == "__main__":
         writer.add_scalar("train_eval/stddev_train_return", stddev_train_returns, global_step)
 
         writer.add_scalar("curriculum/completed_episodes", completed_episodes, step)
+
+        # Save mode to logging_dir
+        if args.save_model and (update % args.model_save_freq == 0 or update == num_updates):
+            model_path = os.path.join(args.logging_dir, f"./runs/{run_name}/")
+            os.makedirs(os.path.dirname(model_path), exist_ok=True)
+            file_path = os.path.join(model_path, f"procgen_{args.env_id}_model.pt")
+            torch.save(agent.state_dict(), file_path)
+            print(f"Saved model to {file_path}")
     if args.curriculum:
         curriculum.stop()
     envs.close()
