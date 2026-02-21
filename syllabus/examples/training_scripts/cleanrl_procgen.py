@@ -253,6 +253,9 @@ def level_replay_evaluate(
                 num_levels=num_levels,
                 start_level=0,
                 eval=False,
+                distribution_mode=args.distribution_mode,
+                exploratory_actions=args.exploratory_actions,
+                easy_visuals=args.easy_visuals,
             )
             for i in range(args.num_eval_episodes)
         ]

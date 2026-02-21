@@ -216,6 +216,7 @@ class Curriculum:
         ax.pie(top_probs, labels=top_labels, autopct="%1.1f%%", startangle=0)
         ax.set_title("Task Sampling Distribution")
         plt.savefig(f'tmp_syllabus_fig_{run_id}.png')
+        plt.close(fig)
         return fig
 
     def log_metrics(self, writer, logs: List[Dict], step: int = None, log_n_tasks: int = -1):
@@ -247,7 +248,7 @@ class Curriculum:
             if len(self.tasks) > log_n_tasks and log_n_tasks != -1:
                 warnings.warn(
                     f"Too many tasks to log {len(self.tasks)}. Only logging stats for {log_n_tasks} tasks.", stacklevel=2)
-                task_dist = task_dist[:log_n_tasks]
+                log_task_dist = task_dist[:log_n_tasks]
 
             # Add basic logs
             for idx, prob in enumerate(log_task_dist):
