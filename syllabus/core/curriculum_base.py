@@ -268,7 +268,9 @@ class Curriculum:
                 self.pie_plot_counter = 0
                 # Generate task distribution pie chart
                 self.plot_pie_chart(task_dist, wandb.run.id, log_n_tasks=log_n_tasks)
-                wandb.log({"curriculum/task_distribution": wandb.Image(f"tmp_syllabus_fig_{wandb.run.id}.png"), "global_step": step})
+                if use_wandb:
+                    wandb.log(
+                        {"curriculum/task_distribution": wandb.Image(f"tmp_syllabus_fig_{wandb.run.id}.png"), "global_step": step})
 
                 # Get top 10 tasks
                 top_10 = sorted(
@@ -279,17 +281,15 @@ class Curriculum:
                 top_10_tasks, top_10_probs = zip(*top_10)
 
                 # Log top 10 tasks to wandb table
-                try:
-                    import wandb
+                if use_wandb:
                     self.wandb_table.add_data(step, "\n".join(top_10_tasks),
                                               "\n".join([f"{t:.3f}" for t in top_10_probs]))
                     wandb.log({"curriculum/top_tasks": self.wandb_table, "global_step": step})
-                except ImportError:
-                    pass
             self.pie_plot_counter += 1
         except Exception as e:
             # No need to crash over logging :)
             warnings.warn(f"Failed to generate curriculum distribution stats. Ignoring error: {e}", stacklevel=2)
+
         try:
             # Write logs
             for name, prob in logs:
