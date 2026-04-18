@@ -160,7 +160,7 @@ class MultiProcessingComponents:
         if self._using_simple_queues:
             self.update_queue.put(update)
         else:
-            self.update_queue.put(copy.deepcopy(update), block=False)
+            self.update_queue.put(update, block=False)
         self.verbose_print("Put update")
 
     def get_update(self):

@@ -1,3 +1,4 @@
+import copy
 import warnings
 from typing import Any, Callable, Dict
 
@@ -99,7 +100,7 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         # self.components.task_done()
         info["task"] = self.task_space.encode(self.get_task())
         if self.update_on_step:
-            self._update_step(obs, 0.0, False, False, info, send=False)
+            self._update_step(obs, 0.0, False, False, info, info["task"], send=False)
         return obs, info
 
     def step(self, action):
@@ -110,14 +111,18 @@ class GymnasiumSyncWrapper(gym.Wrapper):
         self.task_progress = info.get("task_completion", 0.0)
 
         # Update curriculum with step info
+        encoded_task = None
         if self.update_on_step:
-            self._update_step(obs, rew, term, trunc, info)
+            encoded_task = copy.deepcopy(self.task_space.encode(self.get_task()))
+            self._update_step(obs, rew, term, trunc, info, encoded_task)
 
         # Episode update
         if term or trunc:
+            if encoded_task is None:
+                encoded_task = copy.deepcopy(self.task_space.encode(self.get_task()))
             episode_update = {
                 "update_type": "episode",
-                "metrics": (self.episode_return, self.episode_length, self.task_space.encode(self.get_task()), self.task_progress),
+                "metrics": (self.episode_return, self.episode_length, encoded_task, self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True,
                 "state_version": self.state_version,
@@ -126,9 +131,11 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         # Task completion update
         if self.change_task_on_completion and (self.task_progress >= 1.0 or self.task_progress < 0.0):
+            if encoded_task is None:
+                encoded_task = copy.deepcopy(self.task_space.encode(self.get_task()))
             update = {
                 "update_type": "task_progress",
-                "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
+                "metrics": (encoded_task, self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True,
                 "state_version": self.state_version,
@@ -142,17 +149,17 @@ class GymnasiumSyncWrapper(gym.Wrapper):
 
         return obs, rew, term, trunc, info
 
-    def _update_step(self, obs, rew, term, trunc, info, send=True):
+    def _update_step(self, obs, rew, term, trunc, info, encoded_task, send=True):
         trimmed_obs = {key: obs[key]
                        for key in obs.keys() if key not in self.remove_obs_keys} if isinstance(obs, dict) else obs
         if self.send_obs:
-            self._obs[self._batch_step] = trimmed_obs
+            self._obs[self._batch_step] = copy.deepcopy(trimmed_obs)
         self._rews[self._batch_step] = rew
         self._terms[self._batch_step] = term
         self._truncs[self._batch_step] = trunc
         if self.send_infos:
-            self._infos[self._batch_step] = info
-        self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+            self._infos[self._batch_step] = copy.deepcopy(info)
+        self._tasks[self._batch_step] = copy.deepcopy(encoded_task)
         self._task_progresses[self._batch_step] = self.task_progress
         self._batch_step += 1
 
@@ -163,16 +170,17 @@ class GymnasiumSyncWrapper(gym.Wrapper):
             self._batch_step = 0
 
     def _package_step_updates(self):
+        batch_size = self._batch_step
         return [{
             "update_type": "step_batch",
             "metrics": ([
-                self._tasks[:self._batch_step],
-                self._obs[:self._batch_step] if self.send_obs else None,
-                self._rews[:self._batch_step],
-                self._terms[:self._batch_step],
-                self._truncs[:self._batch_step],
-                self._infos[:self._batch_step] if self.send_infos else None,
-                self._task_progresses[:self._batch_step],
+                self._tasks[:batch_size],
+                self._obs[:batch_size] if self.send_obs else None,
+                self._rews[:batch_size].copy(),
+                self._terms[:batch_size].copy(),
+                self._truncs[:batch_size].copy(),
+                self._infos[:batch_size] if self.send_infos else None,
+                self._task_progresses[:batch_size].copy(),
             ],),
             "env_id": self.instance_id,
             "request_sample": False,
@@ -287,18 +295,20 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
             self._update_step(obs, rews, terms, truncs, infos, is_finished)
 
         if is_finished:
+            encoded_task = copy.deepcopy(self.task_space.encode(self.env.task))
             episode_update = {
                 "update_type": "episode",
-                "metrics": (self.episode_returns, self.episode_length, self.task_space.encode(self.env.task), self.task_progress),
+                "metrics": (copy.deepcopy(self.episode_returns), self.episode_length, encoded_task, self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True
             }
             self.components.put_update([episode_update])
 
         if self.change_task_on_completion and self.task_progress >= 1.0:
+            encoded_task = copy.deepcopy(self.task_space.encode(self.get_task()))
             update = {
                 "update_type": "task_progress",
-                "metrics": (self.task_space.encode(self.get_task()), self.task_progress),
+                "metrics": (encoded_task, self.task_progress),
                 "env_id": self.instance_id,
                 "request_sample": True
             }
@@ -314,12 +324,12 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
         agent_indices = [self.agent_map[agent] for agent in rews.keys()]
         # Environment outputs
         trimmed_obs = self._trim_obs(obs)
-        self._obs[self._batch_step] = trimmed_obs
+        self._obs[self._batch_step] = copy.deepcopy(trimmed_obs)
         self._rews[self._batch_step][agent_indices] = list(rews.values())
         self._terms[self._batch_step][agent_indices] = list(terms.values())
         self._truncs[self._batch_step][agent_indices] = list(truncs.values())
-        self._infos[self._batch_step] = infos
-        self._tasks[self._batch_step] = self.task_space.encode(self.get_task())
+        self._infos[self._batch_step] = copy.deepcopy(infos)
+        self._tasks[self._batch_step] = copy.deepcopy(self.task_space.encode(self.get_task()))
         self._task_progresses[self._batch_step] = self.task_progress
         self._batch_step += 1
 
@@ -330,16 +340,17 @@ class PettingZooSyncWrapper(BaseParallelWrapper):
             self._batch_step = 0
 
     def _package_step_updates(self):
+        batch_size = self._batch_step
         return [{
             "update_type": "step_batch",
             "metrics": ([
-                self._tasks[:self._batch_step],
-                self._obs[:self._batch_step],
-                self._rews[:self._batch_step],
-                self._terms[:self._batch_step],
-                self._truncs[:self._batch_step],
-                self._infos[:self._batch_step],
-                self._task_progresses[:self._batch_step],
+                self._tasks[:batch_size],
+                self._obs[:batch_size],
+                self._rews[:batch_size].copy(),
+                self._terms[:batch_size].copy(),
+                self._truncs[:batch_size].copy(),
+                self._infos[:batch_size],
+                self._task_progresses[:batch_size].copy(),
             ],),
             "env_id": self.instance_id,
             "request_sample": False
