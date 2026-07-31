@@ -11,7 +11,7 @@ from syllabus.task_space import DiscreteTaskSpace, TaskSpace
 class SequentialCurriculum(Curriculum):
     """ Curriculum that iterates through a list of curricula based on stopping conditions. """
 
-    def __init__(self, curriculum_list: List[Any], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 1000, should_loop=False, **curriculum_kwargs):
+    def __init__(self, curriculum_list: List[Any], stopping_conditions: List[Any], *curriculum_args, return_buffer_size: int = 100, should_loop=False, **curriculum_kwargs):
         super().__init__(*curriculum_args, **curriculum_kwargs)
         assert len(curriculum_list) > 0, "Must provide at least one curriculum"
         if should_loop:
@@ -28,6 +28,7 @@ class SequentialCurriculum(Curriculum):
         self.stopping_conditions = self._parse_stopping_conditions(stopping_conditions)
         self._curriculum_index = 0
         self.should_loop = should_loop
+        self.return_buffer_size = return_buffer_size
 
         # Stopping metrics
         self.n_steps = 0
@@ -36,7 +37,7 @@ class SequentialCurriculum(Curriculum):
         self.total_episodes = 0
         self.n_tasks = 0
         self.total_tasks = 0
-        self.episode_returns = deque(maxlen=return_buffer_size)
+        self.episode_returns = deque(maxlen=self.return_buffer_size)
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
         """ Parse the curriculum list to ensure that all items are curricula.
@@ -138,7 +139,7 @@ class SequentialCurriculum(Curriculum):
         return self.total_tasks
 
     def _get_episode_return(self):
-        return sum(self.episode_returns) / len(self.episode_returns) if len(self.episode_returns) > 0 else 0
+        return sum(self.episode_returns) / len(self.episode_returns) if len(self.episode_returns) >= self.return_buffer_size else 0
 
     @property
     def current_curriculum(self):
@@ -161,7 +162,6 @@ class SequentialCurriculum(Curriculum):
         recoded_tasks = [self.task_space.encode(task) for task in decoded_tasks]
         self.n_tasks += k
         self.total_tasks += k
-        print(k, self.n_tasks)
 
         # Check if we should move on to the next phase of the curriculum
         self.check_stopping_conditions()
@@ -207,7 +207,7 @@ class SequentialCurriculum(Curriculum):
             # Reset individual curriculum metrics
             self.n_episodes = 0
             self.n_steps = 0
-            self.episode_returns = deque(maxlen=100)
+            self.episode_returns = deque(maxlen=self.return_buffer_size)
             self.n_tasks = 0
 
     def _sample_distribution(self) -> List[float]:
