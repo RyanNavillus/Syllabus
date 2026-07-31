@@ -38,6 +38,7 @@ class SequentialCurriculum(Curriculum):
         self.n_tasks = 0
         self.total_tasks = 0
         self.episode_returns = deque(maxlen=self.return_buffer_size)
+        self.current_task_set = set(self.current_curriculum.task_space.tasks)
 
     def _parse_curriculum_list(self, curriculum_list: List[Curriculum]) -> List[Curriculum]:
         """ Parse the curriculum list to ensure that all items are curricula.
@@ -168,7 +169,7 @@ class SequentialCurriculum(Curriculum):
         return recoded_tasks
 
     def update_on_episode(self, episode_return, length, task, progress, env_id=None):
-        if task not in self.current_curriculum.task_space:
+        if task not in self.current_task_set:
             return  # Ignore previously sampled tasks that are not in the current curriculum
 
         self.n_episodes += 1
@@ -212,6 +213,7 @@ class SequentialCurriculum(Curriculum):
             self.n_steps = 0
             self.episode_returns = deque(maxlen=self.return_buffer_size)
             self.n_tasks = 0
+            self.current_task_set = set(self.current_curriculum.task_space.tasks)
 
     def _sample_distribution(self) -> List[float]:
         return self.current_curriculum._sample_distribution()
