@@ -168,6 +168,9 @@ class SequentialCurriculum(Curriculum):
         return recoded_tasks
 
     def update_on_episode(self, episode_return, length, task, progress, env_id=None):
+        if task not in self.current_curriculum.task_space:
+            return  # Ignore previously sampled tasks that are not in the current curriculum
+
         self.n_episodes += 1
         self.total_episodes += 1
         self.n_steps += length
