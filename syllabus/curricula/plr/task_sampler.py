@@ -1,5 +1,6 @@
 # Code heavily based on the original Prioritized Level Replay implementation from https://github.com/facebookresearch/level-replay
 # If you use this code, please cite the above codebase and original PLR paper: https://arxiv.org/abs/2010.03934
+import atexit
 import threading
 import time
 import gymnasium as gym
@@ -43,6 +44,8 @@ class TaskSampler:
         task_buffer_priority (str): Criterion (e.g. "replay_support") for picking replacement in the buffer.
         use_dense_rewards (bool): If True, uses dense rewards in certain grounded strategies.
         gamma (float): Discount factor for one-step TD-error calculations.
+        legacy_robust_plr_indexing (bool): If True, include the bootstrap value in unfinished robust PLR
+            segments to reproduce the legacy scoring behavior.
     """
 
     def __init__(
@@ -72,6 +75,7 @@ class TaskSampler:
         gae_lambda=0.95,
         robust_plr: bool = False,
         evaluator: Evaluator = None,
+        legacy_robust_plr_indexing: bool = False,
     ):
         if robust_plr:
             assert task_space is not None, "Task space must be provided for robust PLR."
@@ -85,7 +89,7 @@ class TaskSampler:
         self.tasks = tasks
         self.num_tasks = len(self.tasks)
         self.num_steps = num_steps
-        self.num_actors = num_actors
+        self.num_actors = num_actors + self.num_eval_envs if robust_plr else num_actors
         self.num_train_actors = num_actors
         self.strategy = strategy
         self.replay_schedule = replay_schedule
@@ -105,6 +109,7 @@ class TaskSampler:
         self.use_dense_rewards = use_dense_rewards
         self.gamma = gamma
         self.gae_lambda = gae_lambda
+        self.legacy_robust_plr_indexing = legacy_robust_plr_indexing
         self.score_function = self._get_score_function()
 
         self._init_task_index(tasks if tasks else [])
@@ -124,7 +129,7 @@ class TaskSampler:
         self.track_solvable = False
         self.grounded_values = None
         if self.strategy.startswith("grounded"):
-            self.grounded_values = np.array([np.NINF] * N, dtype=np.float32)
+            self.grounded_values = np.array([-np.inf] * N, dtype=np.float32)
 
         if self.sample_full_distribution:
             self.task2actor = defaultdict(set)
@@ -140,9 +145,16 @@ class TaskSampler:
 
         # Offline evaluation
         self.robust_plr = robust_plr
+        self.should_evaluate = robust_plr
         if self.robust_plr:
             self.evaluate_thread = threading.Thread(name='robustplr-evaluate', target=self._evaluate_tasks, daemon=True)
             self.evaluate_thread.start()
+            atexit.register(self.stop)
+
+    def stop(self):
+        if self.robust_plr and self.should_evaluate:
+            self.should_evaluate = False
+            self.evaluate_thread.join()
 
     def _init_task_index(self, tasks):
         if tasks:
@@ -233,9 +245,7 @@ class TaskSampler:
         old_steps = self.partial_task_steps[actor_index][task_idx]
 
         new_steps = old_steps + num_steps
-        merged_score = old_partial_score + (score - old_partial_score) * num_steps
-        if running_mean:
-            merged_score /= float(new_steps)
+        merged_score = old_partial_score + (score - old_partial_score) * num_steps / float(new_steps)
 
         merged_max = max(old_partial_max, max_score)
 
@@ -262,9 +272,7 @@ class TaskSampler:
         old_steps = self.partial_task_steps_buffer[actor_index].get(task, 0)
 
         new_steps = old_steps + num_steps
-        merged_score = old_partial_score + (score - old_partial_score) * num_steps
-        if running_mean:
-            merged_score /= float(new_steps)
+        merged_score = old_partial_score + (score - old_partial_score) * num_steps / float(new_steps)
 
         if done:
             task_idx = self._next_buffer_index
@@ -302,6 +310,45 @@ class TaskSampler:
 
     def _uniform(self, **kwargs):
         return 1.0, 1.0
+
+    def _update_with_scores(self, rollouts):
+        tasks = rollouts.tasks
+        scores = rollouts.scores
+        done = ~(rollouts.masks > 0)
+
+        for actor_index in range(rollouts.tasks.shape[1]):
+            done_steps = done[:, actor_index].nonzero()[:self.num_steps, 0]
+            start_t = 0
+
+            for t in done_steps:
+                if not start_t < self.num_steps:
+                    break
+                if t == 0:
+                    continue
+
+                task = tasks[start_t, actor_index].item()
+                episode_scores = scores[start_t:t, actor_index]
+                self.update_task_score(
+                    actor_index,
+                    task,
+                    episode_scores.mean().item(),
+                    episode_scores.max().item(),
+                    t.item() - start_t,
+                )
+                start_t = t.item()
+
+            if start_t < self.num_steps:
+                task = tasks[start_t, actor_index].item()
+                episode_scores = scores[start_t:, actor_index]
+                score = episode_scores.mean().item()
+                self._last_score = score
+                self._partial_update_task_score(
+                    actor_index,
+                    task,
+                    score,
+                    episode_scores.max().item(),
+                    self.num_steps - start_t,
+                )
 
     def _average_entropy(self, **kwargs):
         episode_logits = kwargs["episode_logits"]
@@ -606,6 +653,42 @@ class TaskSampler:
                 and kwargs_["grounded_value"] is not None
             ):
                 self.grounded_values[final_task_idx] = kwargs_["grounded_value"]
+            start_t = t.item()
+
+        if start_t < self.num_steps:
+            task = tasks[start_t].item()
+            tail_end = None if self.legacy_robust_plr_indexing else len(tasks)
+            kwargs_ = {
+                "actor_index": actor_index,
+                "done": False,
+                "task": task,
+            }
+            if external_scores is not None:
+                kwargs_["external_scores"] = external_scores
+            if self.requires_value_buffers:
+                kwargs_["returns"] = returns[start_t:tail_end]
+                kwargs_["rewards"] = rewards[start_t:]
+                kwargs_["value_preds"] = value_preds[start_t:tail_end]
+                if self.strategy == "alt_advantage_abs":
+                    kwargs_["alt_returns"] = alt_returns[start_t:tail_end]
+            else:
+                logits = policy_logits[start_t:]
+                kwargs_["episode_logits"] = torch.log_softmax(logits, -1)
+            if self.grounded_values is not None:
+                kwargs_["grounded_value"] = self.grounded_values[task]
+
+            score, max_score = score_function(**kwargs_)
+            self._last_score = score
+            num_steps = len(tasks[start_t:])
+            if self.sample_full_distribution and task in self.staging_task_set:
+                self._partial_update_task_score_buffer(
+                    actor_index, task, score, num_steps, running_mean=(external_scores is not None)
+                )
+            else:
+                self._partial_update_task_score(
+                    actor_index, task, score, max_score, num_steps,
+                    running_mean=(external_scores is not None),
+                )
 
     def after_update(self, actor_indices=None):
         if not self._has_working_task_buffer:
@@ -622,8 +705,9 @@ class TaskSampler:
                         float("-inf"),
                         0,
                     )
-        self.partial_task_scores.fill(0.0)
-        self.partial_task_steps.fill(0.0)
+        self.partial_task_scores[actor_indices] = 0.0
+        self.partial_task_max_scores[actor_indices] = float("-inf")
+        self.partial_task_steps[actor_indices] = 0
 
         if self.sample_full_distribution:
             for actor_index in actor_indices:
@@ -798,7 +882,7 @@ class TaskSampler:
         tasks = torch.zeros((self.num_steps, self.num_eval_envs), dtype=torch.float32)
         value_preds = torch.zeros((self.num_steps + 1, self.num_eval_envs), dtype=torch.float32)
 
-        while True:
+        while self.should_evaluate:
             # TODO: Make sure queue is being emptied at reasonable rate
             obs, recurrent_state, rewards, dones, tasks, value_preds = self.evaluator.evaluate_batch(
                 self.num_steps, obs, recurrent_state=recurrent_state, rewards=rewards, dones=dones, tasks=tasks, value_preds=value_preds
@@ -839,15 +923,16 @@ class TaskSampler:
 
         replay_decision = self.sample_replay_decision()
         # If we have seen enough tasks to sample a replay level, stop training on them and only evaluate
-        if self._proportion_filled >= self.rho:
+        if self.robust_plr and self._proportion_filled >= self.rho:
             # Add random levels to an evaluation queue until we sample a replay level
             while not replay_decision:
                 level = self._sample_unseen_level() if self._proportion_filled < 1.0 else self._sample_random_level()
                 self.evaluator.eval_curriculum.send_task(level)     # Send task to evaluator environments
                 replay_decision = self.sample_replay_decision()
             return self._sample_replay_level()
-        else:
-            return self._sample_unseen_level()
+        if replay_decision or (not self.sample_full_distribution and self._proportion_filled >= 1.0):
+            return self._sample_replay_level()
+        return self._sample_unseen_level()
 
     def sample_weights(self):
         weights = self._score_transform(self.score_transform, self.temperature, self.task_scores)
@@ -878,7 +963,7 @@ class TaskSampler:
             weights = np.ones_like(scores)
         elif transform == "max":
             weights = np.zeros_like(scores)
-            scores_ = scores[:]
+            scores_ = scores.copy()
             scores_[self.unseen_task_weights > 0] = -float("inf")
             argmax = np.random.choice(np.flatnonzero(np.isclose(scores_, scores_.max())))
             weights[argmax] = 1.0
@@ -913,13 +998,14 @@ class TaskSampler:
         """ Return sampling metrics for logging. """
         n = self.task_buffer_size if self.sample_full_distribution else self.num_tasks
         proportion_seen = (n - (self.unseen_task_weights > 0).sum()) / float(n) if n > 0 else 0.0
-        return {
+        metrics = {
             "task_scores": self.task_scores,
             "unseen_task_weights": self.unseen_task_weights,
             "task_staleness": self.task_staleness,
             "proportion_seen": proportion_seen,
             "score": self._last_score,
         }
+        return metrics
 
     @property
     def solvable_mass(self):

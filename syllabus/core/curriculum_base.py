@@ -156,7 +156,7 @@ class Curriculum:
         """
 
         if self._should_use_startup_sampling():
-            return self._startup_sample()
+            return self._startup_sample(k)
 
         # Use list of indices because np.choice does not play nice with tuple tasks
         task_dist = self._sample_distribution()
@@ -264,7 +264,7 @@ class Curriculum:
             logp = np.log(entropy_task_dist)
             entropy = np.sum(-entropy_task_dist * logp)
             logs.append(("curriculum/entropy", entropy))
-            if self.pie_plot_counter % self.pie_plot_interval == 0:
+            if self.pie_plot_interval > 0 and self.pie_plot_counter % self.pie_plot_interval == 0:
                 self.pie_plot_counter = 0
                 # Generate task distribution pie chart
                 self.plot_pie_chart(task_dist, wandb.run.id, log_n_tasks=log_n_tasks)

@@ -169,7 +169,8 @@ class SequentialCurriculum(Curriculum):
         return recoded_tasks
 
     def update_on_episode(self, episode_return, length, task, progress, env_id=None):
-        if task not in self.current_task_set:
+        decoded_task = self.task_space.decode(task)
+        if decoded_task not in self.current_task_set:
             return  # Ignore previously sampled tasks that are not in the current curriculum
 
         self.n_episodes += 1
@@ -181,7 +182,8 @@ class SequentialCurriculum(Curriculum):
             self.stat_recorder.record(episode_return, length, task)
 
         # Update current curriculum
-        self.current_curriculum.update_on_episode(episode_return, length, task, progress, env_id)
+        current_task = self.current_curriculum.task_space.encode(decoded_task)
+        self.current_curriculum.update_on_episode(episode_return, length, current_task, progress, env_id)
 
         self.check_stopping_conditions()
 

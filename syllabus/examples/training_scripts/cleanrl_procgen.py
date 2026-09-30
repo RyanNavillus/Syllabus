@@ -124,6 +124,10 @@ def parse_args():
                         help="the staleness coefficient for the PLR task sampler")
     parser.add_argument("--plr-ema-alpha", type=float, default=1.0,
                         help="the alpha parameter for the PLR task sampler EMA")
+    parser.add_argument("--robust-plr-strategy", type=str, default="grounded_signed_value_loss",
+                        help="the scoring strategy for robust PLR")
+    parser.add_argument("--legacy-robust-plr-indexing", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="include the bootstrap value in robust PLR unfinished-tail scores for regression testing")
 
     # Learning Progress arguments
     parser.add_argument("--lp-ema-alpha", type=float, default=0.1,
@@ -335,6 +339,7 @@ if __name__ == "__main__":
         # Intialize Curriculum Method
         if args.curriculum_method == "plr":
             print("Using prioritized level replay.")
+            evaluator = CleanRLEvaluator(agent, device=device, copy_agent=True)
             curriculum = PrioritizedLevelReplay(
                 sample_env.task_space,
                 sample_env.observation_space,
@@ -343,7 +348,8 @@ if __name__ == "__main__":
                 gamma=args.gamma,
                 gae_lambda=args.gae_lambda,
                 task_sampler_kwargs_dict={"strategy": "value_l1", "replay_schedule": "fixed"},
-                device="cuda",
+                evaluator=evaluator,
+                device=device,
             )
         elif args.curriculum_method == "simpleplr":
             print("Using simple prioritized level replay.")
@@ -389,8 +395,10 @@ if __name__ == "__main__":
                 gae_lambda=args.gae_lambda,
                 robust_plr=True,
                 evaluator=evaluator,
-                task_sampler_kwargs_dict={"strategy": "grounded_signed_value_loss", "replay_schedule": "proportionate",
-                                          "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef, "temperature": args.temperature, "alpha": args.plr_ema_alpha},
+                task_sampler_kwargs_dict={"strategy": args.robust_plr_strategy, "replay_schedule": "proportionate",
+                                          "rho": 0.5, "replay_prob": 0.5, "staleness_coef": args.staleness_coef,
+                                          "temperature": args.temperature, "alpha": args.plr_ema_alpha,
+                                          "legacy_robust_plr_indexing": args.legacy_robust_plr_indexing},
             )
         elif args.curriculum_method == "dr":
             print("Using domain randomization.")

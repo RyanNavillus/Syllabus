@@ -71,7 +71,7 @@ class Evaluator:
             self.agent = copy.deepcopy(agent).to(self.device)
             agent.to("cuda")
 
-        if not simple_copy:
+        if not copy_agent:
             self.agent = self._agent_reference
 
         self.task_space = task_space if task_space is not None else eval_curriculum.task_space if eval_curriculum is not None else None
@@ -326,12 +326,13 @@ class Evaluator:
         obs = initial_obs
         recurrent_state = recurrent_state if recurrent_state is not None else self._initial_recurrent_state(num_envs)
         rewards = rewards if rewards is not None else torch.zeros((steps, num_envs))
-        dones = dones if dones is not None else torch.zeros((steps, num_envs))
+        dones = dones if dones is not None else torch.zeros((steps + 1, num_envs))
+        dones[0] = dones[-1]
         tasks = tasks if tasks is not None else torch.zeros((steps, num_envs))
-        value_preds = value_preds if value_preds is not None else torch.zeros((steps, num_envs))
+        value_preds = value_preds if value_preds is not None else torch.zeros((steps + 1, num_envs))
 
         for i in range(steps):
-            actions, value, recurrent_state, _ = self.get_action_and_value(obs, recurrent_state, done=dones)
+            actions, value, recurrent_state, _ = self.get_action_and_value(obs, recurrent_state, done=dones[i])
             if isinstance(self.eval_envs.action_space, (gym.spaces.Discrete, gym.spaces.MultiDiscrete)):
                 actions = actions.int()
             obs, rew, term, trunc, info = self.eval_envs.step(actions.cpu().numpy())

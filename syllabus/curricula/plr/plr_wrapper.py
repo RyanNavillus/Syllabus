@@ -105,11 +105,11 @@ class RolloutStorage(object):
         return self.env_to_idx[env_index]
 
     def insert_at_index(self, env_index, mask, obs=None, reward=None, task=None, steps=1):
-        assert steps < self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
+        assert steps <= self.buffer_steps, f"Number of steps {steps} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
         env_index = self.get_index(env_index)
         step = self.env_steps[env_index]
         end_step = step + steps
-        assert end_step < self.buffer_steps, f"Number of insert of {steps} steps at {step} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
+        assert end_step <= self.buffer_steps, f"Number of insert of {steps} steps at {step} exceeds buffer size {self.buffer_steps}. Increase PLR's num_steps or decrease environment wrapper's batch size."
         self.masks[step + 1:end_step + 1, env_index].copy_(torch.as_tensor(mask[:, None]))
 
         if obs is not None:
@@ -286,6 +286,7 @@ class PrioritizedLevelReplay(Curriculum):
         )
         self._rollouts.to(device)
 
+    @property
     def requires_step_updates(self) -> bool:
         return True
 
@@ -297,7 +298,7 @@ class PrioritizedLevelReplay(Curriculum):
 
     def sample(self, k: int = 1) -> Union[List, Any]:
         if self._should_use_startup_sampling():
-            return self._startup_sample()
+            return self._startup_sample(k)
         else:
             return [self._task_sampler.sample() for _ in range(k)]
 
@@ -313,6 +314,7 @@ class PrioritizedLevelReplay(Curriculum):
             mask=np.array([not (term or trunc)]),
             reward=np.array([rew]),
             obs=np.array([obs]),
+            task=np.array([task]),
         )
 
         # Update task sampler
@@ -343,7 +345,7 @@ class PrioritizedLevelReplay(Curriculum):
         """ Update the task sampler with the current rollouts. """
         self._task_sampler.update_with_rollouts(self._rollouts, env_id)
         self._rollouts.after_update(env_id)
-        self._task_sampler.after_update()
+        self._task_sampler.after_update(actor_indices=[env_id])
 
     def log_metrics(self, writer, logs, step=None, log_n_tasks=1):
         """
