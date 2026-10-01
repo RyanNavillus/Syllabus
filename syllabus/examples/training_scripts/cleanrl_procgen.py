@@ -114,6 +114,8 @@ def parse_args():
                         help="curriculum method to use")
     parser.add_argument("--num-eval-episodes", type=int, default=10,
                         help="the number of episodes to evaluate the agent on after each policy update.")
+    parser.add_argument("--serial-eval", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="evaluate episodes sequentially in one environment, as in the original PLR example")
     parser.add_argument("--normalize-success-rates", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, the success rates will be normalized")
 
@@ -262,7 +264,7 @@ def level_replay_evaluate(
                 exploratory_actions=args.exploratory_actions,
                 easy_visuals=args.easy_visuals,
             )
-            for i in range(args.num_eval_episodes)
+            for i in range(1 if args.serial_eval else args.num_eval_episodes)
         ]
     )
     eval_obs, _ = eval_envs.reset()
@@ -272,7 +274,7 @@ def level_replay_evaluate(
         with torch.no_grad():
             eval_action, _, _, _ = policy.get_action_and_value(torch.Tensor(eval_obs).to(device))
 
-        eval_obs, _, eval_term, eval_trunc, eval_infos = eval_envs.step(eval_action.cpu().numpy())
+        eval_obs, _, eval_term, eval_trunc, eval_infos = eval_envs.step(np.atleast_1d(eval_action.cpu().numpy()))
         eval_done = np.logical_or(eval_term, eval_trunc)
 
         if "episode" in eval_infos.keys():
@@ -280,6 +282,7 @@ def level_replay_evaluate(
                 if eval_done[i]:
                     eval_episode_rewards.append(eval_infos['episode']['r'][i])
 
+    eval_envs.close()
     mean_returns = np.mean(eval_episode_rewards)
     stddev_returns = np.std(eval_episode_rewards)
     env_min, env_max = PROCGEN_RETURN_BOUNDS[args.env_id]
