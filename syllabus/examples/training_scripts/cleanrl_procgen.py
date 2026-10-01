@@ -546,6 +546,7 @@ if __name__ == "__main__":
     logprobs = torch.zeros((args.num_steps, args.num_envs)).to(device)
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    valid = torch.zeros((args.num_steps, args.num_envs), dtype=torch.bool).to(device)
     values = torch.zeros((args.num_steps, args.num_envs)).to(device)
     tasks = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
@@ -569,6 +570,8 @@ if __name__ == "__main__":
             global_step += 1 * args.num_envs
             obs[step] = next_obs
             dones[step] = next_done
+            # Gymnasium's next-step autoreset ignores the action after a terminal step.
+            valid[step] = ~next_done.bool()
 
             # ALGO LOGIC: action logic
             with torch.no_grad():
@@ -600,15 +603,17 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
                 current_tasks = tasks[step]
-
-                plr_update = {
-                    "value": value,
-                    "next_value": next_value,
-                    "rew": reward,
-                    "dones": next_done,
-                    "tasks": current_tasks,
-                }
-                curriculum.update(plr_update)
+                valid_envs = valid[step]
+                if valid_envs.any():
+                    plr_update = {
+                        "value": value[valid_envs],
+                        "next_value": next_value[valid_envs],
+                        "rew": reward[valid_envs.cpu().numpy()],
+                        "dones": next_done[valid_envs.cpu().numpy()],
+                        "tasks": current_tasks[valid_envs],
+                        "env_ids": valid_envs.nonzero().flatten().tolist(),
+                    }
+                    curriculum.update(plr_update)
 
         if curriculum is not None:
             curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
@@ -652,19 +657,20 @@ if __name__ == "__main__":
             curriculum.update(tasks, scores, dones)
 
         # flatten the batch
-        b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
-        b_logprobs = logprobs.reshape(-1)
-        b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
-        b_advantages = advantages.reshape(-1)
-        b_returns = returns.reshape(-1)
-        b_values = values.reshape(-1)
+        b_valid = valid.reshape(-1)
+        b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)[b_valid]
+        b_logprobs = logprobs.reshape(-1)[b_valid]
+        b_actions = actions.reshape((-1,) + envs.single_action_space.shape)[b_valid]
+        b_advantages = advantages.reshape(-1)[b_valid]
+        b_returns = returns.reshape(-1)[b_valid]
+        b_values = values.reshape(-1)[b_valid]
 
         # Optimizing the policy and value network
-        b_inds = np.arange(args.batch_size)
+        b_inds = np.arange(len(b_obs))
         clipfracs = []
         for _ in range(args.update_epochs):
             np.random.shuffle(b_inds)
-            for start in range(0, args.batch_size, args.minibatch_size):
+            for start in range(0, len(b_obs), args.minibatch_size):
                 end = start + args.minibatch_size
                 mb_inds = b_inds[start:end]
 
@@ -680,7 +686,7 @@ if __name__ == "__main__":
 
                 mb_advantages = b_advantages[mb_inds]
                 if args.norm_adv:
-                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std(unbiased=mb_advantages.numel() > 1) + 1e-8)
 
                 # Policy loss
                 pg_loss1 = -mb_advantages * ratio
