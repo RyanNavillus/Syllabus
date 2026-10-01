@@ -203,12 +203,13 @@ class ExploratoryActionsWrapper(gym.Wrapper):
 
 def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start_level=0, num_levels=1, distribution_mode="easy", easy_visuals=False, eval=False, exploratory_actions=False, buffer_size=1):
     def thunk():
+        timeout = 6000 if env_id == "bigfish" else 1000
         if easy_visuals:
             env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode=distribution_mode,
-                                  start_level=start_level, num_levels=num_levels, use_generated_assets=False, use_backgrounds=False, use_monochrome_assets=True, restrict_themes=True)
+                                  start_level=start_level, num_levels=num_levels, timeout=timeout, use_generated_assets=False, use_backgrounds=False, use_monochrome_assets=True, restrict_themes=True)
         else:
             env = openai_gym.make(f"procgen-{env_id}-v0", distribution_mode=distribution_mode,
-                                  start_level=start_level, num_levels=num_levels)
+                                  start_level=start_level, num_levels=num_levels, timeout=timeout)
         env = GymV21CompatibilityV0(env=env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
 
