@@ -3,6 +3,7 @@ This code is based on https://github.com/facebookresearch/level-replay/blob/main
 
 NOTE: In order to efficiently change the seed of a procgen environment directly without reinitializing it,
 we rely on Minqi Jiang's custom branch of procgen found here: https://github.com/minqi/procgen
+Training requires Gymnasium 1.1 or newer for same-step vector autoreset.
 """
 import argparse
 import multiprocessing
@@ -78,6 +79,8 @@ def parse_args():
                         help="Use GAE for advantage computation")
     parser.add_argument("--gamma", type=float, default=0.999,
                         help="the discount factor gamma")
+    parser.add_argument("--reward-norm-gamma", type=float, default=0.99,
+                        help="the discount factor for reward normalization")
     parser.add_argument("--gae-lambda", type=float, default=0.95,
                         help="the lambda for the general advantage estimation")
     parser.add_argument("--num-minibatches", type=int, default=8,
@@ -86,6 +89,8 @@ def parse_args():
                         help="the K epochs to update the policy")
     parser.add_argument("--norm-adv", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="Toggles advantages normalization")
+    parser.add_argument("--norm-adv-per-rollout", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                        help="Normalize advantages once per rollout instead of per mini-batch")
     parser.add_argument("--clip-coef", type=float, default=0.2,
                         help="the surrogate clipping coefficient")
     parser.add_argument("--clip-vloss", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
@@ -239,7 +244,7 @@ def make_env(env_id, seed, task_wrapper=False, curriculum_components=None, start
 
 def wrap_vecenv(vecenvs):
     vecenvs.is_vector_env = True
-    vecenvs = NormalizeReward(vecenvs, gamma=args.gamma)
+    vecenvs = NormalizeReward(vecenvs, gamma=args.reward_norm_gamma)
     vecenvs = gym.wrappers.vector.TransformReward(vecenvs, lambda reward: np.clip(reward, -10, 10))
     return vecenvs
 
@@ -535,7 +540,8 @@ if __name__ == "__main__":
                 easy_visuals=args.easy_visuals,
             )
             for i in range(args.num_envs)
-        ]
+        ],
+        autoreset_mode=gym.vector.AutoresetMode.SAME_STEP,
     )
     envs = wrap_vecenv(envs)
 
@@ -550,7 +556,6 @@ if __name__ == "__main__":
     logprobs = torch.zeros((args.num_steps, args.num_envs)).to(device)
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
-    valid = torch.zeros((args.num_steps, args.num_envs), dtype=torch.bool).to(device)
     values = torch.zeros((args.num_steps, args.num_envs)).to(device)
     tasks = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
@@ -574,8 +579,6 @@ if __name__ == "__main__":
             global_step += 1 * args.num_envs
             obs[step] = next_obs
             dones[step] = next_done
-            # Gymnasium's next-step autoreset ignores the action after a terminal step.
-            valid[step] = ~next_done.bool()
 
             # ALGO LOGIC: action logic
             with torch.no_grad():
@@ -589,17 +592,21 @@ if __name__ == "__main__":
             next_done = np.logical_or(term, trunc)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             if args.curriculum:
-                tasks[step] = torch.Tensor(infos["task"])
+                task_ids = infos["task"]
+                if "final_info" in infos:
+                    task_ids = np.where(next_done, infos["final_info"]["task"], task_ids)
+                tasks[step] = torch.Tensor(task_ids)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
             completed_episodes += sum(next_done)
 
-            if "episode" in infos.keys():
-                for i in range(len(infos["episode"]["r"])):
+            if "final_info" in infos and "episode" in infos["final_info"]:
+                final_episodes = infos["final_info"]["episode"]
+                for i in range(len(final_episodes["r"])):
                     if next_done[i]:
-                        episode_rewards.append(infos["episode"]['r'][i])
-                        print(f"global_step={global_step}, episodic_return={infos['episode']['r'][i]}")
-                        writer.add_scalar("charts/episodic_return", infos["episode"]["r"][i], global_step)
-                        writer.add_scalar("charts/episodic_length", infos["episode"]["l"][i], global_step)
+                        episode_rewards.append(final_episodes['r'][i])
+                        print(f"global_step={global_step}, episodic_return={final_episodes['r'][i]}")
+                        writer.add_scalar("charts/episodic_return", final_episodes["r"][i], global_step)
+                        writer.add_scalar("charts/episodic_length", final_episodes["l"][i], global_step)
                         break
 
             # Syllabus curriculum update
@@ -607,17 +614,14 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     next_value = agent.get_value(next_obs)
                 current_tasks = tasks[step]
-                valid_envs = valid[step]
-                if valid_envs.any():
-                    plr_update = {
-                        "value": value[valid_envs],
-                        "next_value": next_value[valid_envs],
-                        "rew": reward[valid_envs.cpu().numpy()],
-                        "dones": next_done[valid_envs.cpu().numpy()],
-                        "tasks": current_tasks[valid_envs],
-                        "env_ids": valid_envs.nonzero().flatten().tolist(),
-                    }
-                    curriculum.update(plr_update)
+                plr_update = {
+                    "value": value,
+                    "next_value": next_value,
+                    "rew": reward,
+                    "dones": next_done,
+                    "tasks": current_tasks,
+                }
+                curriculum.update(plr_update)
 
         if curriculum is not None:
             curriculum.log_metrics(writer, [], step=global_step, log_n_tasks=5)
@@ -661,13 +665,14 @@ if __name__ == "__main__":
             curriculum.update(tasks, scores, dones)
 
         # flatten the batch
-        b_valid = valid.reshape(-1)
-        b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)[b_valid]
-        b_logprobs = logprobs.reshape(-1)[b_valid]
-        b_actions = actions.reshape((-1,) + envs.single_action_space.shape)[b_valid]
-        b_advantages = advantages.reshape(-1)[b_valid]
-        b_returns = returns.reshape(-1)[b_valid]
-        b_values = values.reshape(-1)[b_valid]
+        b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
+        b_logprobs = logprobs.reshape(-1)
+        b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
+        b_advantages = advantages.reshape(-1)
+        if args.norm_adv and args.norm_adv_per_rollout:
+            b_advantages = (b_advantages - b_advantages.mean()) / (b_advantages.std(unbiased=b_advantages.numel() > 1) + 1e-5)
+        b_returns = returns.reshape(-1)
+        b_values = values.reshape(-1)
 
         # Optimizing the policy and value network
         b_inds = np.arange(len(b_obs))
@@ -689,7 +694,7 @@ if __name__ == "__main__":
                     clipfracs += [((ratio - 1.0).abs() > args.clip_coef).float().mean().item()]
 
                 mb_advantages = b_advantages[mb_inds]
-                if args.norm_adv:
+                if args.norm_adv and not args.norm_adv_per_rollout:
                     mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std(unbiased=mb_advantages.numel() > 1) + 1e-8)
 
                 # Policy loss
