@@ -240,7 +240,7 @@ class CentralPrioritizedLevelReplay(Curriculum):
 
         # Update task sampler
         if any(self._rollouts.env_steps == self._rollouts.num_steps):
-            env_idxs = (self._rollouts.env_steps == self._rollouts.num_steps).nonzero().flatten()
+            env_idxs = (self._rollouts.env_steps == self._rollouts.num_steps).nonzero().flatten().tolist()
             if self._task_sampler.requires_value_buffers:
                 self._rollouts.compute_returns(self._gamma, self._gae_lambda)
             for idx in env_idxs:

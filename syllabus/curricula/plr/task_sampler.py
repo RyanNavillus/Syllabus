@@ -696,8 +696,9 @@ class TaskSampler:
         actor_indices = range(self.num_actors) if actor_indices is None else actor_indices
 
         for actor_index in actor_indices:
+            actor_index = int(actor_index)
             for task_idx in range(self.partial_task_scores.shape[1]):
-                if self.partial_task_scores[actor_index][task_idx] != 0.0:
+                if self.partial_task_scores[actor_index, task_idx] != 0.0:
                     self.update_task_score(
                         actor_index,
                         self.tasks[task_idx],
@@ -770,7 +771,7 @@ class TaskSampler:
             sample_weights /= np.sum(sample_weights)
         elif total != 1.0:
             sample_weights /= total
-        task_idx = np.random.choice(range(len(self.tasks)), 1, p=sample_weights)[0]
+        task_idx = np.random.choice(len(self.tasks), p=sample_weights)
         if update_staleness:
             self._update_staleness(task_idx)
         return int(self.tasks[task_idx])
@@ -785,7 +786,7 @@ class TaskSampler:
             return t_val
         else:
             sample_weights = self.unseen_task_weights / self.unseen_task_weights.sum()
-            task_idx = np.random.choice(range(len(self.tasks)), 1, p=sample_weights)[0]
+            task_idx = np.random.choice(len(self.tasks), p=sample_weights)
             self._update_staleness(task_idx)
             return int(self.tasks[task_idx])
 
@@ -799,7 +800,7 @@ class TaskSampler:
             self.staging_task_set.add(t_val)
             return t_val
         else:
-            task_idx = np.random.choice(range(len(self.tasks)), 1)[0]
+            task_idx = np.random.choice(len(self.tasks))
             self._update_staleness(task_idx)
             return int(self.tasks[task_idx])
 
@@ -914,7 +915,7 @@ class TaskSampler:
 
         if not self.sample_full_distribution:
             if strategy == "random":
-                task_idx = np.random.choice(range(self.num_tasks))
+                task_idx = np.random.choice(self.num_tasks)
                 return int(self.tasks[task_idx])
             if strategy == "sequential":
                 task_idx = self.next_task_index
